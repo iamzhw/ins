@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans default-lazy-init="true">
+   <description>QuartzLocal Cron JobConfiguration</description>   
+   	<bean id="inspecthelperScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" lazy-init="false">
+      <property name="triggers">
+         <list>   
+         <ref bean="quoteInspectHelperTrigger"/>
+         </list>
+      </property>
+      <property name="quartzProperties">
+         <props>
+            <prop key="org.quartz.threadPool.threadCount">5</prop>
+         </props>
+      </property>
+   </bean> 
+   
+   <bean id="quoteInspectHelperTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="quoteInspectHelperJobDetail" />
+      <property name="cronExpression" value="0 0 5 * * ?" />
+   </bean>   
+   
+   <bean id="quoteInspectHelperJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="quoteCronInspectHelperJob" />
+      <property name="targetMethod" value="execute" />
+      <property name="concurrent" value="true" />
+   </bean>   
+   <bean id="quoteCronInspectHelperJob" class="com.inspecthelper.service.InspectHelperJob">  
+   </bean>
+</beans>

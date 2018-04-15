@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.ChartDao">
+<select id="queryEqpRate" parameterType="map" resultType="map" statementType="STATEMENT">
+	sELECT A.NAME,
+	DECODE(SIGN(100-ROUND(NVL((NVL2(GG.SUM7,FF.SUM6,0)/NVL(GG.SUM7,1))*100,0),0)),1,ROUND(NVL((NVL2(GG.SUM7,FF.SUM6,0)/NVL(GG.SUM7,1))*100,0),0),100) RATE
+	FROM AREA A
+	LEFT JOIN(
+	SELECT COUNT(DISTINCT(T.POINT_ID)) SUM6,PLAN.${area_type} FROM TB_INS_POINT
+	T,TB_INS_PLAN PLAN,TB_INS_PLAN_DETAIL PD,TB_INS_LINE_POINT
+	LLP,TB_INS_TASK TASK
+	WHERE
+	LLP.POINT_ID=T.POINT_ID
+	AND LLP.LINE_ID=PD.INSPECT_OBJECT_ID
+	AND PD.PLAN_ID=PLAN.PLAN_ID
+ <![CDATA[
+  AND TASK.START_TIME>=TRUNC(SYSDATE,'MM')
+  AND TASK.COMPLETE_TIME<TRUNC(ADD_MONTHS(SYSDATE,1),'MM')
+  AND PLAN.PLAN_END_TIME>TRUNC(SYSDATE,'MM')
+  ]]>
+	AND TASK.PLAN_ID=PLAN.PLAN_ID
+	AND PLAN.ISDELETED=0
+	AND T.POINT_TYPE IN (1,4)
+	GROUP BY PLAN.${area_type}
+	) FF ON FF.${area_type}=A.AREA_ID
+	LEFT JOIN(
+	SELECT COUNT(DISTINCT(POINT_ID)) SUM7,${area_type}
+	FROM (SELECT DISTINCT(T.POINT_ID),PLAN.${area_type} FROM TB_INS_POINT
+	T,TB_INS_PLAN PLAN,TB_INS_PLAN_DETAIL PD,TB_INS_LINE_POINT
+	LLP,TB_INS_TASK TASK
+	WHERE
+	LLP.POINT_ID=T.POINT_ID
+	AND LLP.LINE_ID=PD.INSPECT_OBJECT_ID
+	AND PD.PLAN_ID=PLAN.PLAN_ID
+  <![CDATA[
+  AND TASK.START_TIME>=TRUNC(SYSDATE,'MM')
+  AND TASK.COMPLETE_TIME<TRUNC(ADD_MONTHS(SYSDATE,1),'MM')
+  AND PLAN.PLAN_END_TIME>TRUNC(SYSDATE,'MM')
+  ]]>
+	AND TASK.PLAN_ID=PLAN.PLAN_ID
+	AND PLAN.ISDELETED=0
+	AND T.POINT_TYPE IN (1,4)
+	UNION ALL
+	SELECT T.POINT_ID,T.${area_type} FROM TB_INS_POINT T WHERE T.POINT_TYPE IN (4) AND
+	T.POINT_LEVEL IS NOT NULL
+	AND T.POINT_LEVEL NOT IN (6,9,0)
+	) G GROUP BY ${area_type}
+	) GG ON GG.${area_type}=A.AREA_ID
+	WHERE A.PARENT_AREA_ID=${area_id}
+	order by A.area_id
+</select>
+<select id="queryCoverRate" parameterType="map" resultType="map" statementType="STATEMENT">
+select 
+a.name,
+decode(sign(100-round(nvl((nvl2(rr.sum18,tt.sum20,0)/nvl(rr.sum18,1))*100,0),0)),1,round(nvl((nvl2(rr.sum18,tt.sum20,0)/nvl(rr.sum18,1))*100,0),0),100) RATE
+from area a
+left join(
+select b3.${area_type},(b3.sum33+nvl(b2.sum22,0)) sum18 from
+( select a.area_id ${area_type},nvl(sum(c1.times),0) sum33 from area a
+left join(
+ select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.${area_type} from tb_ins_point o where  o.point_type in (4) and o.point_level  is not null
+ and o.point_level not in (6,9,0) 
+ <![CDATA[
+ and o.create_time<trunc(sysdate,'mm')
+ ]]>
+ and not exists (
+ select 1 from (
+select distinct t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+ where
+ llp.point_id=t.point_id
+ and llp.line_id=pd.inspect_object_id
+ and pd.plan_id=plan.plan_id
+ and task.plan_id=plan.plan_id
+ <![CDATA[
+ and task.start_time>=trunc(sysdate,'mm')
+ and task.complete_time<trunc(add_months(sysdate,1),'mm')
+  and plan.plan_end_time>trunc(sysdate,'mm')
+  ]]>
+  and plan.isdeleted=0
+  and   t.point_type in (4)
+ ) b1 where b1.point_id=o.point_id
+ )
+ ) c1 on a.area_id=c1.${area_type}
+ group by a.area_id) b3
+ left join (
+ select ${area_type},count(times) sum22 from (
+select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,t.${area_type} from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+ where
+ llp.point_id=t.point_id
+ and llp.line_id=pd.inspect_object_id
+ and pd.plan_id=plan.plan_id
+ and task.plan_id=plan.plan_id
+ <![CDATA[
+ and task.start_time>=trunc(sysdate,'mm')
+ and task.complete_time<trunc(add_months(sysdate,1),'mm')
+  and plan.plan_end_time>trunc(sysdate,'mm')
+  ]]>
+  and plan.isdeleted=0
+  and   t.point_type in (4)
+  ) group by ${area_type}
+ ) b2 on b2.${area_type}=b3.${area_type}
+) rr on rr.${area_type}=a.area_id
+left join(
+select count(*) sum20,s.${area_type} from tb_ins_record t,tb_base_staff s where   t.task_id is not null
+and s.staff_id=t.inspector 
+<![CDATA[
+and  t.create_time >=trunc(sysdate,'mm') 
+and t.create_time<trunc(add_months(sysdate,1),'mm') 
+]]>
+and t.record_type=0
+group by s.${area_type}
+) tt on tt.${area_type}=a.area_id
+where a.parent_area_id=${area_id}
+order by a.area_id
+</select>
+<select id="queryTroubleBill" parameterType="map" resultType="map" statementType="STATEMENT">
+SELECT 
+NAME,
+MAX(DECODE(STATUS_ID,1,SUM2)) SUM1,
+MAX(DECODE(STATUS_ID,2,SUM2)) SUM2,
+MAX(DECODE(STATUS_ID,3,SUM2)) SUM3,
+MAX(DECODE(STATUS_ID,4,SUM2)) SUM4,
+SUM(SUM2) SUM5
+FROM (
+SELECT 
+AA.NAME,AA.STATUS_ID,NVL(BB.SUM1,0) SUM2,AA.AREA_ID
+FROM  
+(SELECT A.AREA_ID,S.STATUS_ID,A.NAME,S.STATUS_NAME
+FROM AREA A, TB_INS_BILL_STAUS S
+WHERE A.PARENT_AREA_ID=${area_id} AND STATUS_ID!=0 AND STATUS_ID!=5) AA
+LEFT JOIN(
+SELECT COUNT(B.STATUS_ID) SUM1,B.${area_type},B.STATUS_ID FROM TB_INS_BILL B
+<![CDATA[
+WHERE  B.COMPLETE_TIME>=TRUNC(SYSDATE,'MM')
+AND B.COMPLETE_TIME<TRUNC(ADD_MONTHS(SYSDATE,1),'MM')
+]]>
+GROUP BY B.STATUS_ID,B.${area_type}
+) BB ON BB.STATUS_ID=AA.STATUS_ID AND BB.${area_type}=AA.AREA_ID
+ORDER BY AA.AREA_ID,AA.STATUS_ID
+) GROUP BY NAME,AREA_ID
+ORDER BY AREA_ID
+</select>
+</mapper>

@@ -1,0 +1,1568 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.StepPartTaskDao">
+	
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select t.task_id,
+	       t.task_name,
+	       to_char(t.start_time,'yyyy-mm-dd') start_time,
+	       to_char(t.end_time,'yyyy-mm-dd') end_time,
+	       t.area_id,
+	       t.inspect_id,
+	       t.is_del,
+	       t.circle_id,
+	       t.equip_type,
+	       s.staff_name 
+		from axx_step_task t 
+		 join tb_base_staff s on t.inspect_id = s.staff_id
+		where  t.is_del=0
+		<if test="queryParams.task_name != null and queryParams.task_name != ''">  
+            <![CDATA[
+	  		and t.task_name like '%'||#{queryParams.task_name}||'%'
+	  		]]>
+		</if>
+		<if test="queryParams.inspect_name != null and queryParams.inspect_name != ''">  
+            <![CDATA[
+	  		and s.staff_name like '%'||#{queryParams.inspect_name}||'%'
+	  		]]>
+		</if>
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">
+			and t.area_id =#{queryParams.area_id}
+		</if>
+		<if test="queryParams.circle != null and queryParams.circle != ''">
+			and t.circle_id =#{queryParams.circle}
+		</if>
+		<if test="queryParams.start_date != null and queryParams.start_date != ''">
+			and t.start_time &gt;=to_date(#{queryParams.start_date}, 'yyyy-mm-dd')
+		</if>
+		<if test="queryParams.end_date != null and queryParams.end_date != ''">
+			and t.end_time &lt;=to_date(#{queryParams.end_date}, 'yyyy-mm-dd')
+		</if>		
+           order by t.inspect_id
+	</select>
+	
+	
+	<!-- 查询出未生成路由非地标任务的人员频次去生成任务,过滤本周期之内生成的步巡段 -->
+	<select id="selNoLMTaskPeople" resultType="map" parameterType="map">
+	<![CDATA[         
+	  select tt.*, s.staff_name
+  		from (select distinct t.inspect_id, t.circle_id, t.area_id
+          from (select startl."ORDER" start_order,
+                       endl."ORDER" end_order,
+                       a.inspect_id,
+                       a.circle_id,
+                       a.area_id,
+                       a.cable_id,
+                       a.relay_id,
+                       a.allot_id
+                  from (select *
+                          from axx_step_equip_allot
+                         where allot_id not in
+                               (select a1.allot_id
+                                  from axx_step_equip_allot a1
+                                 where a1.circle_id = 2
+                                   and a1.delete_flag = 0
+                                   and trunc(a1.create_time) between
+                                       to_date(#{OneCircleBeginMonth}, 'yy-mm-dd') and
+                                       to_date(#{OneCircleEndMonth}, 'yy-mm-dd')
+                                union
+                                select a2.allot_id
+                                  from axx_step_equip_allot a2
+                                 where a2.circle_id = 3
+                                   and a2.delete_flag = 0
+                                   and trunc(a2.create_time) between
+                                       to_date(#{TwoCircleBeginMonth}, 'yy-mm-dd') and
+                                       to_date(#{TwoCircleEndMonth}, 'yy-mm-dd'))) a
+                  join axx_line_equip startl on a.start_equip = startl.equip_id
+                  join axx_line_equip endl on a.end_equip = endl.equip_id
+                 where a.delete_flag = 0) t
+          join axx_line_equip ale on t.cable_id = ale.cable_id
+                                 and t.relay_id = ale.relay_id
+          join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+                                       and aste.area_id = t.area_id
+         where t.start_order <= ale."ORDER"
+           and t.end_order >= ale."ORDER"
+           and aste.is_del = 0
+           and aste.is_lose = 0
+           and aste.equip_type != #{equip_type}) tt
+		  left join(select * from axx_step_task task1 where task1.end_time >= trunc(sysdate)) t on tt.inspect_id = t.inspect_id
+		                           and tt.circle_id = t.circle_id
+		                           and (t.equip_type is null or t.equip_type != #{equip_type})
+		                           and (t.is_del is null or t.is_del = 0)
+		  join tb_base_staff s on tt.inspect_id = s.staff_id
+		 where (t.end_time is null or t.end_time < trunc(sysdate))
+		   and not exists (select 1
+		          from axx_step_task t1
+		         where t1.end_time >= trunc(sysdate)
+		           and t.inspect_id = t1.inspect_id
+		           and t.circle_id = t1.circle_id)
+	  
+ 	 ]]>
+	</select>
+	
+	<!-- 查询哪些非路由点非地标任务没有被分配 -->
+	<select id="selNoLMNoRouteTaskEquip" resultType="map" parameterType="String">
+	  <![CDATA[
+	   select tt.*, s.staff_name from (select distinct param.inspect_id, param.circle_id, param.area_id
+          from (select t.*, aste.equip_id
+                  from (select startl."ORDER" start_order,
+                               endl."ORDER" end_order,
+                               a.inspect_id,
+                               a.circle_id,
+                               a.area_id,
+                               a.cable_id,
+                               a.relay_id,
+                               a.allot_id
+                          from (select *
+                                  from axx_step_equip_allot
+                                 where allot_id not in
+                                       (select a1.allot_id
+                                          from axx_step_equip_allot a1
+                                         where a1.circle_id = 2
+                                           and a1.delete_flag = 0
+                                           and trunc(a1.create_time) between
+                                               to_date(#{OneCircleBeginMonth}, 'yy-mm-dd') and
+                                               to_date(#{OneCircleEndMonth}, 'yy-mm-dd')
+                                        union
+                                        select a2.allot_id
+                                          from axx_step_equip_allot a2
+                                         where a2.circle_id = 3
+                                           and a2.delete_flag = 0
+                                           and trunc(a2.create_time) between
+                                               to_date(#{TwoCircleBeginMonth}, 'yy-mm-dd') and
+                                               to_date(#{TwoCircleEndMonth}, 'yy-mm-dd'))) a
+                          join axx_line_equip startl on a.start_equip =
+                                                        startl.equip_id
+                          join axx_line_equip endl on a.end_equip =
+                                                      endl.equip_id
+                         where a.delete_flag = 0) t
+                  join axx_line_equip ale on t.cable_id = ale.cable_id
+                                         and t.relay_id = ale.relay_id
+                  join axx_step_tour_equip aste on ale.equip_id =
+                                                   aste.equip_id
+                                               and aste.area_id = t.area_id
+                 where t.start_order <= ale."ORDER"
+                   and t.end_order >= ale."ORDER"
+                   and aste.is_del = 0
+                   and aste.is_lose = 0) param
+          join axx_step_tour_equip e on param.equip_id = e.relation_equip
+                                    and e.area_id = param.area_id
+                                    and e.equip_type != #{equip_type}
+                                    and e.is_lose = 0) tt
+		  left join(select * from axx_step_task task1 where task1.end_time >= trunc(sysdate)) t on tt.inspect_id = t.inspect_id
+		                           and tt.circle_id = t.circle_id
+		                           and (t.equip_type is null or t.equip_type != #{equip_type})
+		                           and (t.is_del is null or t.is_del = 0)
+		  join tb_base_staff s on tt.inspect_id = s.staff_id
+		 where (t.end_time is null or t.end_time < trunc(sysdate))
+		   and not exists (select 1
+		          from axx_step_task t1
+		         where t1.end_time >= trunc(sysdate)
+		           and t.inspect_id = t1.inspect_id
+		           and t.circle_id = t1.circle_id)
+
+	  ]]>
+	</select>
+	
+	<!-- 根据地标频次去查询未分配地标任务人员,过滤本周期之内生成的步巡段  -->
+	<select id="selLMTaskPeople" parameterType="map" resultType="map">
+	<![CDATA[
+	   select tt.*, s.staff_name
+ 	    from (select distinct t.inspect_id, t.circle_id, t.area_id
+          from (select startl."ORDER" start_order,
+                       endl."ORDER" end_order,
+                       a.inspect_id,
+                       #{circle_id} circle_id,
+                       a.area_id,
+                       a.cable_id,
+                       a.relay_id,
+                       a.allot_id
+                  from (select *
+                          from axx_step_equip_allot
+                         where allot_id not in
+                               (select a1.allot_id
+                                  from axx_step_equip_allot a1
+                                 where a1.delete_flag = 0
+                                   and trunc(a1.create_time) between
+                                       to_date(#{LandMarkCircleBeginMonth}, 'yy-mm-dd') and
+                                       to_date(#{LandMarkCircleEndMonth}, 'yy-mm-dd'))) a
+                  join axx_line_equip startl on a.start_equip = startl.equip_id
+                  join axx_line_equip endl on a.end_equip = endl.equip_id
+                 where a.delete_flag = 0) t
+          join axx_line_equip ale on t.cable_id = ale.cable_id
+                                 and t.relay_id = ale.relay_id
+          join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+                                       and aste.area_id = t.area_id
+         where t.start_order <= ale."ORDER"
+           and t.end_order >= ale."ORDER"
+           and aste.is_del = 0
+           and aste.is_lose = 0
+           and aste.equip_type = #{equip_type}) tt
+	  left join(select * from axx_step_task where end_time >= trunc(sysdate)) t on tt.inspect_id = t.inspect_id
+	                           and tt.circle_id = t.circle_id
+	                           and t.equip_type = #{equip_type}
+	                           and (t.is_del is null or t.is_del = 0)
+	    join tb_base_staff s on tt.inspect_id = s.staff_id
+	   where (t.end_time is null or t.end_time < trunc(sysdate))
+	   and not exists (select 1
+	          from axx_step_task t1
+	         where t1.end_time >= trunc(sysdate)
+	           and t.inspect_id = t1.inspect_id
+	           and t.circle_id = t1.circle_id)
+	 ]]> 
+	</select>
+	
+	<!-- 查询未分配地标任务的人员 非路由 -->
+	<select id="selLMNoRouteTaskEquip" parameterType="map" resultType="map">
+	<![CDATA[
+	  select tt.*, s.staff_name from (select distinct param.inspect_id, #{circle_id} circle_id, param.area_id
+          from (select t.*, aste.equip_id
+                  from (select startl."ORDER" start_order,
+                               endl."ORDER" end_order,
+                               a.inspect_id,
+                               a.circle_id,
+                               a.area_id,
+                               a.cable_id,
+                               a.relay_id,
+                               a.allot_id
+                          from (select *
+                                  from axx_step_equip_allot
+                                 where allot_id not in
+                                       (select a1.allot_id
+                                          from axx_step_equip_allot a1
+                                         where a1.delete_flag = 0
+                                           and trunc(a1.create_time) between
+                                               to_date(#{LandMarkCircleBeginMonth}, 'yy-mm-dd') and
+                                               to_date(#{LandMarkCircleEndMonth}, 'yy-mm-dd'))) a
+                          join axx_line_equip startl on a.start_equip = startl.equip_id
+                          join axx_line_equip endl on a.end_equip = endl.equip_id
+                         where a.delete_flag = 0) t
+                  join axx_line_equip ale on t.cable_id = ale.cable_id
+                                         and t.relay_id = ale.relay_id
+                  join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+                                               and aste.area_id = t.area_id
+                 where t.start_order <= ale."ORDER"
+                   and t.end_order >= ale."ORDER"
+                   and aste.is_del = 0
+                   and aste.is_lose = 0) param
+          join axx_step_tour_equip e on param.equip_id = e.relation_equip
+                                    and e.area_id = param.area_id
+                                    and e.equip_type = #{equip_type}
+                                    and e.is_lose = 0) tt
+	  left join(select * from axx_step_task task1 where task1.end_time >= trunc(sysdate)) t on tt.inspect_id = t.inspect_id
+	                           and tt.circle_id = t.circle_id
+	                           and t.equip_type = #{equip_type}
+	                           and (t.is_del is null or t.is_del = 0)
+	  join tb_base_staff s on tt.inspect_id = s.staff_id
+	   where (t.end_time is null or t.end_time < trunc(sysdate))
+	    and not exists (select 1
+          from axx_step_task t1
+         where t1.end_time >= trunc(sysdate)
+           and t.inspect_id = t1.inspect_id
+           and t.circle_id = t1.circle_id)
+	 ]]> 
+	</select>
+	
+	<!-- 把已删除步巡段的设施点从设施任务表中移除 -->
+	<delete id="removeStepPartRecord">
+		delete from axx_step_task_equip te where te.allot_id not in(
+		 select a.allot_id from axx_step_equip_allot a where a.delete_flag=0
+		)
+	</delete>
+	
+	<!-- 查询非地标任务的所有步巡段 -->
+	<select id="selNoLMStepPartBysTask" resultType="map" parameterType="String">
+	  select t.task_id,
+         t.task_name,
+         t.end_time,
+         t.equip_type,
+         a.allot_id,
+         a.circle_id,
+         a.steppart_name
+	    from axx_step_task t
+	    join (select *
+	            from axx_step_equip_allot
+           where allot_id not in
+                 (select a1.allot_id
+                    from axx_step_equip_allot a1
+                   where a1.circle_id = 2
+                     and a1.delete_flag = 0
+                     and trunc(a1.create_time) between
+                         to_date(#{OneCircleBeginMonth}, 'yy-mm-dd') and
+                         to_date(#{OneCircleEndMonth}, 'yy-mm-dd')
+                  union
+                  select a2.allot_id
+                    from axx_step_equip_allot a2
+                   where a2.circle_id = 3
+                     and a2.delete_flag = 0
+                     and trunc(a2.create_time) between
+                         to_date(#{TwoCircleBeginMonth}, 'yy-mm-dd') and
+                         to_date(#{TwoCircleEndMonth}, 'yy-mm-dd'))) a on t.inspect_id = a.inspect_id
+                                                                      and a.circle_id = t.circle_id
+	   where a.delete_flag = 0
+	     and t.is_del = 0
+	     and t.end_time >= trunc(sysdate)
+	     and (t.equip_type is null or t.equip_type != #{equip_type})
+	</select>
+	
+	<!-- 查询地标任务的步巡段 -->
+	<select id="selLMStepPartTask" resultType="map" parameterType="map">
+	  select t.task_id,
+       t.task_name,
+       t.end_time,
+       t.equip_type,
+       a.allot_id,
+       t.circle_id,
+       a.steppart_name
+	  from axx_step_task t
+	  join (select * from axx_step_equip_allot
+	         where allot_id not in(select a1.allot_id
+	                  from axx_step_equip_allot a1
+	                 where a1.delete_flag = 0
+	                   and trunc(a1.create_time) between
+	                       to_date(#{LandMarkCircleBeginMonth}, 'yy-mm-dd') and
+	                       to_date(#{LandMarkCircleEndMonth}, 'yy-mm-dd'))) a on t.inspect_id = a.inspect_id
+	                                                                         and t.circle_id = #{circle_id}
+	 where a.delete_flag = 0
+	   and t.is_del = 0
+	   and t.end_time >= trunc(sysdate)
+	   and t.equip_type = #{equip_type}
+	</select>
+	
+   <!--查询步巡段中这条步巡段中是否包含地标  -->
+   <select id="selIsContainLandMark" parameterType="map" resultType="map">
+   	 select ale.equip_id,aste.equip_type,t.area_id,t.relay_id
+	 from(select startl."ORDER" start_order,endl."ORDER" end_order,
+	 a.area_id,a.cable_id,a.relay_id from axx_step_equip_allot a 
+	 join axx_line_equip startl on a.start_equip =startl.equip_id
+	 join axx_line_equip endl on a.end_equip = endl.equip_id
+	 where a.allot_id=#{ALLOT_ID})t join axx_line_equip ale on t.cable_id=ale.cable_id and
+	 t.relay_id=ale.relay_id join axx_step_tour_equip aste on ale.equip_id=aste.equip_id 
+	  <![CDATA[              
+	 and  aste.area_id=t.area_id  where t.start_order <= ale."ORDER"
+	 and t.end_order >= ale."ORDER" and aste.is_del=0 and aste.is_lose=0
+	 and aste.equip_type= #{EQUIP_TYPE}
+	  ]]>
+   </select>
+   
+   <!--查询任务点表中这条步巡段中是否包含地标-->
+   <select id="selIsContainLankMarkInEquip" parameterType="map" resultType="map">
+     select * from axx_step_task_equip te
+	  join axx_step_task t on te.task_id = t.task_id
+	  join axx_step_tour_equip e on te.equip_id = e.equip_id
+	  where t.end_time >= trunc(sysdate)
+	   and t.is_del = 0
+	   and te.allot_id = #{ALLOT_ID}
+	   and e.equip_type = #{EQUIP_TYPE}
+   </select>
+   
+   <!--查询这条步巡段中是否包含非地标点  -->
+   <select id="selIsContainNoLandMark" parameterType="map" resultType="map">
+   	 select ale.equip_id,aste.equip_type,t.area_id,t.relay_id
+	   from(select startl."ORDER" start_order,endl."ORDER" end_order,
+	   a.area_id,a.cable_id,a.relay_id from axx_step_equip_allot a 
+	   join axx_line_equip startl on a.start_equip =startl.equip_id
+	   join axx_line_equip endl on a.end_equip = endl.equip_id
+	   where a.allot_id=#{ALLOT_ID})t join axx_line_equip ale on t.cable_id=ale.cable_id and
+	   t.relay_id=ale.relay_id join axx_step_tour_equip aste on ale.equip_id=aste.equip_id     
+	   <![CDATA[             
+	   and  aste.area_id=t.area_id  where t.start_order <= ale."ORDER"
+	   and t.end_order >= ale."ORDER" and aste.is_del=0 and aste.is_lose=0
+	   and aste.equip_type <> #{EQUIP_TYPE}
+	   ]]>
+   </select>
+   
+   <!--查询任务点中这条步巡段中是否包含非地标点  -->
+   <select id="selIsContainNoLangMarkInEquip" parameterType="map" resultType="map">
+   	  select * from axx_step_task_equip te
+	   join axx_step_task t on te.task_id = t.task_id
+	   join axx_step_tour_equip e on te.equip_id = e.equip_id
+	   <![CDATA[ 
+	  where t.end_time >= trunc(sysdate)
+	    and t.is_del = 0
+	    and te.allot_id = #{ALLOT_ID}
+	    and e.equip_type <> #{EQUIP_TYPE}
+	    ]]>
+   </select>
+   
+   <!-- 插入步巡任务表非地标 -->
+   <insert id="insertStepPartTask" parameterType="map">
+   	insert into axx_step_task(task_id,task_name,start_time,end_time,
+   	area_id,inspect_id,circle_id)values(#{TASK_ID},#{TASK_NAME},
+   to_date(#{START_TIME},'yy-mm-dd'),to_date(#{END_TIME},'yy-mm-dd'),
+   #{AREA_ID},#{INSPECT_ID},#{CIRCLE_ID})
+   </insert>
+   
+   
+   <!-- 插入步巡任务表地标 -->
+   <insert id="insertLMStepPartTask" parameterType="map">
+   	insert into axx_step_task(task_id,task_name,start_time,end_time,
+   	area_id,inspect_id,circle_id,equip_type
+   	)values(#{TASK_ID},#{TASK_NAME},
+   to_date(#{START_TIME},'yy-mm-dd'),to_date(#{END_TIME},'yy-mm-dd'),
+   #{AREA_ID},#{INSPECT_ID},#{CIRCLE_ID},#{EQUIP_TYPE})
+   </insert>
+         
+   
+   <!-- 查询地标的周期 -->
+    <select id="selCircleByLandMark" resultType="String">
+      select p.param_value from axx_t_param p where p.param_name='landmarkstep' 
+    </select>
+    
+    <!-- 把多出来的地标设施点表插入到历史表中去 -->
+    <insert id="insertToTaskHis" parameterType="map">
+    	<![CDATA[ 
+	     insert into axx_step_task_equip_history
+		  select relate.task_id,
+		         relate.equip_id,
+		         relate.status,
+		         relate.complete_time,
+		         relate.allot_id,
+		         relate.create_time,
+		         asea1.update_time,
+		         asea1.updator
+		    from (select taske.equip_id
+		            from axx_step_task_equip taske
+		            join axx_step_tour_equip e on taske.equip_id = e.equip_id
+		            join axx_step_task task on taske.task_id = task.task_id
+		            join axx_step_equip_allot a on taske.allot_id = a.allot_id
+		           where taske.allot_id = #{ALLOT_ID}
+		             and task.is_del = 0
+		             and e.is_equip = 1
+		             and task.end_time >= trunc(sysdate)
+		             and a.delete_flag = 0
+		             and e.equip_type = #{EQUIP_TYPE}
+		          minus
+		          select ale.equip_id
+		            from (select startl."ORDER" start_order,
+		                         endl."ORDER" end_order,
+		                         a.area_id,
+		                         a.cable_id,
+		                         a.relay_id
+		                    from axx_step_equip_allot a
+		                    join axx_line_equip startl on a.start_equip =
+		                                                  startl.equip_id
+		                    join axx_line_equip endl on a.end_equip = endl.equip_id
+		                   where a.allot_id = #{ALLOT_ID}) t
+		            join axx_line_equip ale on t.cable_id = ale.cable_id
+		                                   and t.relay_id = ale.relay_id
+		            join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+		                                         and aste.area_id = t.area_id
+		           where t.start_order <= ale."ORDER"
+		             and t.end_order >= ale."ORDER"
+		             and aste.is_del = 0
+		             and aste.is_lose = 0
+		             and aste.is_equip = 1
+		             and aste.equip_type = #{EQUIP_TYPE}) rmequip
+		    join axx_step_task_equip relate on rmequip.equip_id = relate.equip_id
+		    join axx_step_task asts on relate.task_id = asts.task_id
+		    join axx_step_equip_allot asea1 on asea1.allot_id = relate.allot_id
+		   where asts.is_del = 0
+		     and asts.end_time >= trunc(sysdate)
+		     and relate.allot_id = #{ALLOT_ID}
+	   ]]>
+    </insert>
+    
+    <!-- 将多出来的非地标设施点插入到历史表中去 -->
+    <insert id="intoTaskHisNoLM" parameterType="map">
+     <![CDATA[
+	 insert into axx_step_task_equip_history
+	  select relate.task_id,
+	         relate.equip_id,
+	         relate.status,
+	         relate.complete_time,
+	         relate.allot_id,
+	         relate.create_time,
+	         asea1.update_time,
+	         asea1.updator
+	    from (select taske.equip_id
+	            from axx_step_task_equip taske
+	            join axx_step_tour_equip e on taske.equip_id = e.equip_id
+	            join axx_step_task task on taske.task_id = task.task_id
+	            join axx_step_equip_allot a on taske.allot_id = a.allot_id
+	           where taske.allot_id = #{ALLOT_ID}
+	             and task.is_del = 0
+	             and task.end_time >= trunc(sysdate)
+	             and a.delete_flag = 0
+	             and e.equip_type <> #{EQUIP_TYPE}
+	             and e.is_equip = 1
+	          minus
+	          select ale.equip_id
+	            from (select startl."ORDER" start_order,
+	                         endl."ORDER" end_order,
+	                         a.area_id,
+	                         a.cable_id,
+	                         a.relay_id
+	                    from axx_step_equip_allot a
+	                    join axx_line_equip startl on a.start_equip = startl.equip_id
+	                    join axx_line_equip endl on a.end_equip = endl.equip_id
+	                   where a.allot_id = #{ALLOT_ID}) t
+	            join axx_line_equip ale on t.cable_id = ale.cable_id and t.relay_id = ale.relay_id
+	            join axx_step_tour_equip aste on ale.equip_id = aste.equip_id and aste.area_id = t.area_id
+	           where t.start_order <= ale."ORDER"
+	             and t.end_order >= ale."ORDER"
+	             and aste.is_del = 0
+	             and aste.is_lose = 0
+	             and aste.is_equip = 1
+	             and aste.equip_type <> #{EQUIP_TYPE}) rmequip
+	    join axx_step_task_equip relate on rmequip.equip_id = relate.equip_id
+	    join axx_step_task asts on relate.task_id = asts.task_id
+	    join axx_step_equip_allot asea1 on asea1.allot_id = relate.allot_id
+	   where asts.is_del = 0
+	     and asts.end_time >= trunc(sysdate)
+	     and relate.allot_id = #{ALLOT_ID}
+     ]]>
+    </insert>
+    
+    
+    <delete id="delTaskEquipLM" parameterType="map">
+      <![CDATA[  
+       delete from axx_step_task_equip delte where exists (
+         select t.task_id, t.equip_id, t.allot_id
+          from (select relate.task_id,
+                       relate.equip_id,
+                       relate.status,
+                       relate.complete_time,
+                       relate.allot_id,
+                       relate.create_time,
+                       asea1.update_time,
+                       asea1.updator
+                  from (select taske.equip_id
+                          from axx_step_task_equip taske
+                          join axx_step_tour_equip e on taske.equip_id =
+                                                        e.equip_id
+                          join axx_step_task task on taske.task_id =
+                                                     task.task_id
+                          join axx_step_equip_allot a on taske.allot_id =
+                                                         a.allot_id
+                         where taske.allot_id = #{ALLOT_ID}
+                           and task.is_del = 0
+                           and task.end_time >= trunc(sysdate)
+                           and a.delete_flag = 0
+                           and e.equip_type = #{EQUIP_TYPE}
+                           and e.is_equip = 1
+                        minus
+                        select ale.equip_id
+                          from (select startl."ORDER" start_order,
+                                       endl."ORDER" end_order,
+                                       a.area_id,
+                                       a.cable_id,
+                                       a.relay_id
+                                  from axx_step_equip_allot a
+                                  join axx_line_equip startl on a.start_equip =
+                                                                startl.equip_id
+                                  join axx_line_equip endl on a.end_equip =
+                                                              endl.equip_id
+                                 where a.allot_id = #{ALLOT_ID}) t
+                          join axx_line_equip ale on t.cable_id = ale.cable_id
+                                                 and t.relay_id = ale.relay_id
+                          join axx_step_tour_equip aste on ale.equip_id =
+                                                           aste.equip_id
+                                                       and aste.area_id =
+                                                           t.area_id
+                         where t.start_order <= ale."ORDER"
+                           and t.end_order >= ale."ORDER"
+                           and aste.is_del = 0
+                           and aste.is_lose = 0
+                           and aste.is_equip = 1
+                           and aste.equip_type = #{EQUIP_TYPE}) rmequip
+                  join axx_step_task_equip relate on rmequip.equip_id =
+                                                     relate.equip_id
+                  join axx_step_task asts on relate.task_id = asts.task_id
+                  join axx_step_equip_allot asea1 on asea1.allot_id =
+                                                     relate.allot_id
+                 where asts.is_del = 0
+                   and asea1.delete_flag = 0
+                   and asts.end_time >= trunc(sysdate)
+                   and relate.allot_id = #{ALLOT_ID}) t
+         where t.task_id = delte.task_id
+           and t.equip_id = delte.equip_id
+           and t.allot_id = delte.allot_id)
+	  ]]>
+    </delete>
+    
+    <!-- 删除多余的非地标任务点 -->
+    <delete id="delTaskEquipNoLM" parameterType="map">
+     <![CDATA[
+     delete from axx_step_task_equip delte where exists
+ 		(select t.task_id, t.equip_id, t.allot_id
+          from (select relate.task_id,
+                       relate.equip_id,
+                       relate.status,
+                       relate.complete_time,
+                       relate.allot_id,
+                       relate.create_time,
+                       asea1.update_time,
+                       asea1.updator
+                  from (select taske.equip_id
+                          from axx_step_task_equip taske
+                          join axx_step_tour_equip e on taske.equip_id = e.equip_id
+                          join axx_step_task task on taske.task_id = task.task_id
+                          join axx_step_equip_allot a on taske.allot_id = a.allot_id
+                         where taske.allot_id = #{ALLOT_ID}
+                           and task.is_del = 0
+                           and task.end_time >= trunc(sysdate)
+                           and a.delete_flag = 0
+                           and e.equip_type <> #{EQUIP_TYPE}
+                           and e.is_equip = 1
+                        minus
+                        select ale.equip_id
+                          from (select startl."ORDER" start_order,
+                                       endl."ORDER" end_order,
+                                       a.area_id,
+                                       a.cable_id,
+                                       a.relay_id
+                                  from axx_step_equip_allot a
+                                  join axx_line_equip startl on a.start_equip = startl.equip_id
+                                  join axx_line_equip endl on a.end_equip = endl.equip_id
+                                 where a.allot_id = #{ALLOT_ID}) t
+                          join axx_line_equip ale on t.cable_id = ale.cable_id
+                                                 and t.relay_id = ale.relay_id
+                          join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+                                                       and aste.area_id = t.area_id
+                         where t.start_order <= ale."ORDER"
+                           and t.end_order >= ale."ORDER"
+                           and aste.is_del = 0
+                           and aste.is_lose = 0
+                           and aste.is_equip= 1
+                           and aste.equip_type <> #{EQUIP_TYPE}) rmequip
+                  join axx_step_task_equip relate on rmequip.equip_id = relate.equip_id
+                  join axx_step_task asts on relate.task_id = asts.task_id
+                  join axx_step_equip_allot asea1 on asea1.allot_id = relate.allot_id
+                 where asts.is_del = 0
+                   and asea1.delete_flag = 0
+                   and asts.end_time >= trunc(sysdate)
+                   and relate.allot_id = #{ALLOT_ID}) t
+         where t.task_id = delte.task_id
+           and t.equip_id = delte.equip_id
+           and t.allot_id = delte.allot_id)  
+     ]]>
+    </delete>
+    
+    <insert id="intoTaskEquipAddLM" parameterType="map">
+    <![CDATA[       
+     insert into axx_step_task_equip
+	  (task_id, equip_id, allot_id, create_time)
+	  select ast.task_id, t.equip_id, t.allot_id, sysdate
+	    from (select ale.equip_id,
+	                 t.allot_id,
+	                 t.inspect_id,
+	                 #{CIRCLE_ID} circle_id
+	            from (select startl."ORDER" start_order,
+	                         endl."ORDER" end_order,
+	                         a.inspect_id,
+	                         a.area_id,
+	                         a.cable_id,
+	                         a.relay_id,
+	                         a.allot_id
+	                    from axx_step_equip_allot a
+	                    join axx_line_equip startl on a.start_equip =
+	                                                  startl.equip_id
+	                    join axx_line_equip endl on a.end_equip = endl.equip_id
+	                   where a.allot_id = #{ALLOT_ID}) t
+	            join axx_line_equip ale on t.cable_id = ale.cable_id
+	                                   and t.relay_id = ale.relay_id
+	            join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+	                                            
+	                                         and aste.area_id = t.area_id
+	           where t.start_order <= ale."ORDER"
+	             and t.end_order >= ale."ORDER"
+	             and aste.is_del = 0
+	             and aste.is_equip= 1
+	             and aste.is_lose = 0
+	             and aste.equip_type = #{EQUIP_TYPE} 
+	          minus
+	          select taske.equip_id,
+	                 a.allot_id,
+	                 a.inspect_id,
+	                 #{CIRCLE_ID} circle_id
+	            from axx_step_task_equip taske
+	            join axx_step_tour_equip e on taske.equip_id = e.equip_id
+	            join axx_step_task task on taske.task_id = task.task_id
+	            join axx_step_equip_allot a on taske.allot_id = a.allot_id
+	                                       and task.inspect_id = a.inspect_id
+	                                       and task.circle_id = #{CIRCLE_ID}
+	           where taske.allot_id = #{ALLOT_ID}
+	             and task.is_del = 0
+	             and task.end_time >= trunc(sysdate)
+	             and a.delete_flag = 0
+	             and e.is_equip = 1
+	             and e.equip_type = #{EQUIP_TYPE} ) t
+	    join axx_step_task ast on ast.inspect_id = t.inspect_id
+	                          and ast.circle_id = t.circle_id
+	   where ast.end_time >= trunc(sysdate)
+	     and ast.is_del = 0
+	    ]]>
+    </insert>
+    
+    <!-- 插入设施任务表新的非地标步巡设施点 -->
+    <insert id="intoTaskEquipAddNoLM" parameterType="map">
+    <![CDATA[ 
+     insert into axx_step_task_equip
+	  (task_id, equip_id, allot_id, create_time)
+	  select ast.task_id, t.equip_id, t.allot_id, sysdate
+	    from (select ale.equip_id, t.allot_id, t.inspect_id, t.circle_id
+	            from (select startl."ORDER" start_order,
+	                         endl."ORDER" end_order,
+	                         a.inspect_id,
+	                         a.area_id,
+	                         a.cable_id,
+	                         a.relay_id,
+	                         a.allot_id,
+	                         a.circle_id
+	                    from axx_step_equip_allot a
+	                    join axx_line_equip startl on a.start_equip = startl.equip_id
+	                    join axx_line_equip endl on a.end_equip = endl.equip_id
+	                   where a.allot_id = #{ALLOT_ID}) t
+	            join axx_line_equip ale on t.cable_id = ale.cable_id
+	                                   and t.relay_id = ale.relay_id
+	            join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+	                                         and aste.area_id = t.area_id
+	           where t.start_order <= ale."ORDER"
+	             and t.end_order >= ale."ORDER"
+	             and aste.is_del = 0
+	             and aste.is_lose = 0
+	             and aste.is_equip= 1
+	             and aste.equip_type <> #{EQUIP_TYPE}
+	          minus
+	          select taske.equip_id, a.allot_id, a.inspect_id, a.circle_id
+	            from axx_step_task_equip taske
+	            join axx_step_tour_equip e on taske.equip_id = e.equip_id
+	            join axx_step_task task on taske.task_id = task.task_id
+	            join axx_step_equip_allot a on taske.allot_id = a.allot_id
+	                                       and task.inspect_id = a.inspect_id
+	                                       and task.circle_id = a.circle_id
+	           where taske.allot_id = #{ALLOT_ID}
+	             and task.is_del = 0
+	             and task.end_time >= trunc(sysdate)
+	             and a.delete_flag = 0
+	             and e.is_equip = 1
+	             and e.equip_type <> #{EQUIP_TYPE}) t
+	    join axx_step_task ast on ast.inspect_id = t.inspect_id
+	                          and ast.circle_id = t.circle_id
+	   where ast.end_time >= trunc(sysdate)
+	     and ast.is_del = 0
+     ]]>
+    </insert>
+    
+    <select id="selLMTypeId" resultType="String">
+    	select distinct equip_type_id from AXX_EQUIP_DANGER_PARAM where equip_type_name = '地标'
+    </select>
+    
+    <select id="selIsTaskByAllotID" parameterType="map" resultType="map">
+    	select a.inspect_id,a.allot_id,t.task_id from axx_step_equip_allot a join 
+		 axx_step_task t on a.inspect_id = t.inspect_id
+		 and a.circle_id = t.circle_id where a.allot_id=#{ALLOT_ID}
+		 <![CDATA[ 
+		 and (t.equip_type is null or t.equip_type <> #{EQUIP_TYPE})
+		 ]]>
+		 and a.delete_flag=0 and t.is_del=0 and t.end_time>= trunc(sysdate)
+    </select>
+    
+    <select id="selLMTaskByMap" resultType="map" parameterType="map">
+    	select a.inspect_id,a.allot_id,t.task_id from axx_step_equip_allot a join 
+		 axx_step_task t on a.inspect_id = t.inspect_id
+		 and t.circle_id =#{CIRCLE_ID} where a.allot_id=#{ALLOT_ID}
+		 and t.equip_type = #{EQUIP_TYPE}
+		 and a.delete_flag=0 and t.is_del=0 and t.end_time>= trunc(sysdate)
+    </select>
+	    
+    <select id="selPartNameByTaskID" parameterType="String" resultType="map">
+    	select distinct a.allot_id,a.steppart_name,t.task_id,t.task_name from axx_step_task t join 
+		 axx_step_task_equip te on t.task_id = te.task_id
+		 join axx_step_equip_allot a on te.allot_id=a.allot_id
+		 where t.task_id=#{task_id} and a.delete_flag=0 and t.is_del=0
+    </select>
+    
+    <select id="selEffectiveTaskByStaffID" parameterType="String" resultType="map">
+    	<![CDATA[
+       select t.task_id,t.task_name from axx_step_task t where t.inspect_id = #{staff_id} 
+      and t.is_del = 0  order by t.task_id
+    	]]>
+    </select>
+    
+    <select id="selFacType" resultType="map">
+       select distinct p.equip_type_id,p.equip_type_name from AXX_EQUIP_DANGER_PARAM p 
+       order by p.equip_type_id asc
+    </select>
+    
+    <select id="selErrorTypesByTypeID" parameterType="String" resultType="String">
+    	select danger_name from axx_equip_danger_param where equip_type_id = #{equip_type_id} order by check_field 
+    </select>
+    
+    <select id="selErrorNumber" parameterType="map" resultType="java.util.LinkedHashMap">
+    select count(1) test1,count(case when status=1 then 1 end) test2,
+    count(case when error_status=0 then 1 end) test3,count(case  when other_trouble is not null then 1 end) test4,
+     count(case when check_field1=1 then 1 end) test5,count(case when check_field2=1 then 1 end) test6,
+     count(case when check_field3=1 then 1 end) test7,count(case when check_field4=1 then 1 end) test8,
+     count(case when check_field5=1 then 1 end) test9,count(case when check_field6=1 then 1 end) test10,
+     count(case when check_field7=1 then 1 end) test11,count(case when check_field8=1 then 1 end) test12 
+   from (select t.*,row_number() over(partition by  task_id, equip_id order by  check_time desc) rn from (
+   select t.task_id,t.circle_id,taske.equip_id,taske.status,c.check_time,c.other_trouble,
+     nvl(c.status,911) error_status,nvl(check_field1,0) check_field1,nvl(check_field2,0) check_field2,
+     nvl(check_field3,0) check_field3,nvl(check_field4,0) check_field4,nvl(check_field5,0) check_field5, 
+     nvl(check_field6,0) check_field6,nvl(check_field7,0) check_field7,nvl(check_field8,0) check_field8 
+    from axx_step_task t join axx_step_task_equip taske on t.task_id = taske.task_id
+    join axx_step_tour_equip e on taske.equip_id = e.equip_id    and e.equip_type = #{equip_type_id}
+    and e.is_lose = 0
+     <![CDATA[
+    left join axx_equip_check c on c.equip_type =#{equip_type_id} and c.equip_id = taske.equip_id and taske.status = 1
+   and (trunc(c.check_time)  BETWEEN to_date(#{start_time},'yyyy-mm-dd')  AND  to_date(#{end_time},'yyyy-mm-dd'))
+     ]]>
+    where t.inspect_id = #{staff_id}  and 
+    <if test="task_id != null and task_id != ''">
+        t.task_id =#{task_id} and 
+    </if>
+    t.is_del = 0) t ) t2
+    where t2.rn = 1 
+    </select>
+    
+    <select id="IntoHisTaskEquipDelAllot" >
+    	insert into axx_step_task_equip_history
+		select te.task_id,te.equip_id,te.status,te.complete_time,te.allot_id,te.create_time,
+		 a.update_time,a.updator from axx_step_task_equip te join axx_step_equip_allot a on te.allot_id = a.allot_id
+		 where a.delete_flag = 1
+    </select>
+    
+	<delete id="delRelationTaskEquip" parameterType="int">
+	 
+		delete from axx_step_task_equip te where exists(
+		select e.*, a.update_time, a.updator
+		  from axx_step_task_equip e
+		  join axx_step_task t on e.task_id = t.task_id
+		  join axx_step_equip_allot a on e.allot_id = a.allot_id
+		  <![CDATA[
+		 where t.end_time >= trunc(sysdate)
+		  ]]>
+		   and a.delete_flag = 0
+		   and t.is_del = 0
+		   and e.equip_id = #{equip_id}
+		   and te.task_id = t.task_id
+		   and te.equip_id= e.equip_id
+		   and te.allot_id= e.allot_id)
+	  
+	</delete>
+	
+	<insert id="intoRelationTaskEquip" parameterType="int">
+	   insert into axx_step_task_equip_history
+		select e.*, a.update_time, a.updator
+		  from axx_step_task_equip e
+		  join axx_step_task t on e.task_id = t.task_id
+		  join axx_step_equip_allot a on e.allot_id = a.allot_id
+		  <![CDATA[
+		 where t.end_time >= trunc(sysdate)
+		 ]]>
+		   and a.delete_flag = 0
+		   and t.is_del = 0
+		   and e.equip_id = #{equip_id}
+	</insert>
+	
+	<insert id="intoHisNoRouteTaskEquip">
+	  <![CDATA[
+	  insert into axx_step_task_equip_history
+		select aste.*, a.update_time, a.updator
+		  from (select te.equip_id, te.allot_id
+		          from axx_step_task_equip te
+		          join axx_step_tour_equip e on te.equip_id = e.equip_id
+		          join axx_step_task t on te.task_id = t.task_id
+		          join axx_step_equip_allot a on te.allot_id = a.allot_id
+		         where e.is_equip = 0
+		           and e.is_lose = 0
+		           and t.is_del = 0
+		           and a.delete_flag = 0
+		           and t.end_time >= trunc(sysdate)
+		        minus
+		        select e2.equip_id, te2.allot_id
+		          from axx_step_task_equip te2
+		          join axx_step_tour_equip e2 on te2.equip_id = e2.relation_equip
+		          join axx_step_task t2 on te2.task_id = t2.task_id
+		         where e2.is_equip = 0
+		           and t2.end_time > = trunc(sysdate)) t
+		  join axx_step_task_equip aste on t.equip_id = aste.equip_id
+		                               and t.allot_id = aste.allot_id
+		  join axx_step_equip_allot a on aste.allot_id = a.allot_id
+		  join axx_step_task task on aste.task_id = task.task_id
+		 where task.end_time >= trunc(sysdate)
+		   and task.is_del = 0
+		   and a.delete_flag = 0
+		   ]]>
+	</insert>
+	 
+	<delete id="delNoRouteTaskEquip">
+	  <![CDATA[
+		delete from axx_step_task_equip aste2 where exists
+		 (select aste.*, a.update_time, a.updator
+		          from (select te.equip_id, te.allot_id
+		                  from axx_step_task_equip te
+		                  join axx_step_tour_equip e on te.equip_id = e.equip_id
+		                  join axx_step_task t on te.task_id = t.task_id
+		                  join axx_step_equip_allot a on te.allot_id = a.allot_id
+		                 where e.is_equip = 0
+		                   and e.is_lose = 0
+		                   and t.is_del = 0
+		                   and a.delete_flag = 0
+		                   and t.end_time >= trunc(sysdate)
+		                minus
+		                select e2.equip_id, te2.allot_id
+		                  from axx_step_task_equip te2
+		                  join axx_step_tour_equip e2 on te2.equip_id =
+		                                                 e2.relation_equip
+		                  join axx_step_task t2 on te2.task_id = t2.task_id
+		                 where e2.is_equip = 0
+		                   and t2.end_time > = trunc(sysdate)) t
+		          join axx_step_task_equip aste on t.equip_id = aste.equip_id
+		                                       and t.allot_id = aste.allot_id
+		          join axx_step_equip_allot a on aste.allot_id = a.allot_id
+		          join axx_step_task task on aste.task_id = task.task_id
+		         where task.end_time >= trunc(sysdate)
+		           and task.is_del = 0
+		           and a.delete_flag = 0
+		           and aste2.task_id = task.task_id
+		           and aste2.equip_id = aste.equip_id
+		           and aste2.allot_id = a.allot_id)
+		]]>
+	</delete>
+	
+	<insert id="intoTaskHisNoLMRoute" parameterType="map">
+	 <![CDATA[
+	  insert into axx_step_task_equip
+	  (task_id, equip_id, allot_id, create_time)
+	  select t.task_id, t.equip_id, a.allot_id, sysdate
+	    from (select e.equip_id, t.allot_id
+            from (select ale.equip_id,
+                         aste.equip_type,
+                         t.area_id,
+                         t.relay_id,
+                         t.allot_id
+                    from (select startl."ORDER" start_order,
+                                 endl."ORDER" end_order,
+                                 a.area_id,
+                                 a.cable_id,
+                                 a.relay_id,
+                                 a.allot_id
+                            from axx_step_equip_allot a
+                            join axx_line_equip startl on a.start_equip =
+                                                          startl.equip_id
+                            join axx_line_equip endl on a.end_equip =
+                                                        endl.equip_id
+                           where a.allot_id = #{ALLOT_ID}) t
+                    join axx_line_equip ale on t.cable_id = ale.cable_id
+                                           and t.relay_id = ale.relay_id
+                    join axx_step_tour_equip aste on ale.equip_id =
+                                                     aste.equip_id
+                                                 and aste.area_id = t.area_id
+                   where t.start_order <= ale."ORDER"
+                     and t.end_order >= ale."ORDER"
+                     and aste.is_del = 0
+                     and aste.is_lose = 0) t
+            join axx_step_tour_equip e on t.relay_id = e.relay_id
+                                      and t.equip_id = e.relation_equip
+           where e.is_lose = 0
+             and e.equip_type <> #{EQUIP_TYPE}
+             and e.is_equip = 0
+          minus
+          select te.equip_id, te.allot_id
+            from axx_step_task_equip te
+            join axx_step_tour_equip e on te.equip_id = e.equip_id
+            join axx_step_task t on te.task_id = t.task_id
+           where e.is_equip = 0
+             and e.is_lose = 0
+             and t.is_del = 0
+             and e.equip_type <> #{EQUIP_TYPE}
+             and te.allot_id = #{ALLOT_ID}
+             and t.end_time >= trunc(sysdate)) t
+	    join axx_step_equip_allot a on t.allot_id = a.allot_id
+	    join axx_step_task t on a.inspect_id = t.inspect_id
+	                        and a.circle_id = t.circle_id
+	   where a.delete_flag = 0
+	     and t.end_time >= trunc(sysdate)
+	     and t.is_del = 0
+	  ]]>
+	</insert>
+    
+    <insert id="intoTaskEquipAddLMRoute" parameterType="map">
+      <![CDATA[
+       insert into axx_step_task_equip
+  		(task_id, equip_id, allot_id, create_time)
+  		select t.task_id, t.equip_id, a.allot_id, sysdate
+    		from (select e.equip_id, t.allot_id
+             from (select ale.equip_id,
+                         aste.equip_type,
+                         t.area_id,
+                         t.relay_id,
+                         t.allot_id
+                    from (select startl."ORDER" start_order,
+                                 endl."ORDER" end_order,
+                                 a.area_id,
+                                 a.cable_id,
+                                 a.relay_id,
+                                 a.allot_id
+                            from axx_step_equip_allot a
+                            join axx_line_equip startl on a.start_equip =
+                                                          startl.equip_id
+                            join axx_line_equip endl on a.end_equip =
+                                                        endl.equip_id
+                           where a.allot_id = #{ALLOT_ID}) t
+                    join axx_line_equip ale on t.cable_id = ale.cable_id
+                                           and t.relay_id = ale.relay_id
+                    join axx_step_tour_equip aste on ale.equip_id =
+                                                     aste.equip_id
+                                                 and aste.area_id = t.area_id
+                   where t.start_order <= ale."ORDER"
+                     and t.end_order >= ale."ORDER"
+                     and aste.is_del = 0
+                     and aste.is_lose = 0) t
+            join axx_step_tour_equip e on t.relay_id = e.relay_id
+                                      and t.equip_id = e.relation_equip
+           where e.is_lose = 0
+             and e.equip_type = #{EQUIP_TYPE}
+             and e.is_equip = 0
+          minus
+          select te.equip_id, te.allot_id
+            from axx_step_task_equip te
+            join axx_step_tour_equip e on te.equip_id = e.equip_id
+            join axx_step_task t on te.task_id = t.task_id
+           where e.is_equip = 0
+             and e.is_lose = 0
+             and t.is_del = 0
+             and e.equip_type = #{EQUIP_TYPE}
+             and te.allot_id = #{ALLOT_ID}
+             and t.end_time >= trunc(sysdate)) t
+	    join axx_step_equip_allot a on t.allot_id = a.allot_id
+	    join axx_step_task t on a.inspect_id = t.inspect_id
+	                        and #{CIRCLE_ID} = t.circle_id
+	   where a.delete_flag = 0
+	     and t.end_time >= trunc(sysdate)
+	     and t.is_del = 0
+       ]]>
+    </insert>
+    
+    <!-- 删除不存在的路由点 -->
+	<delete id="delLostEquip">
+	  <![CDATA[
+	  	delete from axx_step_task_equip aste where exists(
+		select te.* from axx_step_task_equip te join axx_step_task t on te.task_id = t.task_id
+		 where t.end_time >= trunc(sysdate) and t.is_del = 0 
+		  and not exists(
+		    select * from axx_step_tour_equip e where e.equip_id = te.equip_id
+		  )
+		  and aste.task_id = te.task_id
+		  and aste.equip_id= te.equip_id
+		  and aste.allot_id= te.allot_id
+		  )
+	   ]]>
+	</delete>
+	
+	<!-- 删除未挂上路由点的非路由点 -->
+	<delete id="delLostEquipRouteEquip">
+	 <![CDATA[
+	  delete from axx_step_task_equip aste where exists(  
+		select te.*,e2.relation_equip from axx_step_task_equip te join axx_step_task t on te.task_id = t.task_id
+		 join axx_step_tour_equip e2 on te.equip_id = e2.equip_id 
+		 where t.end_time >= trunc(sysdate) and t.is_del = 0  and e2.is_equip = 0
+		  and not exists(
+		    select * from axx_step_tour_equip e where e.equip_id = e2.relation_equip
+		    and e.is_equip = 1  
+		  )
+		  and aste.task_id = te.task_id
+		  and aste.equip_id= te.equip_id
+		  and aste.allot_id= te.allot_id
+		  )
+	  ]]>	  
+	</delete>
+	
+	<!-- 插入非路由非地标的任务点根据步巡段 -->
+	<insert id="intoTaskNoRouthLmEquipByAllotID" parameterType="map">
+	 <![CDATA[
+		insert into axx_step_task_equip
+		    (task_id, equip_id, allot_id, create_time)
+		select t.task_id,e.equip_id,te.allot_id,sysdate
+		  from axx_step_task_equip te
+		  join axx_step_tour_equip e on te.equip_id = e.relation_equip
+		  join axx_step_equip_allot a on te.allot_id = a.allot_id
+		  join axx_step_task t on a.inspect_id = t.inspect_id and a.circle_id = t.circle_id
+		 where te.allot_id = #{allot_id}
+		   and e.equip_type <> #{equip_type}
+		   and t.end_time >= trunc(sysdate)
+		   and t.is_del = 0
+	 ]]>
+	</insert>
+	
+	<insert id="intoTaskRouthLmEquipByAllotID" parameterType="map">
+	 <![CDATA[
+	  insert into axx_step_task_equip
+	    (task_id, equip_id, allot_id, create_time)
+		select t.task_id,e.equip_id,te.allot_id,sysdate
+		  from axx_step_task_equip te
+		  join axx_step_tour_equip e on te.equip_id = e.relation_equip
+		  join axx_step_equip_allot a on te.allot_id = a.allot_id
+		  join axx_step_task t on a.inspect_id = t.inspect_id and t.circle_id = #{circle_id}
+		 where te.allot_id = #{allot_id}
+		   and e.equip_type = #{equip_type}
+		   and t.end_time >= trunc(sysdate)
+		   and t.is_del = 0
+	 ]]>	   
+	</insert>
+	
+	
+	<select id="getTaskTime" parameterType="map" resultType="map">
+		 select to_char(ast.start_time,'yyyy-mm-dd') start_time ,to_char(ast.end_time,'yyyy-mm-dd') end_time from axx_step_task ast  where ast.task_id=#{task_id}
+	</select>
+	
+	<!-- 查询当前步巡段中是否包含非路由非地标点 -->
+	<select id="selIsContainNoRouthLandMark" parameterType="map" resultType="map">
+		select * from (select ale.equip_id, aste.equip_type, t.area_id, t.relay_id
+          from (select startl."ORDER" start_order,
+                       endl."ORDER" end_order,
+                       a.area_id,
+                       a.cable_id,
+                       a.relay_id
+                  from axx_step_equip_allot a
+                  join axx_line_equip startl on a.start_equip =
+                                                startl.equip_id
+                  join axx_line_equip endl on a.end_equip = endl.equip_id
+                 where a.allot_id = #{ALLOT_ID}) t
+          join axx_line_equip ale on t.cable_id = ale.cable_id
+                                 and t.relay_id = ale.relay_id
+          join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+                                       and aste.area_id = t.area_id
+       <![CDATA[
+         where t.start_order <= ale."ORDER"
+           and t.end_order >= ale."ORDER"
+           and aste.is_del = 0
+           and aste.is_lose = 0) t
+	  	join axx_step_tour_equip e on t.relay_id = e.relay_id and t.equip_id = e.relation_equip
+	 	where e.is_lose = 0 and e.equip_type <> #{EQUIP_TYPE} and e.is_equip = 0	 
+	  ]]>
+   </select>
+   
+   <select id="selIsContainRouthLandMark" parameterType="map" resultType="map">
+      select e.* from (select ale.equip_id, aste.equip_type, t.area_id, t.relay_id
+          from (select startl."ORDER" start_order,
+                       endl."ORDER" end_order,
+                       a.area_id,
+                       a.cable_id,
+                       a.relay_id
+                  from axx_step_equip_allot a
+                  join axx_line_equip startl on a.start_equip =
+                                                startl.equip_id
+                  join axx_line_equip endl on a.end_equip = endl.equip_id
+                 where a.allot_id = #{ALLOT_ID}) t
+          join axx_line_equip ale on t.cable_id = ale.cable_id
+                                 and t.relay_id = ale.relay_id
+          join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+                                       and aste.area_id = t.area_id
+        <![CDATA[                                       
+         where t.start_order <= ale."ORDER"
+           and t.end_order >= ale."ORDER"
+           and aste.is_del = 0
+           and aste.is_lose = 0) t
+		  join axx_step_tour_equip e on t.relay_id = e.relay_id and t.equip_id = e.relation_equip
+		 where e.is_lose = 0 and e.equip_type = #{EQUIP_TYPE} and e.is_equip = 0
+      ]]>
+   </select>
+   
+   <select id="selTaskId" resultType="String">
+     select step_part_task_sequence.nextval from dual
+   </select>
+   
+   <!-- 查询步巡任务点中之前未过期任务的步巡点是否包含非地标 -->
+   <select id="selTaskEquipHasNoLM" parameterType="map" resultType="map">
+   	  select te.task_id, te.equip_id, te.allot_id, t.end_time, e.equip_type
+	  from axx_step_task_equip te, axx_step_task t, axx_step_tour_equip e
+		 where te.task_id = t.task_id
+		   and te.equip_id = e.equip_id
+		   and t.end_time >= sysdate
+		   and t.is_del = 0
+		   and te.allot_id = #{ALLOT_ID}
+		   and e.is_lose = 0
+		    <![CDATA[ 
+		   and e.equip_type <> #{EQUIP_TYPE}
+		   ]]>
+   </select>
+   
+   <!-- 查询步巡任务点中之前未过期任务的步巡点是否包含地标 -->
+   	<select id="selTaskEquipHasLM" parameterType="map" resultType="map">
+   	  select te.task_id, te.equip_id, te.allot_id, t.end_time, e.equip_type
+	  from axx_step_task_equip te, axx_step_task t, axx_step_tour_equip e
+		 where te.task_id = t.task_id
+		   and te.equip_id = e.equip_id
+		   and t.end_time >= sysdate
+		   and t.is_del = 0
+		   and te.allot_id = #{ALLOT_ID}
+		   and e.is_lose = 0
+		   and e.equip_type = #{EQUIP_TYPE}
+   </select>
+   
+   <!-- 凭借人员周期去查找未过期任务 -->
+   <select id="selTaskByPersionAndCircle" parameterType="map" resultType="map">
+   	 select * from axx_step_task t
+	 where t.inspect_id = #{INSPECT_ID}
+	   and t.circle_id = #{CIRCLE_ID}
+	   and t.end_time >= sysdate
+	   and t.is_del = 0
+   </select>
+   
+   <update id="upTaskIdFromTaskEquip" parameterType="map">
+   	update axx_step_task_equip te set te.task_id = #{task_id}
+	 where exists (select *
+	          from axx_step_task_equip e, axx_step_task t
+	         where e.task_id = t.task_id
+	           and allot_id = #{allot_id}
+	           and t.end_time >= sysdate
+	           and t.is_del = 0
+	           and t.circle_id = #{circle_id}
+	           and te.task_id = e.task_id
+	           and te.equip_id = e.equip_id
+	           and te.allot_id = e.allot_id)
+   </update>
+   
+   <insert id="intoHisTaskLMEquipNoRouth" parameterType="map">
+   <![CDATA[ 
+    insert into axx_step_task_equip_history
+	select relate.task_id,
+	       relate.equip_id,
+	       relate.status,
+	       relate.complete_time,
+	       relate.allot_id,
+	       relate.create_time,
+	       asea1.update_time,
+	       asea1.updator
+	  from (select te.equip_id, te.allot_id
+	          from axx_step_task_equip te
+	          join axx_step_tour_equip e on te.equip_id = e.equip_id
+	          join axx_step_task t on te.task_id = t.task_id
+	         where e.is_equip = 0
+	           and e.is_lose = 0
+	           and t.is_del = 0
+	           and e.equip_type = #{EQUIP_TYPE}
+	           and te.allot_id = #{ALLOT_ID}
+	           and t.end_time >= trunc(sysdate)
+	        minus
+	        select e.equip_id, t.allot_id
+	          from (select ale.equip_id,
+	                       aste.equip_type,
+	                       t.area_id,
+	                       t.relay_id,
+	                       t.allot_id
+	                  from (select startl."ORDER" start_order,
+	                               endl."ORDER" end_order,
+	                               a.area_id,
+	                               a.cable_id,
+	                               a.relay_id,
+	                               a.allot_id
+	                          from axx_step_equip_allot a
+	                          join axx_line_equip startl on a.start_equip =
+	                                                        startl.equip_id
+	                          join axx_line_equip endl on a.end_equip =
+	                                                      endl.equip_id
+	                         where a.allot_id = #{ALLOT_ID}) t
+	                  join axx_line_equip ale on t.cable_id = ale.cable_id
+	                                         and t.relay_id = ale.relay_id
+	                  join axx_step_tour_equip aste on ale.equip_id = aste.equip_id
+	                                               and aste.area_id = t.area_id
+	                 where t.start_order <= ale."ORDER"
+	                   and t.end_order >= ale."ORDER"
+	                   and aste.is_del = 0
+	                   and aste.is_lose = 0) t
+	          join axx_step_tour_equip e on t.relay_id = e.relay_id
+	                                    and t.equip_id = e.relation_equip
+	         where e.is_lose = 0
+	           and e.equip_type = #{EQUIP_TYPE}
+	           and e.is_equip = 0) rmequip
+	  join axx_step_task_equip relate on rmequip.equip_id = relate.equip_id
+	  join axx_step_task asts on relate.task_id = asts.task_id
+	  join axx_step_equip_allot asea1 on asea1.allot_id = relate.allot_id
+	 where asts.is_del = 0
+	   and asts.end_time >= trunc(sysdate)
+	   and relate.allot_id = #{ALLOT_ID}
+	   ]]>
+   </insert>
+   
+   <delete id="delHisTaskLMEquipNoRouth" parameterType="map">
+   <![CDATA[
+	 delete from axx_step_task_equip delte where exists
+ 	  (select t.task_id, t.equip_id, t.allot_id
+          from (select relate.task_id,
+                       relate.equip_id,
+                       relate.status,
+                       relate.complete_time,
+                       relate.allot_id,
+                       relate.create_time,
+                       asea1.update_time,
+                       asea1.updator
+                  from (select te.equip_id, te.allot_id
+                          from axx_step_task_equip te
+                          join axx_step_tour_equip e on te.equip_id =
+                                                        e.equip_id
+                          join axx_step_task t on te.task_id = t.task_id
+                         where e.is_equip = 0
+                           and e.is_lose = 0
+                           and t.is_del = 0
+                           and e.equip_type = #{EQUIP_TYPE}
+                           and te.allot_id = #{ALLOT_ID}
+                           and t.end_time >= trunc(sysdate)
+                        minus
+                        select e.equip_id, t.allot_id
+                          from (select ale.equip_id,
+                                       aste.equip_type,
+                                       t.area_id,
+                                       t.relay_id,
+                                       t.allot_id
+                                  from (select startl."ORDER" start_order,
+                                               endl."ORDER" end_order,
+                                               a.area_id,
+                                               a.cable_id,
+                                               a.relay_id,
+                                               a.allot_id
+                                          from axx_step_equip_allot a
+                                          join axx_line_equip startl on a.start_equip =
+                                                                        startl.equip_id
+                                          join axx_line_equip endl on a.end_equip =
+                                                                      endl.equip_id
+                                         where a.allot_id = #{ALLOT_ID}) t
+                                  join axx_line_equip ale on t.cable_id =
+                                                             ale.cable_id
+                                                         and t.relay_id =
+                                                             ale.relay_id
+                                  join axx_step_tour_equip aste on ale.equip_id =
+                                                                   aste.equip_id
+                                                               and aste.area_id =
+                                                                   t.area_id
+                                 where t.start_order <= ale."ORDER"
+                                   and t.end_order >= ale."ORDER"
+                                   and aste.is_del = 0
+                                   and aste.is_lose = 0) t
+                          join axx_step_tour_equip e on t.relay_id =
+                                                        e.relay_id
+                                                    and t.equip_id =
+                                                        e.relation_equip
+                         where e.is_lose = 0
+                           and e.equip_type = #{EQUIP_TYPE}
+                           and e.is_equip = 0) rmequip
+                  join axx_step_task_equip relate on rmequip.equip_id =
+                                                     relate.equip_id
+                  join axx_step_task asts on relate.task_id = asts.task_id
+                  join axx_step_equip_allot asea1 on asea1.allot_id =
+                                                     relate.allot_id
+                 where asts.is_del = 0
+                   and asts.end_time >= trunc(sysdate)
+                   and relate.allot_id = #{ALLOT_ID}) t
+         where t.task_id = delte.task_id
+           and t.equip_id = delte.equip_id
+           and t.allot_id = delte.allot_id)   
+           ]]>
+   </delete>
+   
+   <!-- 将多余的非路由非地标点备份到历史表中 -->
+   <insert id="intoHisTaskEquipNoRouthLM" parameterType="map">
+   <![CDATA[
+   	  insert into axx_step_task_equip_history
+	   select relate.task_id,
+	         relate.equip_id,
+	         relate.status,
+	         relate.complete_time,
+	         relate.allot_id,
+	         relate.create_time,
+	         asea1.update_time,
+	         asea1.updator
+	    from (select te.equip_id, te.allot_id
+	            from axx_step_task_equip te
+	            join axx_step_tour_equip e on te.equip_id = e.equip_id
+	            join axx_step_task t on te.task_id = t.task_id
+	           where e.is_equip = 0
+	             and e.is_lose = 0
+	             and t.is_del = 0
+	             and e.equip_type <> #{EQUIP_TYPE}
+	             and te.allot_id = #{ALLOT_ID}
+	             and t.end_time >= trunc(sysdate)
+	          minus
+	          select e.equip_id, t.allot_id
+	            from (select ale.equip_id,
+	                         aste.equip_type,
+	                         t.area_id,
+	                         t.relay_id,
+	                         t.allot_id
+	                    from (select startl."ORDER" start_order,
+	                                 endl."ORDER" end_order,
+	                                 a.area_id,
+	                                 a.cable_id,
+	                                 a.relay_id,
+	                                 a.allot_id
+	                            from axx_step_equip_allot a
+	                            join axx_line_equip startl on a.start_equip =
+	                                                          startl.equip_id
+	                            join axx_line_equip endl on a.end_equip =
+	                                                        endl.equip_id
+	                           where a.allot_id = #{ALLOT_ID}) t
+	                    join axx_line_equip ale on t.cable_id = ale.cable_id
+	                                           and t.relay_id = ale.relay_id
+	                    join axx_step_tour_equip aste on ale.equip_id =
+	                                                     aste.equip_id
+	                                                 and aste.area_id = t.area_id
+	                   where t.start_order <= ale."ORDER"
+	                     and t.end_order >= ale."ORDER"
+	                     and aste.is_del = 0
+	                     and aste.is_lose = 0) t
+	            join axx_step_tour_equip e on t.relay_id = e.relay_id
+	                                      and t.equip_id = e.relation_equip
+	           where e.is_lose = 0
+	             and e.equip_type <> #{EQUIP_TYPE}
+	             and e.is_equip = 0) rmequip
+	    join axx_step_task_equip relate on rmequip.equip_id = relate.equip_id
+	    join axx_step_task asts on relate.task_id = asts.task_id
+	    join axx_step_equip_allot asea1 on asea1.allot_id = relate.allot_id
+	   where asts.is_del = 0
+	     and asts.end_time >= trunc(sysdate)
+	     and relate.allot_id = #{ALLOT_ID}
+   	  ]]>
+   </insert>
+   
+	<!-- 将刚刚备份的非路由非地标任务点删除 -->
+   <delete id="delHisTaskEquipNoRouthLM" parameterType="map">
+	<![CDATA[
+      delete from axx_step_task_equip delte where exists
+		(select t.task_id, t.equip_id, t.allot_id
+          from (select relate.task_id,
+                       relate.equip_id,
+                       relate.status,
+                       relate.complete_time,
+                       relate.allot_id,
+                       relate.create_time,
+                       asea1.update_time,
+                       asea1.updator
+                  from (select te.equip_id, te.allot_id
+                          from axx_step_task_equip te
+                          join axx_step_tour_equip e on te.equip_id =
+                                                        e.equip_id
+                          join axx_step_task t on te.task_id = t.task_id
+                         where e.is_equip = 0
+                           and e.is_lose = 0
+                           and t.is_del = 0
+                           and e.equip_type <> #{EQUIP_TYPE}
+                           and te.allot_id = #{ALLOT_ID}
+                           and t.end_time >= trunc(sysdate)
+                        minus
+                        select e.equip_id, t.allot_id
+                          from (select ale.equip_id,
+                                       aste.equip_type,
+                                       t.area_id,
+                                       t.relay_id,
+                                       t.allot_id
+                                  from (select startl."ORDER" start_order,
+                                               endl."ORDER" end_order,
+                                               a.area_id,
+                                               a.cable_id,
+                                               a.relay_id,
+                                               a.allot_id
+                                          from axx_step_equip_allot a
+                                          join axx_line_equip startl on a.start_equip =
+                                                                        startl.equip_id
+                                          join axx_line_equip endl on a.end_equip =
+                                                                      endl.equip_id
+                                         where a.allot_id = #{ALLOT_ID}) t
+                                  join axx_line_equip ale on t.cable_id =
+                                                             ale.cable_id
+                                                         and t.relay_id =
+                                                             ale.relay_id
+                                  join axx_step_tour_equip aste on ale.equip_id =
+                                                                   aste.equip_id
+                                                               and aste.area_id =
+                                                                   t.area_id
+                                 where t.start_order <= ale."ORDER"
+                                   and t.end_order >= ale."ORDER"
+                                   and aste.is_del = 0
+                                   and aste.is_lose = 0) t
+                          join axx_step_tour_equip e on t.relay_id =
+                                                        e.relay_id
+                                                    and t.equip_id =
+                                                        e.relation_equip
+                         where e.is_lose = 0
+                           and e.equip_type <> #{EQUIP_TYPE}
+                           and e.is_equip = 0) rmequip
+                  join axx_step_task_equip relate on rmequip.equip_id =
+                                                     relate.equip_id
+                  join axx_step_task asts on relate.task_id = asts.task_id
+                  join axx_step_equip_allot asea1 on asea1.allot_id =
+                                                     relate.allot_id
+                 where asts.is_del = 0
+                   and asts.end_time >= trunc(sysdate)
+                   and relate.allot_id = #{ALLOT_ID}) t
+         where t.task_id = delte.task_id
+           and t.equip_id = delte.equip_id
+           and t.allot_id = delte.allot_id)
+	]]>
+   </delete>
+   
+   <select id="selStepStatisticsInLastCircle" parameterType="map" resultType="map">
+		select asts.statistics_id
+		  from axx_step_task_statistics asts
+		  join axx_step_task t on asts.task_id = t.task_id
+		  where trunc(t.start_time) = to_date(#{beginMonth},'yy-mm-dd')
+		  and trunc(t.end_time) = to_date(#{endMonth},'yy-mm-dd')
+		  and t.circle_id = #{circle}		   
+   </select>
+   
+   <insert id="intoStepStatistics" parameterType="map" >
+		insert into axx_step_task_statistics 
+	    select SEQ_STEP_TASK_STATISTICS.NEXTVAL,t.* from(
+	    select #{task_type} task_type,
+	           count(tt.equip_id) ALL_COUNT,
+	           count(case when tt.status = 1 then 1 end) FINISH_COUNT,
+	           count(case when tt.error_status = 0 then 1 end) issue_count,
+	           tt.task_id
+	      from(select * from (select row_number() over(partition by temp.equip_id,
+	         temp.task_id order by check_time desc) rn, temp.*
+	        from(select taske.equip_id,e.status error_status,taske.task_id,taske.status,e.check_time from 
+	       axx_step_task_equip taske join axx_step_task t on t.task_id = taske.task_id
+	       join axx_step_tour_equip aste on taske.equip_id = aste.equip_id
+	       left join axx_equip_check e on e.equip_id = taske.equip_id and
+	       (trunc(e.check_time) between to_date(#{beginMonth}, 'yy-mm-dd') and to_date(#{endMonth}, 'yy-mm-dd'))
+	       where t.circle_id = #{circle} and aste.is_del = 0
+	       and t.start_time = to_date(#{beginMonth}, 'yy-mm-dd')) temp) t where t.rn = 1) tt
+	       group by tt.task_id) t   		   		
+   </insert>
+	
+   <insert id="intoStepStatisticsType" parameterType="map">
+	 insert into axx_step_statistics_type
+	  select statistics_id,equip_type,count(case when check_field1 is not null then 1 end) check_field1,
+	     count(case when check_field2=1 then 1 end) check_field2,count(case when check_field3=1 then 1 end) check_field3,
+	     count(case when check_field4=1 then 1 end) check_field4,count(case when check_field5=1 then 1 end) check_field5,
+	     count(case when check_field6=1 then 1 end) check_field6,count(case when check_field7=1 then 1 end) check_field7,
+	     count(case when check_field8=1 then 1 end) check_field8,count(case  when other_trouble is not null then 1 end) other_trouble
+	   from (select row_number() over(partition by temp.equip_id,temp.task_id order by check_time desc) rn, temp.*
+	     from(select asts.statistics_id,taske.equip_id,e.status error_status,taske.task_id,taske.status,e.check_time,
+	      e.equip_type,e.check_field1,e.check_field2,e.check_field3,e.check_field4,
+	   e.check_field5,e.check_field6,e.check_field7,e.check_field8,e.other_trouble from 
+	     axx_step_task_equip taske join axx_step_task t on t.task_id = taske.task_id
+	     join axx_step_task_statistics asts on asts.task_id = t.task_id 
+	     join axx_step_tour_equip aste on aste.equip_id = taske.equip_id
+	     left join axx_equip_check e on e.equip_id = taske.equip_id and
+	     (trunc(e.check_time) between to_date(#{beginMonth}, 'yy-mm-dd') and to_date(#{endMonth}, 'yy-mm-dd'))
+	     where t.circle_id = #{circle} and aste.is_del = 0 and t.start_time = to_date(#{beginMonth}, 'yy-mm-dd')) temp) t
+	     where t.rn = 1 and t.status = 1 and t.error_status = 0
+	   group by t.statistics_id,t.equip_type    
+   </insert>
+   
+   <delete id="delStepStatisticsType" parameterType="map">
+     delete from  axx_step_statistics_type where statistics_id in(     
+		select asts.statistics_id
+		  from axx_step_task_statistics asts
+		  join axx_step_task t on asts.task_id = t.task_id
+		  where trunc(t.start_time) = to_date(#{beginMonth},'yy-mm-dd')
+		  and trunc(t.end_time) = to_date(#{endMonth},'yy-mm-dd')
+		  and t.circle_id = #{circle})
+   </delete>
+   
+   <delete id="delTaskStatistics" parameterType="map">
+   	delete from  axx_step_task_statistics where statistics_id in(     
+		select asts.statistics_id
+		  from axx_step_task_statistics asts
+		  join axx_step_task t on asts.task_id = t.task_id
+		  where trunc(t.start_time) = to_date(#{beginMonth},'yy-mm-dd')
+		  and trunc(t.end_time) = to_date(#{endMonth},'yy-mm-dd')
+		  and t.circle_id = #{circle})
+   </delete>
+	
+</mapper>

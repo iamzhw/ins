@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.cableCheck.dao.CheckReformOrderDao">
+
+	<select id="getMessageByTaskId" parameterType="int" resultType="map">
+		select distinct r.eqp_id,
+		                r.eqp_no,
+		                r.eqp_name,
+		                r.eqpaddress EQPADDRESS,
+		                r.comments,
+		                t.task_type,
+		                r.remark,
+		                t.info
+		  from tb_cablecheck_task       t,
+		       tb_cablecheck_record     r,
+		       tb_cablecheck_taskdetail td
+		 where t.task_id = td.task_id
+		   and r.record_id = td.inspect_object_id
+		   and t.task_id = #{taskId}
+		   and td.inspect_object_type = 0
+	</select>
+	<select id="getzgMessageByTaskId" parameterType="int" resultType="map">
+	              select * from (
+       select        r.eqp_id,
+                         r.eqp_no,
+		                r.eqp_name,
+		                r.eqpaddress EQPADDRESS,
+		                r.comments,
+                    t.task_type,
+                    r.create_staff,
+                    TO_CHAR(r.create_time, 'yyyy/mm/dd') create_time,
+                    r.info remark,
+                    t.info,
+                    t.shyj,
+                    r.descript,                
+                    r.record_type,
+                    r.record_id
+                    from tb_cablecheck_task     t
+       left join tb_cablecheck_record     r on
+       t.task_id = r.task_id
+       where r.port_no is null 
+       and r.record_type = 2
+       and t.task_id = #{taskId}
+       order by r.create_time desc ) t where rownum = 1
+       </select>
+	<select id="getPortMessage" parameterType="map" resultType="map">
+	select r.eqp_id eqp_id,
+	r.record_id,
+	e.equipment_code eqp_no,
+	e.equipment_name eqp_name,
+	e.res_type_id,
+	e.res_type,
+	r.port_id,
+	r.port_no,
+	r.port_name,
+	r.descript,
+	r.ischeckok,
+	tbs.staff_name,
+	r.record_type,
+	TO_CHAR(r.create_time, 'yyyy/mm/dd') create_time,
+	td.glbm,
+	td.glmc,
+	r.ish,
+	r.port_info,
+	r.company,
+	r.portrightposition,
+	r.portidrightposition,
+	r.eqpid_new,
+	r.eqpno_new,
+    r.changeportid,
+    r.changeportno,
+    r.changeeqpid,
+    r.changeeqpno
+	from TB_CABLECHECK_RECORD r
+	left join tb_cablecheck_task task
+	on r.task_id = task.task_id
+	left join TB_CABLECHECK_EQUIPMENT e
+	on r.eqp_id = e.equipment_id
+		AND R.EQP_NO=E.EQUIPMENT_CODE
+	left join tb_cablecheck_taskdetail td
+	on td.inspect_object_id = r.record_id
+	left join tb_base_staff tbs
+	on tbs.staff_id = r.create_staff
+	where r.task_id = #{taskId}
+	and r.port_id is not null
+	and r.record_type&lt;&gt; 2
+	and r.ischeckok=1
+	and r.port_id not in (
+	select distinct r.port_id from TB_CABLECHECK_RECORD r where r.record_type = 2
+	and r.ischeckok=0
+	and r.task_id=task.task_id
+	and r.port_id is not null)
+	<!-- <if test="company != null and company != ''">  
+	            <![CDATA[
+		    		AND r.company = #{company}
+		    	]]>
+			</if> -->
+	order by
+	to_number(regexp_substr(r.port_id, '[0-9]*[0-9]', 1)) asc,
+	to_number(regexp_substr(r.port_id, '[0-9]*[0-9]', 3)) asc
+	</select>
+	
+	<select id="getPortMessageZg" parameterType="map" resultType="map">
+	select r.eqp_id eqp_id,
+	r.record_id,
+	e.equipment_code eqp_no,
+	e.equipment_name eqp_name,
+	e.res_type_id,
+	e.res_type,
+	r.port_id,
+	r.port_no,
+	r.port_name,
+	r.descript,
+	r.ischeckok,
+	tbs.staff_name,
+	r.record_type,
+	TO_CHAR(r.create_time, 'yyyy/mm/dd') create_time,
+	td.glbm,
+	td.glmc,
+	r.ish,
+	r.port_info,
+	r.company,
+	r.portrightposition,
+	r.portidrightposition,
+	r.eqpid_new,
+	r.eqpno_new,
+    r.changeportid,
+    r.changeportno,
+    r.changeeqpid,
+    r.changeeqpno
+	from TB_CABLECHECK_RECORD r
+	left join tb_cablecheck_task task
+	on r.task_id = task.task_id
+	left join TB_CABLECHECK_EQUIPMENT e
+	on r.eqp_id = e.equipment_id
+		AND R.EQP_NO=E.EQUIPMENT_CODE
+	left join tb_cablecheck_taskdetail td
+	on td.inspect_object_id = r.record_id
+	left join tb_base_staff tbs
+	on tbs.staff_id = r.create_staff
+	where r.task_id = #{taskId}
+	and r.port_id is not null
+	and r.record_type= 2
+	and r.ischeckok=1
+	and r.port_id not in (
+	select distinct r.port_id from TB_CABLECHECK_RECORD r where r.record_type = 2
+	and r.ischeckok=0
+	and r.task_id=task.task_id
+	and r.port_id is not null)
+	<!-- <if test="company != null and company != ''">  
+	            <![CDATA[
+		    		AND r.company = #{company}
+		    	]]>
+			</if> -->
+	order by
+	to_number(regexp_substr(r.port_id, '[0-9]*[0-9]', 1)) asc,
+	to_number(regexp_substr(r.port_id, '[0-9]*[0-9]', 3)) asc
+	</select>
+		<select id="getcheckPortMessage" parameterType="map" resultType="map">
+	select distinct r.eqp_id,
+		       r.record_id,
+		       r.eqp_no,
+		       r.eqp_name,
+		       e.res_type_id,
+		       e.res_type,
+		       r.port_id,
+		       r.port_no,
+		       r.port_name,
+		       r.descript,
+		       r.ischeckok,
+		       td.glbm,
+		       tbs.staff_name,
+		       r.record_type,
+               TO_CHAR(r.create_time, 'yyyy/mm/dd') create_time,
+		       r.ish
+		  from TB_CABLECHECK_RECORD r
+		  left join TB_CABLECHECK_EQUIPMENT e
+		    on r.eqp_id = e.equipment_id
+		  left join tb_cablecheck_taskdetail td
+    		on td.inspect_object_id = r.record_id
+    		 left join tb_base_staff tbs
+        on tbs.staff_id = r.create_staff
+		 where  r.task_id = #{taskId}
+		   and r.port_id is not null
+		   and r.record_type &lt;&gt; 2
+		   and r.ischeckok=1
+		   and r.port_id = #{pordId}
+		</select>
+		<select id="getzgPortMessage" parameterType="map" resultType="map">
+	
+		select r.eqp_id,
+		       r.record_id,
+		       r.eqp_no,
+		       r.eqp_name,
+		       e.res_type_id,
+		       e.res_type,
+		       r.port_id,
+		       r.port_no,
+		       r.port_name,
+		       r.descript,
+		       r.ischeckok,
+		       td.glbm,
+		       tbs.staff_name,
+		       r.record_type,
+               TO_CHAR(r.create_time, 'yyyy/mm/dd') create_time,
+		       r.ish,
+		       r.port_info
+		  from TB_CABLECHECK_RECORD r
+		  left join TB_CABLECHECK_EQUIPMENT e
+		    on r.eqp_id = e.equipment_id
+		  left join tb_cablecheck_taskdetail td
+    		on td.inspect_object_id = r.record_id
+    		 left join tb_base_staff tbs
+        on tbs.staff_id = r.create_staff
+		 where  r.task_id = #{taskId}
+		   and r.port_id is not null
+		   and r.record_type = 2
+		   and r.port_id = #{pordId}
+		   </select>
+		   
+		   <select id="getzgPortMessageall" parameterType="map" resultType="map">
+	
+		select r.eqp_id,
+		       r.record_id,
+		       r.eqp_no,
+		       r.eqp_name,
+		       e.res_type_id,
+		       e.res_type,
+		       r.port_id,
+		       r.port_no,
+		       r.port_name,
+		       r.descript,
+		       r.ischeckok,
+		       td.glbm,
+		       tbs.staff_name,
+		       r.record_type,
+               TO_CHAR(r.create_time, 'yyyy/mm/dd') create_time,
+		       r.ish
+		  from TB_CABLECHECK_RECORD r
+		  left join TB_CABLECHECK_EQUIPMENT e
+		    on r.eqp_id = e.equipment_id
+		  left join tb_cablecheck_taskdetail td
+    		on td.inspect_object_id = r.record_id
+    		 left join tb_base_staff tbs
+        on tbs.staff_id = r.create_staff
+		 where  r.task_id = #{taskId}
+		   and r.port_id is not null
+		   and r.record_type = 2
+		   and r.ischeckok=1
+		   </select>
+	<select id="getEqpOrPortPhoto" parameterType="map" resultType="map">  
+	select distinct p.photo_id, p.photo_path, p.micro_photo_path
+		  from tb_cablecheck_taskdetail td,
+		       tb_cablecheck_photo_rel  rel,
+		       tb_cablecheck_photo      p
+		 where td.detail_id = rel.detail_id
+		   and rel.photo_id = p.photo_id
+		   and td.inspect_object_type = #{inspectObjectType}
+		   and td.task_id = #{taskId}
+	</select>
+	<select id="getzgEqpPhoto" parameterType="map" resultType="map">
+	     select p.photo_id, p.photo_path, p.micro_photo_path
+         from tb_cablecheck_record r ,
+              tb_cablecheck_photo_rel rel,
+              tb_cablecheck_photo  p
+        where r.record_id = rel.record_id 
+        and rel.photo_id = p.photo_id
+        and r.task_id = #{taskId}
+        and r.port_no is null 
+        </select>
+	<select id="getPortPhoto" parameterType="map" resultType="map">
+	     select      p.photo_id,
+                     p.photo_path,
+                     p.micro_photo_path,
+                     rel.object_type
+       from TB_CABLECHECK_RECORD    r,
+            tb_cablecheck_photo_rel rel,
+            tb_cablecheck_photo     p
+      where r.record_id = rel.record_id
+        and rel.photo_id = p.photo_id
+        and r.task_id =#{taskId}       
+        and r.port_id = #{portId}
+        and rel.object_type = 1
+		<!-- select distinct p.photo_id, p.photo_path, p.micro_photo_path,rel.object_type
+		  from tb_cablecheck_taskdetail td,
+		       TB_CABLECHECK_RECORD     r,
+		       tb_cablecheck_photo_rel  rel,
+		       tb_cablecheck_photo      p
+		 where r.record_id = td.inspect_object_id
+		   and td.detail_id = rel.detail_id
+		   and rel.photo_id = p.photo_id
+		   and r.port_id = #{portId}
+		   and td.task_id= #{taskId} -->
+	</select>
+	
+	
+	<select id="getzgPortPhoto" parameterType="map" resultType="map">
+	     select      p.photo_id,
+                     p.photo_path,
+                     p.micro_photo_path,
+                     rel.object_type
+       from TB_CABLECHECK_RECORD    r,
+            tb_cablecheck_photo_rel rel,
+            tb_cablecheck_photo     p
+      where r.record_id = rel.record_id
+        and rel.photo_id = p.photo_id
+        and r.task_id =#{taskId}       
+        and r.port_id = #{portId}
+        and rel.object_type = 2
+        and r.record_id = #{record_id}   
+		<!-- select distinct p.photo_id, p.photo_path, p.micro_photo_path,rel.object_type
+		  from tb_cablecheck_taskdetail td,
+		       TB_CABLECHECK_RECORD     r,
+		       tb_cablecheck_photo_rel  rel,
+		       tb_cablecheck_photo      p
+		 where r.record_id = td.inspect_object_id
+		   and td.detail_id = rel.detail_id
+		   and rel.photo_id = p.photo_id
+		   and r.port_id = #{portId}
+		   and td.task_id= #{taskId} -->
+	</select>
+	
+<select id="getGDList" parameterType="map" resultType="map">
+	SELECT DISTINCT NVL(SJ.GLMC, ' ') GLMC,
+                   	NVL(SJ.GLBH, ' ') GLBH,
+	                NVL(SJ.GDBH, ' ') GDBH,
+	                NVL(SJ.SGGH, ' ') SGGH,
+	                NVL(SJ.PZGH, ' ') PZGH,
+	                NVL(SJ.GQGH, ' ') GQGH,
+	                NVL(PT.NAME, ' ') XZ,
+	                NVL(TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD'), ' ') BDSJ
+	  FROM TB_CABLECHECK_DTSJ SJ
+	  LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+    	ON SJ.XZ=PT.PSO_TYPE_ID
+	 WHERE SJ.DZID = #{PORT_ID}
+	   AND SJ.SBID = #{EQP_ID}
+	   AND SJ.BDSJ &gt;= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') 
+	   AND SJ.BDSJ &lt;= TRUNC(LAST_DAY(ADD_MONTHS(SYSDATE, -1)))
+</select>
+
+	<select id="portErrorList" parameterType="map" resultType="map">
+	SELECT DISTINCT NVL(SJ.GLMC, ' ') GLMC,
+                   	NVL(SJ.GLBH, ' ') GLBH,
+	                NVL(SJ.GDBH, ' ') GDBH,
+	                NVL(SJ.SGGH, ' ') SGGH,
+	                NVL(SJ.PZGH, ' ') PZGH,
+	                NVL(SJ.GQGH, ' ') GQGH,
+	                NVL(PT.NAME, ' ') XZ,
+	                NVL(TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD'), ' ') BDSJ
+	  FROM TB_CABLECHECK_DTSJ SJ
+	  LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+    	ON SJ.XZ=PT.PSO_TYPE_ID
+	 WHERE SJ.DZID = #{PORT_ID}
+	   AND SJ.SBID = #{EQP_ID}
+	   AND SJ.BDSJ &gt;= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') 
+	   AND SJ.BDSJ &lt;= TRUNC(LAST_DAY(ADD_MONTHS(SYSDATE, -1)))
+</select>
+</mapper>

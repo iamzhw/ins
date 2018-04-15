@@ -1,0 +1,1042 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.CutAndConnOfFiberDao">
+	
+<!-- 	接头损耗及中继段测试记录表 -->
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select ri.*, atc.cable_name, atr.relay_name, a.name city_name
+  from RELAYTESTINFO ri
+ inner join AXX_T_CABLE atc
+    on ri.lineid = atc.cable_id
+ inner join AXX_T_RELAY atr
+    on ri.relayid = atr.relay_id
+ inner join area a
+    on ri.citykey = a.area_id
+ where 1 = 1
+    <if test="queryParams.localId !=null and queryParams.localId !=''">
+		and ri.cityKey= #{queryParams.localId}   
+    </if>
+    <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+		and ri.cityKey= #{queryParams.city_name}   
+    </if>
+    <if test="queryParams.min_date != null and queryParams.min_date != ''">
+    	and ri.testdate >= #{queryParams.min_date} 
+    </if>
+    <if test="queryParams.max_date != null and queryParams.max_date != ''">
+    	<![CDATA[
+    		and ri.testdate <= #{queryParams.max_date} 
+    	]]>
+    </if>
+    <if test="queryParams.cable_name!=null and queryParams.cable_name !=''">
+    	and atc.cable_id = #{queryParams.cable_name} 
+    </if>
+    <if test="queryParams.relay_name !=null and queryParams.relay_name !=''">
+    	and atr.relay_id = #{queryParams.relay_name} 
+    </if>
+    <if test="queryParams.relayinfoId !=null and queryParams.relayinfoId !=''">
+    	and ri.RELAYINFOID=#{queryParams.relayinfoId}
+    </if>
+	</select>
+	
+<!-- 	得到城市编号名称 -->
+	<select id="getCityInfo" resultType="map" parameterType="map">
+		select * from area where area_level =3 
+		<if test="localId != null and localId != ''">
+			and area_id = #{localId}
+		</if>
+	</select>
+	
+	<select id="getCityName" resultType="map" parameterType="map">
+		select a.area_id from area a where a.name =#{city_name}
+	</select>
+	<select id="getCableName" resultType="map" parameterType="map">
+		select a.cable_id from AXX_T_CABLE a where a.cable_name =#{cable_name} 
+	</select>
+	<select id="getRelayName" resultType="map" parameterType="map">
+		select a.relay_id from AXX_T_RELAY a where a.relay_name = #{relay_name} and a.cable_id=#{cable_id}
+	</select>
+<!-- 	通过城市areaId得到光缆集合 -->
+	<select id="getCable" resultType="map" parameterType="string">
+		select atc.cable_id,atc.cable_name,atca.area_id from 
+AXX_T_CABLE atc  left join AXX_T_CABLE_AREA atca on atc.cable_id=atca.cable_id
+                 left join area on atca.area_id=area.area_id 
+                where 1=1
+                <if test="_parameter != null and _parameter !=''">
+                	and area.area_id=#{_parameter}	
+                </if>		
+	</select>
+	
+	<select id="getRelay" resultType="map" parameterType="string"> 
+		select atc.cable_id, atr.relay_id, atr.relay_name
+  from  AXX_T_RELAY atr 
+  left join AXX_T_CABLE atc
+    on atc.cable_id = atr.cable_id
+ where 1=1 
+ 	<if test="_parameter !=null and _parameter !=''">
+ 		and atc.cable_id = #{_parameter}
+ 	</if>
+	</select>
+	
+	
+<!-- 	接头损耗及中继段测试记录表 详细信息数据源 -->
+	<select id="showRelayDetailInfo" resultType="map" parameterType="util.page.Query">
+		 select *
+   from (select ri.*, ri.relayinfoid id , atc.cable_name, atr.relay_name
+           from RELAYTESTINFO ri
+          inner join AXX_T_CABLE atc
+             on ri.lineid = atc.cable_id
+          inner join AXX_T_RELAY atr
+             on ri.relayid = atr.relay_id
+          where 1=1 
+          <if test="queryParams.relayinfoId !=null and queryParams.relayinfoId !=''">
+          	and ri.relayinfoid = #{queryParams.relayinfoId}
+          </if>
+          ) model
+  inner join RELAYTESTINFOSUB rs
+     on model.relayinfoid = rs.relayinfoid
+      <if test="queryParams.i_index !=null and queryParams.i_index !=''">
+          	and rs.I_INDEX = #{queryParams.i_index}
+      </if>
+	</select>
+	<!-- 	接头损耗及中继段测试记录表 详细信息数据源 报表导出 -->
+	<select id="exportTextInfoExcel" resultType="map" parameterType="map">
+		 select *
+   from (select ri.*, ri.relayinfoid id , atc.cable_name, atr.relay_name
+           from RELAYTESTINFO ri
+          inner join AXX_T_CABLE atc
+             on ri.lineid = atc.cable_id
+          inner join AXX_T_RELAY atr
+             on ri.relayid = atr.relay_id
+          where 1=1 
+          <if test="relayinfoId !=null and relayinfoId !=''">
+          	and ri.relayinfoid = #{relayinfoId}
+          </if>
+          ) model
+  inner join RELAYTESTINFOSUB rs
+     on model.relayinfoid = rs.relayinfoid
+	</select>
+	
+	
+	<delete id="delTestDetail" parameterType="map">
+		<if test="relayinfoId !=null and relayinfoId != '' ">
+			delete from RELAYTESTINFOSUB where RELAYINFOID=#{relayinfoId}	
+		</if>
+		<if test="allIndex !=null and allIndex !='' ">
+			and I_INDEX = #{allIndex}
+		</if>
+		
+	</delete>
+	
+	<delete id="delTest" parameterType="string">
+		<if test="_parameter !=null and _parameter != '' ">
+			delete from RELAYTESTINFO where RELAYINFOID=#{_parameter}	
+		</if>   
+	</delete>
+	
+	
+	
+	
+<!--  	干线光缆割接记录表查询数据源 -->
+	<select id="getCuttingRecordOfFiber" parameterType="util.page.Query" resultType="map">
+		select 
+		    flr.ID,                   
+   flr.CUTOVERDATE,
+   flr.OLDFIBERNAME,         
+   flr.NEWFIBERNAME,        
+   flr.FIBERJG,              
+   flr.OLDXINNAME,           
+   flr.NEWXINNAME,           
+   flr.OLDFIBERXINSP,        
+   flr.NEWFIBERXINSP,        
+   flr.OLDCUTOVERLENGTH,     
+   flr.NEWCUTOVERLENGTH,    
+   flr.CHANGELENGTH,         
+   to_char(flr.CHANGEDATE,'yyyy-mm-dd hh24:mi:ss') CHANGEDATE,           
+   to_char(flr.FIBERCURDATE,'yyyy-mm-dd hh24:mi:ss') FIBERCURDATE,
+   to_char( flr.CURSTARTDATE,'yyyy-mm-dd hh24:mi:ss') CURSTARTDATE,     
+   to_char( flr.CURENDDATE,'yyyy-mm-dd hh24:mi:ss') CURENDDATE ,   
+   flr.DATEDISTAIN,     
+   to_char(flr.REGAINDATE,'yyyy-mm-dd hh24:mi:ss') REGAINDATE,
+   flr.LINEMINSUNHAO   ,     
+   flr.LINEMAXSUNHAO  ,      
+   flr.SUNHAO3   ,           
+   flr.SUNHAO5 ,             
+   flr.PEOPLENUMBER  ,       
+   flr.CURLEADER  ,          
+   flr.JWPEOPLES    ,        
+   flr.JWTESTPEOPLES   ,     
+   flr.JIFANG1    ,          
+   flr.JIFANG2,             
+   flr.JIFANG3   ,           
+   flr.CUROVERPEOPLENUMBER  ,
+   flr.CUROVERPEOPLES  ,     
+   flr.ZHENSHIPEO ,          
+   flr.RAOWUPEO,             
+   flr.QITAPEO  ,            
+   flr.TIANBIAOREN   ,       
+   flr.JIFANGNAME   ,        
+   flr.TESTER , 
+   to_char(flr.TESTDATE ,'yyyy-mm-dd hh24:mi:ss') TESTDATE    ,        
+   flr.CITYKEY ,      
+   flr.RELAYID,              
+   flr.LINEID  ,             
+		atc.cable_name, atr.relay_name,to_char(flr.CUTOVERDATE,'yyyy-mm-dd hh24:mi:ss') CUTDATE ,
+		 atr.fiberspectrum,atr.fibercorenum,atr.fiberpiecing,atr.fiberlengthatnow,atr.fibermanufacturer,atr.fibercoremanufacturer 
+  from FIBERLINEREPORT flr
+ left join AXX_T_CABLE atc
+    on flr.lineid = atc.cable_id
+ left join AXX_T_RELAY atr
+    on flr.RELAYID = atr.relay_id
+		where 1=1 
+	<if test="queryParams.id !=null and queryParams.id !=''">
+		and flr.ID= #{queryParams.id}   
+    </if>	
+    <if test="queryParams.localId !=null and queryParams.localId !=''">
+		and flr.cityKey= #{queryParams.localId}   
+    </if>
+     <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+		and flr.cityKey= #{queryParams.city_name}   
+    </if>
+    <if test="queryParams.min_date != null and queryParams.min_date != ''">
+    	and flr.CUTOVERDATE >= to_date(#{queryParams.min_date},'yyyy-mm-dd')   
+    </if>
+    <if test="queryParams.max_date != null and queryParams.max_date != ''">
+    	<![CDATA[
+    		and flr.CUTOVERDATE <= to_date(#{queryParams.max_date},'yyyy-mm-dd') 
+    	]]>
+    </if>
+    <if test="queryParams.cable_name!=null and queryParams.cable_name !=''">
+    	and atc.cable_id = #{queryParams.cable_name} 
+    </if>
+    <if test="queryParams.relay_name !=null and queryParams.relay_name !=''">
+    	and atr.relay_id = #{queryParams.relay_name} 
+    </if>
+    order by flr.CUTOVERDATE desc
+	</select>
+	
+	
+<!-- 	大台阶数据源 -->
+	<select id="getRecordOfSteps" resultType="map" parameterType="util.page.Query">  
+		select s.*, atc.cable_name, atr.relay_name,to_char(s.PLANDATE,'yyyy-mm-dd') PD,to_char(s.REALDATE,'yyyy-mm-dd') RD
+  from STEPS s
+ inner join AXX_T_CABLE atc
+    on s.lineid = atc.cable_id
+ inner join AXX_T_RELAY atr
+    on s.relayid = atr.relay_id
+ where 1 = 1 
+	<if test="queryParams.stepId !=null and queryParams.stepId !=''">
+		and s.STEPID= #{queryParams.stepId}   
+    </if>	
+    <if test="queryParams.localId !=null and queryParams.localId !=''">
+		and s.CITYKEY= #{queryParams.localId}   
+    </if>
+     <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+		and s.CITYKEY= #{queryParams.city_name}   
+    </if>
+    <if test="queryParams.min_date != null and queryParams.min_date != ''">
+    	and s.PLANDATE >= to_date(#{queryParams.min_date},'yyyy-mm-dd')   
+    </if>
+    <if test="queryParams.max_date != null and queryParams.max_date != ''">
+    	<![CDATA[
+    		and s.PLANDATE <= to_date(#{queryParams.max_date},'yyyy-mm-dd') 
+    	]]>
+    </if>
+    <if test="queryParams.cable_name!=null and queryParams.cable_name !=''">
+    	and s.LINEID = #{queryParams.cable_name} 
+    </if>
+    <if test="queryParams.relay_name !=null and queryParams.relay_name !=''">
+    	and s.RELAYID = #{queryParams.relay_name} 
+    </if>
+	</select>
+	
+<!-- 	中继段测试记录表修改操作 -->
+	<update id="updTestInfo" parameterType="map">
+		update RELAYTESTINFO 
+		<set>
+			<if test="relaydistance !=null ">
+				RELAYDISTANCE = #{relaydistance} 
+			</if>
+			<if test="testdate !=null ">
+				, TESTDATE = #{testdate}
+			</if>
+			<if test="place1 !=null ">
+				, PLACE1 = #{place1}
+			</if>
+			<if test="tester1 !=null ">
+				, TESTER1 = #{tester1}
+			</if>
+			<if test="testmeter1 !=null ">
+				, TESTMETER1 = #{testmeter1}
+			</if>
+			<if test="place2 !=null ">
+				, PLACE2 = #{place2}
+			</if>
+			<if test="tester2 !=null ">
+			    , TESTER2 = #{tester2}
+			</if>
+			<if test="testmeter2 !=null ">
+				, TESTMETER2 = #{testmeter2}
+			</if>
+			<if test="testform !=null ">
+				, TESTFORM = #{testform}
+			</if>
+			<if test="refraction !=null ">
+				, REFRACTION=#{refraction}
+			</if>
+		</set>
+		<where>
+			RELAYINFOID=#{relayinfoId}
+		</where>	
+	</update>
+	
+	
+	<!-- 	中继段测试详细信息表修改操作 -->
+	<update id="updTestDetailInfo" parameterType="map">
+		update RELAYTESTINFOSUB 
+		<set>
+			<if test="directiona1 !=null ">
+				DIRECTIONA1 = #{directiona1} 
+			</if>
+			<if test="directionb1 !=null ">
+				, DIRECTIONB1 = #{directionb1}
+			</if>
+			<if test="avg1 !=null ">
+				, AVG1 = #{avg1}
+			</if>
+			<if test="directiona2 !=null ">
+				, DIRECTIONA2 = #{directiona2}
+			</if>
+			<if test="directionb2 !=null ">
+				, DIRECTIONB2 = #{directionb2}
+			</if>
+			<if test="avg2 !=null ">
+				, AVG2 = #{avg2}
+			</if>
+			<if test="directiona3 !=null ">
+			    , DIRECTIONA3 = #{directiona3}
+			</if>
+			<if test="directionb3 !=null ">
+				, DIRECTIONB3 = #{directionb3}
+			</if>
+			<if test="avg3 !=null ">
+				, AVG3 = #{avg3}
+			</if>
+			<if test="directiona4 !=null ">
+				, DIRECTIONA4=#{directiona4}
+			</if>
+			<if test="directionb4 !=null ">
+				, DIRECTIONB4 = #{directionb4}
+			</if>
+			<if test="avg4 !=null ">
+				, AVG4 = #{avg4}
+			</if>
+			<if test="directiona5 !=null ">
+				, DIRECTIONA5=#{directiona5}
+			</if>
+			<if test="directionb5 !=null ">
+				, DIRECTIONB5 = #{directionb5}
+			</if>
+			<if test="avg5 !=null ">
+				, AVG5 = #{avg5}
+			</if>
+			<if test="directiona6 !=null ">
+				, DIRECTIONA6=#{directiona6}
+			</if>
+			<if test="directionb6 !=null ">
+				, DIRECTIONB6 = #{directionb6}
+			</if>
+			<if test="avg6 !=null">
+				, AVG6 = #{avg6}
+			</if>
+			<if test="beforedb !=null ">
+				, BEFOREDB=#{beforedb}
+			</if>
+			<if test="db !=null ">
+				, DB = #{db}
+			</if>
+			<if test="dbkm !=null ">
+				, DBKM = #{dbkm}
+			</if>
+		</set>
+		<where>
+			RELAYINFOID=#{relayinfoId} and I_INDEX = #{i_index}
+		</where>	
+	</update>
+	
+	
+<!-- 	光缆敏感信息表数据源 -->
+	<select id="getListOfSensitiveline" parameterType="util.page.Query" resultType="map">
+		select sl.*,
+       atr.relay_name,
+       atc.cable_name,
+       atr.fiberstructure,
+       atr.fibermanufacturer,
+       atr.fibercoremanufacturer,
+       atr.fiberspectrum,
+       atr.fiberlengthatcompleted,
+       atr.fiberlengthatnow,
+       atc.area_id
+  from SENSITIVELINE sl
+ inner join axx_t_relay atr
+    on sl.relayid = atr.relay_id
+ inner join axx_t_cable atc
+    on sl.lineid = atc.cable_id
+ inner join AXX_T_CABLE_AREA atca
+    on atca.cable_id=atc.cable_id
+ where 1=1 
+ 	<if test="queryParams.localId !=null and queryParams.localId !=''">
+		and atca.area_id= #{queryParams.localId}   
+    </if>
+    <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+		and atca.area_id= #{queryParams.city_name}   
+    </if>
+    <if test="queryParams.cable_name !=null and queryParams.cable_name !=''">
+    	and sl.lineid = #{queryParams.cable_name} 
+    </if>
+    <if test="queryParams.relay_name !=null and queryParams.relay_name !=''">
+    	and sl.relayid = #{queryParams.relay_name} 
+    </if>
+    <if test="queryParams.senstivesegname !=null and queryParams.senstivesegname !=''">
+    	and sl.SENSTIVESEGNAME like '%'||#{queryParams.senstivesegname}||'%'  
+    </if>
+	</select>
+	
+<!-- 	中继段测试信息新增 -->
+	<insert id="addTestInfo" parameterType="map">
+		insert into RELAYTESTINFO ( RELAYINFOID 
+		<if test="city_name !=null and city_name !=''">
+			,CITYKEY
+		</if>
+		<if test="cable_name !=null and cable_name !=''">
+			,LINEID 
+		</if>
+		<if test="relay_name !=null and relay_name !=''">
+			,RELAYID
+		</if>
+		<if test="testdate !=null and testdate !=''">
+			,TESTDATE
+		</if>
+		<if test="testform !=null">
+			,TESTFORM
+		</if>
+		<if test="place2 !=null ">
+			,PLACE2
+		</if>
+		<if test="place1 !=null">
+			,PLACE1
+		</if>
+		<if test="relaydistance !=null">
+			,RELAYDISTANCE
+		</if>
+		<if test="testmeter2 !=null">
+			,TESTMETER2
+		</if>
+		<if test="refraction !=null">
+			,REFRACTION
+		</if>
+		<if test="testmeter1 !=null">
+			,TESTMETER1
+		</if>
+		<if test="tester2 !=null">
+			,TESTER2
+		</if>
+		<if test="tester1 !=null">
+			,TESTER1 )
+		</if>
+		values(
+			seq_relaytestinfo.nextval
+		<if test="city_name !=null and city_name !=''">
+			,#{city_name}
+		</if>	
+		<if test="cable_name !=null and cable_name !=''">
+			,#{cable_name} 
+		</if>
+		<if test="relay_name !=null and relay_name !=''">
+			,#{relay_name}
+		</if>
+		<if test="testdate !=null and testdate !=''">
+			,#{testdate}
+		</if>
+		<if test="testform !=null">
+			,#{testform}
+		</if>
+		<if test="place2 !=null ">
+			,#{place2}
+		</if>
+		<if test="place1 !=null">
+			,#{place1}
+		</if>
+		<if test="relaydistance !=null">
+			,#{relaydistance}
+		</if>
+		<if test="testmeter2 !=null">
+			,#{testmeter2}
+		</if>
+		<if test="refraction !=null">
+			,#{refraction}
+		</if>
+		<if test="testmeter1 !=null">
+			,#{testmeter1}
+		</if>
+		<if test="tester2 !=null">
+			,#{tester2}
+		</if>
+		<if test="tester1 !=null">
+			,#{tester1} 
+		</if>
+		) 
+	</insert>
+	
+<!-- 	中继段测试详细信息新增操作 -->
+	<insert id="addTestDetailInfo" parameterType="map">
+		insert into RELAYTESTINFOSUB(
+			<if test="relayinfoId != null and relayinfoId !='' ">
+				  RELAYINFOID
+			</if>
+			<if test="directiona1 != null and directiona1 !='' ">
+				 , DIRECTIONA1
+			</if>
+			<if test="directionb1 != null and directionb1 !='' ">
+				,DIRECTIONB1
+			</if>
+			<if test="avg1 != null and avg1 !='' ">
+				,AVG1
+			</if>
+			<if test="directiona2 != null and directiona2 != '' ">
+				,DIRECTIONA2
+			</if>
+			<if test="directionb2 != null and directionb2 != '' ">
+				,DIRECTIONB2
+			</if>
+			<if test="avg2 != null and avg2 != '' ">
+				,AVG2
+			</if>
+			<if test="directiona3 != null and directiona3 != '' ">
+				,DIRECTIONA3
+			</if>
+			<if test="directionb3 != null and directionb3 != '' ">
+				,DIRECTIONB3
+			</if>
+			<if test="avg3 != null and avg3 != '' ">
+				,AVG3
+			</if>
+			<if test="directiona4 != null and directiona4 != '' ">
+				,DIRECTIONA4
+			</if>
+			<if test="directionb4 != null and directionb4 != '' ">
+				,DIRECTIONB4
+			</if>
+			<if test="avg4 != null and avg4 != '' ">
+				,AVG4
+			</if>
+			<if test="directiona5 != null and directiona5 != '' ">
+				,DIRECTIONA5
+			</if>
+			<if test="directionb5 != null and directionb5 != '' ">	
+				,DIRECTIONB5
+			</if>
+			<if test="avg5 != null and avg5 != '' ">
+				,AVG5
+			</if>
+			<if test="directiona6 != null and directiona6 != '' ">
+				,DIRECTIONA6
+			</if>
+			<if test="directionb6 != null and directionb6 != '' ">
+				,DIRECTIONB6
+			</if>
+			<if test="avg6 != null and avg6 != '' ">
+				,AVG6
+			</if>
+			<if test="beforedb != null and beforedb != '' ">
+				,BEFOREDB
+			</if>
+			<if test="db != null and db != '' ">
+				,DB
+			</if>
+			<if test="dbkm != null and dbkm != '' ">
+				,DBKM
+			</if>
+			    ,I_INDEX
+		) values (
+			<if test="relayinfoId != null and relayinfoId != '' ">
+				  #{relayinfoId}
+			</if>
+			<if test="directiona1 != null and directiona1 != '' ">
+				 ,#{directiona1}
+			</if>
+			<if test="directionb1 != null and directionb1 != '' ">
+				,#{directionb1}
+			</if>
+			<if test="avg1 != null and avg1 != '' ">
+				,#{avg1}
+			</if>
+			<if test="directiona2 != null and directiona2 != '' ">
+				,#{directiona2}
+			</if>
+			<if test="directionb2 != null and directionb2 != '' ">
+				,#{directionb2}
+			</if>
+			<if test="avg2 != null and avg2 != '' ">
+				,#{avg2}
+			</if>
+			<if test="directiona3 != null and directiona3 != '' ">
+				,#{directiona3}
+			</if>
+			<if test="directionb3 != null and directionb3 != '' ">
+				,#{directionb3}
+			</if>
+			<if test="avg3 != null and avg3 != '' ">
+				,#{avg3}
+			</if>
+			<if test="directiona4 != null and directiona4 != '' ">
+				,#{directiona4}
+			</if>
+			<if test="directionb4 != null and directionb4 != '' ">
+				,#{directionb4}
+			</if>
+			<if test="avg4 != null and avg4 != '' ">
+				,#{avg4}
+			</if>
+			<if test="directiona5 != null and directiona5 != '' ">
+				,#{directiona5}
+			</if>
+			<if test="directionb5 != null and directionb5 != '' ">	
+				,#{directionb5}
+			</if>
+			<if test="avg5 != null and avg5 != '' ">
+				,#{avg5}
+			</if>
+			<if test="directiona6 != null and directiona6 != '' ">
+				,#{directiona6}
+			</if>
+			<if test="directionb6 != null and directionb6 != '' ">
+				,#{directionb6}
+			</if>
+			<if test="avg6 != null and avg6 != '' ">
+				,#{avg6}
+			</if>
+			<if test="beforedb != null and beforedb != '' ">
+				,#{beforedb}
+			</if>
+			<if test="db != null and db != '' ">
+				,#{db}
+			</if>
+			<if test="dbkm != null and dbkm != '' ">
+				,#{dbkm}
+			</if>
+		       , seq_i_index.nextVal
+		)
+	</insert>
+	
+	<delete id="delRecordOfFiber" parameterType="map">
+		<if test="id !=null and id != ''">
+			delete from FIBERLINEREPORT where ID=#{id}
+		</if>
+	</delete>
+	
+	
+	<insert id="addRecordOfFiber" parameterType="map">
+		insert into FIBERLINEREPORT(
+			ID
+			<if test="localId != '' and localId != null"> 
+			,CITYKEY	
+			</if>
+			<if test="cable_name !='' and cable_name !=null">
+			,LINEID
+			</if>
+			<if test="cutdate !='' and cutdate!=null">
+			,CUTOVERDATE
+			</if>
+			<if test="relay_name!='' and relay_name!=null">
+			,RELAYID
+			</if>
+			<if test="fiberjg!='' and fiberjg!=null ">
+			,FIBERJG
+			</if>
+			<if test="oldfibername!='' and oldfibername!=null">
+			,OLDFIBERNAME
+			</if>
+			<if test="changedate !='' and changedate!=null ">
+			,CHANGEDATE
+			</if>
+			<if test="fiberspectrum !='' and fiberspectrum !=null">
+			,FIBERSPECTRUM
+			</if>
+			<if test="fiberlengthatnow!='' and fiberlengthatnow!=null">
+			,FIBERLENGTHATNOW
+			</if>
+			<if test="oldxinname!='' and oldxinname!=null">
+			,OLDXINNAME
+			</if>
+			<if test="fibercorenum!=''and fibercorenum!=null">
+			,FIBERCORENUM
+			</if>
+			<if test="fiberpiecing!='' and fiberpiecing!=null">
+			,FIBERPIECING
+			</if>
+			<if test="fibercurdate !='' and fibercurdate !=null">
+			,FIBERCURDATE
+			</if>
+			<if test="newfibername != '' and newfibername!=null">
+			,NEWFIBERNAME
+			</if>
+			<if test="curstartdate !='' and curstartdate!=null">
+			,CURSTARTDATE
+			</if>
+			<if test="newxinname!='' and newxinname!=null">
+			,NEWXINNAME
+			</if>
+			<if test="curstartdate!='' and curstartdate !=null">
+			,CURENDDATE
+			</if>
+			<if test="oldfiberxinsp!='' and oldfiberxinsp!=null">
+			,OLDFIBERXINSP
+			</if>
+			<if test="datedistain !='' and datedistain!=null">
+			,DATEDISTAIN
+			</if>
+			<if test="newfiberxinsp !='' and newfiberxinsp !=null">
+			,NEWFIBERXINSP
+			</if>
+			<if test="regaindate !='' and regaindate !=null">
+			,REGAINDATE
+			</if>
+			<if test="oldcutoverlength !='' and oldcutoverlength !=null ">
+			,OLDCUTOVERLENGTH
+			</if>
+			<if test="newcutoverlength !='' and newcutoverlength !=null">
+			,NEWCUTOVERLENGTH
+			</if>
+			<if test="lineminsunhao !='' and lineminsunhao !=null">
+			,LINEMINSUNHAO
+			</if>
+			<if test="sunhao3 !='' and sunhao3 != null">
+			,SUNHAO3
+			</if>
+			<if test="linemaxsunhao !='' and linemaxsunhao != null">
+			,LINEMAXSUNHAO
+			</if>
+			<if test="changelength !='' and changelength !=null">
+			,CHANGELENGTH
+			</if>
+			<if test="sunhao5 !='' and sunhao5 !=null ">
+			,SUNHAO5
+			</if>
+			<if test="tester !='' and tester !=null">
+			,TESTER
+			</if>
+			<if test="testdate !='' and testdate != null">
+			,TESTDATE
+			</if>
+			<if test="peoplenumber !='' and peoplenumber !=null">
+			,PEOPLENUMBER
+			</if>
+			<if test="curleader !='' and curleader !=null">
+			,CURLEADER
+			</if>
+			<if test="jwpeoples !='' and jwpeoples !=null">
+			,JWPEOPLES
+			</if>
+			<if test="jifang1 !='' and jifang1 !=null">
+			,JIFANG1
+			</if>
+			<if test ="jwtestpeoples !='' and jwtestpeoples != null">
+			,JWTESTPEOPLES
+			</if>
+			<if test="jifang2 !='' and jifang2 !=null">
+			,JIFANG2
+			</if>
+			<if test="curoverpeoplenumber !='' and curoverpeoplenumber !=null">
+			,CUROVERPEOPLENUMBER
+			</if>
+			<if test="jifang3 !='' and jifang3 !=null" >
+			,JIFANG3
+			</if>
+			<if test="curoverpeoples != '' and curoverpeoples != null">
+			,CUROVERPEOPLES
+			</if>
+			<if test="zhenshipeo !='' and zhenshipeo != null">
+			,ZHENSHIPEO
+			</if>
+			<if test ="raowupeo !='' and raowupeo !=null">
+			,RAOWUPEO
+			</if>
+			<if test="qitapeo !='' and qitapeo !=null">
+			,QITAPEO
+			</if>
+			<if test="tianbiaoren !='' and tianbiaoren!=null">
+			,TIANBIAOREN
+			</if>
+			<if test="jifangname !='' and jifangname !=null">
+			,JIFANGNAME
+			</if>
+		)
+		values(
+			seq_FIBERLINEREPORT_id.nextVal
+			<if test="localId != '' and localId != null"> 
+				,#{localId}
+			</if>
+			<if test="cable_name !='' and cable_name != null" >
+			,#{cable_name}
+			</if>
+			<if test="cutdate !='' and cutdate !=null" >
+			,to_date(#{cutdate},'yyyy-mm-dd hh24:mi:ss')
+			</if>
+			<if test ="relay_name !='' and relay_name != null" >
+			,#{relay_name}
+			</if>
+			<if test="fiberjg!=''and fiberjg!=null">
+			,#{fiberjg}
+			</if>
+			<if test="oldfibername!='' and oldfibername!=null">
+			,#{oldfibername}
+			</if>
+			<if test="changedate !='' and changedate !=null ">
+			,to_date(#{changedate},'yyyy-mm-dd hh24:mi:ss')
+			</if>
+			<if test="fiberspectrum!='' and fiberspectrum!=null">
+			,#{fiberspectrum}
+			</if>
+			<if test="fiberlengthatnow!=''and fiberlengthatnow!=null">
+			,#{fiberlengthatnow}
+			</if>
+			<if test="oldxinname!='' and oldxinname !=null">
+			,#{oldxinname}
+			</if>
+			<if test="fibercorenum!='' and fibercorenum !=null">
+			,#{fibercorenum}
+			</if>
+			<if test="fiberpiecing!='' and fiberpiecing !=null">
+			,#{fiberpiecing}
+			</if>
+			<if test="fibercurdate !='' and  fibercurdate !=null" >
+			,to_date(#{fibercurdate},'yyyy-mm-dd hh24:mi:ss')
+			</if>
+			<if test= "newfibername != '' and newfibername !=null">
+			,#{newfibername}
+			</if>
+			<if test ="curstartdate !='' and curstartdate !=null" >
+			,to_date(#{curstartdate},'yyyy-mm-dd hh24:mi:ss')
+			</if>
+			<if test ="newxinname != '' and newxinname !=null" >
+			,#{newxinname}
+			</if>
+			<if test="curenddate !='' and curenddate !=null" >
+			,to_date(#{curenddate},'yyyy-mm-dd hh24:mi:ss')
+			</if>
+			<if test="oldfiberxinsp !='' and oldfiberxinsp !=null" >
+			,#{oldfiberxinsp}
+			</if>
+			<if test="datedistain !='' and datedistain !=null" >
+			,#{datedistain}
+			</if>
+			<if test="newfiberxinsp !='' and newfiberxinsp !=null">
+			,#{newfiberxinsp}
+			</if>
+			<if test="regaindate !='' and regaindate !=null" >
+			,to_date(#{regaindate},'yyyy-mm-dd hh24:mi:ss')
+			</if>
+			<if test="oldcutoverlength !='' and oldcutoverlength !=null">
+			,#{oldcutoverlength}
+			</if>
+			<if test="newcutoverlength !='' and newcutoverlength !=null">
+			,#{newcutoverlength}
+			</if>
+			<if test="lineminsunhao != '' and lineminsunhao != null">
+			,#{lineminsunhao}
+			</if>
+			<if test="sunhao3 !='' and sunhao3 !=null">
+			,#{sunhao3}
+			</if>
+			<if test="linemaxsunhao !='' and linemaxsunhao !=null">
+			,#{linemaxsunhao}
+			</if>
+			<if test="changelength !=''and changelength !=null">
+			,#{changelength}
+			</if>
+			<if test ="sunhao5 !='' and sunhao5 !=null">
+			,#{sunhao5}
+			</if>
+			<if test="tester !='' and tester !=null" >
+			,#{tester}
+			</if>
+			<if test="testdate !='' and  testdate !=null">
+			,to_date(#{testdate},'yyyy-mm-dd hh24:mi:ss')
+			</if>
+			<if test="peoplenumber !='' and peoplenumber !=null" >
+			,#{peoplenumber}
+			</if>
+			<if test ="curleader !='' and curleader !=null ">
+			,#{curleader}
+			</if>
+			<if test="jwpeoples !='' and jwpeoples !=null">
+			,#{jwpeoples}
+			</if>
+			<if test="jifang1 !='' and jifang1 !=null" >
+			,#{jifang1}
+			</if>
+			<if test="jwtestpeoples !='' and jwtestpeoples !=null " >
+			,#{jwtestpeoples}
+			</if>
+			<if test="jifang2 !='' and jifang2 !=null">
+			,#{jifang2}
+			</if>
+			<if test="curoverpeoplenumber !='' and curoverpeoplenumber !=null">
+			,#{curoverpeoplenumber}
+			</if>
+			<if test="jifang3 !='' and jifang3 !=null">
+			,#{jifang3}
+			</if>
+			<if test="curoverpeoples !='' and curoverpeoples !=null">
+			,#{curoverpeoples}
+			</if>
+			<if test="zhenshipeo !='' and zhenshipeo !=null">
+			,#{zhenshipeo}
+			</if>
+			<if test="raowupeo !='' and raowupeo !=null">
+			,#{raowupeo}
+			</if>
+			<if test="qitapeo !='' and qitapeo !=null">
+			,#{qitapeo}
+			</if>
+			<if test="tianbiaoren !='' and tianbiaoren !=null">
+			,#{tianbiaoren}
+			</if>
+			<if test="jifangname !='' and jifangname !=null">
+			,#{jifangname}
+			</if>
+		)
+	</insert>
+	
+	<update id="updRecordOfFiber" parameterType="map">
+		update FIBERLINEREPORT set
+			<if test="city_name != null and city_name != ''"> 
+				CITYKEY=#{city_name},	
+			</if>
+				LINEID=#{cable_name},CUTOVERDATE=to_date(#{cutdate},'yyyy-mm-dd hh24:mi:ss'),RELAYID=#{relay_name},CHANGEDATE=to_date(#{changedate},'yyyy-mm-dd hh24:mi:ss'),FIBERCURDATE=to_date(#{fibercurdate},'yyyy-mm-dd hh24:mi:ss'),NEWFIBERNAME=#{newfibername},CURSTARTDATE=to_date(#{curstartdate},'yyyy-mm-dd hh24:mi:ss'),NEWXINNAME=#{newxinname},CURENDDATE=to_date(#{curenddate},'yyyy-mm-dd hh24:mi:ss'),
+			OLDFIBERXINSP=#{oldfiberxinsp},DATEDISTAIN=#{datedistain},NEWFIBERXINSP=#{newfiberxinsp},REGAINDATE=to_date(#{regaindate},'yyyy-mm-dd hh24:mi:ss'),OLDCUTOVERLENGTH=#{oldcutoverlength},NEWCUTOVERLENGTH=#{newcutoverlength},LINEMINSUNHAO=#{lineminsunhao},
+			SUNHAO3=#{sunhao3},LINEMAXSUNHAO=#{linemaxsunhao},CHANGELENGTH=#{changelength},SUNHAO5=#{changelength},TESTER=#{tester},TESTDATE=to_date(#{testdate},'yyyy-mm-dd hh24:mi:ss'),PEOPLENUMBER=#{peoplenumber},CURLEADER=#{curleader},JWPEOPLES=#{jwpeoples},JIFANG1=#{jifang1},
+			JWTESTPEOPLES=#{jwtestpeoples},JIFANG2=#{jifang2},CUROVERPEOPLENUMBER=#{curoverpeoplenumber},JIFANG3=#{jifang3},CUROVERPEOPLES=#{curoverpeoples},ZHENSHIPEO=#{zhenshipeo},RAOWUPEO=#{raowupeo},QITAPEO=#{qitapeo},TIANBIAOREN=#{tianbiaoren},JIFANGNAME=#{jifangname} 
+		where ID=#{id} 
+	</update>
+	
+	<delete id="delStepData" parameterType="map">
+		delete from STEPS where STEPID=#{stepId}	
+	</delete>
+	
+	
+	<insert id="addStepData" parameterType="map">
+		insert into STEPS(
+			STEPID,DIRECTION,FIBERNO,STEPPLACE,LOSS,PLANDATE,REALDATE,RELAYID,LINEID
+			<if test="city_name !=null and city_name !=''">
+				,CITYKEY
+			</if>
+			<if test="localId !=null and localId !=''">
+				,CITYKEY
+			</if>
+		) values(
+			seq_STEPS_STEPID.nextVal,#{direction},#{fiberno},#{stepplace},#{loss},to_date(#{plandate},'yyyy-mm-dd'),to_date(#{realdate},'yyyy-mm-dd'),#{relay_name},#{cable_name}
+			<if test="city_name !=null and city_name !=''">
+				,#{city_name}
+			</if>
+			<if test="localId !=null and localId !=''">
+				,#{localId}
+			</if>
+		)
+	</insert>
+	
+	
+	<update id="updStepData" parameterType="map">
+		update STEPS set 
+			DIRECTION=#{direction},FIBERNO=#{fiberno},STEPPLACE=#{stepplace},LOSS=#{loss},PLANDATE=to_date(#{plandate},'yyyy-mm-dd'),REALDATE=to_date(#{realdate},'yyyy-mm-dd')
+			<if test="city_name !=null and city_name !=''">
+				,CITYKEY=#{city_name} 
+			</if>
+			,RELAYID=#{relay_name} 
+			,LINEID=#{cable_name}
+		 where STEPID=#{stepId}
+	</update>
+	<select id="selectRelayId" resultType="string" parameterType="map">
+		select * from area where area_level =3 
+	</select>
+	<select id="selectLineId" resultType="string" parameterType="map">
+		select t.cable_id from AXX_T_CABLE t where t.cable_name =#{A} 
+	</select>
+	<select id="selectCityId" resultType="string" parameterType="map">
+		select * from area t where t. =3 
+	</select>
+	<select id="exportFiberRecordExcel" resultType="map" parameterType="map">
+		select 
+			    flr.ID,                   
+	   flr.CUTOVERDATE,
+	   flr.OLDFIBERNAME,         
+	   flr.NEWFIBERNAME,        
+	   flr.FIBERJG,              
+	   flr.OLDXINNAME,           
+	   flr.NEWXINNAME,           
+	   flr.OLDFIBERXINSP,        
+	   flr.NEWFIBERXINSP,        
+	   flr.OLDCUTOVERLENGTH,     
+	   flr.NEWCUTOVERLENGTH,    
+	   flr.CHANGELENGTH,         
+	   to_char(flr.CHANGEDATE,'yyyy-mm-dd hh24:mi:ss') CHANGEDATE,           
+	   to_char(flr.FIBERCURDATE,'yyyy-mm-dd hh24:mi:ss') FIBERCURDATE,
+	   to_char( flr.CURSTARTDATE,'yyyy-mm-dd hh24:mi:ss') CURSTARTDATE,     
+	   to_char( flr.CURENDDATE,'yyyy-mm-dd hh24:mi:ss') CURENDDATE ,   
+	   flr.DATEDISTAIN,     
+	   to_char(flr.REGAINDATE,'yyyy-mm-dd hh24:mi:ss') REGAINDATE,
+	   flr.LINEMINSUNHAO   ,     
+	   flr.LINEMAXSUNHAO  ,      
+	   flr.SUNHAO3   ,           
+	   flr.SUNHAO5 ,             
+	   flr.PEOPLENUMBER  ,       
+	   flr.CURLEADER  ,          
+	   flr.JWPEOPLES    ,        
+	   flr.JWTESTPEOPLES   ,     
+	   flr.JIFANG1    ,          
+	   flr.JIFANG2,             
+	   flr.JIFANG3   ,           
+	   flr.CUROVERPEOPLENUMBER  ,
+	   flr.CUROVERPEOPLES  ,     
+	   flr.ZHENSHIPEO ,          
+	   flr.RAOWUPEO,             
+	   flr.QITAPEO  ,            
+	   flr.TIANBIAOREN   ,       
+	   flr.JIFANGNAME   ,        
+	   flr.TESTER , 
+	   to_char(flr.TESTDATE ,'yyyy-mm-dd hh24:mi:ss') TESTDATE    ,        
+	   flr.CITYKEY ,      
+	   flr.RELAYID,              
+	   flr.LINEID  ,             
+			atc.cable_name, atr.relay_name,to_char(flr.CUTOVERDATE,'yyyy-mm-dd hh24:mi:ss') CUTDATE ,
+			 atr.fiberspectrum,atr.fibercorenum,atr.fiberpiecing,atr.fiberlengthatnow,atr.fibermanufacturer,atr.fibercoremanufacturer 
+	  from FIBERLINEREPORT flr
+	 left join AXX_T_CABLE atc
+	    on flr.lineid = atc.cable_id
+	 left join AXX_T_RELAY atr
+	    on flr.RELAYID = atr.relay_id
+			where 1=1 
+	    <if test="localId !=null and localId !=''">
+			and flr.cityKey= #{localId}   
+	    </if>
+	     <if test="city_name !=null and city_name !=''">
+			and flr.cityKey= #{city_name}   
+	    </if>
+	    <if test="min_date != null and min_date != ''">
+	    	and flr.CUTOVERDATE >= to_date(#{min_date},'yyyy-mm-dd')   
+	    </if>
+	    <if test="max_date != null and max_date != ''">
+	    	<![CDATA[
+	    		and flr.CUTOVERDATE <= to_date(#{max_date},'yyyy-mm-dd') 
+	    	]]>
+	    </if>
+	    <if test="cable_name!=null and cable_name !=''">
+	    	and atc.cable_id = #{cable_name} 
+	    </if>
+	    <if test="relay_name !=null and relay_name !=''">
+	    	and atr.relay_id = #{relay_name} 
+	    </if>
+	    order by flr.CUTOVERDATE desc
+	</select>
+</mapper>

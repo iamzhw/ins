@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.roomInspection.dao.ClassDao">
+
+
+	<sql id="dynamicWhere">
+		<if
+			test="queryParams.CLASS_NAME != null and queryParams.CLASS_NAME != ''">  
+            <![CDATA[
+	    	AND tbc.CLASS_NAME like '%'||#{queryParams.CLASS_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND tbc.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tbc.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</sql>
+
+
+
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		SELECT tbc.class_id,
+		tbc.class_name,
+		a.name area_name,
+		b.name
+		son_area_name,
+		tbs.staff_name,
+		to_char(tbc.create_date,'yyyy-MM-dd') as
+		create_time
+		FROM tb_base_class tbc,
+		tb_base_staff tbs, AREA A, AREA B
+		WHERE tbc.AREA_ID = A.AREA_ID
+		AND tbc.SON_AREA_ID = B.AREA_ID
+		and
+		tbc.create_staff = tbs.staff_id
+		<include refid="dynamicWhere" />
+		ORDER BY tbc.AREA_ID, tbc.SON_AREA_ID
+	</select>
+
+	<select id="getClassModel" parameterType="int" resultType="map">
+		SELECT *
+		FROM tb_base_class tbc
+		WHERE tbc.class_id=#{id}
+		
+	</select>
+
+	<select id="getSonAreaListByClassId" parameterType="int"
+		resultType="map">
+		SELECT A.*
+		FROM AREA A, TB_BASE_CLASS F
+		WHERE A.PARENT_AREA_ID = F.AREA_ID
+		AND F.CLASS_ID = #{classId}
+		ORDER BY A.AREA_ID
+ 	</select>
+	<insert id="insert" parameterType="map">
+		INSERT INTO tb_base_class
+		(class_id,
+		class_name,
+		area_id,
+		son_area_id,
+		create_staff,
+		create_date)
+		VALUES
+		(SEQ_TB_base_class.Nextval,#{CLASS_NAME},#{AREA_ID},#{SON_AREA_ID},#{CREATE_STAFF},
+		SYSDATE)
+	</insert>
+
+
+	<update id="update" parameterType="map">
+		UPDATE tb_base_class F
+		SET
+		F.CLASS_NAME = #{CLASS_NAME},
+		F.AREA_ID =#{AREA_ID},
+		F.SON_AREA_ID
+		= #{SON_AREA_ID},
+		F.MODIFY_STAFF = #{MODIFY_STAFF},
+		F.MODIFY_DATE =
+		SYSDATE
+		WHERE F.CLASS_ID = #{CLASS_ID}
+	</update>
+
+	<delete id="delete" parameterType="int">
+		DELETE tb_base_class WHERE
+		class_id=#{id}
+	</delete>
+</mapper>

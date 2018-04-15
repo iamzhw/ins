@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.GisCompareDao">
+	<select id="query" parameterType="map" resultType="map">
+		 select a.name area,b.name son_area,g.grid_name ZHHWHWG,tb.equipment_id SBID,tb.equipment_code SBBM,tb.equipment_name SBMC,
+		 	   tb.address,tb.res_type,tb.longitude,tb.latitude,
+      		   tb.longitude_inspect,tb.latitude_inspect,f.staff_name STAFFID_INSPECTOR,
+      		   to_char(tb.staff_long_lati_time,'yyyy-mm-dd HH24:mi:ss') staff_long_lati_time
+		 from tb_cablecheck_equipment tb
+		       left join tb_cablecheck_grid g on g.grid_id=tb.grid_id
+		       left join area a on a.area_id=tb.parent_area_id
+		       left join area b on b.area_id=tb.area_id
+		       left join tb_base_staff f on f.staff_id=tb.staffid_inspector
+		 where tb.longitude_inspect is not null
+		 	<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	            <![CDATA[
+		    	AND TB.PARENT_AREA_ID=#{queryParams.area_id} 
+		    	]]>
+		    </if>
+		    <if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	            <![CDATA[
+		    	AND TB.AREA_ID=#{queryParams.son_area_id} 
+		    	]]>
+		    </if>
+		    <if test="queryParams.whwg != null and queryParams.whwg != ''">  
+	            <![CDATA[
+		    	AND TB.GRID_ID=#{queryParams.whwg} 
+		    	]]>
+		    </if>
+		    <if test="queryParams.sblx != null and queryParams.sblx != ''">  
+	            <![CDATA[
+		    	AND TB.RES_TYPE_ID=#{queryParams.sblx} 
+		    	]]>
+		    </if>
+		    <if test="queryParams.equipmentCode != null and queryParams.equipmentCode != ''">  
+	            <![CDATA[
+		    	AND TB.EQUIPMENT_CODE like '%'||#{queryParams.equipmentCode}||'%' 
+		    	]]>
+		    </if>
+		    <if test="queryParams.EQUIPMENT_NAME != null and queryParams.EQUIPMENT_NAME != ''">  
+	            <![CDATA[
+		    	AND TB.EQUIPMENT_NAME like '%'||#{queryParams.EQUIPMENT_NAME}||'%'
+		    	]]>
+		    </if>
+	</select>
+	
+	<select id="exportGis" parameterType="map" resultType="map">
+		 select a.name area,b.name son_area,g.grid_name ZHHWHWG,tb.equipment_id SBID,tb.equipment_code SBBM,tb.equipment_name SBMC,
+		 	   tb.address,tb.res_type,tb.longitude,tb.latitude,
+      		   tb.longitude_inspect,tb.latitude_inspect,f.staff_name STAFFID_INSPECTOR,
+      		   to_char(tb.staff_long_lati_time,'yyyy-mm-dd HH24:mi:ss') staff_long_lati_time
+		 from tb_cablecheck_equipment tb
+		       left join tb_cablecheck_grid g on g.grid_id=tb.grid_id
+		       left join area a on a.area_id=tb.parent_area_id
+		       left join area b on b.area_id=tb.area_id
+		       left join tb_base_staff f on f.staff_id=tb.staffid_inspector
+		 where tb.longitude_inspect is not null
+		 	<if test="area_id != null and area_id != ''">  
+	            <![CDATA[
+		    	AND TB.PARENT_AREA_ID=#{area_id} 
+		    	]]>
+		    </if>
+		    <if test="son_area_id != null and son_area_id != ''">  
+	            <![CDATA[
+		    	AND TB.AREA_ID=#{son_area_id} 
+		    	]]>
+		    </if>
+		    <if test="whwg != null and whwg != ''">  
+	            <![CDATA[
+		    	AND TB.GRID_ID=#{whwg} 
+		    	]]>
+		    </if>
+		    <if test="sblx != null and sblx != ''">  
+	            <![CDATA[
+		    	AND TB.RES_TYPE_ID=#{sblx} 
+		    	]]>
+		    </if>
+		    <if test="equipmentCode != null and equipmentCode != ''">  
+	            <![CDATA[
+		    	AND TB.EQUIPMENT_CODE like '%'||#{equipmentCode}||'%' 
+		    	]]>
+		    </if>
+		    <if test="EQUIPMENT_NAME != null and EQUIPMENT_NAME != ''">  
+	            <![CDATA[
+		    	AND TB.EQUIPMENT_NAME like '%'||#{EQUIPMENT_NAME}||'%'
+		    	]]>
+		    </if>
+	</select>
+</mapper>

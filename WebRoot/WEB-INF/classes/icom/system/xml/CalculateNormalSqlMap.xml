@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC 
+	"-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="icom.system.dao.CalculateNormalDao">
+	<select id="getCountForTaskPoint" parameterType="map" resultType="string">
+		select count(1) from TB_INS_UPLOAD_POINT p
+		<![CDATA[
+		where p.LONGITUDE >= #{LONGITUDE}-0.05 
+			  and p.LONGITUDE <= #{LONGITUDE}+0.05 
+			  and p.LATITUDE >= #{LATITUDE}-0.05 
+			  and p.LATITUDE <= #{LATITUDE}+0.05
+			  and p.UPLOAD_TIME >= to_date(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+			  and p.UPLOAD_TIME <= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+			  and p.UPLOAD_TIME = #{staffId}
+		]]>
+	</select>
+	
+	<select id="getUploadForTaskPoint" parameterType="map" resultType="map">
+		select p.LONGITUDE,p.LATITUDE from TB_INS_UPLOAD_POINT p
+		<![CDATA[
+		where p.UPLOAD_TIME  >=trunc(add_months(last_day(sysdate),-1)+1)
+			  and p.UPLOAD_TIME  <=last_day(sysdate)
+		]]>	  
+			  and p.UPLOAD_STAFF = #{staffId}
+			  order by p.UPLOAD_TIME asc
+	</select>
+	
+			<!-- select p.LONGITUDE,p.LATITUDE from TB_INS_UPLOAD_POINT p
+		<![CDATA[
+    	where p.UPLOAD_TIME  >=to_date(#{START_TIME}, 'yyyy-mm-dd HH24:MI:SS')
+        and p.UPLOAD_TIME  <=to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd HH24:MI:SS')
+        ]]>
+        and p.UPLOAD_STAFF in ( select sd.staff_id from TB_INS_STAFF_DEPT sd, TB_INS_STAFF_DEPT sdd where sd.dept_id=sdd.dept_id and sdd.staff_id=#{staffId} )
+        order by p.UPLOAD_TIME asc
+        -->
+	
+	<select id="getUploadForTaskPointByDept" parameterType="map" resultType="map">
+        select p.LONGITUDE,p.LATITUDE from TB_INS_UPLOAD_POINT p
+		join TB_INS_STAFF_DEPT sd on p.upload_staff=sd.staff_id
+		join tb_ins_staff_dept ds on ds.dept_id=sd.dept_id
+		<![CDATA[
+		where p.UPLOAD_TIME  >trunc(add_months(last_day(sysdate),-1)+1)
+		and p.UPLOAD_TIME  <=last_day(sysdate)
+		]]>
+		and ds.staff_id=#{staffId}
+		order by p.UPLOAD_TIME asc
+	</select>
+	
+	<select id="getCountStaffIdByDept" parameterType="map" resultType="int">
+		SELECT COUNT(DEPT_ID) ISDEPT FROM TB_INS_STAFF_DEPT WHERE STAFF_ID=#{staffId}
+	</select>
+	
+	<select id="getStartTimeByTaskId" parameterType="string" resultType="map">
+		select to_char(t.START_TIME,'yyyy-mm-dd hh24:mi:ss') START_TIME,
+			   to_char(t.COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') COMPLETE_TIME
+		from TB_INS_TASK t where t.TASK_ID=#{val}
+	</select>
+	
+	<select id="getPointsLocation" parameterType="string" resultType="map">
+		SELECT DISTINCT P.POINT_ID,P.LONGITUDE,P.LATITUDE
+          FROM TB_INS_LINE_POINT LP, TB_INS_POINT P,TB_INS_TASK_DETAIL TD
+         WHERE LP.POINT_ID = P.POINT_ID
+         <![CDATA[
+           AND P.POINT_TYPE <0
+         ]]>
+           AND LP.LINE_ID = TD.INSPECT_OBJECT_ID
+           AND TD.TASK_ID=#{VAL}
+	</select>
+	
+	<select id="getSignNormalPoint" parameterType="map" resultType="map" statementType="STATEMENT">
+	SELECT  TIP.POINT_ID,T.TASK_ID,LP.LINE_ID,tip.point_type,lp.point_seq,
+	<foreach collection="location" item="l" index="i" separator=",">
+	decode(sign(50-sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(tip.longitude,tip.latitude,0),null,null),
+	mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(${l.longitude},${l.latitude},0),null,null),1)),-1,0,1) ${l.DISTANCE}
+	</foreach>
+	FROM TB_INS_POINT TIP
+	JOIN TB_INS_LINE_POINT LP ON LP.POINT_ID=TIP.POINT_ID
+	JOIN TB_INS_LINE L ON L.LINE_ID=LP.LINE_ID
+	JOIN TB_INS_PLAN_DETAIL PD ON PD.INSPECT_OBJECT_ID=L.LINE_ID
+	JOIN TB_INS_PLAN P ON P.PLAN_ID=PD.PLAN_ID
+	JOIN TB_INS_TASK T ON T.PLAN_ID=P.PLAN_ID
+	<![CDATA[
+	WHERE P.PLAN_KIND =1
+	 AND T.START_TIME <= SYSDATE
+	 AND T.COMPLETE_TIME >= SYSDATE
+	 AND T.STATUS_ID<3
+	 AND L.LINE_TYPE IN (0,4)
+	 ]]>
+	 <if test="task_id!=null and task_id!=''">
+	 and T.TASK_ID=#{task_id}
+	 </if>
+	 AND (T.INSPECTOR=${staff_id} OR T.INSPECTOR in (SELECT DEPT_ID FROM TB_INS_STAFF_DEPT SD WHERE SD.STAFF_ID=${staff_id}))
+	 ORDER BY T.TASK_ID,LP.LINE_ID,LP.POINT_SEQ
+	</select>
+	
+	<insert id="addSignNormal" parameterType="map">
+	INSERT INTO TB_INS_RECORD_NORMAL(normal_id,point_id,task_id,staff_id,create_time,line_id,distance,timecount)
+   	VALUES(SEQ_TB_INS_RECORD_NORMAL.NEXTVAL,#{POINT_ID},#{TASK_ID},#{UPLOAD_STAFF},sysdate,#{LINE_ID},#{DISTANCE},#{TIMECOUNT})
+	</insert>
+	
+	<select id="countSignNormal" parameterType="map" resultType="int">
+	select count(1) from TB_INS_RECORD_NORMAL rn
+	  where rn.point_id= #{POINT_ID}
+	  and rn.task_id=#{TASK_ID}
+	  and rn.staff_id=#{UPLOAD_STAFF}
+	  and rn.cteate_time=to_date(#{UPLOAD_TIME},'yyyy-mm-dd hh24:mi:ss')
+	  and rn.line_id=#{LINE_ID}
+	  and rn.upload_id=#{UPLOAD_ID}
+	</select>
+	
+	<select id="getTaskIdByStaffId" parameterType="int" resultType="map">
+	SELECT TASK_ID,point_id FROM TB_INS_STAFF_TASK WHERE STAFF_ID=#{staff_id}
+	</select>
+	
+	<select id="getDistance" parameterType="map" resultType="float">
+	select round(1/count(lp.point_id)*nvl(l.length,0),2)*decode(sign(1-(
+	select count(1) from tb_ins_record_normal rn
+	where rn.task_id=#{TASK_ID} and rn.line_id=#{LINE_ID} and rn.point_id=#{POINT_ID} and rn.staff_id=#{UPLOAD_STAFF}
+	)),1,1,0) distance
+	FROM tb_ins_line_point lp
+	join tb_ins_line l on l.line_id=lp.line_id
+	where l.line_id=#{LINE_ID}
+	group by lp.line_id,l.length
+	</select>
+	
+	<!-- 计算与上一个点和上一个关键点的距离 -->
+	<select id="getDistanceForLinePoint" parameterType="map" resultType="map" statementType="STATEMENT">
+	select
+	nvl2(a.longitude,decode(sign(${normalD}-sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(nvl(a.longitude,0),nvl(a.latitude,0),0),null,null),
+	mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(${longitude},${latitude},0),null,null),1)),-1,0,1),1)
+	as last_point
+	,
+	round(sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(nvl(a.longitude,0),nvl(a.latitude,0),0),null,null),
+	mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(${longitude},${latitude},0),null,null),1),0) n_dis
+	,
+	nvl2(b.longitude,decode(sign(${keyD}-sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(nvl(b.longitude,0),nvl(b.latitude,0),0),null,null),
+	mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(${longitude},${latitude},0),null,null),1)),-1,0,1),1)
+	as last_key_point,
+	round(sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(nvl(b.longitude,0),nvl(b.latitude,0),0),null,null),
+	mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(${longitude},${latitude},0),null,null),1),0) k_dis
+	,
+	a.point_type
+	from
+	(select * from (
+	select lp.point_seq,p.longitude,p.latitude,p.point_type,lp.line_id from
+	tb_ins_line_point lp
+	join tb_ins_point p on p.point_id=lp.point_id
+	where lp.line_id=${line_id}
+	order by lp.point_seq desc) where rownum=1) a
+	left join (
+	select * from (
+	select lp.point_seq,p.longitude,p.latitude,p.point_type,lp.line_id from
+	tb_ins_line_point lp
+	join tb_ins_point p on p.point_id=lp.point_id
+	where lp.line_id=${line_id} and p.point_type>0
+	order by lp.point_seq desc) where rownum=1) b on b.line_id=a.line_id
+	</select>
+	<select id="getCablePoints" parameterType="map" resultType="map">
+	select lp.point_seq,p.point_id,p.longitude,p.latitude,p.point_type from
+	tb_ins_line_point lp
+	join tb_ins_point p on p.point_id=lp.point_id
+	where lp.line_id=#{lineId}
+	order by lp.point_seq
+	</select>
+	
+	<select id="getDistanceForNorSign" parameterType="map" resultType="float">
+	select min(round(1/count(lp.point_id)*nvl(l.length,0),2)*decode(sign(1-(
+	select count(1) from tb_ins_record_normal rn
+	where rn.task_id=#{TASK_ID} and rn.point_id=#{POINT_ID}
+	)),1,1,0)) distance
+	FROM tb_ins_line_point lp
+	join tb_ins_line l on l.line_id=lp.line_id
+	where lp.point_id=#{POINT_ID}
+	group by lp.line_id,l.length
+	</select>
+	
+	<insert id="addSignNorPoint" parameterType="map">
+		insert into tb_ins_record_normal
+  (normal_id,
+   point_id,
+   task_id,
+   staff_id,
+   create_time,
+   distance,
+   timecount,
+   longitude,
+   latitude)
+select 
+  seq_tb_ins_record_normal.nextval,
+   #{POINT_ID},
+   #{TASK_ID},
+   #{STAFF_ID},
+   SYSDATE,
+   #{DISTANCE},
+   2,
+   #{LONGITUDE},
+   #{LATITUDE} from dual
+     where not exists (
+ select 1 from tb_ins_record_normal where point_id=#{POINT_ID}
+ and task_id=#{TASK_ID}
+ and staff_id=#{STAFF_ID})
+	</insert>
+</mapper>

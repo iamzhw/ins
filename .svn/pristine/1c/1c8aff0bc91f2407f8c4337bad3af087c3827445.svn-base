@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.roomInspection.dao.RoomDao">
+
+	<select id="roomQuery" parameterType="util.page.Query"
+		resultType="map">
+		SELECT r.ROOM_ID,
+			r.ROOM_NAME,
+			t.ROOM_TYPE_NAME,
+			s.STAFF_NAME AS CHECK_STAFF,
+			r.LONGITUDE,
+			r.LATITUDE,
+			r.ADDRESS,
+			TO_CHAR(r.CREATE_DATE, 'yyyy-mm-dd') AS CREATE_DATE,
+			r.CREATE_BY,
+			TO_CHAR(r.MODIFY_DATE, 'yyyy-mm-dd') AS MODIFY_DATE,
+			r.MODIFY_BY,
+			r.ROOM_ID AS DETAIL_ID
+		FROM JFXJ_ROOM r, JFXJ_ROOM_TYPE t, TB_BASE_STAFF s
+		WHERE r.ROOM_TYPE_ID = t.ROOM_TYPE_ID
+			AND r.CHECK_STAFF_ID = s.STAFF_ID
+			AND r.STATUS=0 
+		<if test="queryParams.ROOM_NAME != null and queryParams.ROOM_NAME != ''">
+			AND r.ROOM_NAME LIKE '%'||#{queryParams.ROOM_NAME}||'%'
+		</if>
+		<if test="queryParams.ROOM_TYPE_ID != null and queryParams.ROOM_TYPE_ID != ''">
+			AND t.ROOM_TYPE_ID =  #{queryParams.ROOM_TYPE_ID}
+		</if>
+		<if test="queryParams.CHECK_STAFF != null and queryParams.CHECK_STAFF != ''">
+			AND s.STAFF_NAME LIKE '%'||#{queryParams.CHECK_STAFF}||'%'
+		</if>
+		<if test="queryParams.ADDRESS != null and queryParams.ADDRESS != ''">
+			AND r.ADDRESS LIKE '%'||#{queryParams.ADDRESS}||'%'
+		</if>
+		<if test="queryParams.LONGITUDE != null and queryParams.LONGITUDE != ''">
+			AND r.LONGITUDE = #{queryParams.LONGITUDE} 
+		</if>
+		<if test="queryParams.LATITUDE != null and queryParams.LATITUDE != ''">
+			AND r.LATITUDE = #{queryParams.LATITUDE} 
+		</if>
+		<if test="queryParams.CREATE_BY != null and queryParams.CREATE_BY != ''">
+			AND r.CREATE_BY LIKE '%'||#{queryParams.CREATE_BY}||'%'
+		</if>
+		<if test="queryParams.CREATE_DATE != null and queryParams.CREATE_DATE != ''">
+			AND r.CREATE_DATE = TO_DATE(#{queryParams.CREATE_DATE}, 'yyyy-mm-dd')
+		</if>
+		ORDER BY r.CREATE_DATE DESC
+	</select>
+	
+	<select id="queryRoombyRoomId" parameterType="int" resultType="map">
+		select jr.room_id,jr.room_name,jr.check_staff_id,tbs.staff_name,jr.room_type_id,jrt.room_type_name,jr.address,
+        	jr.longitude,jr.latitude,to_char(jr.create_date,'yyyy-mm-dd') create_date,jr.create_by, to_char(jr.modify_date,'yyyy-mm-dd') modify_date,
+       		jr.modify_by,jr.room_code,jr.area_id,a.name area_name,jr.son_area_id,b.name son_area_name 
+   		from jfxj_room jr,tb_base_staff tbs,jfxj_room_type jrt,area a,area b 
+		where jr.check_staff_id=tbs.staff_id and jr.room_type_id=jrt.room_type_id and a.area_id=jr.area_id
+   			 and b.area_id = jr.son_area_id and jr.room_id=#{roomId}
+	</select>
+	
+	<insert id="insertRoom" parameterType="map">
+		insert into jfxj_room (ROOM_ID, ROOM_NAME, ROOM_TYPE_ID,
+		 CHECK_STAFF_ID, LONGITUDE, LATITUDE, ADDRESS,
+		 CREATE_DATE, CREATE_BY, ROOM_CODE,AREA_ID,SON_AREA_ID,STATUS)
+		values (SEQ_ROOM_ID.Nextval, #{ROOM_NAME}, #{ROOM_TYPE_ID}, #{CHECK_STAFF_ID}, #{LONGITUDE}, #{LATITUDE},
+		 #{ADDRESS}, to_date(#{CREATE_DATE},'yyyy-mm-dd'), #{CREATE_BY}, #{ROOM_CODE},#{AREA_ID},#{SON_AREA_ID},0)
+	</insert>
+	
+	<update id="updateRoom" parameterType="map">
+		update jfxj_room jr set jr.room_name=#{ROOM_NAME},jr.room_type_id=#{ROOM_TYPE_ID},
+    		jr.check_staff_id=#{CHECK_STAFF_ID},jr.longitude=#{LONGITUDE},jr.latitude=#{LATITUDE},
+    		jr.address=#{ADDRESS},jr.modify_date=to_date(#{MODIFY_DATE},'yyyy-mm-dd'),
+    		jr.modify_by=#{MODIFY_BY},jr.room_code= #{ROOM_CODE},jr.area_id=#{AREA_ID},jr.son_area_id=#{SON_AREA_ID} 
+    		where jr.room_id=#{ROOM_ID}
+	</update>
+	
+	<delete id="deleteRoom" parameterType="map">
+		update jfxj_room set status=1 where room_id in (${ROOM_ID})
+	</delete>
+	
+	<select id="getAllRoomType" resultType="map">
+		SELECT ROOM_TYPE_ID, ROOM_TYPE_NAME FROM JFXJ_ROOM_TYPE
+	</select>
+	
+	<select id="getRoomTypes" resultType="map">
+		select a.* from JFXJ_ROOM_TYPE a order by a.ROOM_TYPE_ID
+	</select>
+
+</mapper>

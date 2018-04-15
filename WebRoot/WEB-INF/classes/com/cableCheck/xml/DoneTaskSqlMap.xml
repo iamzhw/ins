@@ -1,0 +1,1713 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.DoneTaskDao">
+	<!-- 动态查询条件 -->
+	<sql id="dynamicWhere_plan">
+		<if test="queryParams.STATUS_ID!= null and queryParams.STATUS_ID != ''">  
+            <![CDATA[
+	    	AND STATUS_ID like '%'||#{queryParams.STATUS_ID}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_NAME != null and queryParams.TASK_NAME != ''">  
+            <![CDATA[
+	    	AND TASK_NAME like '%'||#{queryParams.TASK_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_TYPE != null and queryParams.TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND TASK_TYPE like '%'||#{queryParams.TASK_TYPE}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.START_TIME!= null and queryParams.START_TIME != ''">  
+            <![CDATA[
+	    	AND START_TIME >= TO_DATE(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.COMPLETE_TIME != null and queryParams.COMPLETE_TIME != ''">  
+            <![CDATA[
+	    	AND trunc(START_TIME) <= TO_DATE(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND T.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND T.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.RES_TYPE_ID != null and  queryParams.RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TBC.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.WHWG != null and  queryParams.WHWG != ''">  
+            <![CDATA[
+	    		AND TBC.GRID_ID = #{queryParams.WHWG}
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere_plan_for_excel">
+		<if test="STATUS_ID!= null and STATUS_ID != ''">  
+            <![CDATA[
+	    	AND task.STATUS_ID like '%'||#{STATUS_ID}||'%' 
+	    	]]>
+		</if>
+		<if test="TASK_NAME != null and TASK_NAME != ''">  
+            <![CDATA[
+	    	AND task.TASK_NAME like '%'||#{TASK_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="TASK_TYPE != null and TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND task.TASK_TYPE like '%'||#{TASK_TYPE}||'%' 
+	    	]]>
+		</if>
+		<if test="START_TIME!= null and START_TIME != ''">  
+            <![CDATA[
+	    	AND task.START_TIME >= TO_DATE(#{START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if
+			test="COMPLETE_TIME != null and COMPLETE_TIME != ''">  
+            <![CDATA[
+	    	AND trunc(task.START_TIME) <= TO_DATE(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND task.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND task.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="taskIds != null and taskIds != ''">  
+            <![CDATA[
+	    	AND task.task_id in (${taskIds})
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere_plan_for_excelbyeqp">
+		<if test="STATUS_ID!= null and STATUS_ID != ''">  
+            <![CDATA[
+	    	AND STATUS_ID like '%'||#{STATUS_ID}||'%' 
+	    	]]>
+		</if>
+		<if test="TASK_NAME != null and TASK_NAME != ''">  
+            <![CDATA[
+	    	AND TASK_NAME like '%'||#{TASK_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="TASK_TYPE != null and TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND TASK_TYPE like '%'||#{TASK_TYPE}||'%' 
+	    	]]>
+		</if>
+		<if test="START_TIME!= null and START_TIME != ''">  
+            <![CDATA[
+	    	AND START_TIME >= TO_DATE(#{START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if
+			test="COMPLETE_TIME != null and COMPLETE_TIME != ''">  
+            <![CDATA[
+	    	AND trunc(START_TIME) <= TO_DATE(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND T.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if
+			test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND T.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="RES_TYPE_ID != null and  RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TBC.RES_TYPE_ID = #{RES_TYPE_ID}
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere_plan_order">
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+            	and a.area_id=#{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+            	and b.area_id=#{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="WHWG != null and WHWG != ''">  
+            <![CDATA[
+            	and tb.grid_id=#{WHWG}
+	    	]]>
+		</if>
+		<if test="STATUS_ID != null and STATUS_ID != ''">  
+            <![CDATA[
+            	and ts.status_id=#{STATUS_ID}
+	    	]]>
+		</if>
+		<if test="TASK_NAME != null and TASK_NAME != ''">  
+            <![CDATA[
+            	and ts.task_name like '%'||#{TASK_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="TASK_TYPE != null and TASK_TYPE != ''">  
+            <![CDATA[
+            	and ts.task_type =#{TASK_TYPE}
+	    	]]>
+		</if>
+		<if test="START_TIME != null and START_TIME != ''">  
+            <![CDATA[
+            	 and ts.start_time>=to_date(#{START_TIME},'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="COMPLETE_TIME !=null and COMPLETE_TIME != ''">  
+            <![CDATA[
+            	and trunc(ts.start_time)<=to_date(#{COMPLETE_TIME},'yyyy-mm-dd')
+	    	]]>
+		</if>
+		
+		<if test="C_START_TIME != null and C_START_TIME != ''">  
+            <![CDATA[
+            	and ts.actual_complete_time>=to_date(#{C_START_TIME},'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if
+			test="C_COMPLETE_TIME != null and C_COMPLETE_TIME != ''">  
+            <![CDATA[
+            	and trunc(ts.actual_complete_time)<=to_date(#{C_COMPLETE_TIME},'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="EQUIPMENT_CODE != null and  EQUIPMENT_CODE != ''">  
+            <![CDATA[
+            	and tb.equipment_code=#{EQUIPMENT_CODE}
+	    	]]>
+		</if>
+		<if test="INSPECTOR != null and  INSPECTOR != ''">  
+            <![CDATA[
+            	and f1.staff_name like '%'||#{INSPECTOR}||'%'
+	    	]]>
+		</if>
+		<if test="taskIds != null and  taskIds != ''">  
+            <![CDATA[
+            	and ts.task_id in(${taskIds})
+	    	]]>
+		</if>
+		<if test="SBLX != null and  SBLX != ''">  
+            <![CDATA[
+            	and tb.res_type_id=#{SBLX}
+	    	]]>
+		</if>
+	</sql>
+	<resultMap type="Map" id="photoMap">
+       <result column="photo_path" property="photo_path"/>
+	   <result column="micro_photo_path" property="micro_photo_path"/>
+	   <result column="record_type" property="record_type"/>
+	</resultMap>
+	<!-- 查询我的任务设备图片 -->
+	<resultMap id="myTaskEqpMap" type="Map" >
+        <result column="eqp_id" property="eqp_id"/>
+		<result column="eqp_no" property="eqp_no"/>
+		<result column="eqp_name" property="eqp_name"/>
+		<result column="eqpaddress" property="eqpaddress"/>
+		<result column="area_id" property="area_id"/>
+		<result column="son_area_id" property="son_area_id"/>
+		<result column="task_id" property="task_id"/>
+		<result column="record_type" property="record_type"/>
+		<result column="area_name" property="area_name"/>
+		<result column="son_area_name" property="son_area_name"/>
+		<result column="info" property="info"/>
+		<!-- 查询图片  --> 
+        <collection property="photoList" column="task_id" select="getPhotoByEqpId"></collection>
+	</resultMap>
+	<!-- 查询已办任务 -->
+	<select id="queryDoneTask" parameterType="map" resultType="map">
+		SELECT TASK_ID,TASK_NO,TASK_NAME,REMARK,AUDITOR,INSPECTOR,MAINTOR,ZHHWHWG,STATUS_ID,TASK_TYPE,SFZG,EQUIPMENT_CODE,RES_TYPE,GRID_ID,START_TIME,COMPLETE_TIME,ACTUAL_COMPLETE_TIME,LAST_UPDATE_TIME,TO_CHAR(CHECK_COMPLETE_TIME, 'yyyy-mm-dd hh24:mi:ss') CHECK_COMPLETE_TIME,AREA_ID,SON_AREA_ID, 
+		BEFORE_CHECK,BEFORE_CHECK_H,CHECKED,CHECKED_H,ERROE_CHECK,ERROE_CHECK_H,
+		decode(CHECKED,0 ,0,round(((CHECKED-ERROE_CHECK)/CHECKED),4)*100) || '%' CHECKED_ERROE_CHECK
+		FROM (SELECT ROW_NUMBER() OVER(PARTITION BY modelA.task_id ORDER BY modelA.CHECK_COMPLETE_TIME DESC) rn,       
+          modelA.*      
+          FROM (select
+			T.TASK_ID,T.TASK_NO,T.TASK_NAME ,R.REMARK,S3.STAFF_NAME AUDITOR,S1.STAFF_NAME INSPECTOR,S2.STAFF_NAME MAINTOR,
+			case STATUS_ID
+				when 4 then '问题上报,待派单'
+				when 5 then '退单,待派单'
+				when 6 then '待回单'
+				when 7 then '已整改回单,待审核'
+				when 8 then '已归档'
+			end STATUS_ID,
+			case TASK_TYPE
+				when 0 then '周期性任务'
+				when 1 then '问题上报（一键反馈）'
+				when 2 then '问题上报（不可预告抽查）'
+				when 3 then '问题上报（任务检查）'
+				when 4 then '二次检查'
+				when 5 then '电子档案库定向检查'
+				when 6 then '资源整改单'
+				when 10 then '三级派发-承包人检查'
+				when 11 then '三级派发-网格检查'
+				when 12 then '三级派发-市县专业中心检查'
+				when 13 then '三级派发-市资源中心检查'
+				
+			end TASK_TYPE,
+			 (case
+        	 when (TASK_TYPE in (0,4,5)and R.RECORD_TYPE = 2) then
+         	 '已整改'
+       	     when (TASK_TYPE in (1, 2, 3,6) and R.RECORD_TYPE = 2) then
+             '已整改'
+             else
+             '未整改'
+              end) as SFZG,
+			TBC.EQUIPMENT_CODE,
+			TBC.RES_TYPE,
+			TBC.GRID_ID,
+			G.GRID_NAME ZHHWHWG,
+			TO_CHAR(T.START_TIME, 'yyyy/mm/dd') START_TIME,
+			TO_CHAR(T.COMPLETE_TIME, 'yyyy/mm/dd') COMPLETE_TIME,
+			TO_CHAR(T.ACTUAL_COMPLETE_TIME, 'yyyy/mm/dd') ACTUAL_COMPLETE_TIME,
+			TO_CHAR(T.LAST_UPDATE_TIME, 'yyyy-mm-dd hh24:mi:ss') LAST_UPDATE_TIME,
+			R.CREATE_TIME CHECK_COMPLETE_TIME,
+			A.NAME AREA_ID,B.NAME SON_AREA_ID,
+			(select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag='0') BEFORE_CHECK,
+            (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag = '1' and td.inspect_object_type = '1') CHECKED,
+            (select count(distinct r.port_id) from TB_CABLECHECK_RECORD r where r.task_id = t.task_id and r.ischeckok = 1 and r.port_id is not null) ERROE_CHECK,
+            (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td left join tb_cablecheck_dtsj dtsj on td.inspect_object_id=dtsj.id 
+				where td.task_id = t.task_id and td.check_flag is not null and td.check_flag = '0' and dtsj.h='1') BEFORE_CHECK_H,
+            (select count(distinct r.port_id) from TB_CABLECHECK_RECORD r where r.task_id = t.task_id and r.ischeckok = 1 and r.port_id is not null and r.isH='1') ERROE_CHECK_H,
+            (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td left join TB_CABLECHECK_RECORD r on td.inspect_object_id = r.record_id
+				where td.task_id = t.task_id and td.check_flag is not null and td.check_flag = '1' and td.inspect_object_type = '1' and r.ish = '1') CHECKED_H
+		from TB_CABLECHECK_TASK             T,
+       		 AREA                           A,
+       		 AREA                           B,
+ 			 TB_BASE_STAFF                  S1,
+       		 TB_BASE_STAFF                  S2,
+       		 TB_BASE_STAFF                  S3,
+       		 TB_CABLECHECK_RECORD           R,
+       		 TB_CABLECHECK_EQUIPMENT TBC,
+       		 TB_CABLECHECK_GRID             G
+		<!-- where T.ENABLE = 0 -->
+		where
+			S1.STAFF_ID (+)= T.INSPECTOR
+			and S2.STAFF_ID (+)= T.MAINTOR
+			and S3.STAFF_ID(+)= T.AUDITOR
+			and A.AREA_ID(+) = T.AREA_ID
+			and B.AREA_ID(+) = T.SON_AREA_ID
+			and T.TASK_ID = R.TASK_ID(+)
+			and R.PORT_ID IS NULL
+			and T.SBID = TBC.EQUIPMENT_ID(+)
+			and TBC.GRID_ID = G.GRID_ID(+)
+			and (( T.TASK_TYPE IN (0,4,5,10,11,12,13)  and T.STATUS_ID = 8 )OR (T.TASK_TYPE IN (1,2,3,6)  and T.STATUS_ID IN (4,5,6,7,8)))
+			<if test="queryParams.isadmin ==0 ">  
+	            <![CDATA[
+		    	and  ((t.maintor=#{queryParams.staff_id} and (T.TASK_TYPE IN (1,2,3,6)  and T.STATUS_ID IN (7,8))) or (t.inspector=#{queryParams.staff_id})or ( t.auditor=#{queryParams.staff_id} and ( (T.TASK_TYPE IN (0,1,2,3,4,5,6,10,11,12,13)  and T.STATUS_ID IN (8)))))
+		    	]]>
+			</if>
+			<if test="queryParams.EQUIPMENT_CODE != null and queryParams.EQUIPMENT_CODE != ''">  
+	            <![CDATA[
+		    		AND TBC.EQUIPMENT_CODE like  '%'||#{queryParams.EQUIPMENT_CODE}||'%'
+			    	and TBC.res_type_id != 2530
+		    	]]>
+			</if>
+			<if test="queryParams.pos_eqpCode != null and queryParams.pos_eqpCode != ''">  
+	            <![CDATA[
+		    		AND TBC.EQUIPMENT_CODE like  '%'||#{queryParams.pos_eqpCode}||'%'
+		    		and TBC.res_type_id = 2530
+		    	]]>
+			</if>
+			<if test="queryParams.C_START_TIME!= null and queryParams.C_START_TIME != ''">  
+	            <![CDATA[
+		    	AND R.CREATE_TIME >= TO_DATE(#{queryParams.C_START_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.C_COMPLETE_TIME != null and queryParams.C_COMPLETE_TIME != ''">  
+	            <![CDATA[
+		    	AND trunc(R.CREATE_TIME) <= TO_DATE(#{queryParams.C_COMPLETE_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.INSPECTOR != null and queryParams.INSPECTOR != ''">  
+	            <![CDATA[
+		    	and s1.staff_name like '%'||#{queryParams.INSPECTOR}||'%'
+		    	]]>
+			</if>
+			<include refid="dynamicWhere_plan" />
+		ORDER BY t.MODIFY_TIME DESC,T.CREATE_TIME DESC) modelA   ) WHERE rn = 1 order by LAST_UPDATE_TIME DESC
+	</select>
+	<select id="queryDoneTaskForExcel" parameterType="map" resultType="map">
+		select
+			T.TASK_ID,T.TASK_NO,T.TASK_NAME
+		from 
+			TB_CABLECHECK_TASK T,AREA A, AREA B, TB_BASE_STAFF S1,TB_BASE_STAFF S2, TB_BASE_STAFF S3
+		<!-- where T.ENABLE = 0 -->
+		where
+			<!-- and t.status_id in (0,8) -->
+			S1.STAFF_ID (+)= T.INSPECTOR
+			and S2.STAFF_ID (+)= T.MAINTOR
+			and S3.STAFF_ID(+)= T.AUDITOR
+			and A.AREA_ID(+) = T.AREA_ID
+			and B.AREA_ID(+) = T.SON_AREA_ID
+			<if test="ROLE_ID == null or ROLE_ID == ''">  
+	            <![CDATA[
+		    	and (t.inspector= #{staff_id} or t.maintor=#{staff_id} or t.auditor=#{staff_id} or t.create_staff=#{staff_id})
+		    	]]>
+			</if>
+			<include refid="dynamicWhere_plan_for_excel" />
+		ORDER BY T.CREATE_TIME DESC
+	</select>
+	<select id="getMyTaskEqpPhotoForZq" parameterType="map" resultMap="myTaskEqpMap">
+     	select  tc.task_id,
+     			tc.remark,
+     			t.equipment_id eqp_id,
+     			t.equipment_code eqp_no,
+       			t.equipment_name eqp_name,
+       			t.address eqpaddress,
+       			a.name son_area_name
+       	from tb_cablecheck_task tc
+       	left join  TB_CABLECHECK_EQUIPMENT t on t.equipment_id=tc.sbid
+       	left join area a on tc.son_area_id=a.area_id
+		where tc.task_id = #{TASK_ID}
+     </select>
+    <resultMap id="myTaskPortMap" type="Map" >
+        <result column="ID" property="ID"/>
+		<result column="DZID" property="DZID"/>
+		<result column="DZBM" property="DZBM"/>
+		<result column="GLBH" property="GLBH"/>
+		<result column="GLMC" property="GLMC"/>
+		<result column="SBID" property="SBID"/>
+		<result column="SBBM" property="SBBM"/>
+		<result column="SBMC" property="SBMC"/>
+		<result column="ISH" property="ISH"/>
+		<result column="SGGH" property="SGGH"/>
+		<result column="TASK_ID" property="TASK_ID"/>
+		<!-- 查询图片  --> 
+        <collection property="portCheckedList" column="{TASK_ID=TASK_ID,PORT_ID=DZID}" select="getPortCheckedList"></collection>
+	</resultMap>
+	<select id="queryPortDetailForZq" parameterType="map" resultMap="myTaskPortMap">
+		select * from (
+		     select 
+             TD.DZID,
+             TD.DZBM,
+             TD.GLBH,
+             TD.GLMC,
+             TD.SBID,
+             TD.SBBM,
+             TD.SBMC,
+             pt.name xz,
+              t.task_id,
+		          case TD.H
+				when '0' then '否'
+				when '1' then '是'
+		        	end ISH,
+             td.GDBH,
+             td.sggh,
+            to_char( td.gdjgsj,'yyyy-mm-dd hh24:mi:ss') gdjgsj,
+             to_char(td.bdsj,'yyyy-mm-dd hh24:mi:ss') bdsj
+      
+        from TB_CABLECHECK_DTSJ TD
+        LEFT JOIN Tb_Cablecheck_Taskdetail T
+          ON TD.ID = T.INSPECT_OBJECT_ID
+        LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON td.XZ = PT.PSO_TYPE_ID
+		   WHERE T.TASK_ID = #{TASK_ID}
+		  union
+		   select r.port_id,
+		         r.port_no,
+		           case 
+                when trim(td.glbm) is null and trim(dt.glbh) is not null then trim(dt.glbh)
+                else  trim(td.glbm)      
+                 end glbh,  
+		         td.glmc,
+		         r.eqp_id,
+		         r.eqp_no,
+		         r.eqp_name,
+              pt.name xz,
+		         td.task_id,
+		          case dt.H
+				when '0' then '否'
+				when '1' then '是'
+			end ISH,
+      dt.gdbh,
+      dt.SGGH,
+       to_char( dt.gdjgsj,'yyyy-mm-dd hh24:mi:ss') gdjgsj,
+             to_char(dt.bdsj,'yyyy-mm-dd hh24:mi:ss') bdsj
+		    from TB_CABLECHECK_TASKDETAIL td
+		    left join TB_CABLECHECK_RECORD r
+		      on td.inspect_object_id = r.record_id
+		       left join TB_CABLECHECK_DTSJ dt
+         on dt.dzid = r.port_id
+          LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON dt.XZ = PT.PSO_TYPE_ID
+		   where td.task_id = #{TASK_ID} and r.port_id is not null and r.port_id not in (
+		       select distinct TD.DZID
+                 FROM TB_CABLECHECK_TASKDETAIL T
+              LEFT JOIN TB_CABLECHECK_DTSJ TD
+               ON TD.ID = T.INSPECT_OBJECT_ID
+           WHERE T.TASK_ID = #{TASK_ID} and TD.DZID IS NOT NULL
+		   )
+		) mm
+		 order by to_number(regexp_substr(mm.DZBM, '[0-9]*[0-9]', 1)),
+		          to_number(regexp_substr(mm.DZBM, '[0-9]*[0-9]', 3))
+     	<!-- SELECT
+			TD.ID,
+			TD.DZID,
+			TD.DZBM,
+      		TD.GLBH,
+      		TD.GLMC,
+      		TD.SBID,
+      		TD.SBBM,
+      		TD.SBMC,
+      		t.task_id
+		FROM TB_CABLECHECK_DTSJ TD 
+		LEFT JOIN TB_CABLECHECK_TASKDETAIL T ON TD.ID=T.INSPECT_OBJECT_ID
+		WHERE T.TASK_ID = #{TASK_ID}
+		order by to_number(regexp_substr(TD.DZBM, '[0-9]*[0-9]', 1)),
+          		 to_number(regexp_substr(TD.DZBM, '[0-9]*[0-9]', 3)) -->
+     </select>
+	 <select id="queryPortDetailNewForZq" parameterType="map" resultMap="TaskOrderMap">
+		<!--  select re.port_no,re.eqp_no,re.eqp_name,de.glbm,de.orderno,de.action_type,de.archive_time,f.staff_name,re.create_time,
+               decode(re.ischeckok, 0, '合格', '不合格') ischeckok,
+                re.descript,p.micro_photo_path from tb_cablecheck_record re 
+        inner join tb_cablecheck_taskdetail de on de.detail_id=re.detail_id
+        left join tb_cablecheck_photo_rel rel on rel.detail_id=de.detail_id
+        left join tb_cablecheck_photo p on p.photo_id=rel.photo_id
+        left join tb_base_staff f on f.staff_id=re.create_staff       
+        where re.task_id =#{TASK_ID} and re.port_no is not null -->
+        <!--  select re.port_no,re.eqp_no,re.eqp_name,de.glbm,de.orderno,de.action_type,de.archive_time,f.staff_name,re.create_time,
+               decode(re.ischeckok, 0, '合格', '不合格') ischeckok,
+                re.descript,to_char(wm_concat(p.micro_photo_path))micro_photo_path from tb_cablecheck_record re 
+        inner join tb_cablecheck_taskdetail de on de.detail_id=re.detail_id
+        left join tb_cablecheck_photo_rel rel on rel.detail_id=de.detail_id
+        left join tb_cablecheck_photo p on p.photo_id=rel.photo_id
+        left join tb_base_staff f on f.staff_id=re.create_staff       
+        where re.task_id =#{TASK_ID} and re.port_no is not null group by  re.port_no,re.eqp_no,re.eqp_name,de.glbm,de.orderno,de.action_type,
+              de.archive_time,f.staff_name,re.create_time, re.ischeckok, re.descript -->
+         select DISTINCT re.task_id,re.port_id, re.port_no,re.eqp_no,re.eqp_name,de.glbm,de.orderno,
+	     	 case de.mark when '1' then '综调'
+	            when '2' then 'IOM' end mark,
+		     de.action_type,to_char(de.archive_time,'yyyy-mm-dd hh24:mi:ss')archive_time,
+		     re.descript check_descript,re.record_type check_record_type,
+		     case re.ischeckok when '0' then '合格'
+	               when '1' then '不合格' end check_ischeckok,
+	      f.staff_name check_staff_name,to_char(re.create_time,'yyyy-mm-dd hh24:mi:ss')check_time         
+         from tb_cablecheck_record re
+         inner join tb_cablecheck_taskdetail de on de.detail_id=re.detail_id
+         left join tb_base_staff f on f.staff_id=re.create_staff
+         where  re.task_id=#{TASK_ID}  and re.port_no is not null
+     </select>
+     <resultMap id="TaskOrderMap" type="Map" >
+		<result column="TASK_ID" property="TASK_ID"/>
+		<result column="PORT_ID" property="PORT_ID"/>
+		<result column="PORT_NO" property="PORT_NO"/>
+		<result column="EQP_NO" property="EQP_NO"/>
+		<result column="EQP_NAME" property="EQP_NAME"/>
+		<result column="GLBM" property="GLBM"/>
+		<result column="ORDERNO" property="ORDERNO"/>
+		<result column="MARK" property="MARK"/>
+		<result column="ACTION_TYPE" property="ACTION_TYPE"/>
+		<result column="ARCHIVE_TIME" property="ARCHIVE_TIME"/>
+		<result column="CHECK_DESCRIPT" property="CHECK_DESCRIPT"/>
+		<result column="CHECK_RECORD_TYPE" property="CHECK_RECORD_TYPE"/>
+		<result column="CHECK_ISCHECKOK" property="CHECK_ISCHECKOK"/>
+		<result column="CHECK_STAFF_NAME" property="CHECK_STAFF_NAME"/>
+		<result column="CHECK_TIME" property="CHECK_TIME"/>
+		<!-- <result column="CHECK_MICRO_PHOTO_PATH" property="CHECK_MICRO_PHOTO_PATH"/> -->
+        <collection property="taskOrderCheckedList" column="{TASK_ID=TASK_ID,PORT_ID=PORT_ID}" select="getTaskOrderCheckedList"></collection>
+	</resultMap>
+	<select id="getTaskOrderCheckedList" parameterType="map" resultType="map">
+		 <!--  select re.record_type zg_record_type,f.staff_name zg_staff_name,to_char(re.create_time,'yyyy-mm-dd hh24:mi:ss')zg_time,
+		  case re.ischeckok when '0' then '合格'
+		 				    when '1' then '不合格' end zg_ischeckok,
+		  		re.port_info zg_port_info, to_char(wm_concat(p.micro_photo_path)) zg_micro_photo_path      
+          from tb_cablecheck_record re
+          left join tb_cablecheck_photo_rel rel on rel.record_id=re.record_id
+          left join tb_cablecheck_photo p on p.photo_id=rel.photo_id
+          left join tb_base_staff f on f.staff_id=re.create_staff                         
+          where re.record_type=2 and  re.task_id=#{TASK_ID} and re.port_id=#{PORT_ID}
+          group by  re.record_type,f.staff_name,re.create_time,re.ischeckok,re.port_info  -->
+          SELECT DISTINCT RE.RECORD_TYPE,RE.TASK_ID,RE.PORT_ID,P.PHOTO_PATH,P.MICRO_PHOTO_PATH FROM TB_CABLECHECK_RECORD RE
+          INNER JOIN TB_CABLECHECK_PHOTO_REL REL ON REL.RECORD_ID=RE.RECORD_ID
+          INNER JOIN TB_CABLECHECK_PHOTO P ON P.PHOTO_ID=REL.PHOTO_ID
+          WHERE RE.TASK_ID=#{TASK_ID}  AND RE.PORT_ID= #{PORT_ID} and re.record_type !=2 
+     </select>
+     <select id="getPortCheckedList" parameterType="map" resultType="map">
+		<!-- select *  from ( -->
+		select r.record_id,
+		     (case
+       	     when  r.RECORD_TYPE = 2 then
+             '整改记录'
+             else
+             '检查记录' 
+              end) as recordType,
+		       r.port_id,
+		       r.record_type,
+		       r.descript,
+		       r.port_info,
+		       (select bs.staff_name from TB_BASE_STAFF bs where bs.staff_id=r.create_staff) create_staff,
+		       r.create_time,
+		       decode(r.ischeckok, 0, '合格', '不合格') ischeckok,
+		       p.photo_path,
+		       p.micro_photo_path,
+		        rank()over(partition by r.port_id order by r.create_time desc) mm
+		  from TB_CABLECHECK_RECORD r left join TB_CABLECHECK_PHOTO_REL pr on r.record_id=pr.object_id
+		  left join tb_cablecheck_photo p on p.photo_id=pr.photo_id
+		 where r.port_id = #{PORT_ID}
+		   and r.task_id = #{TASK_ID}
+		  <!--  )  where  mm=1 -->
+     </select>
+     
+       <select id="portChecked" parameterType="map" resultType="map">
+		select distinct create_staff,ischeckok,create_time,descript,recordType  from (select r.record_id,
+		       r.port_id,
+		       (case
+       	     when  r.RECORD_TYPE = 2 then
+             '整改记录'
+             else
+             '检查记录' 
+              end) as recordType,
+		       r.record_type,
+		       r.descript,
+		       (select bs.staff_name from TB_BASE_STAFF bs where bs.staff_id=r.create_staff) create_staff,
+		       r.create_time,
+		       decode(r.ischeckok, 0, '合格', '不合格') ischeckok,
+		       p.photo_path,
+		       p.micro_photo_path,
+		        rank()over(partition by r.port_id order by r.create_time desc) mm
+		  from TB_CABLECHECK_RECORD r left join TB_CABLECHECK_PHOTO_REL pr on r.record_id=pr.object_id
+		  left join tb_cablecheck_photo p on p.photo_id=pr.photo_id
+		 where r.port_id = #{PORT_ID}
+		   and r.task_id = #{TASK_ID}
+		   )  where  mm=1
+		        </select>
+		   
+	<!-- 根据设备id获取图片 -->
+	<select id="getPhotoByEqpId" parameterType="string" resultMap="photoMap"><!--
+		select distinct tp.photo_path, tp.micro_photo_path, tc.record_type
+				  from tb_cablecheck_photo tp
+				  left join tb_cablecheck_photo_rel tr
+				    on tp.photo_id = tr.photo_id
+				  left join tb_cablecheck_record tc
+				    on tc.task_id = tr.task_id
+				  left join tb_cablecheck_taskdetail tt
+				    on tt.task_id = tr.task_id
+				 where task_id = #{task_id}
+				   and tt.inspect_object_type = 0
+				   and tc.task_id = tr.task_id
+				   and tr.detail_id = tt.detail_id
+				   and tp.photo_id = tr.photo_id
+	-->
+	 select p.photo_id, p.photo_path, p.micro_photo_path,r.record_type
+         from tb_cablecheck_record r ,
+              tb_cablecheck_photo_rel rel,
+              tb_cablecheck_photo  p
+        where r.record_id = rel.record_id 
+        and rel.photo_id = p.photo_id
+        and r.task_id = #{task_id}
+        and r.port_no is null 
+        </select>
+	<select id="queryTroubleTaskEqp"  parameterType="map" resultMap="myTaskEqpMap">
+		select *
+    from (select m.*, rank() OVER(ORDER BY m.create_time desc) rank
+            from (select distinct tcr.record_id,
+                                  tcr.eqp_id,
+                                  tcr.eqp_no,
+                                  tcr.eqp_name,
+                                  tcr.eqpaddress,
+                                  tcr.area_id,
+                                  tcr.son_area_id,
+                                  tcr.record_type,
+                                  t.task_id,
+                                  t.remark,
+                                  a1.name         as area_name,
+                                  a2.name         as son_area_name,
+                                  tcr.info,
+                                  tcr.create_time
+                    from tb_cablecheck_task t
+                    left join tb_cablecheck_record tcr
+                      on t.task_id = tcr.task_id
+                    left join area a1
+                      on tcr.area_id = a1.area_id
+                    left join area a2
+                      on tcr.son_area_id = a2.area_id
+                   where t.task_id = #{TASK_ID,jdbcType=VARCHAR}
+                     and tcr.port_id is null) m)
+   where rank = 1
+    </select>
+   <resultMap id="troubleTaskPortMap" type="Map" >
+		<result column="PORT_ID" property="PORT_ID"/>
+		<result column="PORT_NO" property="PORT_NO"/>
+		<result column="EQP_NO" property="EQP_NO"/>
+		<result column="EQP_NAME" property="EQP_NAME"/>
+		<result column="GLBM" property="GLBM"/>
+		<result column="GLMC" property="GLMC"/>
+		<result column="ISH" property="ISH"/>
+		<result column="SGGH" property="SGGH"/>
+		<result column="TASK_ID" property="TASK_ID"/>
+        <collection property="portCheckedList" column="{TASK_ID=TASK_ID,PORT_ID=PORT_ID}" select="getPortCheckedList"></collection>
+	</resultMap>
+	<select id="queryTroubleTaskPort" parameterType="map" resultMap="troubleTaskPortMap">
+		 select distinct r.port_id,
+		                r.port_no,
+		                r.eqp_no,
+		                r.eqp_name,
+		                  case 
+                when trim( td.glbm) is null and trim(dt.glbh) is not null then trim(dt.glbh)
+                else  trim(td.glbm)      
+                 end glbh,  
+		               case  when trim( td.glmc) is null and trim(dt.glmc) is not null then trim(dt.glmc)
+                else  trim(td.glmc)      
+                 end glmc, 
+		                r.task_id,
+                    pt.name xz,
+		                case dt.H
+				when '0' then '否'
+				when '1' then '是'
+			end ISH,
+			 
+			dt.SGGH,
+       dt.gdbh,
+       to_char( dt.gdjgsj,'yyyy-mm-dd hh24:mi:ss') gdjgsj,
+             to_char(dt.bdsj,'yyyy-mm-dd hh24:mi:ss') bdsj
+		    from tb_cablecheck_taskdetail td
+      left join  tb_cablecheck_record r
+        on  r.detail_id = td.detail_id
+        left join TB_CABLECHECK_DTSJ dt
+		 on dt.dzid = r.port_id   
+		<!--  and dt.sfpf=1 -->
+      LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON dt.XZ = PT.PSO_TYPE_ID
+		   where td.inspect_object_type = 1
+		 <!--    AND DT.BDSJ &lt;=R.CREATE_TIME -->
+		   and td.task_id = #{TASK_ID}
+		   and r.record_type != 2
+		   and r.ischeckok = 1
+		 order by to_number(regexp_substr(r.port_no, '[0-9]*[0-9]', 1)),
+		          to_number(regexp_substr(r.port_no, '[0-9]*[0-9]', 3))
+		<!-- select distinct t.port_id,
+		                t.port_no,
+		                t.port_name,
+		                t.DESCRIPT remark,
+		                t.record_type,
+		                t.eqp_no,
+		                t.eqp_name
+		  from tb_cablecheck_record t, tb_cablecheck_taskdetail td
+		 where t.detail_id = td.detail_id
+		   and td.inspect_object_type = 1
+		   and t.task_id = #{TASK_ID}
+		   order by to_number(regexp_substr(t.port_no, '[0-9]*[0-9]', 1)),
+          to_number(regexp_substr(t.port_no, '[0-9]*[0-9]', 3)) -->
+	</select>
+
+	<!-- 根据taskId查端子照片 -->
+	<select id="queryPortPhoto" parameterType="map" resultType="map">
+		 select      p.photo_id,
+                     p.photo_path,
+                     p.micro_photo_path,
+                     rel.object_type  record_type
+       from TB_CABLECHECK_RECORD    r,
+            tb_cablecheck_photo_rel rel,
+            tb_cablecheck_photo     p
+      where r.record_id = rel.record_id
+        and rel.photo_id = p.photo_id
+        and r.task_id =#{TASK_ID,jdbcType=VARCHAR}     
+        and r.port_id = #{PORT_ID}
+	</select>
+	<select id="exportInfo" parameterType="map" resultType="map">
+		SELECT TASK_ID,TASK_NO,TASK_NAME,REMARK,AUDITOR,INSPECTOR,MAINTOR,ZHHWHWG,STATUS_ID,TASK_TYPE,SFZG,EQUIPMENT_CODE,RES_TYPE,GRID_ID,START_TIME,COMPLETE_TIME,ACTUAL_COMPLETE_TIME,LAST_UPDATE_TIME,TO_CHAR(CHECK_COMPLETE_TIME, 'yyyy/mm/dd') CHECK_COMPLETE_TIME,AREA_ID,SON_AREA_ID, 
+		BEFORE_CHECK,CHECKED,ERROE_CHECK,BEFORE_CHECK_H,ERROE_CHECK_H,CHECKED_H,
+		decode(CHECKED,0 ,0,round(((CHECKED-ERROE_CHECK)/CHECKED),4)*100) || '%' CHECKED_ERROE_CHECK
+		FROM (SELECT ROW_NUMBER() OVER(PARTITION BY modelA.task_id ORDER BY modelA.CHECK_COMPLETE_TIME DESC) rn,       
+          modelA.*      
+          FROM (select
+			T.TASK_ID,T.TASK_NO,T.TASK_NAME ,R.REMARK,S3.STAFF_NAME AUDITOR,S1.STAFF_NAME INSPECTOR,S2.STAFF_NAME MAINTOR,
+			case STATUS_ID
+				when 4 then '问题上报,待派单'
+				when 5 then '退单,待派单'
+				when 6 then '待回单'
+				when 7 then '已整改回单,待审核'
+				when 8 then '已归档'
+			end STATUS_ID,
+			case TASK_TYPE
+				when 0 then '周期性任务'
+				when 1 then '问题上报（一键反馈）'
+				when 2 then '问题上报（不可预告抽查）'
+				when 3 then '问题上报（任务检查）'
+				when 4 then '二次检查'
+				when 5 then '电子档案库定向检查'
+				when 6 then '资源整改单'
+			end TASK_TYPE,
+			 (case
+        	 when (TASK_TYPE in(0,4,5) and R.RECORD_TYPE = 2) then
+         	 '已整改'
+       	     when (TASK_TYPE in (1, 2, 3,6) and R.RECORD_TYPE = 2) then
+             '已整改'
+             else
+             '未整改'
+              end) as SFZG,
+			TBC.EQUIPMENT_CODE,
+			TBC.RES_TYPE,
+			TBC.GRID_ID,
+			G.GRID_NAME ZHHWHWG,
+			TO_CHAR(T.START_TIME, 'yyyy/mm/dd') START_TIME,
+			TO_CHAR(T.COMPLETE_TIME, 'yyyy/mm/dd') COMPLETE_TIME,
+			TO_CHAR(T.ACTUAL_COMPLETE_TIME, 'yyyy/mm/dd') ACTUAL_COMPLETE_TIME,
+			TO_CHAR(T.LAST_UPDATE_TIME, 'yyyy-mm-dd hh24:mi:ss') LAST_UPDATE_TIME,
+			R.CREATE_TIME CHECK_COMPLETE_TIME,
+			A.NAME AREA_ID,B.NAME SON_AREA_ID,
+			(select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag='0') BEFORE_CHECK,
+                       (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag = '1' and td.inspect_object_type = '1') CHECKED,
+                       (select count(distinct r.port_id) from TB_CABLECHECK_RECORD r where r.task_id = t.task_id and r.ischeckok = 1 and r.port_id is not null) ERROE_CHECK,
+                       (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td left join tb_cablecheck_dtsj dtsj on td.inspect_object_id=dtsj.id 
+                               where td.task_id = t.task_id
+                               and td.check_flag is not null 
+                               and td.check_flag = '0' 
+                               and dtsj.h='1') BEFORE_CHECK_H,
+                       (select count(distinct r.port_id) from TB_CABLECHECK_RECORD r where r.task_id = t.task_id and r.ischeckok = 1 and r.port_id is not null and r.isH='1') ERROE_CHECK_H,
+                       (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td left join TB_CABLECHECK_RECORD r on td.inspect_object_id = r.record_id
+                           where td.task_id = t.task_id
+                             and td.check_flag is not null
+                             and td.check_flag = '1'
+                             and td.inspect_object_type = '1'
+                             and r.ish = '1') CHECKED_H
+		from TB_CABLECHECK_TASK             T,
+       		 AREA                           A,
+       		 AREA                           B,
+ 			 TB_BASE_STAFF                  S1,
+       		 TB_BASE_STAFF                  S2,
+       		 TB_BASE_STAFF                  S3,
+       		 TB_CABLECHECK_RECORD           R,
+       		 TB_CABLECHECK_EQUIPMENT TBC,
+       		 TB_CABLECHECK_GRID             G
+		<!-- where T.ENABLE = 0 -->
+		where
+			S1.STAFF_ID (+)= T.INSPECTOR
+			and S2.STAFF_ID (+)= T.MAINTOR
+			and S3.STAFF_ID(+)= T.AUDITOR
+			and A.AREA_ID(+) = T.AREA_ID
+			and B.AREA_ID(+) = T.SON_AREA_ID
+			and T.TASK_ID = R.TASK_ID(+)
+			and R.PORT_ID IS NULL
+			and T.SBID = TBC.EQUIPMENT_ID(+)
+			and TBC.GRID_ID = G.GRID_ID(+)
+			and (( T.TASK_TYPE IN (0,4,5)  and T.STATUS_ID = 8 )OR (T.TASK_TYPE IN (1,2,3,6)  and T.STATUS_ID IN (4,5,6,7,8)))
+			<if test="isadmin ==0 ">  
+	            <![CDATA[
+		    	and  ((t.maintor=#{staff_id} and (T.TASK_TYPE IN (1,2,3,6)  and T.STATUS_ID IN (7,8))) or (t.inspector=#{staff_id})or ( t.auditor=#{staff_id} and ( (T.TASK_TYPE IN (0,1,2,3,4,5,6)  and T.STATUS_ID IN (8)))))
+		    	]]>
+			</if>
+			<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TBC.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+	    		and TBC.RES_TYPE_ID != 2530
+	    	]]>
+			</if>
+			<if test="C_START_TIME!= null and C_START_TIME != ''">  
+	            <![CDATA[
+		    	AND R.CREATE_TIME >= TO_DATE(#{C_START_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="C_COMPLETE_TIME != null and C_COMPLETE_TIME != ''">  
+	            <![CDATA[
+		    	AND trunc(R.CREATE_TIME) <= TO_DATE(#{C_COMPLETE_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="INSPECTOR != null and INSPECTOR != ''">  
+	            <![CDATA[
+		    		AND S1.STAFF_NAME like  '%'||#{INSPECTOR}||'%'
+		    	]]>
+			</if>
+			<if test="pos_eqpCode != null and pos_eqpCode != ''">  
+	            <![CDATA[
+		    		AND TBC.EQUIPMENT_CODE like  '%'||#{pos_eqpCode}||'%'
+		    		and TBC.RES_TYPE_ID = 2530
+		    	]]>
+			</if>
+			<include refid="dynamicWhere_plan_for_excelbyeqp" />
+		ORDER BY t.MODIFY_TIME DESC,T.CREATE_TIME DESC) modelA   ) WHERE rn = 1 order by LAST_UPDATE_TIME DESC
+	</select>
+	<select id="exportPortInfo" parameterType="map" resultType="map">
+	
+SELECT *
+  FROM (
+
+   select  m.area_id,m.son_area_id,m.ZHHWHWG,m.task_type,m.status_id,m.inspector,m.maintor,m.auditor,m.equipment_code,m.res_type,m.port_id,m.port_no,
+        
+        m.remark,m.info,m.SFZG,m.START_TIME,m.COMPLETE_TIME,m.LAST_UPDATE_TIME,m.descript,m.equipment_name,m.eqp_name,
+        m.CHECK_COMPLETE_TIME,m.ischeckok,m.photo_path,m.task_name,m.install_code,
+      M.glbm1,
+       dtsj.glbh,
+       dtsj.glmc, 
+       M.glmc1,
+       spt.name XZ,
+       dtsj.gdjgsj,
+       iom_order_no,
+       row_number() over(partition by M.PORT_ID, M.RECORD_TYPE, M.TASK_ID order by DTSJ.BDSJ desc nulls last,dtsj.gdjgsj  desc nulls last) RANK
+   from (
+                
+       select 
+          (select a.name from area a where a.area_id = r.area_id) area_id,
+          (select a.name from area a where a.area_id = r.son_area_id) son_area_id,
+           g.grid_name ZHHWHWG,
+           task.task_name,
+           decode(task.task_type,
+                  0,
+                 '周期性任务',
+                  1,
+                 '问题上报（一键反馈）',
+                  2,
+                 '问题上报（不可预告抽查）',
+                  3,
+                 '问题上报（周期性任务检查）',
+                 4,
+                 '二次复查',
+                 5,
+                 '电子档案库定向抽查'
+                 ) task_type,
+            decode(task.status_id,
+                   4,
+                   '待派发',
+                   5,
+                   '退单，待审核',
+                   6,
+                  '待回单',
+                   7,
+                  '已整改回单，待审核',
+                   8,
+                  '归档',task.status_id)status_id,                       
+             (select s.staff_name from tb_base_staff s
+                      where s.staff_id = task.inspector) inspector,
+             (select s.staff_name from tb_base_staff s
+                      where s.staff_id = task.maintor) maintor,
+             (select s.staff_name from tb_base_staff s
+                      where s.staff_id = task.auditor) auditor,
+              r.eqp_no equipment_code,
+              tbc.res_type,    
+              r.port_id ,  
+              r.port_no,
+              td.glbm glbm1,
+              td.glmc glmc1, 
+              task.task_id,  
+              r.record_type,
+               r.descript,
+                tbc.equipment_name,
+                r.eqp_name,
+               tbc.equipment_code install_code,              
+              <!--  (SELECT to_char(wm_concat(distinct odso.iom_order_no)) iom_order_no FROM TB_CABLECHECK_LINK_ODSO odso where odso.opt_code=td.glbm)iom_order_no, -->
+              ' 'iom_order_no,
+              r.remark,   
+              r.info,    
+             <!-- (case
+                     when (TASK_TYPE in (0,4)and R.RECORD_TYPE = 2) then
+                      '已整改'
+                      when (TASK_TYPE in (1, 2, 3) and R.RECORD_TYPE = 2) then
+                     '已整改'
+                     else
+                    '未整改'end) as SFZG, -->
+                    (case
+                    	when (
+	                    	(task_type =0 and record_type=0) or
+	                    	(task_type in(1,2) and ischeckok=0) or
+	                    	(task_type=4 and record_type=4)or
+	                    	(task_type=5 and record_type=5)
+                    	) then '无需整改'                   
+                    	when (
+                    		(task_type = 3 and record_type=0) or
+                    		(task_type in(1,2)  and ischeckok=1)                    	
+                    	) then '未整改'                   	
+                    	when (task_type in(1,2,3) and record_type=2 ) then '已整改'
+                     end) as SFZG,
+                    
+              TO_CHAR( task.start_time, 'yyyy/mm/dd') START_TIME,
+              TO_CHAR(task.COMPLETE_TIME, 'yyyy/mm/dd') COMPLETE_TIME,              
+              TO_CHAR(task.LAST_UPDATE_TIME, 'yyyy-mm-dd hh24:mi:ss') LAST_UPDATE_TIME,        
+              R.CREATE_TIME CHECK_COMPLETE_TIME,                                                                                 
+               case
+                   when r.ischeckok = 1 then
+                   '不合格'
+                   when td.inspect_object_type = 0 then ''
+                    else  '合格'
+               end ischeckok,
+               p.photo_path
+  
+        from tb_cablecheck_task task
+            left join tb_cablecheck_record r
+            on task.task_id = r.task_id
+        left join tb_cablecheck_taskdetail td
+            on r.detail_id = td.detail_id
+        left join TB_CABLECHECK_PHOTO_REL pr
+            on r.record_id = pr.object_id
+        left join tb_cablecheck_photo p
+            on p.photo_id = pr.photo_id
+        left join tb_base_staff f 
+            on f.staff_id = task.inspector
+        left join TB_CABLECHECK_EQUIPMENT TBC
+            on task.SBID = TBC.EQUIPMENT_ID
+        left join TB_CABLECHECK_GRID   G
+            on g.grid_id = tbc.grid_id
+                 where ((task.task_type = 3 and
+                       ((r.record_type = 0 and r.ischeckok = 1) or
+                       (r.record_type = 2))) or
+                       (task.task_type != 3 and r.record_type in (0, 1, 2, 3,4,5)))
+                   and r.port_id is not null and  r.check_way=2
+                  <if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+		                <![CDATA[
+		               AND TBC.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+		               AND TBC.RES_TYPE_ID != 2530
+		               ]]>
+			      </if>
+			      <if test="pos_eqpCode != null and pos_eqpCode != ''">  
+		                <![CDATA[
+		               AND equipment_code like  '%'||#{pos_eqpCode}||'%'
+		               
+		               ]]>
+			      </if>
+			      <if test="INSPECTOR != null and INSPECTOR != ''">  
+		                <![CDATA[
+		               AND f.staff_name like  '%'||#{INSPECTOR}||'%'
+		               ]]>
+			      </if>
+			      <if test="SBLX != null and SBLX != ''">  
+			          <![CDATA[
+				      AND TBC.res_type_id = #{SBLX} 
+				      ]]>
+				</if>
+				<if test="C_START_TIME!= null and C_START_TIME != ''">  
+	            <![CDATA[
+		    	AND R.CREATE_TIME >= TO_DATE(#{C_START_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="C_COMPLETE_TIME != null and C_COMPLETE_TIME != ''">  
+	            <![CDATA[
+		    	AND trunc(R.CREATE_TIME) <= TO_DATE(#{C_COMPLETE_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			      <include refid="dynamicWhere_plan_for_excel" />
+                ) M
+        
+         left join tb_cablecheck_dtsj dtsj
+          on dtsj.dzid = M.port_id
+         <!--  and to_char(dtsj.bdsj,'yyyy-MM-dd')&lt;=to_char(M.CHECK_COMPLETE_TIME,'yyyy-MM-dd')  -->
+         <!--  and dtsj.sfpf=1 -->
+         and to_char(dtsj.bdsj,'yyyy-MM-dd')&lt;=to_char(trunc(sysdate,'mm'),'yyyy-mm-dd')
+         left join OSSPAD.tb_cablecheck_srv_pso_type SPT
+          on spt.pso_type_id = dtsj.XZ
+          )T
+ WHERE T.RANK = 1
+order by last_update_time  desc
+
+ <!--  select (select a.name from area a where a.area_id=r.area_id) area_id,
+	       (select a.name from area a where a.area_id=r.son_area_id) son_area_id,
+	        task.task_name,
+	       (select s.staff_name from tb_base_staff s where s.staff_id=task.inspector) inspector,
+	       (select s.staff_name from tb_base_staff s where s.staff_id=task.maintor) maintor,
+	       (select s.staff_name from tb_base_staff s where s.staff_id=task.auditor) auditor, 
+	       task.START_TIME,
+	       task.COMPLETE_TIME,
+	       decode(task.status_id,4,'待派发',5,'退单，待审核',6,'待回单',7,'已整改回单，待审核',8,'归档',task.status_id)status_id,
+	       decode(task.task_type,0,'周期性任务',1,'问题上报（一键反馈）',2,'问题上报（不可预告抽查）',3,'问题上报（周期性任务检查）') task_type,
+	       (select s.staff_name from tb_base_staff s where s.staff_id=task.create_staff) oper_staff,
+	       task.create_time oper_time,
+	       task.actual_complete_time,
+	       r.create_time check_time,
+	       decode(task.enable,1,'临时检查','需整改') enable,
+	       r.eqp_id,
+	       r.eqp_no,
+	       r.eqp_name,
+	       r.port_no,
+	       spt.name XZ,
+	       r.port_id,
+	       case 
+             when trim(td.glbm) is null and trim(dtsj.glbh) is not null then trim(dtsj.glbh)
+             else  trim(td.glbm)      
+          end glbm,  
+           decode(td.glmc,'', dtsj.glmc,td.glmc) glmc,
+	       r.remark,
+	       r.descript,
+	       case when
+	       r.ischeckok=1 then '不合格'
+	       when  td.inspect_object_type=0 then '' 
+	       else '合格' end ischeckok,
+	       zgr.create_time zg_time,
+	       zgr.info
+	  from tb_cablecheck_record r
+	  join tb_cablecheck_taskdetail td on r.detail_id=td.detail_id
+	  join tb_cablecheck_task task on  task.task_id=r.task_id
+	  left join tb_cablecheck_dtsj dtsj on dtsj.dzid = r.port_id 
+    left join OSSPAD.tb_cablecheck_srv_pso_type SPT on spt.pso_type_id = dtsj.XZ
+	  left join tb_cablecheck_record zgr on zgr.task_id=task.task_id and zgr.detail_id=r.detail_id and zgr.record_type=2
+	  where(td.inspect_object_type=1 or (td.inspect_object_type=0 and r.port_id is not null))
+		<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+		          <![CDATA[
+		   		AND r.eqp_no like  '%'||#{EQUIPMENT_CODE}||'%'
+		   	]]>
+		</if>
+		<include refid="dynamicWhere_plan_for_excel" />
+		-->
+	</select>
+	<!-- 按工单导出 -->
+	<!-- <select id="exportExcelByPOrder" parameterType="map" resultType="map">
+		  SELECT distinct A.NAME
+              ,B.NAME sonName
+              ,G.GRID_NAME,ts.task_id,TS.TASK_NO,TS.TASK_NAME,case when TS.TASK_TYPE =0 then '周期性任务'
+                                                                                     when ts.task_type =1 then '问题上报（一键反馈）'
+                                                                                     when ts.task_type=2 then '问题上报（不可预告抽查）'
+                                                                                     when ts.task_type=3 then '问题上报（任务检查）'
+                                                                                     when ts.task_type=4 then '二次复查' end tasktype,
+                                                               case when TS.STATUS_ID =4 then '问题上报、待派单'
+                                                                    when ts.STATUS_ID =5 then '退单、待派单'
+                                                                    when ts.STATUS_ID=6 then '问题上报、待回单'
+                                                                    when ts.STATUS_ID=7 then '已整改回单、待审核'
+                                                                    when ts.STATUS_ID=8 then '归档' end STATUS,
+                     f1.staff_name inspector ,f2.staff_name maintor,f3.staff_name auditor,tb.equipment_code,tb.equipment_name,tb.res_type,tb.address,re.eqp_no,re.eqp_name,
+                     RE.PORT_NO,RE.ACTION_TYPE,de.glbm,re.descript,re.remark,re.info,
+                     case when re.ischeckok !=0 then '不合格'
+                       else '合格' end ischeckok,
+                     case when re.record_type !=2 then '检查记录'
+                       else '整改记录' end record_type,
+              ts.start_time,ts.actual_complete_time,
+              tco.archive_time,re.order_no,
+             de.archive_time,de.orderno order_no, bz.team_name,mc.company_name,
+                     re.create_time,
+                     (select to_char(wm_concat(p.photo_path)) from  tb_cablecheck_photo_rel rel inner join tb_cablecheck_photo p on p.photo_id=rel.photo_id
+                               where  rel.record_id=re.record_id) p_path
+              FROM TB_CABLECHECK_RECORD RE
+              INNER JOIN TB_CABLECHECK_TASKDETAIL DE ON DE.DETAIL_ID=RE.DETAIL_ID
+              LEFT JOIN TB_CABLECHECK_TASK TS ON TS.TASK_ID=RE.TASK_ID
+              LEFT JOIN TB_CABLECHECK_EQUIPMENT TB ON TB.EQUIPMENT_ID=TS.SBID
+              LEFT JOIN TB_CABLECHECK_GRID G ON G.GRID_ID=TB.GRID_ID
+              left join tb_cablecheck_order tco on tco.order_id=re.order_id
+              left join tb_cablecheck_order tco on tco.order_no=de.orderno
+		      left join tb_base_staff_zw_banzu bz on bz.team_id=tco.team_id
+		      left join tb_base_company_banzu_relation br on br.banzu_id = bz.team_id
+		      left join tb_base_maintain_company mc on mc.company_id = br.company_id
+              LEFT JOIN AREA A ON A.AREA_ID=TB.PARENT_AREA_ID
+              LEFT JOIN AREA B ON B.AREA_ID=TB.AREA_ID
+              left join tb_base_staff f1 on f1.staff_id=ts.inspector
+              left join tb_base_staff f2 on f2.staff_id=ts.maintor
+              left join tb_base_staff f3 on f3.staff_id=ts.auditor
+              where 1=1 and re.port_id is not null
+              <include refid="dynamicWhere_plan_order" />
+	</select> -->
+	<select id="exportExcelByPOrder" parameterType="map" resultMap="troubleTaskOrderMap">
+		  SELECT distinct A.NAME,B.NAME sonName, G.GRID_NAME, ts.task_id,TS.TASK_NO,TS.TASK_NAME,
+		                case
+		                  when TS.TASK_TYPE = 0 then
+		                   '周期性任务'
+		                  when ts.task_type = 1 then
+		                   '问题上报（一键反馈）'
+		                  when ts.task_type = 2 then
+		                   '问题上报（不可预告抽查）'
+		                  when ts.task_type = 3 then
+		                   '问题上报（任务检查）'
+		                  when ts.task_type = 4 then
+		                   '二次复查'
+		                end tasktype,
+		                case
+		                  when TS.STATUS_ID = 4 then
+		                   '问题上报、待派单'
+		                  when ts.STATUS_ID = 5 then
+		                   '退单、待派单'
+		                  when ts.STATUS_ID = 6 then
+		                   '问题上报、待回单'
+		                  when ts.STATUS_ID = 7 then
+		                   '已整改回单、待审核'
+		                  when ts.STATUS_ID = 8 then
+		                   '归档'
+		                end STATUS,
+		                f1.staff_name inspector,f2.staff_name maintor, f3.staff_name auditor, tb.equipment_code,
+		                tb.equipment_name, tb.res_type, tb.address,  re.eqp_no,   re.eqp_name, re.port_id,RE.PORT_NO,de.glbm, RE.ACTION_TYPE,  re.descript,
+		                re.remark,  ts.start_time, ts.actual_complete_time, de.archive_time, de.orderno order_no,bz.team_name, mc.company_name,
+		                case when re.record_type !=2 then '检查记录' else '整改记录' end record_type ,
+               			case re.ischeckok when '1' then '不合格' else '合格' end ischeckok, 
+		                (select to_char(wm_concat(p.photo_path))
+		                   from tb_cablecheck_photo_rel rel
+		                  inner join tb_cablecheck_photo p
+		                     on p.photo_id = rel.photo_id
+		                  where rel.record_id = re.record_id) p_path
+              FROM TB_CABLECHECK_RECORD RE
+              INNER JOIN TB_CABLECHECK_TASKDETAIL DE ON DE.DETAIL_ID=RE.DETAIL_ID
+              LEFT JOIN TB_CABLECHECK_TASK TS ON TS.TASK_ID=RE.TASK_ID
+              LEFT JOIN TB_CABLECHECK_EQUIPMENT TB ON TB.EQUIPMENT_ID=TS.SBID
+              LEFT JOIN TB_CABLECHECK_GRID G ON G.GRID_ID=TB.GRID_ID
+             <!--  left join tb_cablecheck_order tco on tco.order_id=re.order_id -->
+              left join tb_cablecheck_order tco on tco.order_no=de.orderno
+		      left join tb_base_staff_zw_banzu bz on bz.team_id=tco.team_id
+		      left join tb_base_company_banzu_relation br on br.banzu_id = bz.team_id
+		      left join tb_base_maintain_company mc on mc.company_id = br.company_id
+              LEFT JOIN AREA A ON A.AREA_ID=TB.PARENT_AREA_ID
+              LEFT JOIN AREA B ON B.AREA_ID=TB.AREA_ID
+              left join tb_base_staff f1 on f1.staff_id=ts.inspector
+              left join tb_base_staff f2 on f2.staff_id=ts.maintor
+              left join tb_base_staff f3 on f3.staff_id=ts.auditor
+              where 1=1 and de.check_flag=1 and re.port_id is not null and  re.check_way= 1
+              <include refid="dynamicWhere_plan_order" />
+	</select>
+	<resultMap id="troubleTaskOrderMap" type="Map" >
+		<result column="NAME" property="NAME"/>
+		<result column="SONNAME" property="SONNAME"/>
+		<result column="GRID_NAME" property="GRID_NAME"/>
+		<result column="TASK_ID" property="TASK_ID"/>
+		<result column="TASK_NO" property="TASK_NO"/>
+		<result column="TASK_NAME" property="TASK_NAME"/>
+		<result column="TASKTYPE" property="TASKTYPE"/>
+		<result column="STATUS" property="STATUS"/>
+		<result column="INSPECTOR" property="INSPECTOR"/>
+		<result column="MAINTOR" property="MAINTOR"/>
+		<result column="AUDITOR" property="AUDITOR"/>
+		<result column="EQUIPMENT_CODE" property="EQUIPMENT_CODE"/>
+		<result column="EQUIPMENT_NAME" property="EQUIPMENT_NAME"/>
+		<result column="RES_TYPE" property="RES_TYPE"/>
+		<result column="ADDRESS" property="ADDRESS"/>
+		<result column="EQP_NO" property="EQP_NO"/>
+		<result column="EQP_NAME" property="EQP_NAME"/>
+		<result column="PORT_ID" property="PORT_ID"/>
+		<result column="PORT_NO" property="PORT_NO"/>
+		<result column="RECORD_TYPE" property="RECORD_TYPE"/>
+		<result column="ISCHECKOK" property="ISCHECKOK"/>
+		<result column="GLBM" property="GLBM"/>
+		<result column="ACTION_TYPE" property="ACTION_TYPE"/>
+		<result column="DESCRIPT" property="DESCRIPT"/>
+		<result column="REMARK" property="REMARK"/>
+		<result column="START_TIME" property="START_TIME"/>
+		<result column="ACTUAL_COMPLETE_TIME" property="ACTUAL_COMPLETE_TIME"/>
+		<result column="ARCHIVE_TIME" property="ARCHIVE_TIME"/>
+		<result column="ORDER_NO" property="ORDER_NO"/>
+		<result column="TEAM_NAME" property="TEAM_NAME"/>
+		<result column="COMPANY_NAME" property="COMPANY_NAME"/>		
+		<result column="P_PATH" property="P_PATH"/>		
+        <collection property="orderCheckedList" column="{TASK_ID=TASK_ID,PORT_ID=PORT_ID}" select="getOrderCheckedList"></collection>
+	</resultMap>
+	 <select id="getOrderCheckedList" parameterType="map" resultType="map">
+		 select  '整改记录' record_type,
+       			case re.ischeckok when '0' then '合格'
+         				when '1' then '不合格' end ischeckok,
+		       re.port_info,re.info,
+		       to_char(wm_concat(p.micro_photo_path)) zg_micro_photo_path
+		  from tb_cablecheck_record re
+		  left join tb_cablecheck_photo_rel rel
+		    on rel.record_id = re.record_id
+		  left join tb_cablecheck_photo p
+		    on p.photo_id = rel.photo_id
+		  left join tb_base_staff f
+		    on f.staff_id = re.create_staff
+		 where re.record_type = 2
+		   and re.task_id = #{TASK_ID}
+		   and re.port_id =#{PORT_ID}
+		 group by re.ischeckok,re.port_info, re.info
+     </select>
+	<select id="countBeforeCheck" parameterType="String" resultType="String">
+		select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = #{task_id} and td.check_flag is not null and td.check_flag='0'
+	</select>
+	<select id="countBeforeCheckH" parameterType="String" resultType="String">
+		select count(distinct td.inspect_object_no)
+		  from tb_cablecheck_taskdetail td left join tb_cablecheck_dtsj dtsj on td.inspect_object_id=dtsj.id
+		 where td.task_id = #{task_id}
+		   and td.check_flag is not null
+		   and td.check_flag = '0'
+		   and dtsj.h='1'
+	</select>
+	<select id="countErrorCheck" parameterType="String" resultType="String">
+		select count(distinct r.port_id)
+		  from TB_CABLECHECK_RECORD r
+		 where r.task_id = #{task_id}
+		   and r.ischeckok = 1
+		   and r.port_id is not null
+	</select>
+	<select id="countErrorCheckH" parameterType="String" resultType="String">
+		select count(distinct r.port_id)
+		  from TB_CABLECHECK_RECORD r
+		 where r.task_id = #{task_id}
+		   and r.ischeckok = 1
+		   and r.port_id is not null
+		   and r.isH='1'
+	</select>
+	<select id="countChecked" parameterType="String" resultType="String">
+		select count(distinct td.inspect_object_no)
+		  from tb_cablecheck_taskdetail td
+		 where td.task_id = #{task_id}
+		   and td.check_flag is not null
+		   and td.check_flag = '1'
+		   and td.inspect_object_type = '1'
+	</select>
+	<select id="countCheckedH" parameterType="String" resultType="String">
+		select count(distinct td.inspect_object_no)
+		  from tb_cablecheck_taskdetail td
+		  left join TB_CABLECHECK_RECORD r
+		    on td.inspect_object_id = r.record_id
+		 where td.task_id = #{task_id}
+		   and td.check_flag is not null
+		   and td.check_flag = '1'
+		   and td.inspect_object_type = '1'
+		   and r.ish = '1'
+	</select>
+	<select id="getTaskByTaskId" parameterType="String" resultType="map">
+		select * from TB_CABLECHECK_TASK t where t.task_id = #{taskId}
+	</select>
+	<!-- 周期性任务查设备图片（整改前） -->
+     <select id="getEqpPhoto" parameterType="map" resultType="map">
+		select r.task_id,
+		       r.record_id,
+		       r.record_type,
+		       pr.id rel_id,
+		       p.photo_id,
+		       p.micro_photo_path,
+		       p.photo_path
+		  from TB_CABLECHECK_RECORD    r,
+		       TB_CABLECHECK_PHOTO_REL pr,
+		       tb_cablecheck_photo     p
+		 where r.port_id is null
+		   and r.record_id = pr.object_id
+		   and p.photo_id = pr.photo_id
+		   and r.task_id = #{TASK_ID}
+     </select>
+     <select id="queryProcess" parameterType="map" resultType="map">
+		select
+       		t.oper_time,
+       		ts.staff_name,
+       		t.remark，
+       		t.content,
+      		f.staff_name receiver
+		from tb_cablecheck_process t 
+		left join tb_base_staff ts on t.oper_staff=ts.staff_id
+		left join Tb_Base_Staff f on f.staff_id = t.receiver
+		where t.task_id = #{TASK_ID} 
+		order by t.process_id
+	</select>
+	
+	
+		<select id="queryHandler" parameterType="map" resultType="map">
+		SELECT 
+			TS.STAFF_ID,
+			TS.STAFF_NO,
+			TS.STAFF_NAME,
+			B.NAME SON_AREA_ID 
+		FROM TB_BASE_STAFF TS 
+		LEFT JOIN AREA A ON A.AREA_ID=TS.AREA_ID
+		LEFT JOIN AREA B ON B.AREA_ID=TS.SON_AREA_ID
+		LEFT JOIN TB_BASE_STAFF_SOFT S ON S.STAFF_ID = TS.STAFF_ID
+		WHERE S.SOFTWARE_ID=17
+		<if test="queryParams.areaId != null and queryParams.areaId != ''">
+				AND	TS.AREA_ID = #{queryParams.areaId}
+		</if>
+		<if test="queryParams.sonAreaId != null and queryParams.sonAreaId != ''">
+				AND TS.SON_AREA_ID = #{queryParams.sonAreaId}
+		</if>
+		<if test="queryParams.staff_no != null and queryParams.staff_no != ''">
+				AND TS.STAFF_NO LIKE '%'||#{queryParams.staff_no}||'%'
+		</if>
+		<if test="queryParams.staff_name != null and queryParams.staff_name != ''">
+				AND TS.STAFF_NAME LIKE '%'||#{queryParams.staff_name}||'%'
+		</if>
+	</select>
+	
+	<select id="taskQuery" parameterType="map" resultType="map">
+	select * from tb_cablecheck_task task where task.task_id in (${taskIds})
+	</select>
+	<update id="upTask" parameterType="map">
+	update tb_cablecheck_task 
+	set     task_type = #{TASK_TYPE},
+			status_id = #{STATUS_ID},
+			inspector = #{INSPECTOR},
+			create_staff = #{CREATE_STAFF},
+			auditor = #{AUDITOR},
+			enable = #{ENABLE},
+			remark = #{REMARK}, 
+            info =#{INFO},
+            CREATE_TIME = sysdate,
+		    START_TIME = sysdate,
+		    LAST_UPDATE_TIME = sysdate
+		where task_id = #{TASK_ID}
+	</update>
+	
+	
+	<select id="terminalQuery1" parameterType="map" resultType="map">
+		select tde.dtsj_id ID, tde.port_id DZID, tde.glbm GLBH, tde.glmc GLMC, tde.inspect_object_no DZBM,
+		tde.sbid,tde.sbbm,tde.sbmc,to_char(tde.bdsj_port,'yyyy-mm-dd') bdsj,tde.xz,tde.action_type
+  from tb_cablecheck_taskdetail tde
+ where tde.task_id = #{TASK_ID}
+   and tde.check_flag = 0
+   and tde.inspect_object_type = 1
+			
+	</select>
+	
+	<insert id="doSaveTaskDetail" parameterType="map" >
+	insert into
+    tb_cablecheck_taskdetail(
+		DETAIL_ID,
+		TASK_ID,
+		INSPECT_OBJECT_ID,
+		INSPECT_OBJECT_TYPE,
+		INSPECT_OBJECT_NO,
+		CHECK_FLAG,
+		PORT_ID,
+		DTSJ_ID,
+		GLBM,
+		GLMC,sbid,sbbm,sbmc,bdsj_port,xz,action_type)
+		values
+		(SQP_TB_CABLECHECK_TASK_DETAIL.nextVAL,
+		#{TASK_ID},
+		#{INSPECT_OBJECT_ID},
+		#{INSPECT_OBJECT_TYPE},
+		#{INSPECT_OBJECT_NO},
+		#{CHECK_FLAG},
+		#{DZID},
+		#{DTSJ_ID},
+		#{GLBH},
+		#{GLMC},#{SBID},#{SBBM},#{SBMC},to_date(#{BDSJ},'yyyy-mm-dd'),#{XZ},#{ACTION_TYPE})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="DETAIL_ID">
+			SELECT SQP_TB_CABLECHECK_TASK_DETAIL.CURRVAL FROM DUAL
+		</selectKey>
+</insert>
+
+
+<update id="updateDtsj" parameterType="map">
+	UPDATE 
+		TB_CABLECHECK_DTSJ 
+		SET SFPF=1 
+		WHERE ID = #{ID}
+</update>
+
+<select id="queryTaskInfo" parameterType="map" resultType="map">
+select * from tb_cablecheck_task task left join 
+TB_CABLECHECK_EQUIPMENT tbe on task.sbid = tbe.equipment_id
+where task.task_id = #{taskId}
+</select>
+
+	
+	<insert id="saveTroubleTask" parameterType="map">
+	insert into
+    tb_cablecheck_task(
+		TASK_ID,
+		TASK_NO,
+		TASK_NAME,
+		TASK_TYPE,
+		STATUS_ID,
+		INSPECTOR,
+		CREATE_STAFF,
+		CREATE_TIME,
+		START_TIME,
+		LAST_UPDATE_TIME,
+		SON_AREA_ID,
+		AREA_ID,
+		ENABLE,
+		REMARK,
+		INFO,
+		SBID,
+		AUDITOR,
+		OLD_TASK_ID)
+		values
+		(SQP_TB_CABLECHECK_TASK.nextVAL,
+		#{TASK_NO},
+		#{TASK_NAME},
+		#{TASK_TYPE},
+		#{STATUS_ID},
+		#{INSPECTOR},
+		#{CREATE_STAFF},
+		sysdate,
+		sysdate,
+		sysdate,
+		#{SON_AREA_ID},
+		#{AREA_ID},
+		#{ENABLE},
+		#{REMARK},
+		#{INFO},
+		#{SBID},
+		#{AUDITOR},
+		#{OLD_TASK_ID}
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="TASK_ID">
+			SELECT SQP_TB_CABLECHECK_TASK.CURRVAL FROM DUAL
+		</selectKey>
+</insert>
+<select id="getIfNeedZg" parameterType="String" resultType="int">
+select task.is_need_zg from tb_cablecheck_task task 
+where task.task_id = #{TASK_ID}
+</select>
+
+<select id="queryNoTroubleTaskPort" parameterType="map" resultMap="troubleTaskPortMap">
+		 select distinct r.port_id,
+		                r.port_no,
+		                r.eqp_no,
+		                r.eqp_name,
+		                 case 
+                       when trim(td.glbm) is null and trim(dt.glbh) is not null then trim(dt.glbh)
+                          else  trim(td.glbm)      
+                             end glbh,  
+		                td.glmc,
+		                r.task_id,
+                    pt.name xz,
+		                case dt.H
+				when '0' then '否'
+				when '1' then '是'
+			end ISH,
+			dt.SGGH,
+       dt.gdbh,
+       to_char( dt.gdjgsj,'yyyy-mm-dd hh24:mi:ss') gdjgsj,
+             to_char(dt.bdsj,'yyyy-mm-dd hh24:mi:ss') bdsj
+		    from tb_cablecheck_taskdetail td
+      left join  tb_cablecheck_record r
+        on  r.detail_id = td.detail_id
+        left join TB_CABLECHECK_DTSJ dt
+		 on dt.dzid = r.port_id
+      LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON dt.XZ = PT.PSO_TYPE_ID
+		   where td.inspect_object_type = 1
+		   and td.task_id = #{TASK_ID}
+		 order by to_number(regexp_substr(r.port_no, '[0-9]*[0-9]', 1)),
+		          to_number(regexp_substr(r.port_no, '[0-9]*[0-9]', 3))
+	</select>
+	
+	<select id="queryTroubleTaskPortToFinish" parameterType="map" resultType="map">
+		 select distinct r.port_id,
+		                r.port_no,
+		                r.eqp_no,
+		                r.eqp_name,
+		                nvl(r.port_name,' ') port_name,
+                  	    nvl(dt.h,' ') h   	                 
+		    from tb_cablecheck_taskdetail td
+      left join  tb_cablecheck_record r
+        on  r.detail_id = td.detail_id
+        left join TB_CABLECHECK_DTSJ dt
+		 on dt.dzid = r.port_id
+		   where td.inspect_object_type = 1
+		   and td.task_id = #{TASK_ID}
+		   and r.record_type != 2
+		   and r.ischeckok = 1
+		 order by to_number(regexp_substr(r.port_no, '[0-9]*[0-9]', 1)),
+		          to_number(regexp_substr(r.port_no, '[0-9]*[0-9]', 3))
+	</select>
+	
+	
+		<select id="querySecondTask" parameterType="map" resultType="map">
+			select m.*,  CHECKED_ERROE_CHECK || '%'  checkrate from  ( SELECT TASK_ID,TASK_NO,TASK_NAME,REMARK,AUDITOR,INSPECTOR,MAINTOR,ZHHWHWG,STATUS_ID,TASK_TYPE,EQUIPMENT_CODE,RES_TYPE,GRID_ID,START_TIME,COMPLETE_TIME,ACTUAL_COMPLETE_TIME,LAST_UPDATE_TIME,TO_CHAR(CHECK_COMPLETE_TIME, 'yyyy-mm-dd hh24:mi:ss') CHECK_COMPLETE_TIME,AREA_ID,SON_AREA_ID, 
+		BEFORE_CHECK,CHECKED,ERROE_CHECK,
+		decode(CHECKED,0 ,0,round(((CHECKED-ERROE_CHECK)/CHECKED),4)*100) CHECKED_ERROE_CHECK
+    
+    
+		FROM (SELECT ROW_NUMBER() OVER(PARTITION BY modelA.task_id ORDER BY modelA.CHECK_COMPLETE_TIME DESC) rn,       
+          modelA.*      
+          FROM (select
+			T.TASK_ID,T.TASK_NO,T.TASK_NAME ,R.REMARK,S3.STAFF_NAME AUDITOR,S1.STAFF_NAME INSPECTOR,S2.STAFF_NAME MAINTOR,
+			case STATUS_ID
+				when 4 then '问题上报,待派单'
+				when 5 then '退单,待派单'
+				when 6 then '待回单'
+				when 7 then '已整改回单,待审核'
+				when 8 then '已归档'
+			end STATUS_ID,
+			case TASK_TYPE
+				when 0 then '周期性任务'
+				when 1 then '问题上报（一键反馈）'
+				when 2 then '问题上报（不可预告抽查）'
+				when 3 then '问题上报（任务检查）'
+				when 4 then '二次检查'
+				when 5 then '电子档案库定向检查'
+			end TASK_TYPE,
+			
+			TBC.EQUIPMENT_CODE,
+			TBC.RES_TYPE,
+			TBC.GRID_ID,
+			G.GRID_NAME ZHHWHWG,
+			TO_CHAR(T.START_TIME, 'yyyy/mm/dd') START_TIME,
+			TO_CHAR(T.COMPLETE_TIME, 'yyyy/mm/dd') COMPLETE_TIME,
+			TO_CHAR(T.ACTUAL_COMPLETE_TIME, 'yyyy/mm/dd') ACTUAL_COMPLETE_TIME,
+			TO_CHAR(T.LAST_UPDATE_TIME, 'yyyy-mm-dd hh24:mi:ss') LAST_UPDATE_TIME,
+			R.CREATE_TIME CHECK_COMPLETE_TIME,
+			A.NAME AREA_ID,B.NAME SON_AREA_ID,
+			(select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag='0') BEFORE_CHECK,
+            (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag = '1' and td.inspect_object_type = '1') CHECKED,
+            (select count(distinct r.port_id) from TB_CABLECHECK_RECORD r where r.task_id = t.task_id and r.ischeckok = 1 and r.port_id is not null) ERROE_CHECK
+		from TB_CABLECHECK_TASK             T,
+       		 AREA                           A,
+       		 AREA                           B,
+ 			 TB_BASE_STAFF                  S1,
+       		 TB_BASE_STAFF                  S2,
+       		 TB_BASE_STAFF                  S3,
+       		 TB_CABLECHECK_RECORD           R,
+       		 TB_CABLECHECK_EQUIPMENT TBC,
+       		 TB_CABLECHECK_GRID             G
+	
+		where
+			S1.STAFF_ID (+)= T.INSPECTOR
+			and S2.STAFF_ID (+)= T.MAINTOR
+			and S3.STAFF_ID(+)= T.AUDITOR
+			and A.AREA_ID(+) = T.AREA_ID
+			and B.AREA_ID(+) = T.SON_AREA_ID
+			and T.TASK_ID = R.TASK_ID(+)
+			and R.PORT_ID IS NULL
+			and T.SBID = TBC.EQUIPMENT_ID(+)
+			and TBC.GRID_ID = G.GRID_ID(+)
+			and T.TASK_TYPE = 0 
+			and T.STATUS_ID = 8
+			
+			<if test="queryParams.EQUIPMENT_CODE != null and queryParams.EQUIPMENT_CODE != ''">  
+	            <![CDATA[
+		    		AND TBC.EQUIPMENT_CODE like  '%'||#{queryParams.EQUIPMENT_CODE}||'%'
+			    	and TBC.res_type_id != 2530
+		    	]]>
+			</if>
+			<if test="queryParams.pos_eqpCode != null and queryParams.pos_eqpCode != ''">  
+	            <![CDATA[
+		    		AND TBC.EQUIPMENT_CODE like  '%'||#{queryParams.pos_eqpCode}||'%'
+		    		and TBC.res_type_id = 2530
+		    	]]>
+			</if>
+			<if test="queryParams.C_START_TIME!= null and queryParams.C_START_TIME != ''">  
+	            <![CDATA[
+		    	AND R.CREATE_TIME >= TO_DATE(#{queryParams.C_START_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.C_COMPLETE_TIME != null and queryParams.C_COMPLETE_TIME != ''">  
+	            <![CDATA[
+		    	AND trunc(R.CREATE_TIME) <= TO_DATE(#{queryParams.C_COMPLETE_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.INSPECTOR != null and queryParams.INSPECTOR != ''">  
+	            <![CDATA[
+		    	and s1.staff_name like '%'||#{queryParams.INSPECTOR}||'%'
+		    	]]>
+			</if>
+			<include refid="dynamicWhere_plan" />
+		 ORDER BY T.CREATE_TIME DESC) modelA   ) WHERE rn = 1  ) m where 1=1
+		 <if test="queryParams.checkport != null and queryParams.checkport != ''">  
+	            <![CDATA[
+		    	and m.CHECKED >= #{queryParams.checkport}
+		    	]]>
+			</if>
+			
+			<if test="queryParams.checkrate != null and queryParams.checkrate != ''">  
+	            <![CDATA[
+		    	and  m.CHECKED_ERROE_CHECK>= #{queryParams.checkrate}
+		    	]]>
+			</if>
+			<choose>
+			<when test="queryParams.orderby ==0">order by LAST_UPDATE_TIME DESC</when>
+			<when test="queryParams.orderby ==1">order by m.CHECKED DESC</when>
+			<when test="queryParams.orderby ==2">order by m.CHECKED_ERROE_CHECK DESC</when>
+			</choose>
+			
+		     
+	</select>
+	
+	<select id="exportSecondTaskInfo" parameterType="map" resultType="map">
+			select m.*,  CHECKED_ERROE_CHECK || '%'  checkrate from  ( SELECT TASK_ID,TASK_NO,TASK_NAME,REMARK,AUDITOR,INSPECTOR,MAINTOR,ZHHWHWG,STATUS_ID,TASK_TYPE,EQUIPMENT_CODE,RES_TYPE,GRID_ID,START_TIME,COMPLETE_TIME,ACTUAL_COMPLETE_TIME,LAST_UPDATE_TIME,TO_CHAR(CHECK_COMPLETE_TIME, 'yyyy-mm-dd hh24:mi:ss') CHECK_COMPLETE_TIME,AREA_ID,SON_AREA_ID, 
+		BEFORE_CHECK,CHECKED,ERROE_CHECK,
+		decode(CHECKED,0 ,0,round(((CHECKED-ERROE_CHECK)/CHECKED),4)*100) CHECKED_ERROE_CHECK
+    
+    
+		FROM (SELECT ROW_NUMBER() OVER(PARTITION BY modelA.task_id ORDER BY modelA.CHECK_COMPLETE_TIME DESC) rn,       
+          modelA.*      
+          FROM (select
+			T.TASK_ID,T.TASK_NO,T.TASK_NAME ,R.REMARK,S3.STAFF_NAME AUDITOR,S1.STAFF_NAME INSPECTOR,S2.STAFF_NAME MAINTOR,
+			case STATUS_ID
+				when 4 then '问题上报,待派单'
+				when 5 then '退单,待派单'
+				when 6 then '待回单'
+				when 7 then '已整改回单,待审核'
+				when 8 then '已归档'
+			end STATUS_ID,
+			case TASK_TYPE
+				when 0 then '周期性任务'
+				when 1 then '问题上报（一键反馈）'
+				when 2 then '问题上报（不可预告抽查）'
+				when 3 then '问题上报（任务检查）'
+				when 4 then '二次检查'
+				when 5 then '电子档案库定向检查'
+			end TASK_TYPE,
+			
+			TBC.EQUIPMENT_CODE,
+			TBC.RES_TYPE,
+			TBC.GRID_ID,
+			G.GRID_NAME ZHHWHWG,
+			TO_CHAR(T.START_TIME, 'yyyy/mm/dd') START_TIME,
+			TO_CHAR(T.COMPLETE_TIME, 'yyyy/mm/dd') COMPLETE_TIME,
+			TO_CHAR(T.ACTUAL_COMPLETE_TIME, 'yyyy/mm/dd') ACTUAL_COMPLETE_TIME,
+			TO_CHAR(T.LAST_UPDATE_TIME, 'yyyy-mm-dd hh24:mi:ss') LAST_UPDATE_TIME,
+			R.CREATE_TIME CHECK_COMPLETE_TIME,
+			A.NAME AREA_ID,B.NAME SON_AREA_ID,
+			(select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag='0') BEFORE_CHECK,
+            (select count(distinct td.inspect_object_no) from tb_cablecheck_taskdetail td where td.task_id = t.task_id and td.check_flag is not null and td.check_flag = '1' and td.inspect_object_type = '1') CHECKED,
+            (select count(distinct r.port_id) from TB_CABLECHECK_RECORD r where r.task_id = t.task_id and r.ischeckok = 1 and r.port_id is not null) ERROE_CHECK
+		from TB_CABLECHECK_TASK             T,
+       		 AREA                           A,
+       		 AREA                           B,
+ 			 TB_BASE_STAFF                  S1,
+       		 TB_BASE_STAFF                  S2,
+       		 TB_BASE_STAFF                  S3,
+       		 TB_CABLECHECK_RECORD           R,
+       		 TB_CABLECHECK_EQUIPMENT TBC,
+       		 TB_CABLECHECK_GRID             G
+	
+		where
+			S1.STAFF_ID (+)= T.INSPECTOR
+			and S2.STAFF_ID (+)= T.MAINTOR
+			and S3.STAFF_ID(+)= T.AUDITOR
+			and A.AREA_ID(+) = T.AREA_ID
+			and B.AREA_ID(+) = T.SON_AREA_ID
+			and T.TASK_ID = R.TASK_ID(+)
+			and R.PORT_ID IS NULL
+			and T.SBID = TBC.EQUIPMENT_ID(+)
+			and TBC.GRID_ID = G.GRID_ID(+)
+			and T.TASK_TYPE = 0 
+			and T.STATUS_ID = 8
+			
+			<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+	            <![CDATA[
+		    		AND TBC.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+			    	and TBC.res_type_id != 2530
+		    	]]>
+			</if>
+			<if test="pos_eqpCode != null and pos_eqpCode != ''">  
+	            <![CDATA[
+		    		AND TBC.EQUIPMENT_CODE like  '%'||#{pos_eqpCode}||'%'
+		    		and TBC.res_type_id = 2530
+		    	]]>
+			</if>
+			<if test="C_START_TIME!= null and C_START_TIME != ''">  
+	            <![CDATA[
+		    	AND R.CREATE_TIME >= TO_DATE(#{C_START_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="C_COMPLETE_TIME != null and C_COMPLETE_TIME != ''">  
+	            <![CDATA[
+		    	AND trunc(R.CREATE_TIME) <= TO_DATE(#{C_COMPLETE_TIME}, 'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="INSPECTOR != null and INSPECTOR != ''">  
+	            <![CDATA[
+		    	and s1.staff_name like '%'||#{INSPECTOR}||'%'
+		    	]]>
+			</if>
+			<include refid="dynamicWhere_plan_for_excelbyeqp" />
+		 ORDER BY T.CREATE_TIME DESC) modelA   ) WHERE rn = 1  ) m where 1=1
+		 <if test="checkport != null and checkport != ''">  
+	            <![CDATA[
+		    	and m.CHECKED >= #{checkport}
+		    	]]>
+			</if>
+			
+			<if test="checkrate != null and checkrate != ''">  
+	            <![CDATA[
+		    	and  m.CHECKED_ERROE_CHECK>= #{checkrate}
+		    	]]>
+			</if>
+			<choose>
+			<when test="orderby ==0">order by LAST_UPDATE_TIME DESC</when>
+			<when test="orderby ==1">order by m.CHECKED DESC</when>
+			<when test="orderby ==2">order by m.CHECKED_ERROE_CHECK DESC</when>
+			</choose>
+			
+		     
+	</select>
+</mapper>

@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inspecthelper.dao.InsOrderTaskDao">
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.overDayState!= null and queryParams.overDayState!=''">  
+            <![CDATA[
+	    	AND exists (select 1 from ins_action_history iah where iah.trouble_id=t.trouble_id and iah.action_type=6) and  ${queryParams.overDayState}
+	    	]]>
+		</if>
+		<if test="queryParams.sn != null and queryParams.sn != ''">  
+            <![CDATA[
+	    	AND t.sn = #{queryParams.sn}
+	    	]]>
+		</if>
+		<if test="queryParams.orderNo != null and queryParams.orderNo != ''">  
+            <![CDATA[
+	    	AND t.order_id = #{queryParams.orderNo}
+	    	]]>
+		</if>
+		<if test="queryParams.typeId != null and queryParams.typeId != ''">  
+            <![CDATA[
+	    	AND t.type = #{queryParams.typeId}
+	    	]]>
+		</if>
+		<if test="queryParams.order_equ != null and queryParams.order_equ != ''">  
+            <![CDATA[
+	    	AND t.equipment_code like '%'||#{queryParams.order_equ}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.remarks != null and queryParams.remarks != ''">  
+            <![CDATA[
+	    	AND t.remarks like '%'||#{queryParams.remarks}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.stateId != null and queryParams.stateId != ''">  
+            <![CDATA[
+	    	AND t.state = #{queryParams.stateId}
+	    	]]>
+		</if>
+		<if test="queryParams.targetId != null and queryParams.targetId != ''">  
+            <![CDATA[
+	    	AND t.target_id = #{queryParams.targetId}
+	    	]]>
+		</if>
+		<if test="queryParams.areaId != null and queryParams.areaId != ''">  
+            <![CDATA[
+	    	AND t.son_area like '%'||#{queryParams.areaId}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.area != null and queryParams.area != ''">  
+            <![CDATA[
+	    	AND s.area_id=#{queryParams.area}
+	    	]]>
+		</if>
+		<if test="queryParams.resTypeId != null and queryParams.resTypeId != ''">  
+            <![CDATA[
+	    	AND t.res_type_id = #{queryParams.resTypeId}
+	    	]]>
+		</if>
+		<if test="queryParams.staffId != null and queryParams.staffId != ''">  
+            <![CDATA[
+	    	AND t.repaire_staff = #{queryParams.staffId} and t.state = '1'
+	    	]]>
+		</if>
+		<if test="queryParams.staffNo1 != null and queryParams.staffNo1 != ''">  
+            <![CDATA[
+	    	AND t.check_staff = #{queryParams.staffNo1} and t.state in('0','2','4')
+	    	]]>
+		</if>
+		<if test="queryParams.staffId_ != null and queryParams.staffId_ != ''">  
+            <![CDATA[
+	    	AND (t.check_staff = #{queryParams.staffId_} or t.repaire_staff = #{queryParams.staffId_})
+	    	]]>
+		</if>
+		<if test="queryParams.ownCompany != null and queryParams.ownCompany != ''">  
+            <![CDATA[
+	    	AND t.ins_company like '%'||#{queryParams.ownCompany}||'%'
+	    	]]>
+		</if>
+	</sql>
+	<select id="getOrderTaskList" resultType="map" parameterType="util.page.Query">
+		select t.trouble_id, t.order_id,t.staff_id,t.staff_name,s.own_company,t.equipment_name,t.task_id ,t.type,t.target_name
+     	 ,t.task_code,to_char(t.happen_date,'yyyy-MM-dd hh:mi:ss') happen_date,t.remarks,t.project_no,t.check_staff_name,t.sn,
+			case
+			   when t.state='0' then '未派发' 
+			     when t.state='1' then '待回单'
+			       when t.state='2' then '待审核'
+			         when t.state='3' then '归档'
+			          when t.state='4' then '已退单'
+			           end trstate
+		,case when t.type='1' then '已处理'
+  		when t.type='0' then '问题上报'
+	    end trtype,
+			t.res_type,t.son_area,t.equipment_code,s.staff_name upload_staff_name,t.ins_company
+		from (select trlist.trouble_id, it.target_name,it.target_id,trlist.order_id,trlist.repaire_staff, ff.staff_id,ff.staff_name,ff.own_company,equm.equipment_name,equm.equipment_code,equm.area,equm.res_type,trlist.state,trlist.type,trlist.remarks,trlist.happen_date,task.task_code,task.task_id,trlist.check_staff,trlist.upload_staff
+				,trlist.trouble_code,trlist.project_no,trlist.ftth,equm.res_type_id,equm.son_area,s.own_company ins_company,cf.staff_name check_staff_name,trlist.sn
+				from ins_equ_target_trouble_list trlist
+				left join ins_task_order taskorder on trlist.order_id=taskorder.order_id
+				left join ins_task task on task.task_id=taskorder.task_id
+				left join ins_equipment equm on trlist.equipment_id=equm.equipment_id
+				left join tb_base_staff s on s.staff_id=equm.staff_id
+				left join  tb_base_staff ff on trlist.repaire_staff=ff.staff_id
+				left join tb_base_staff cf on trlist.check_staff=cf.staff_id
+				left join ins_target it on it.target_id=trlist.target_id) t 
+		join tb_base_staff s on s.staff_no=t.upload_staff
+		left join tb_base_staff s1 on s1.staff_id=t.check_staff
+		left join (select ac.trouble_id, max(trunc(ac.action_date)) maxdate
+	             from ins_action_history ac
+	             group by ac.trouble_id) md 
+	             on t.trouble_id=md.trouble_id 
+	             where 1=1 
+		<include refid="dynamicWhere" />
+		order by t.happen_date desc
+	</select>
+	
+	<select id="getEquTarget" resultType="map" parameterType="map">
+		select target_id,target_name,res_spec_id,area_id,check_item_type 
+		from ins_target t 		
+		where 1=1
+		<if test="resTypeId != null and resTypeId != ''">  
+            <![CDATA[
+	    	AND t.res_spec_id=#{resTypeId}
+	    	]]>
+		</if>
+		<if test="areaId != null and areaId != ''">  
+            <![CDATA[
+	    	AND t.area_id=#{areaId}
+	    	]]>
+		</if>
+		order by t.area_id,t.target_id
+	</select>
+	
+	<select id="getPLZPCheckStaff" resultType="map" parameterType="map">
+		select to_char(t1.staff_id) staff_id
+                 from ins_staff_target t1
+                 join tb_base_staff s on t1.staff_id = s.staff_id
+                        where t1.target_id = '0000' 
+                       	and s.own_company =
+                              (select s1.own_company
+                                 from tb_base_staff s1
+                                 join ins_equipment ie on s1.staff_id = ie.staff_id
+       	 where ie.equipment_id = (select t.equipment_id from ins_equ_target_trouble_list t where t.trouble_id=#{troubleId}))
+	</select>	
+	
+	<select id="getLastTrouPhotoPath" resultType="map" parameterType="map">
+		select replace(photo_path,'ip',#{ip}) photo_path
+		,replace(micro_photo_path,'ip',#{ip})
+		micro_photo_path,to_char(rp.upload_date,'yyyy-mm-dd')||'('||rownum||')'
+		photo_name from resource_photo rp where rp.resource_code =
+		#{resourceCode}
+	</select>
+	
+	<select id="findTroublecode"  resultType="map">
+		select trouble_code from INS_EQU_TARGET_TROUBLE_LIST t where t.trouble_id=#{troubleId}
+	</select>
+	
+	<select id="findAllPhoto"  resultType="map">
+		select replace(t.photo_path,'ip',#{ip}) file_path ,replace(t.micro_photo_path,'ip',#{ip}) micro_photo_path from   RESOURCE_PHOTO t
+		left join INS_EQU_TARGET_TROUBLE_LIST trlist on to_char(trlist.trouble_id)=t.resource_code where trlist.trouble_id in (${troubleId})
+	</select>
+	
+	<select id="findAllFile"  resultType="map">
+		select replace(t.file_path,'ip',#{ip}) file_path  from   RESOURCE_FILE t
+			left join INS_EQU_TARGET_TROUBLE_LIST trlist on to_char(trlist.trouble_id)=t.resource_code where trlist.trouble_id in (${troubleId})
+	</select>
+	
+	<select id="getFileId" resultType="int">
+		select FILE_ID.NEXTVAL from DUAL
+	</select>
+	
+	<select id="getNewStr" parameterType="map" resultType="map">
+		select ie.equipment_code||'/'||#{staffNo}||'/'||to_char(sysdate,'yyyy-mm-dd')
+		str
+		from ins_equ_target_trouble_list t
+		join ins_equipment ie on ie.equipment_id=t.equipment_id
+		where t.trouble_id=#{troubleId}
+	</select>
+	
+	<select id="getZGCount" parameterType="map" resultType="int">
+		select count(1) from ins_action_history t
+		where t.trouble_id=#{troubleId} and t.action_type='1'
+	</select>
+	
+	<select id="getStaffByFiberCode"  parameterType="map" resultType="map">
+		select t.处理组 install_company,t.处理人员 install_staff,to_char(t.竣工时间,'yyyy-mm-dd') install_date,t.业务号码 access_num from  report.oss_lc_op_detail@atom t where t.光路编号=#{fiberCode}
+	</select>
+	
+	<select id="getAllStaffByTroubleOrderList"  resultType="map">
+		select s.staff_id,s.staff_name from tb_base_staff s join tb_base_staff_role sr on sr.staff_id = s.staff_id join ins_company com
+		  on com.company_name=s.own_company
+			 where  com.company_Id=#{companyId} and s.status=0 and s.area_id=com.area_id
+			 <choose>
+				<when test="staffType=='repaire'.toString()">
+				 	and sr.role_id = 12
+				</when>
+				<when test="staffType==''check.toString()">
+					and sr.role_id = 13
+				</when>
+			</choose>		 
+	</select>
+	
+	<select id="getActionHistoryOrderList"  parameterType="map" resultType="map">
+		select staff.staff_name,hi.action_id,hi.description,to_char(hi.action_date,'yyyy-mm-dd hh24:mi:ss') action_date,hi.action_type ,staff.own_company,
+			s1.staff_name goal_staff_name,s1.own_company goal_own_company
+		from ins_action_history hi 
+		left join tb_base_staff staff on hi.action_staff_id=staff.staff_id
+		left join tb_base_staff s1 on hi.goal_staff_id=s1.staff_id
+    where hi.trouble_id=#{orderId}  order by hi.action_date asc
+	</select>
+	
+	<update id="pLZPai" parameterType="map">
+		update ins_equ_target_trouble_list t
+  			 set t.last_check_staff = t.check_staff,t.state='0',t.repaire_staff='',
+  			 		t.check_staff = #{checkStaff}
+   			where t.trouble_id=#{troubleId}
+	</update>
+	
+	<update id="modifyOrderEndInfo" parameterType="map">
+		update INS_EQU_TARGET_TROUBLE_LIST trlist set trlist.state='3',trlist.end_time=sysdate, trlist.project_no=#{projNumber},trlist.access_num=#{accessNum}		
+			,trlist.install_name=#{installName},trlist.install_company=#{installCompany},trlist.install_date=to_date(#{installDate},'yyyy-mm-dd')	
+		where trlist.trouble_id = #{troubleId}
+	</update>
+	
+	<update id="modifyOrderTuidanInfo"  parameterType="map">
+		update INS_EQU_TARGET_TROUBLE_LIST trlist set trlist.state='4',trlist.repaire_staff='' where trlist.trouble_id = #{troubleId}
+	</update>
+	
+	<update id="modifyOrderPostInfo" parameterType="map">
+		update INS_EQU_TARGET_TROUBLE_LIST trlist set trlist.repaire_staff = #{staffId},trlist.troubie_remarks=#{remarks},trlist.state='1',trlist.project_no=#{projNumber}	
+			,trlist.install_name=#{installName},trlist.install_company=#{installCompany},trlist.install_date=to_date(#{installDate},'yyyy-mm-dd')	 
+		where trlist.trouble_id in (${troubleId})
+	</update>
+	
+	<update id="modifyOrderPostInfo_" parameterType="map">
+		update INS_EQU_TARGET_TROUBLE_LIST trlist 
+			set trlist.check_staff = #{staffId},trlist.troubie_remarks=#{remarks} ,trlist.state = '0',trlist.project_no=#{projNumber},trlist.access_num=#{accessNum}	
+			,trlist.install_name=#{installName},trlist.install_company=#{installCompany},trlist.install_date=to_date(#{installDate},'yyyy-mm-dd')
+			<choose>
+				<when test="ftth=='1'.toString()">
+				 ,trlist.ftth='FTTH',trlist.remarks=trlist.remarks||'(FTTH)'
+				</when>
+				<when test="ftth=='2'.toString()">
+				,trlist.ftth='BBU',trlist.remarks=trlist.remarks||'(BBU)' 
+				</when>
+				<when test="ftth=='3'.toString()">
+				 ,trlist.ftth='',trlist.remarks=trlist.remarks||'(非FTTH/BBU)'
+				</when>
+			</choose>
+			where trlist.trouble_id in (${troubleId})
+	</update>
+	
+	<update id="modifyOrderHuiInfo" parameterType="map">
+		update INS_EQU_TARGET_TROUBLE_LIST trlist set trlist.troubie_remarks=#{remarks},trlist.state='2' where trlist.trouble_id = #{troubleId}
+	</update>
+	
+	<update id="modifyOrderCheckInfoOk" parameterType="map">
+		update INS_EQU_TARGET_TROUBLE_LIST trlist set trlist.check_company=#{companyId},trlist.check_money=#{money},trlist.state='3' ,trlist.project_no=#{projNumber}	,trlist.end_time=sysdate
+			,trlist.install_name=#{installName},trlist.install_company=#{installCompany},trlist.install_date=to_date(#{installDate},'yyyy-mm-dd'),trlist.access_num=#{accessNum}		
+		where trlist.trouble_id in (${troubleId})
+	</update>
+	
+	<update id="modifyOrderCheckInfoNo" parameterType="map">
+		update INS_EQU_TARGET_TROUBLE_LIST trlist set trlist.state='1' where trlist.trouble_id in (${troubleId})
+	</update>
+	
+	<insert id="insertActionHistory" parameterType="map">
+		insert into ins_action_history(action_id,trouble_id,action_staff_id,description,action_date,action_type,goal_staff_id)
+					values(ACTION_ID.Nextval,#{troubleId},#{staffId},#{descAction},sysdate,#{actionType},#{goalStaffId,, jdbcType=NUMERIC})
+	</insert>
+	
+	<insert id="saveResourceFile" parameterType="map">
+		insert into
+		resource_file (file_id,staff_no,resource_code,upload_date,file_path)
+		values(#{fileId},#{staffNo},#{resourceCode},sysdate,#{path})
+	</insert>
+	
+	<insert id="saveResourcePhoto" parameterType="map">
+		insert into
+		resource_photo(photo_id,staff_no,resource_code,upload_date,photo_path,micro_photo_path)
+		values(#{photoId},#{staffNo},#{resourceCode},sysdate,#{photoPath},#{microPhotoPath})
+	</insert>
+	
+	<select id="getZGTroubleInfo"  resultType="java.util.HashMap" parameterType="java.util.HashMap" >
+		select 	distinct ie.trouble_id,
+				gj.eqpid,
+       			gj.portid,
+      		 	gj.groupid,
+       			decode(ie.state,3,'已整改,已归档','已整改,未归档') remarks,
+       			to_char(ie.end_time,'yyyy-mm-dd hh24:mi:ss') end_time
+    from ins_equ_target_trouble_list ie, sh_zyjc_gj_change gj,ins_task_equipment_check itc
+    where   ie.order_id=itc.order_id
+	and (ie.state=3 or ie.state=2 )
+    and itc.is_odf_check=2
+    and  ie.equipment_id=gj.eqpid
+    and instr(ie.remarks, gj.portno) > 0 
+    and ie.trouble_id in(${troubleId})
+	</select>
+</mapper>
+
+

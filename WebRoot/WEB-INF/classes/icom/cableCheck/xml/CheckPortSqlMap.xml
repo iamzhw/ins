@@ -1,0 +1,1534 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.cableCheck.dao.CheckPortDao">
+
+<!--无任务查端子-->
+<select id="getPortList" parameterType="map" resultType="map">
+   select distinct sj.SBID,
+                   nvl(sj.SBBM, ' ') SBBM,
+                   nvl(sj.SBMC, ' ') SBMC,
+                   sj.SBLX SBLX,
+                   sj.DZID,
+                   sj.id,
+                   nvl(sj.DZBM, ' ') DZBM,
+                   max(sj.H) H,
+                   sj.glbh,
+                   nvl(eqp.address, ' ') address,
+                   nvl(eqp.res_type, ' ') res_type,
+                   sj.sggh,
+                   sj.pzgh,
+                   PT.NAME XZ,
+                   sj.gqgh,
+                   sj.glmc,
+                   sj.gdbh,
+                   TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD') bdsj
+     from TB_CABLECHECK_DTSJ SJ
+     left join TB_CABLECHECK_EQUIPMENT eqp
+       on sj.sbid = eqp.equipment_id
+     left join area a
+       on a.area_id = sj.areaid
+     left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+       on SJ.XZ = PT.PSO_TYPE_ID
+    where sj.BDSJ &gt;
+   = trunc(add_months(sysdate, -1), 'mm') and sj.BDSJ &lt;
+   = trunc(last_day(add_months(sysdate, -1))) and eqp.parent_area_id = #{areaId} and SJ.SBID = #{eqpId} group by sj.SBID, sj.SBBM, sj.SBMC, sj.glbh, sj.SBLX, sj.SBMC, sj.DZID, sj.DZBM, eqp.address, eqp.res_type, sj.sggh, sj.pzgh, PT.NAME, sj.gqgh, sj.glmc, sj.gdbh, SJ.BDSJ, sj.id
+<!--
+	select distinct sj.SBID,
+	                nvl(sj.SBBM, ' ') SBBM,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                sj.SBLX SBLX,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                nvl(sj.DZID, ' ') DZID,
+	                nvl(sj.DZBM, ' ') DZBM,
+	                max(sj.H) H,
+	                '' BDSJ,
+	                '' GLBH,
+	                nvl(eqp.address, ' ') address,
+	                nvl(eqp.res_type, ' ') res_type
+	  from TB_CABLECHECK_DTSJ      SJ,
+	       TB_CABLECHECK_EQUIPMENT eqp,
+	       area                           a
+	 where sj.BDSJ &gt;= trunc(add_months(sysdate,-1),'mm')
+	   and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate,-1))) 
+	   and a.area_id = sj.areaid 
+	   and a.parent_area_id = #{areaId} 
+	   and sj.sbid = eqp.equipment_id 
+	   and SJ.SBID = #{eqpId} 
+	   group by sj.SBID, sj.SBBM, sj.SBMC, sj.SBLX, sj.SBMC, sj.DZID, sj.DZBM, eqp.address, eqp.res_type
+--><!-- 	select distinct sj.SBID,
+	                nvl(sj.SBBM, ' ') SBBM,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                sj.SBLX SBLX,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                nvl(sj.DZID, ' ') DZID,
+	                nvl(sj.DZBM, ' ') DZBM,
+	                max(sj.H) H,
+	                '' BDSJ,
+	                '' GLBH,
+	                nvl(eqp.address, ' ') address,
+	                nvl(eqp.res_type, ' ') res_type
+	  from TB_CABLECHECK_DTSJ SJ
+	  left join TB_CABLECHECK_EQUIPMENT eqp
+	    on sj.sbid = eqp.equipment_id
+	  left join area a
+	    on eqp.area_id = a.area_id
+	 where a.area_id = #{areaId}
+	   and sj.BDSJ &gt;= trunc(add_months(sysdate, -1), 'mm')
+	   and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate, -1)))
+	   and SJ.SBID = #{eqpId}
+	 group by sj.SBID,sj.SBBM,sj.SBMC,sj.SBLX, sj.SBMC, sj.DZID,sj.DZBM,eqp.address, eqp.res_type -->
+</select>
+
+<select id="getAllList" parameterType="map" resultType="map">
+<!-- 	select distinct sj.SBID,
+	                nvl(sj.SBBM, ' ') SBBM,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                sj.SBLX SBLX,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                nvl(sj.DZID, ' ') DZID,
+	                nvl(sj.DZBM, ' ') DZBM,
+	                max(sj.H) H,
+	                '' BDSJ,
+	                '' GLBH,
+	                nvl(eqp.address, ' ') address,
+	                nvl(eqp.res_type, ' ') res_type
+	  from TB_CABLECHECK_DTSJ SJ
+	  left join TB_CABLECHECK_EQUIPMENT eqp
+	    on sj.sbid = eqp.equipment_id
+	  left join area a
+	    on eqp.area_id = a.area_id
+	 where a.area_id = #{areaId}
+	   and SJ.SBID = #{eqpId}
+	 group by sj.SBID,sj.SBBM,sj.SBMC,sj.SBLX, sj.SBMC, sj.DZID,sj.DZBM,eqp.address, eqp.res_type -->
+select distinct sj.SBID,nvl(sj.SBBM,' ')SBBM,nvl(sj.SBMC,' ')SBMC,SJ.SBLX SBLX,
+    nvl(sj.SBMC,' ')SBMC,sj.DZID DZID,nvl(sj.DZBM,' ')DZBM,nvl(sj.H,' ')H,
+   nvl(TO_CHAR(sj.BDSJ, 'yyyy/mm/dd'),' ')BDSJ,nvl(sj.GLBH,' ')GLBH,
+    nvl(eqp.address,' ')address,nvl(eqp.res_type,' ') res_type
+    from TB_CABLECHECK_DTSJ SJ,TB_CABLECHECK_EQUIPMENT eqp,area a
+    where 
+     a.area_id = sj.areaid
+    and eqp.parent_area_id = #{areaId}
+    and sj.sbid=eqp.equipment_id
+		and SJ.SBID=#{eqpId}  order by DZBM
+</select>
+
+<select id="getGDList" parameterType="map" resultType="map">
+	SELECT DISTINCT NVL(SJ.GLMC, ' ') GLMC,
+                   	NVL(SJ.GLBH, ' ') GLBH,
+	                 NVL(TO_CHAR(SJ.GDJGSJ,'yyyy/MM/dd HH24:mi:ss'),' ') GDJGSJ,
+	                NVL(SJ.SGGH, ' ') SGGH,
+	                NVL(SJ.PZGH, ' ') PZGH,
+	                NVL(SJ.GQGH, ' ') GQGH,
+	                NVL(PT.NAME, ' ') XZ,
+	                NVL(TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD'), ' ') BDSJ
+	  FROM TB_CABLECHECK_DTSJ SJ
+	  LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+    	ON SJ.XZ=PT.PSO_TYPE_ID
+	 WHERE SJ.DZID = #{DZID}
+	   AND SJ.SBID = #{SBID}
+	   AND SJ.BDSJ &gt;= TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM') 
+	   AND SJ.BDSJ &lt;= TRUNC(LAST_DAY(ADD_MONTHS(SYSDATE, -1)))
+	   order by GDJGSJ desc
+</select>
+
+<select id="getTaskType" parameterType="String" resultType="int">
+select task_type from tb_cablecheck_task where task_id = #{taskId}
+</select>
+<!-- 任务查所有端子 -->
+<select id="getAllTaskDtsjList" parameterType="map" resultType="map">
+
+  select *
+    from (SELECT DISTINCT SJ.DZID,
+                          SJ.ID,
+                          nvl(SJ.DZBM, ' ') DZBM,
+                          SJ.SBID,
+                          nvl(SJ.SBBM, ' ') SBBM,
+                          sj.SBLX SBLX,
+                          nvl(SJ.SBMC, ' ') SBMC,
+                          '' GLBH,
+                          max(sj.H) H,
+                          '' DETAIL_ID,
+                          ts.TASK_ID,
+                          ts.COMPLETE_TIME,
+                          nvl(EQP.RES_TYPE, ' ') RES_TYPE,
+                          nvl(EQP.ADDRESS, ' ') ADDRESS,
+                          sj.sggh,
+                          sj.pzgh,
+                          PT.NAME XZ,
+                          sj.gqgh,
+                          sj.glmc,
+                          sj.gdjgsj,
+                          sj.gdbh,
+                          TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD') bdsj
+            from tb_cablecheck_task ts
+            left join tb_cablecheck_taskdetail td
+              on ts.task_id = td.task_id
+            left join TB_CABLECHECK_DTSJ SJ
+              on ts.sbid = sj.install_sbid
+            left join TB_CABLECHECK_EQUIPMENT eqp
+              on eqp.equipment_id = sj.sbid
+               LEFT JOIN OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+    	ON SJ.XZ=PT.PSO_TYPE_ID
+           where ts.task_id = #{taskId}
+             and td.inspect_object_type = 1
+             and sj.BDSJ &gt;= trunc(add_months(sysdate, -1), 'mm')
+             and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate, -1)))
+           group by sj.SBID,
+                    sj.SBBM,
+                    sj.SBMC,
+                    sj.SBLX,
+                    sj.SBMC,
+                    sj.DZID,
+                    sj.DZBM,
+                    eqp.address,
+                    eqp.res_type,
+                    ts.COMPLETE_TIME,
+                    ts.TASK_ID,
+                    sj.sggh,
+                    sj.pzgh,
+                    sj.pzgh,
+                    PT.NAME,
+                    sj.gqgh,
+                    sj.glmc,
+                    sj.gdbh,
+                     sj.id,
+                     sj.gdjgsj,
+                    bdsj) t
+   order by t.sbid asc,
+            to_number(regexp_substr(t.dzbm, '[0-9]*[0-9]', 1)) asc,
+            to_number(regexp_substr(t.dzbm, '[0-9]*[0-9]', 3)) asc,
+             t.bdsj desc,
+            t.gdjgsj desc nulls last
+
+<!--
+	select * from (
+	SELECT DISTINCT SJ.DZID,
+	                nvl(SJ.DZBM, ' ') DZBM,
+	                SJ.SBID,
+	                nvl(SJ.SBBM, ' ') SBBM,
+	                sj.SBLX SBLX,
+	                nvl(SJ.SBMC, ' ') SBMC,
+	                '' GLBH,
+	                max(sj.H) H,
+	                '' DETAIL_ID,
+	                ts.TASK_ID,
+	                ts.COMPLETE_TIME,
+	                nvl(EQP.RES_TYPE, ' ') RES_TYPE,
+	                nvl(EQP.ADDRESS, ' ') ADDRESS
+	  from tb_cablecheck_task ts
+	  left join tb_cablecheck_taskdetail td
+	    on ts.task_id=td.task_id
+	  left join TB_CABLECHECK_DTSJ SJ
+	    on ts.sbid = sj.install_sbid
+	  left join TB_CABLECHECK_EQUIPMENT eqp
+	    on eqp.equipment_id = sj.sbid
+	 where ts.task_id = #{taskId}
+	   and td.inspect_object_type = 1
+	   and sj.BDSJ &gt;= trunc(add_months(sysdate, -1), 'mm') 
+	   and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate, -1)))
+	 group by sj.SBID,sj.SBBM, sj.SBMC,sj.SBLX,  sj.SBMC, sj.DZID, sj.DZBM,eqp.address, eqp.res_type,ts.COMPLETE_TIME,ts.TASK_ID
+	) t order by t.sbid asc, to_number(regexp_substr(t.dzbm, '[0-9]*[0-9]', 1)) asc,to_number(regexp_substr(t.dzbm, '[0-9]*[0-9]', 3)) asc
+--></select>
+<!--根据前台传的taskid查出所有端子,Tasktype如果是周期性任务-->
+<select id="getDtsjList" parameterType="map" resultType="map">
+select * from(
+	SELECT DISTINCT SJ.DZID,
+	                nvl(SJ.DZBM, ' ') DZBM,
+	                SJ.SBID,
+	                nvl(SJ.SBBM, ' ') SBBM,
+	                sj.SBLX SBLX,
+	                nvl(SJ.SBMC, ' ') SBMC,
+	                '' GLBH,
+	                max(sj.H) H,
+	                '' DETAIL_ID,
+	                td.TASK_ID,
+	                ts.COMPLETE_TIME,
+	                nvl(EQP.RES_TYPE, ' ') RES_TYPE,
+	                nvl(EQP.ADDRESS, ' ') ADDRESS
+	  FROM TB_CABLECHECK_DTSJ SJ
+	  join tb_cablecheck_taskdetail td
+	    on td.INSPECT_OBJECT_ID = SJ.ID
+	  join tb_cablecheck_task ts
+	    on ts.TASK_ID = td.TASK_ID
+	  left join TB_CABLECHECK_EQUIPMENT EQP
+	    on sj.sbid = eqp.equipment_id
+	 WHERE ts.TASK_ID = #{taskId}
+	   and td.inspect_object_type = 1
+	 group by sj.SBID,sj.SBBM,sj.SBMC,sj.SBLX, sj.SBMC, sj.DZID,sj.DZBM,eqp.address, eqp.res_type,ts.COMPLETE_TIME,td.TASK_ID
+	)t order by t.sbbm, to_number(regexp_substr(t.dzbm,'[0-9]*[0-9]',1)) asc,
+ 		 to_number(regexp_substr(t.dzbm,'[0-9]*[0-9]',3)) asc
+<!--  SELECT DISTINCT 
+               SJ.DZID,
+               nvl(SJ.DZBM,' ')DZBM,
+               SJ.SBID,
+               nvl(SJ.SBBM,' ')SBBM,
+               SJ.SBLX SBLX,
+               nvl(SJ.SBMC,' ')SBMC,
+               nvl(SJ.GLBH,' ')GLBH,
+               nvl(SJ.H,' ')H,
+               td.DETAIL_ID,
+               td.TASK_ID,
+               ts.COMPLETE_TIME,
+               nvl(EQP.RES_TYPE,' ')RES_TYPE,
+               nvl(EQP.ADDRESS,' ')ADDRESS
+          FROM TB_CABLECHECK_DTSJ SJ  join 
+           tb_cablecheck_taskdetail  td 
+           on td.INSPECT_OBJECT_ID = SJ.ID  join
+            tb_cablecheck_task ts  
+           on ts.TASK_ID = td.TASK_ID
+          left join TB_CABLECHECK_EQUIPMENT EQP 
+         on  sj.sbid=eqp.equipment_id 
+         WHERE ts.TASK_ID = #{taskId}
+         and td.detail_id = #{rwmxId}
+         and td.inspect_object_type = 1
+         order by dzbm -->      
+ </select>
+ 
+ <select id="getTroubleList" parameterType="map" resultType="map">
+ SELECT DISTINCT 
+               SJ.DZID,
+               nvl(SJ.DZBM,' ')DZBM,
+               SJ.SBID,
+               nvl(SJ.SBBM,' ')SBBM,
+               SJ.SBLX SBLX,
+               nvl(SJ.SBMC,' ')SBMC,
+               nvl(SJ.GLBH,' ')GLBH,
+               nvl(SJ.H,' ')H,
+               td.DETAIL_ID,
+               td.TASK_ID,
+               ts.COMPLETE_TIME,
+               nvl(EQP.RES_TYPE,' ')RES_TYPE,
+               nvl(EQP.ADDRESS,' ')ADDRESS
+          FROM tb_cablecheck_dtsj sj 
+    left join tb_cablecheck_record rec
+    on sj.sbid = rec.eqp_id
+    left join tb_cablecheck_taskdetail td
+    on rec.record_id = td.inspect_object_id
+    left join tb_cablecheck_task ts
+   on  ts.TASK_ID = td.TASK_ID
+          left join TB_CABLECHECK_EQUIPMENT EQP 
+         on  sj.sbid=eqp.equipment_id 
+         WHERE ts.TASK_ID = #{taskId}
+         and td.detail_id = #{rwmxId}   
+ </select>
+ 
+ <select id="getBdList" parameterType="map" resultType="map">
+ SELECT DISTINCT 
+               SJ.DZID,
+               nvl(SJ.DZBM,' ')DZBM,
+               SJ.SBID,
+               nvl(SJ.SBBM,' ')SBBM,
+               SJ.SBLX SBLX,
+               nvl(SJ.SBMC,' ')SBMC,
+               nvl(SJ.GLBH,' ')GLBH,
+               nvl(SJ.H,' ')H,
+               td.DETAIL_ID,
+               td.TASK_ID,
+               ts.COMPLETE_TIME,
+               nvl(EQP.RES_TYPE,' ')RES_TYPE,
+               nvl(EQP.ADDRESS,' ')ADDRESS
+          FROM TB_CABLECHECK_DTSJ SJ left join 
+           tb_cablecheck_taskdetail  td 
+           on td.INSPECT_OBJECT_ID = SJ.ID left join
+            tb_cablecheck_task ts  
+           on ts.TASK_ID = td.TASK_ID
+          left join TB_CABLECHECK_EQUIPMENT EQP 
+         on  sj.sbid=eqp.equipment_id 
+         WHERE ts.TASK_ID = #{taskId}
+         and td.detail_id = #{rwmxId}
+         and td.inspect_object_type = 1   
+         and sj.BDSJ &gt;=trunc(add_months(sysdate,-1),'mm')
+        and sj.BDSJ &lt;=trunc(last_day(add_months(sysdate,-1)))  
+ </select>
+<!-- 隐患任务变动端子-->
+ <select id="getTroubleBdList" parameterType="map" resultType="map">
+ SELECT DISTINCT 
+               SJ.DZID,
+               nvl(SJ.DZBM,' ')DZBM,
+               SJ.SBID,
+               nvl(SJ.SBBM,' ')SBBM,
+               SJ.SBLX SBLX,
+               nvl(SJ.SBMC,' ')SBMC,
+               nvl(SJ.GLBH,' ')GLBH,
+               nvl(SJ.H,' ')H,
+               td.DETAIL_ID,
+               td.TASK_ID,
+               ts.COMPLETE_TIME,
+               nvl(EQP.RES_TYPE,' ')RES_TYPE,
+               nvl(EQP.ADDRESS,' ')ADDRESS
+          FROM tb_cablecheck_dtsj sj 
+    left join tb_cablecheck_record rec
+    on sj.sbid = rec.eqp_id
+    left join tb_cablecheck_taskdetail td
+    on rec.record_id = td.inspect_object_id
+    left join tb_cablecheck_task ts
+   on  ts.TASK_ID = td.TASK_ID
+          left join TB_CABLECHECK_EQUIPMENT EQP 
+         on  sj.sbid=eqp.equipment_id 
+         WHERE ts.TASK_ID = #{taskId}
+         and td.detail_id = #{rwmxId} 
+         and sj.BDSJ &gt;=trunc(add_months(sysdate,-1),'mm')
+        and sj.BDSJ &lt;=trunc(last_day(add_months(sysdate,-1)))    
+ </select>
+
+<!--oss中设备模糊匹配查光路编码-->
+	<select id="getGlList" parameterType="map" resultType="map">
+	select distinct t1.* from (
+  select T.*,
+           to_char(nvl(lbl.no,' ')) glbh,
+           to_char(nvl(lbl.name,' ')) glmc,
+           ps.state_id xz_id,
+           ps.name xz_name
+      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS,
+                   SPEC.NAME,
+                   PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end z_phy_port_id,
+                    case when  alplc.z_phy_port_id is null
+                   then min(zlplc.link_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.link_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end link_id,
+                    case when  alplc.WO_ID is null
+                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end WO_ID            
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id    
+             WHERE PE.PHY_EQP_ID = #{eqpId}
+           ) T
+      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+       left join ${jndi}.Srv_Work_Order swo on T.wo_id =  swo.wo_id
+      left join ${jndi}.PUB_STATUS ps on swo.state_id=ps.state_id
+     ) t1
+      ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+	<!--  select distinct t1.* from (
+  select T.*,
+           to_char(nvl(lbl.no,' ')) glbh,
+           to_char(nvl(lbl.name,' ')) glmc,
+           cs.no cdno,
+           cs.name cdname,
+           jp.no jumpPortNo,
+           to_char(jp.seq_in_unit) jumpPortSeqNo,
+           to_char(peu.no) jumpUnitNo,
+           peu.sequence jumpUnitSeq,
+           pe.name jumpEqpName,
+           CASE
+             WHEN PE.Res_Spec_Id IN ('2530', '414') THEN jp.NO
+             ELSE peu.SEQUENCE || '/' || jp.SEQ_IN_UNIT
+           END jumpDZBM,
+           ps.state_id xz_id,
+           ps.name xz_name
+      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS,
+                   SPEC.NAME,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN PTP.NO
+                     ELSE PU.NO
+                   END SEQ_IN_NO,
+                   PTP.NO no2,
+                   PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end z_phy_port_id,
+                   decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id,
+                    case when  alplc.WO_ID is null
+                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end WO_ID
+
+
+                   
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id  
+              
+             WHERE PE.PHY_EQP_ID = #{eqpId}
+           ) T
+      left join ${jndi}.phy_term_port jp on jp.phy_port_id = t.z_phy_port_id 
+      left join ${jndi}.phy_eqp_unit peu on jp.unit_id = peu.unit_id
+      left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id 
+      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+       left join ${jndi}.Srv_Work_Order swo on T.wo_id =  swo.wo_id
+      left join ${jndi}.PUB_STATUS ps on swo.state_id=ps.state_id
+      left join ${jndi}.cbl_fiber cf on cfc.fiber_id = cf.fiber_id
+      left join ${jndi}.CBL_SECTION cs on cs.CBL_SECT_ID = cf.CBL_SECT_ID ) t1
+      ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+      -->
+	<!--
+	select distinct t1.* from (
+	select T.*,
+         to_char(lbl.no) glbh,
+         to_char(lbl.name) glmc,
+         cs.no cdno,
+         cs.name cdname,
+         jp.no jumpPortNo,
+         to_char(jp.seq_in_unit) jumpPortSeqNo,
+         to_char(peu.no) jumpUnitNo,
+         peu.sequence jumpUnitSeq,
+         pe.name jumpEqpName,
+         CASE
+           WHEN PE.Res_Spec_Id IN ('2530', '414') THEN jp.NO
+           ELSE peu.SEQUENCE || '/' || jp.SEQ_IN_UNIT
+         END jumpDZBM 
+    from (SELECT PTP.PHY_PORT_ID DZID,
+                 CASE
+                   WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                   ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                 END DZBM,
+                 TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                 PE.NO SBBM,
+                 PE.RES_SPEC_ID SBLX,
+                 PE.NAME SBMC,
+                 PE.ADDRESS,
+                 SPEC.NAME,
+                 CASE
+                   WHEN PE.Res_Spec_Id IN ('2530', '414') THEN PTP.NO
+                   ELSE PU.NO
+                 END SEQ_IN_NO,
+                 PTP.NO no2,
+                 PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+                 decode(alplc.z_phy_port_id,null,zlplc.a_phy_port_id,alplc.z_phy_port_id) z_phy_port_id,
+                 decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id
+            FROM ${jndi}.PHY_EQUIPMENT PE
+            left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+            join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+            left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+            left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id and nvl(alplc.cbl_line_id, 0) = 0
+            left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id  and nvl(zlplc.cbl_line_id, 0) = 0
+           WHERE PE.PHY_EQP_ID = #{eqpId} 
+          ) T
+    left join ${jndi}.phy_term_port jp on jp.phy_port_id = t.z_phy_port_id 
+    left join ${jndi}.phy_eqp_unit peu on jp.unit_id = peu.unit_id
+    left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id 
+    left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+    left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+    left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+    left join ${jndi}.cbl_fiber cf on cfc.fiber_id = cf.fiber_id
+    left join ${jndi}.CBL_SECTION cs on cs.CBL_SECT_ID = cf.CBL_SECT_ID) t1 ORDER BY  
+    to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+	--><!-- SELECT DISTINCT T.*
+  FROM (SELECT '' ID,
+               TO_CHAR(PTP.PHY_PORT_ID) DZID,
+               CASE
+               WHEN PE.Res_Spec_Id IN ('2530', '414') THEN
+                 PTP.NO
+               ELSE
+              PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+             END DZBM,
+               TO_CHAR(PTP.PHY_EQP_ID) SBID,
+               PE.NO SBBM,
+               PE.RES_SPEC_ID SBLX,
+               PE.NAME SBMC,
+               '' BDSJ,
+               PE.ADDRESS,
+               SPEC.NAME,
+               CASE
+               WHEN PE.Res_Spec_Id IN ('2530', '414') THEN
+                 PTP.NO
+               ELSE
+               PU.NO
+               END SEQ_IN_NO,  
+               PTP.NO no2,
+               PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+
+              nvl( CASE
+                 WHEN (SELECT TO_CHAR(LB.NO)
+                         FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                              ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                              ${jndi}.LNK_BUSINESS_LINK      LB
+                        WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                          AND LP.LINK_ID = LBL.LINK_ID(+)
+                          AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                          AND ROWNUM = 1) IS NOT NULL THEN
+                  (SELECT TO_CHAR(LB.NO)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+                 ELSE
+                  (SELECT TO_CHAR(LB.NO)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.Z_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+               END ,' ')GLBH,
+               
+               nvl( CASE
+                 WHEN (SELECT TO_CHAR(LB.NAME)
+                         FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                              ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                              ${jndi}.LNK_BUSINESS_LINK      LB
+                        WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                          AND LP.LINK_ID = LBL.LINK_ID(+)
+                          AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                          AND ROWNUM = 1) IS NOT NULL THEN
+                  (SELECT TO_CHAR(LB.NAME)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+                 ELSE
+                  (SELECT TO_CHAR(LB.NAME)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.Z_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+               END ,' ') GLMC,
+               
+               '' GDJGSJ,
+               '' JCSJ,
+               '' GXSJ,
+               '' PZGH,
+               '' SGGH,
+               '' GQGH,
+               '' XZ,
+               PU.NO KH
+          FROM ${jndi}.PHY_EQUIPMENT PE,
+               ${jndi}.PHY_TERM_PORT PTP,
+               ${jndi}.PHY_EQP_UNIT PU,
+               ${jndi}.pub_resource_spec SPEC
+         WHERE PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+         AND PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+           AND PE.PHY_EQP_ID = #{eqpId}
+           AND PTP.UNIT_ID = PU.UNIT_ID(+)) T
+  ORDER BY  to_number(regexp_substr(t.dzbm,'[0-9]*[0-9]',1)) asc,T.SEQ_IN_UNIT ASC -->
+</select>
+
+
+<select id="getOssGlList" parameterType="map" resultType="map">
+select distinct t1.* from (
+  select T.*,
+           to_char(nvl(lbl.no,' ')) glbh,
+           to_char(nvl(lbl.name,' ')) glmc,
+           ps.state_id xz_id,
+           ps.name xz_name
+      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS,
+                   SPEC.NAME,
+                   PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end z_phy_port_id,
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.link_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.link_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end link_id,
+                    case when  alplc.WO_ID is null
+                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end WO_ID            
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id    
+             WHERE PE.PHY_EQP_ID = #{eqpId}
+           ) T
+      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+       left join ${jndi}.Srv_Work_Order swo on T.wo_id =  swo.wo_id
+      left join ${jndi}.PUB_STATUS ps on swo.state_id=ps.state_id
+     ) t1
+      ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+<!--select distinct t1.* from (
+  select T.*,
+           to_char(nvl(lbl.no,' ')) glbh,
+           to_char(nvl(lbl.name,' ')) glmc,
+           cs.no cdno,
+           cs.name cdname,
+           jp.no jumpPortNo,
+           to_char(jp.seq_in_unit) jumpPortSeqNo,
+           to_char(peu.no) jumpUnitNo,
+           peu.sequence jumpUnitSeq,
+           pe.name jumpEqpName,
+           CASE
+             WHEN PE.Res_Spec_Id IN ('2530', '414') THEN jp.NO
+             ELSE peu.SEQUENCE || '/' || jp.SEQ_IN_UNIT
+           END jumpDZBM,
+           ps.state_id xz_id,
+           ps.name xz_name
+      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS,
+                   SPEC.NAME,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN PTP.NO
+                     ELSE PU.NO
+                   END SEQ_IN_NO,
+                   PTP.NO no2,
+                   PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end z_phy_port_id,
+                   decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id,
+                    case when  alplc.WO_ID is null
+                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end WO_ID
+
+                   
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id  
+              
+             WHERE PE.PHY_EQP_ID = #{eqpId}
+           ) T
+      left join ${jndi}.phy_term_port jp on jp.phy_port_id = t.z_phy_port_id 
+      left join ${jndi}.phy_eqp_unit peu on jp.unit_id = peu.unit_id
+      left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id 
+      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+       left join ${jndi}.Srv_Work_Order swo on T.wo_id =  swo.wo_id
+      left join ${jndi}.PUB_STATUS ps on swo.state_id=ps.state_id
+      left join ${jndi}.cbl_fiber cf on cfc.fiber_id = cf.fiber_id
+      left join ${jndi}.CBL_SECTION cs on cs.CBL_SECT_ID = cf.CBL_SECT_ID ) t1
+      ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC-->
+<!--
+	select distinct t1.* from (
+	select T.*,
+	         to_char(lbl.no) glbh,
+	         to_char(lbl.name) glmc,
+	         cs.no cdno,
+	         cs.name cdname,
+	         jp.no jumpPortNo,
+	         to_char(jp.seq_in_unit) jumpPortSeqNo,
+	         to_char(peu.no) jumpUnitNo,
+	         peu.sequence jumpUnitSeq,
+	         pe.name jumpEqpName,
+	         CASE
+	           WHEN PE.Res_Spec_Id IN ('2530', '414') THEN jp.NO
+	           ELSE peu.SEQUENCE || '/' || jp.SEQ_IN_UNIT
+	         END jumpDZBM 
+	    from (SELECT PTP.PHY_PORT_ID DZID,
+	                 CASE
+	                   WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+	                   ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+	                 END DZBM,
+	                 TO_CHAR(PTP.PHY_EQP_ID) SBID,
+	                 PE.NO SBBM,
+	                 PE.RES_SPEC_ID SBLX,
+	                 PE.NAME SBMC,
+	                 PE.ADDRESS,
+	                 SPEC.NAME,
+	                 CASE
+	                   WHEN PE.Res_Spec_Id IN ('2530', '414') THEN PTP.NO
+	                   ELSE PU.NO
+	                 END SEQ_IN_NO,
+	                 PTP.NO no2,
+	                 PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+	                 decode(alplc.z_phy_port_id,null,zlplc.a_phy_port_id,alplc.z_phy_port_id) z_phy_port_id,
+	                 decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id
+	            FROM ${jndi}.PHY_EQUIPMENT PE
+	            left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+	            join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+	            left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+	            left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id and nvl(alplc.cbl_line_id, 0) = 0
+	            left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id  and nvl(zlplc.cbl_line_id, 0) = 0
+	           WHERE PE.PHY_EQP_ID = #{eqpId} 
+	          ) T
+	    left join ${jndi}.phy_term_port jp on jp.phy_port_id = t.z_phy_port_id 
+	    left join ${jndi}.phy_eqp_unit peu on jp.unit_id = peu.unit_id
+	    left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id 
+	    left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+	    left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+	    left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+	    left join ${jndi}.cbl_fiber cf on cfc.fiber_id = cf.fiber_id
+	    left join ${jndi}.CBL_SECTION cs on cs.CBL_SECT_ID = cf.CBL_SECT_ID ) t1
+	    ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+--><!-- SELECT DISTINCT T.*
+  FROM (SELECT '' ID,
+               TO_CHAR(PTP.PHY_PORT_ID) DZID,
+               CASE
+               WHEN PE.Res_Spec_Id IN ('2530', '414') THEN
+                 PTP.NO
+               ELSE
+              PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+             END DZBM,
+               TO_CHAR(PTP.PHY_EQP_ID) SBID,
+               PE.NO SBBM,
+               PE.RES_SPEC_ID SBLX,
+               PE.NAME SBMC,
+               '' BDSJ,
+               PE.ADDRESS,
+               SPEC.NAME,
+               PU.NO SEQ_IN_no,
+               PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+               
+              nvl( CASE
+                 WHEN (SELECT TO_CHAR(LB.NO)
+                         FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                              ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                              ${jndi}.LNK_BUSINESS_LINK      LB
+                        WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                          AND LP.LINK_ID = LBL.LINK_ID(+)
+                          AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                          AND ROWNUM = 1) IS NOT NULL THEN
+                  (SELECT TO_CHAR(LB.NO)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+                 ELSE
+                  (SELECT TO_CHAR(LB.NO)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.Z_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+               END ,' ')GLBH,
+               
+               nvl( CASE
+                 WHEN (SELECT TO_CHAR(LB.NAME)
+                         FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                              ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                              ${jndi}.LNK_BUSINESS_LINK      LB
+                        WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                          AND LP.LINK_ID = LBL.LINK_ID(+)
+                          AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                          AND ROWNUM = 1) IS NOT NULL THEN
+                  (SELECT TO_CHAR(LB.NAME)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+                 ELSE
+                  (SELECT TO_CHAR(LB.NAME)
+                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+                          ${jndi}.LNK_BUSINESS_LINK      LB
+                    WHERE PTP.PHY_PORT_ID = LP.Z_PHY_PORT_ID
+                      AND LP.LINK_ID = LBL.LINK_ID(+)
+                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+                      AND ROWNUM = 1)
+               END ,' ') GLMC,
+               
+               '' GDJGSJ,
+               '' JCSJ,
+               '' GXSJ,
+               '' PZGH,
+               '' SGGH,
+               '' GQGH,
+               '' XZ,
+               PU.NO KH
+          FROM ${jndi}.PHY_EQUIPMENT PE,
+               ${jndi}.PHY_TERM_PORT PTP,
+               ${jndi}.PHY_EQP_UNIT PU,
+               ${jndi}.pub_resource_spec SPEC
+         WHERE PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+         AND PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+           AND PTP.PHY_PORT_ID = #{portId}
+           AND PTP.PHY_EQP_ID = #{eqpId}
+           AND PTP.UNIT_ID = PU.UNIT_ID(+)) T
+  ORDER BY  to_number(regexp_substr(t.dzbm,'[0-9]*[0-9]',1)) asc,T.SEQ_IN_UNIT ASC -->
+</select>
+
+
+	<select id="getParentArea" parameterType="String" resultType="map">
+		select area_id from area where parent_area_id = #{area_id}
+	</select>
+	
+	<select id="getObdsByEqpId" parameterType="map" resultType="map">
+	         select distinct e.equipment_id SBID,
+              e.equipment_code SBBM,
+              e.equipment_name SBMC,
+              e.res_type_id SBLX
+         from TB_CABLECHECK_EQUIPMENT e
+        where e.install_sbid = #{eqpId}
+          and e.res_type_id = 2530
+	
+		<!--select distinct t.sbid, t.sbbm, t.sbmc,t.sblx
+		  from tb_cablecheck_dtsj t
+		 where t.install_sbid =  #{eqpId}
+		   and t.sblx = 2530-->
+		<!-- select e.equipment_id, e.equipment_code, e.equipment_name, e.res_type
+		  from TB_CABLECHECK_EQUIPMENT e
+		 where e.res_type_id = 2530
+		 and e.equipment_id = #{eqpId} 
+	--></select>
+	<select id="getChangePortNum" parameterType="map" resultType="map">
+		select count(distinct (sj.dzid)) port_change_num
+		  from TB_CABLECHECK_DTSJ sj
+		 where sj.BDSJ &gt;= trunc(add_months(sysdate, -1), 'mm')
+		   and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate, -1)))
+		   and sj.sbid = #{obdId}
+	</select>
+	
+	<select id="getDelPortNum" parameterType="map" resultType="map">
+		select count(distinct (sj.dzid)) port_change_num
+		  from TB_CABLECHECK_DTSJ sj
+		 where sj.BDSJ &gt;= trunc(add_months(sysdate, -1), 'mm')
+		   and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate, -1)))
+		   and sj.sbid = #{obdId}
+		   and sj.xz=17
+	</select>
+	
+	<select id="getIOMPortNum" parameterType="map" resultType="map">
+		select count(distinct (sj.dzid)) port_change_num
+		  from TB_CABLECHECK_DTSJ sj
+		 where sj.BDSJ &gt;=trunc(TO_DATE(#{startTime},'yyyy-MM-dd'))
+		   and sj.BDSJ &lt;=trunc(TO_DATE(#{endTime},'yyyy-MM-dd'))
+		   and sj.sbid = #{obdId}
+		   and sj.xz in (2,31)
+	</select>
+	
+	
+	<select id="getAreaNameByAreaId" parameterType="String" resultType="String">
+		select name from area a where a.area_id=#{area_id}
+	</select>
+	<select id="getEqpCDInfo" parameterType="map" resultType="map">
+		select distinct t1.* from (
+		select T.*,
+	         to_char(lbl.no) glbh,
+	         to_char(lbl.name) glmc,
+	         cs.no cdno,
+	         cs.name cdname,
+	         jp.no jumpPortNo,
+	         to_char(jp.seq_in_unit) jumpPortSeqNo,
+	         to_char(peu.no) jumpUnitNo,
+	         peu.sequence jumpUnitSeq,
+	         pe.name jumpEqpName,
+	         CASE
+	           WHEN PE.Res_Spec_Id IN ('2530', '414') THEN jp.NO
+	           ELSE peu.SEQUENCE || '/' || jp.SEQ_IN_UNIT
+	         END jumpDZBM 
+	    from (SELECT PTP.PHY_PORT_ID DZID,
+	                 CASE
+	                   WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+	                   ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+	                 END DZBM,
+	                 TO_CHAR(PTP.PHY_EQP_ID) SBID,
+	                 PE.NO SBBM,
+	                 PE.RES_SPEC_ID SBLX,
+	                 PE.NAME SBMC,
+	                 PE.ADDRESS,
+	                 SPEC.NAME,
+	                 CASE
+	                   WHEN PE.Res_Spec_Id IN ('2530', '414') THEN PTP.NO
+	                   ELSE PU.NO
+	                 END SEQ_IN_NO,
+	                 PTP.NO no2,
+	                 PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+	                 decode(alplc.z_phy_port_id,null,zlplc.a_phy_port_id,alplc.z_phy_port_id) z_phy_port_id,
+	                 decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id
+	            FROM ${jndi}.PHY_EQUIPMENT PE
+	            left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+	            join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+	            left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+	            left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id and nvl(alplc.cbl_line_id, 0) = 0
+	            left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id  and nvl(zlplc.cbl_line_id, 0) = 0
+	           WHERE PE.PHY_EQP_ID = #{eqpId} 
+	          ) T
+	    left join ${jndi}.phy_term_port jp on jp.phy_port_id = t.z_phy_port_id 
+	    left join ${jndi}.phy_eqp_unit peu on jp.unit_id = peu.unit_id
+	    left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id 
+	    left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+	    left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+	    left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+	    left join ${jndi}.cbl_fiber cf on cfc.fiber_id = cf.fiber_id
+	    left join ${jndi}.CBL_SECTION cs on cs.CBL_SECT_ID = cf.CBL_SECT_ID) t1 ORDER BY  
+	    to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+	</select>
+	
+	
+		<select id="getOssGlDetailList" parameterType="map" resultType="map">
+	
+  select T.*,
+           to_char(nvl(lbl.no,' ')) glbh,
+           to_char(nvl(lbl.name,' ')) glmc,
+           pe.name jumpEqpName,
+           CASE
+             WHEN PE.Res_Spec_Id IN ('2530', '414') THEN jp.NO
+             ELSE peu.SEQUENCE || '/' || jp.SEQ_IN_UNIT
+           END jumpDZBM,
+           ps.state_id xz_id,
+           ps.name xz_name
+      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS,
+                   SPEC.NAME,              
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end z_phy_port_id,
+                   decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id,
+              case when  alplc.WO_ID is null
+                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end WO_ID
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id  
+              
+             WHERE PE.PHY_EQP_ID =#{SBID} and PTP.PHY_PORT_ID = #{DZID}
+           ) T
+      left join ${jndi}.phy_term_port jp on jp.phy_port_id = t.z_phy_port_id 
+      left join ${jndi}.phy_eqp_unit peu on jp.unit_id = peu.unit_id
+      left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id 
+      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+       left join ${jndi}.Srv_Work_Order swo on T.wo_id =  swo.wo_id
+      left join ${jndi}.PUB_STATUS ps on swo.state_id=ps.state_id
+      left join ${jndi}.cbl_fiber cf on cfc.fiber_id = cf.fiber_id
+      left join ${jndi}.CBL_SECTION cs on cs.CBL_SECT_ID = cf.CBL_SECT_ID 
+	</select>
+    <select id="getLastChangePortsList" parameterType="map" resultType="map">
+		<!-- select 
+        	t.port_no,
+        	t.record_type,
+        	t.descript,
+        	t.create_time,            
+        	t.remark, 
+        	t.staff_name,           
+        	t.photo_path  
+        from
+             (select
+                   tr.port_no,
+                   tr.record_type,
+                   tr.descript,
+                   tr.create_time,            
+                   tr.remark, 
+                   f.staff_name,           
+                   ph.photo_path
+             from  tb_cablecheck_record tr 
+                   left join tb_cablecheck_taskdetail de on de.detail_id = tr.detail_id
+                   left join tb_cablecheck_photo_rel rel on rel.detail_id  = de.detail_id
+                   left join tb_cablecheck_photo ph on ph.photo_id = rel.photo_id 
+                   left join tb_base_staff f on f.staff_id = tr.create_staff
+		     where        
+		       	   tr.eqp_id = #{SBID}
+		      	   and tr.port_id = #{DZID}     
+		           order by create_time desc)t 
+	   where rownum=1 -->  
+ 		select  tt.port_no,
+          tt.record_type,
+          tt.descript,
+          tt.create_time,            
+          tt.remark, 
+          tt.staff_name,           
+          tt.photo_path from (  
+		  	select 
+		          t.port_no,
+		          t.record_type,
+		          t.descript,
+		          t.create_time,            
+		          t.remark, 
+		          t.staff_name,           
+		         to_char(wm_concat(t.photo_path))  photo_path
+		        from
+		             (select DISTINCT
+		                   tr.port_no,
+		                   tr.record_type,
+		                   tr.descript,
+		                   tr.create_time,            
+		                   tr.remark, 
+		                   f.staff_name,           
+		                  ph.photo_path
+		                  from  tb_cablecheck_record tr 
+		                   left join tb_cablecheck_taskdetail de on de.detail_id = tr.detail_id
+		                   left join tb_cablecheck_photo_rel rel on rel.detail_id  = de.detail_id
+		                   left join tb_cablecheck_photo ph on ph.photo_id = rel.photo_id 
+		                   left join tb_base_staff f on f.staff_id = tr.create_staff
+		                   where        
+		                   tr.eqp_id = #{SBID}
+		                   and tr.port_id = #{DZID}                
+		               )t 
+		      GROUP BY  t.port_no,
+		          t.record_type,
+		          t.descript,
+		          t.create_time,            
+		          t.remark, 
+		          t.staff_name
+		        order by  t.create_time desc
+		   )tt where rownum=1
+	</select>
+	 
+    <select id="getEqpDDInfo" parameterType="map" resultType="map">
+		select t.*,
+	       lbl.no glbh,
+	       pe.phy_eqp_id dd_sbid,
+	       pe.no dd_sbbm,
+	       pe.name dd_name,
+	       pe.res_spec_id,
+	       case when pe.res_spec_id in ('2530') then dd.no
+	         else decode(peu.sequence,null,null,peu.sequence || '/' || dd.seq_in_unit)
+	       end dd_port_no,
+	       peu.sequence,
+	       dd.seq_in_unit
+	 	 from (select distinct ptp.phy_port_id dzid,
+                   case when pe1.res_spec_id in ('2530', '414') then ptp.no
+                     else peu1.sequence || '/' || ptp.seq_in_unit
+                   end dzbm,
+                   to_char(ptp.phy_eqp_id) sbid,
+                   pe1.no sbbm,
+                   pe1.name sbmc,
+                   pe1.res_spec_id sblx,
+                   spec.name res_spec_name,
+                   peu1.sequence,
+                   ptp.seq_in_unit seq_in_unit,
+                   case
+                     when alplc.z_phy_port_id is null then
+                      min(zlplc.a_phy_port_id) over(partition by ptp.phy_port_id order by zlplc.a_phy_port_id)
+                     else
+                      min(alplc.z_phy_port_id) over(partition by ptp.phy_port_id order by alplc.z_phy_port_id)
+                   end z_phy_port_id,
+                   
+                   decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id
+		          from ${jndi}.phy_equipment pe1
+		          left join ${jndi}.phy_term_port ptp on ptp.phy_eqp_id = pe1.phy_eqp_id
+		          join ${jndi}.pub_resource_spec spec on pe1.res_spec_id = spec.res_spec_id
+		          left join ${jndi}.phy_eqp_unit peu1 on ptp.unit_id = peu1.unit_id
+		          left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id and nvl(alplc.cbl_line_id, 0) != 0
+		          left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id and nvl(zlplc.cbl_line_id, 0) != 0
+	          where pe1.phy_eqp_id = #{SBID} 
+	          	    and ptp.phy_port_id = #{DZID}
+	          order by peu1.sequence, ptp.seq_in_unit) t
+		  left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id                 
+		  left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+		  left join ${jndi}.phy_term_port dd on dd.phy_port_id = t.z_phy_port_id
+		  left join ${jndi}.phy_eqp_unit peu on dd.unit_id = peu.unit_id
+		  left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id   
+	</select> 
+	
+	
+ 	<select id="getEqpJumpInfo" parameterType="map" resultType="map">
+		select t.*,
+		       lbl.no glbh,
+		       pe.phy_eqp_id jump_sbid,
+		       pe.no jump_sbbm,
+		       pe.name jump_eqpName,
+		       case when pe.res_spec_id in ('2530', '414') then jp.no
+		         else decode(peu.sequence,null,null,peu.sequence || '/' || jp.seq_in_unit)
+		       end jump_port_no
+		 from (select distinct ptp.phy_port_id dzid,
+                   case when pe1.res_spec_id in ('2530', '414') then ptp.no
+                     else peu1.sequence || '/' || ptp.seq_in_unit
+                   end dzbm,
+                   to_char(ptp.phy_eqp_id) sbid,
+                   pe1.no sbbm,
+                   pe1.name sbmc,
+                   pe1.res_spec_id sblx,
+                   spec.name res_spec_name,
+                   peu1.sequence,
+                   ptp.seq_in_unit seq_in_unit,
+                   case
+                     when alplc.z_phy_port_id is null then
+                      min(zlplc.a_phy_port_id) over(partition by ptp.phy_port_id order by zlplc.a_phy_port_id)
+                     else
+                      min(alplc.z_phy_port_id) over(partition by ptp.phy_port_id order by alplc.z_phy_port_id)
+                   end z_phy_port_id,
+                   decode(alplc.z_phy_port_id,null,zlplc.link_id,alplc.link_id) link_id
+	          from ${jndi}.phy_equipment pe1
+	          left join ${jndi}.phy_term_port ptp on ptp.phy_eqp_id = pe1.phy_eqp_id
+	          join ${jndi}.pub_resource_spec spec on pe1.res_spec_id = spec.res_spec_id
+	          left join ${jndi}.phy_eqp_unit peu1 on ptp.unit_id = peu1.unit_id
+	          left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id and nvl(alplc.cbl_line_id, 0) = 0
+	          left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id and nvl(zlplc.cbl_line_id, 0) = 0
+	         where pe1.phy_eqp_id =  #{SBID}  
+	         	   and ptp.phy_port_id = #{DZID}
+	         order by peu1.sequence, ptp.seq_in_unit) t
+		  left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id                 
+		  left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+		  left join ${jndi}.phy_term_port jp on jp.phy_port_id = t.z_phy_port_id
+		  left join ${jndi}.phy_eqp_unit peu on jp.unit_id = peu.unit_id
+		  left join ${jndi}.phy_equipment pe on peu.phy_eqp_id = pe.phy_eqp_id
+		
+	</select> 
+	
+	    <select id="getAreaCodeByAreaId" parameterType="string" resultType="string">
+	    select a.code from area a where a.area_id = #{area_id}
+	</select>
+	
+	<select id="getEqpAdd" parameterType="map" resultType="map">
+	select pel.phy_eqp_id,pel.location_id,sa.address_id add1,sa.full_name
+  from ${jndi}.phy_eqp_2_location pel
+  left join ${jndi}.spc_address sa
+    on sa.location_id = pel.location_id
+ where pel.phy_eqp_id = #{SBID}
+ 
+	</select>
+	
+	
+	<select id="getDelPortList" parameterType="map" resultType="map">
+select distinct sj.SBID,
+	                nvl(sj.SBBM, ' ') SBBM,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                sj.SBLX SBLX,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                sj.DZID,
+	                sj.id,
+	                nvl(sj.DZBM, ' ') DZBM,
+	                max(sj.H) H,
+	                sj.glbh,
+	                nvl(eqp.address, ' ') address,
+	                nvl(eqp.res_type, ' ') res_type,
+                    sj.sggh,
+                    sj.pzgh,
+                    PT.NAME XZ,
+                    sj.gqgh,
+                    sj.glmc,
+                    sj.gdbh,
+                    TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD') bdsj
+	  from TB_CABLECHECK_DTSJ      SJ,
+	       TB_CABLECHECK_EQUIPMENT eqp,
+	       area                           a,
+	       OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+	 where sj.BDSJ &gt;= trunc(add_months(sysdate,-1),'mm')
+	   and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate,-1))) 
+	   and a.area_id = sj.areaid 
+	   and eqp.parent_area_id = #{areaId} 
+	   and sj.xz = 17
+	   and sj.sbid = eqp.equipment_id 
+	   and SJ.SBID = #{eqpId} 
+	   and   SJ.XZ=PT.PSO_TYPE_ID
+	   group by sj.SBID, sj.SBBM, sj.SBMC,  sj.glbh,sj.SBLX, sj.SBMC, sj.DZID, sj.DZBM, eqp.address, eqp.res_type,sj.sggh,sj.pzgh, PT.NAME ,sj.gqgh,sj.glmc,sj.gdbh,SJ.BDSJ,sj.id
+	   </select>
+	   
+	   
+	   <select id="getIOMDelPortList" parameterType="map" resultType="map">
+select distinct sj.SBID,
+	                nvl(sj.SBBM, ' ') SBBM,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                sj.SBLX SBLX,
+	                nvl(sj.SBMC, ' ') SBMC,
+	                sj.DZID,
+	                sj.id,
+	                nvl(sj.DZBM, ' ') DZBM,
+	                max(sj.H) H,
+	                sj.glbh,
+	                nvl(eqp.address, ' ') address,
+	                nvl(eqp.res_type, ' ') res_type,
+                    sj.sggh,
+                    sj.pzgh,
+                    PT.NAME XZ,
+                    sj.gqgh,
+                    sj.glmc,
+                    sj.gdbh,
+                    TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD') bdsj
+	  from TB_CABLECHECK_DTSJ      SJ,
+	       TB_CABLECHECK_EQUIPMENT eqp,
+	       area                           a,
+	       OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+	 where sj.BDSJ &gt;=trunc(TO_DATE(#{startTime},'yyyy-MM-dd'))
+		   and sj.BDSJ &lt;=trunc(TO_DATE(#{endTime},'yyyy-MM-dd'))
+	   and a.area_id = sj.areaid 
+	   and eqp.parent_area_id = #{areaId} 
+	   and sj.xz in (2,31)
+	   and sj.sbid = eqp.equipment_id 
+	   and SJ.SBID = #{eqpId} 
+	   and   SJ.XZ=PT.PSO_TYPE_ID
+	   group by sj.SBID, sj.SBBM, sj.SBMC,  sj.glbh,sj.SBLX, sj.SBMC, sj.DZID, sj.DZBM, eqp.address, eqp.res_type,sj.sggh,sj.pzgh, PT.NAME ,sj.gqgh,sj.glmc,sj.gdbh,SJ.BDSJ,sj.id
+	   </select>
+	   
+	   <select id="getAddPortList" parameterType="map" resultType="map">
+		 select m.* from (     
+      select  sj.SBID,
+                  nvl(sj.SBBM, ' ') SBBM,
+                  nvl(sj.SBMC, ' ') SBMC,
+                  sj.SBLX SBLX,               
+                  sj.DZID,
+                  sj.id,
+                  nvl(sj.DZBM, ' ') DZBM,
+                  sj.H,
+                  sj.glbh,
+                  nvl(eqp.address, ' ') address,
+                  nvl(eqp.res_type, ' ') res_type,
+                    sj.sggh,
+                    sj.pzgh,
+                    PT.NAME XZ,
+                    sj.gqgh,
+                    sj.glmc,
+                    sj.gdbh,
+                    TO_CHAR(SJ.BDSJ, 'YYYY/MM/DD') bdsj,
+                     ROW_NUMBER() OVER(PARTITION BY sj.dzid ORDER BY sj.bdsj desc) rank
+    from TB_CABLECHECK_DTSJ      sj,
+         TB_CABLECHECK_EQUIPMENT eqp,
+         OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+   where  eqp.parent_area_id =#{areaId}  
+     and sj.sbid = eqp.equipment_id 
+     and SJ.XZ=PT.PSO_TYPE_ID
+     and SJ.SBID = #{eqpId} 
+     and sj.sbbm = #{eqpNo}
+     and (sj.glbh like 'F17%' or  sj.glbh like 'E17%'  ) 
+     
+     ) m where m.rank=1 
+   order by  to_number(regexp_substr(m.dzbm, '[0-9]*[0-9]', 1)), to_number(regexp_substr(m.dzbm, '[0-9]*[0-9]', 3))
+	
+	 </select>
+	 
+	 <select id="getPortSgInfo" parameterType="map" resultType="map">
+		 select * from (
+		 select odso.reply_acct_no,odso.reply_pty_nm,
+		  TO_CHAR(odso.reply_dt,'yyyy/MM/dd HH24:mi:ss')reply_dt,
+		  	 ODSO.REPLY_PTY_NBR	
+ 			from tb_cablecheck_link_odso odso where odso.opt_code=#{GLBH} and 
+ 			odso.local_area_id=#{area_id} order by odso.reply_dt desc )
+ 			where rownum=1
+	</select> 
+	 <select id="getPortPzInfo" parameterType="map" resultType="map">
+		 select * from (
+		 select  ODSO.DPL_PTY_NBR
+ 			from tb_cablecheck_link_odso odso where odso.opt_code=#{GLBH} and
+ 			odso.local_area_id=#{area_id} order by odso.reply_dt desc )
+ 			where rownum=1
+	</select>
+	<select id="getPortGxInfoByIOM" parameterType="map" resultType="map">
+	 select * from (
+		select odso.iom_mf_acct_no,odso.iom_mf_pty_nm,
+		 TO_CHAR(odso.iom_mf_dt,'yyyy/MM/dd HH24:mi:ss')iom_mf_dt,
+		 odso.iom_mf_pty_nbr		
+ 			from tb_cablecheck_link_odso odso where odso.opt_code=#{GLBH} and 
+ 			odso.local_area_id=#{area_id} order by odso.iom_mf_dt desc)
+ 			where rownum=1
+	</select> 
+	<select id="getPortGxInfoByIOPS" parameterType="map" resultType="map">
+	select * from (
+		 select odso.iops_mf_acct_no,odso.iops_mf_pty_nm,
+		 TO_CHAR( odso.iops_mf_dt,'yyyy/MM/dd HH24:mi:ss')iops_mf_dt,
+		 	 odso.iops_mf_pty_nbr	
+ 			from tb_cablecheck_link_odso odso where odso.opt_code=#{GLBH} and
+ 			odso.local_area_id=#{area_id} order by odso.iops_mf_dt desc)
+ 			where rownum=1
+	</select> 
+	
+	<select id="getCheckedPortNum" parameterType="map" resultType="string">
+		select count(distinct re.port_id)portnum from tb_cablecheck_record re 
+		where re.eqp_no=#{eqp_obd_No} 
+		AND re.eqp_id=#{eqp_obd_Id}
+	  <!--   AND re.create_time &gt;= TRUNC(ADD_MONTHS(SYSDATE, -2),'mm')   -->
+	    AND re.create_time &gt;= TRUNC(ADD_MONTHS(SYSDATE, -3),'mm')
+	    AND re.create_time &lt;= sysdate
+	</select>
+	
+	<select id="getRecordByEqpId" parameterType="map" resultType="map">
+		select m.port_id,nvl(m.port_no,' ')port_no,nvl(m.glbm,' ')glbm,
+			  case m.ischeckok when '1'then '不合格'else '合格'end ischeckok,
+			  m.ischeckok check_ischeckok, 			  
+      		  nvl(m.descript,' ')descript ,f.staff_name,m.create_staff checkstaff,
+      		  to_char(m.create_time,'yyyy-mm-dd HH24:mi:ss')create_time
+		from ( select re.port_id, re.port_no,de.glbm,re.ischeckok,re.descript,re.create_staff, re.create_time,
+		           ROW_NUMBER() OVER(PARTITION BY re.port_id ORDER BY re.create_time desc) rank
+		    from tb_cablecheck_record re
+		    inner join tb_cablecheck_taskdetail de on de.detail_id=re.detail_id
+		    where re.eqp_no=#{eqp_obd_No} 
+		    	  and re.eqp_id=#{eqp_obd_Id}
+		         and re.port_id>0 and re.record_type!=2  )m
+	   left join tb_base_staff f on f.staff_id=m.create_staff
+	   where m.rank=1
+		    <!--   AND re.create_time &gt;= TRUNC(ADD_MONTHS(SYSDATE, -2),'mm')   -->
+	    	 AND re.create_time &gt;= TRUNC(ADD_MONTHS(SYSDATE, -3),'mm')
+		     and m.create_time &lt;=sysdate
+		     order by 
+		     to_number(regexp_substr(M.port_no, '[0-9]*[0-9]', 1)),
+             to_number(regexp_substr(M.port_no, '[0-9]*[0-9]', 3))
+		     
+	</select>
+	
+	<select id="getEqpPortType" parameterType="map" resultType="map">
+	  select pe.phy_eqp_id,
+	       pe.no,
+	       pe.res_spec_id eqpSpecId,  
+	       ptp.res_spec_id portSpec  
+	  from ${jndi}.phy_term_port ptp
+	  join ${jndi}.phy_equipment pe on ptp.phy_eqp_id = pe.phy_eqp_id
+	   where 1 = 1
+	   and ptp.phy_eqp_id = #{sbid}	  
+	   <if test="dzid != null and dzid != ''">  
+		    <![CDATA[
+		   		 and ptp.phy_port_id = #{dzid}
+		   	]]>
+	  </if>
+	   and rownum=1
+		     
+	</select>
+	
+	<select id="getEqpPortType2" parameterType="map" resultType="map">
+	  select pe.phy_eqp_id,
+	       pe.no,
+	       pe.res_spec_id eqpSpecId,  
+	       ptp.res_spec_id portSpec,
+           prs.name  
+	  from resnj.phy_term_port ptp
+	  left join ${jndi}.phy_equipment pe on ptp.phy_eqp_id = pe.phy_eqp_id
+	  left join ${jndi}.pub_resource_spec prs on ptp.res_spec_id=prs.res_spec_id
+	  where pe.phy_eqp_id=#{sbid_old} and ptp.phy_port_id=#{dzid_old} and rownum=1
+		     
+	</select>
+	
+	<select id="getEqpPortTypeByEqpId" parameterType="map" resultType="map">
+	  select pe.phy_eqp_id,
+	       pe.no,
+	       pe.res_spec_id eqpSpecId 
+	  from ${jndi}.phy_equipment pe 
+	   where 1 = 1
+	   and PE.PHY_EQP_ID = #{sbid_new}	  
+
+		     
+	</select>
+	
+	<insert id="insertChangePortRecords" parameterType="map">
+		insert into
+		tb_base_changeport_record
+		(areaid,glbm,eqpid,eqpno,eqptypeid,portid,portno,portspec,portid_new,portno_new,portspec_new,operatorid,operatetime,
+			eqpid_new,eqpno_new,localportno_new,eqptypeid_new)
+		values
+		(
+		#{area_id},
+		#{glbm},
+		#{sbid},
+		#{sbbm},
+		#{eqpSpecId},
+		#{dzid},
+		#{dzbm},
+		#{portSpec},
+		#{dzid_new},
+		#{dzbm_new},
+		#{portSpec_new},
+		#{staffId},
+		sysdate,
+		#{sbid_new},
+		#{sbbm_new},
+		#{localPortNo},
+		#{eqpSpecId_new}
+		)
+	</insert>
+	<select id="getPortByOrder" parameterType="map" resultType="map">
+		 select id, dzid, dzbm, sbid, sbbm, sblx, sbmc, bdsj, glbh, gdjgsj, jcsj, gxsj, 
+ 		 areaid, sfpf, pzgh, sggh, gqgh, xz, gdbh, glmc, install_dzbm, install_sbbm, 
+ 		 h, install_sbid, ro_type_id from tb_cablecheck_dtsj 
+ 		 where id = #{portId}
+	</select>
+	
+	<select id="getThreeJobNumber" parameterType="map" resultType="map">
+		  select tco.order_id,tco.mark, to_char(tco.other_system_staff_id)other_system_staff_id,tt.pzgh  from tb_cablecheck_order tco
+		  inner join 
+		  (   select t.id,t.pzgh from
+		          (select sj.id,sj.pzgh from tb_cablecheck_dtsj sj
+		          where sj.sbid=#{SBID} and sj.dzid=#{DZID} 
+		          and sj.bdsj &gt;= trunc(add_months(sysdate, -1), 'mm')
+		          and sj.bdsj &lt; trunc(sysdate, 'mm') order by sj.gxsj desc
+		      )t where rownum=1
+		   )tt on tt.id=tco.btsj_id where rownum=1
+	</select>
+	
+	<select id="getSgPzInfo" parameterType="map" resultType="map">
+		  select distinct po.staff_nbr,po.staff_name from pub_staff_org_info po where 
+		   <if test="staff_id != null and staff_id != ''">  
+			    <![CDATA[
+			    	 po.staff_id=#{staff_id}
+			   	]]>
+		   </if> 
+		   <if test="staff_id == null or staff_id == ''">  
+			    <![CDATA[
+			    	 1=2
+			   	]]>
+		   </if> 
+		 
+		  union all
+		  select distinct po.staff_nbr,po.staff_name from pub_staff_org_info po where po.staff_nbr=#{pzgh}
+	</select>
+	
+	<select id="getGxInfo" parameterType="map" resultType="map">
+		  select distinct aod.change_fiber_oper from app_csv_opt_daily aod where aod.work_order_id= #{orderId} and aod.change_fiber_oper is not null
+		  union all
+		  select distinct iod.change_fiber_oper from app_iom_opt_daily iod where iod.order_id=  #{orderId} and iod.change_fiber_oper is not null
+	</select>
+	
+</mapper>

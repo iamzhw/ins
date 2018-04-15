@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.system.dao.SoftwareVersionDao" >
+  <resultMap id="BaseResultMap" type="com.system.model.SoftwareVersion" >
+    <id column="SOFTWARE_VERSION_ID" property="softwareVersionId" jdbcType="DECIMAL" />
+    <result column="SOFTWARE_ID" property="softwareId" jdbcType="DECIMAL" />
+    <result column="VERSION_NUM" property="versionNum" jdbcType="VARCHAR" />
+    <result column="VERSION_INFO" property="versionInfo" jdbcType="VARCHAR" />
+    <result column="DRIVATE_TYPE" property="drivateType" jdbcType="DECIMAL" />
+    <result column="STATE" property="state" jdbcType="DECIMAL" />
+    <result column="FILE_PATH" property="filePath" jdbcType="VARCHAR" />
+    <result column="FILE_NAME" property="fileName" jdbcType="VARCHAR" />
+    <result column="IF_FORCE_UPDATE" property="ifForceUpdate" jdbcType="DECIMAL" />
+    <result column="COMMENTS" property="comments" jdbcType="DECIMAL" />
+    <result column="REMARKS" property="remarks" jdbcType="VARCHAR" />
+    <result column="CREATE_STAFF" property="createStaff" jdbcType="DECIMAL" />
+    <result column="CREATE_DATE" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="MODIFY_STAFF" property="modifyStaff" jdbcType="DECIMAL" />
+    <result column="MODIFY_DATE" property="modifyDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Example_Where_Clause" >
+    <where >
+      <foreach collection="oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause" >
+    <where >
+      <foreach collection="example.oredCriteria" item="criteria" separator="or" >
+        <if test="criteria.valid" >
+          <trim prefix="(" suffix=")" prefixOverrides="and" >
+            <foreach collection="criteria.criteria" item="criterion" >
+              <choose >
+                <when test="criterion.noValue" >
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue" >
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue" >
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue" >
+                  and ${criterion.condition}
+                  <foreach collection="criterion.value" item="listItem" open="(" close=")" separator="," >
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List" >
+    SOFTWARE_VERSION_ID, SOFTWARE_ID, VERSION_NUM, VERSION_INFO, DRIVATE_TYPE, STATE, 
+    FILE_PATH, FILE_NAME, IF_FORCE_UPDATE, COMMENTS, REMARKS, CREATE_STAFF, CREATE_DATE, 
+    MODIFY_STAFF, MODIFY_DATE
+  </sql>
+  <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.system.model.SoftwareVersionExample" >
+    select
+    <if test="distinct" >
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from TB_BASE_SOFT_VERS
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null" >
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.math.BigDecimal" >
+    select 
+    <include refid="Base_Column_List" />
+    from TB_BASE_SOFT_VERS
+    where SOFTWARE_VERSION_ID = #{softwareVersionId,jdbcType=DECIMAL}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.math.BigDecimal" >
+    delete from TB_BASE_SOFT_VERS
+    where SOFTWARE_VERSION_ID = #{softwareVersionId,jdbcType=DECIMAL}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.system.model.SoftwareVersionExample" >
+    delete from TB_BASE_SOFT_VERS
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <select id="getSoftwareVersionId" resultType="String">
+  select seq_tb_base_version_id.nextval from dual
+  </select>
+  <insert id="insert" parameterType="com.system.model.SoftwareVersion" >
+    insert into TB_BASE_SOFT_VERS (SOFTWARE_VERSION_ID, SOFTWARE_ID, VERSION_NUM, 
+      VERSION_INFO, DRIVATE_TYPE, STATE, 
+      FILE_PATH, FILE_NAME, IF_FORCE_UPDATE, 
+      COMMENTS, REMARKS, CREATE_STAFF, 
+      CREATE_DATE, MODIFY_STAFF, MODIFY_DATE
+      )
+    values (#{softwareVersionId,jdbcType=DECIMAL}, #{softwareId,jdbcType=DECIMAL}, #{versionNum,jdbcType=VARCHAR}, 
+      #{versionInfo,jdbcType=VARCHAR}, #{drivateType,jdbcType=DECIMAL}, #{state,jdbcType=DECIMAL}, 
+      #{filePath,jdbcType=VARCHAR}, #{fileName,jdbcType=VARCHAR}, #{ifForceUpdate,jdbcType=DECIMAL}, 
+      #{comments,jdbcType=DECIMAL}, #{remarks,jdbcType=VARCHAR}, #{createStaff,jdbcType=DECIMAL}, 
+      #{createDate,jdbcType=TIMESTAMP}, #{modifyStaff,jdbcType=DECIMAL}, #{modifyDate,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.system.model.SoftwareVersion" >
+    insert into TB_BASE_SOFT_VERS
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="softwareVersionId != null" >
+        SOFTWARE_VERSION_ID,
+      </if>
+      <if test="softwareId != null" >
+        SOFTWARE_ID,
+      </if>
+      <if test="versionNum != null" >
+        VERSION_NUM,
+      </if>
+      <if test="versionInfo != null" >
+        VERSION_INFO,
+      </if>
+      <if test="drivateType != null" >
+        DRIVATE_TYPE,
+      </if>
+      <if test="state != null" >
+        STATE,
+      </if>
+      <if test="filePath != null" >
+        FILE_PATH,
+      </if>
+      <if test="fileName != null" >
+        FILE_NAME,
+      </if>
+      <if test="ifForceUpdate != null" >
+        IF_FORCE_UPDATE,
+      </if>
+      <if test="comments != null" >
+        COMMENTS,
+      </if>
+      <if test="remarks != null" >
+        REMARKS,
+      </if>
+      <if test="createStaff != null" >
+        CREATE_STAFF,
+      </if>
+      <if test="createDate != null" >
+        CREATE_DATE,
+      </if>
+      <if test="modifyStaff != null" >
+        MODIFY_STAFF,
+      </if>
+      <if test="modifyDate != null" >
+        MODIFY_DATE,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="softwareVersionId != null" >
+        #{softwareVersionId,jdbcType=DECIMAL},
+      </if>
+      <if test="softwareId != null" >
+        #{softwareId,jdbcType=DECIMAL},
+      </if>
+      <if test="versionNum != null" >
+        #{versionNum,jdbcType=VARCHAR},
+      </if>
+      <if test="versionInfo != null" >
+        #{versionInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="drivateType != null" >
+        #{drivateType,jdbcType=DECIMAL},
+      </if>
+      <if test="state != null" >
+        #{state,jdbcType=DECIMAL},
+      </if>
+      <if test="filePath != null" >
+        #{filePath,jdbcType=VARCHAR},
+      </if>
+      <if test="fileName != null" >
+        #{fileName,jdbcType=VARCHAR},
+      </if>
+      <if test="ifForceUpdate != null" >
+        #{ifForceUpdate,jdbcType=DECIMAL},
+      </if>
+      <if test="comments != null" >
+        #{comments,jdbcType=DECIMAL},
+      </if>
+      <if test="remarks != null" >
+        #{remarks,jdbcType=VARCHAR},
+      </if>
+      <if test="createStaff != null" >
+        #{createStaff,jdbcType=DECIMAL},
+      </if>
+      <if test="createDate != null" >
+        #{createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyStaff != null" >
+        #{modifyStaff,jdbcType=DECIMAL},
+      </if>
+      <if test="modifyDate != null" >
+        #{modifyDate,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.system.model.SoftwareVersionExample" resultType="java.lang.Integer" >
+    select count(*) from TB_BASE_SOFT_VERS
+    <if test="_parameter != null" >
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map" >
+    update TB_BASE_SOFT_VERS
+    <set >
+      <if test="record.softwareVersionId != null" >
+        SOFTWARE_VERSION_ID = #{record.softwareVersionId,jdbcType=DECIMAL},
+      </if>
+      <if test="record.softwareId != null" >
+        SOFTWARE_ID = #{record.softwareId,jdbcType=DECIMAL},
+      </if>
+      <if test="record.versionNum != null" >
+        VERSION_NUM = #{record.versionNum,jdbcType=VARCHAR},
+      </if>
+      <if test="record.versionInfo != null" >
+        VERSION_INFO = #{record.versionInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.drivateType != null" >
+        DRIVATE_TYPE = #{record.drivateType,jdbcType=DECIMAL},
+      </if>
+      <if test="record.state != null" >
+        STATE = #{record.state,jdbcType=DECIMAL},
+      </if>
+      <if test="record.filePath != null" >
+        FILE_PATH = #{record.filePath,jdbcType=VARCHAR},
+      </if>
+      <if test="record.fileName != null" >
+        FILE_NAME = #{record.fileName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.ifForceUpdate != null" >
+        IF_FORCE_UPDATE = #{record.ifForceUpdate,jdbcType=DECIMAL},
+      </if>
+      <if test="record.comments != null" >
+        COMMENTS = #{record.comments,jdbcType=DECIMAL},
+      </if>
+      <if test="record.remarks != null" >
+        REMARKS = #{record.remarks,jdbcType=VARCHAR},
+      </if>
+      <if test="record.createStaff != null" >
+        CREATE_STAFF = #{record.createStaff,jdbcType=DECIMAL},
+      </if>
+      <if test="record.createDate != null" >
+        CREATE_DATE = #{record.createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.modifyStaff != null" >
+        MODIFY_STAFF = #{record.modifyStaff,jdbcType=DECIMAL},
+      </if>
+      <if test="record.modifyDate != null" >
+        MODIFY_DATE = #{record.modifyDate,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map" >
+    update TB_BASE_SOFT_VERS
+    set SOFTWARE_VERSION_ID = #{record.softwareVersionId,jdbcType=DECIMAL},
+      SOFTWARE_ID = #{record.softwareId,jdbcType=DECIMAL},
+      VERSION_NUM = #{record.versionNum,jdbcType=VARCHAR},
+      VERSION_INFO = #{record.versionInfo,jdbcType=VARCHAR},
+      DRIVATE_TYPE = #{record.drivateType,jdbcType=DECIMAL},
+      STATE = #{record.state,jdbcType=DECIMAL},
+      FILE_PATH = #{record.filePath,jdbcType=VARCHAR},
+      FILE_NAME = #{record.fileName,jdbcType=VARCHAR},
+      IF_FORCE_UPDATE = #{record.ifForceUpdate,jdbcType=DECIMAL},
+      COMMENTS = #{record.comments,jdbcType=DECIMAL},
+      REMARKS = #{record.remarks,jdbcType=VARCHAR},
+      CREATE_STAFF = #{record.createStaff,jdbcType=DECIMAL},
+      CREATE_DATE = #{record.createDate,jdbcType=TIMESTAMP},
+      MODIFY_STAFF = #{record.modifyStaff,jdbcType=DECIMAL},
+      MODIFY_DATE = #{record.modifyDate,jdbcType=TIMESTAMP}
+    <if test="_parameter != null" >
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.system.model.SoftwareVersion" >
+    update TB_BASE_SOFT_VERS
+    <set >
+      <if test="softwareId != null" >
+        SOFTWARE_ID = #{softwareId,jdbcType=DECIMAL},
+      </if>
+      <if test="versionNum != null" >
+        VERSION_NUM = #{versionNum,jdbcType=VARCHAR},
+      </if>
+      <if test="versionInfo != null" >
+        VERSION_INFO = #{versionInfo,jdbcType=VARCHAR},
+      </if>
+      <if test="drivateType != null" >
+        DRIVATE_TYPE = #{drivateType,jdbcType=DECIMAL},
+      </if>
+      <if test="state != null" >
+        STATE = #{state,jdbcType=DECIMAL},
+      </if>
+      <if test="filePath != null" >
+        FILE_PATH = #{filePath,jdbcType=VARCHAR},
+      </if>
+      <if test="fileName != null" >
+        FILE_NAME = #{fileName,jdbcType=VARCHAR},
+      </if>
+      <if test="ifForceUpdate != null" >
+        IF_FORCE_UPDATE = #{ifForceUpdate,jdbcType=DECIMAL},
+      </if>
+      <if test="comments != null" >
+        COMMENTS = #{comments,jdbcType=DECIMAL},
+      </if>
+      <if test="remarks != null" >
+        REMARKS = #{remarks,jdbcType=VARCHAR},
+      </if>
+      <if test="createStaff != null" >
+        CREATE_STAFF = #{createStaff,jdbcType=DECIMAL},
+      </if>
+      <if test="createDate != null" >
+        CREATE_DATE = #{createDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyStaff != null" >
+        MODIFY_STAFF = #{modifyStaff,jdbcType=DECIMAL},
+      </if>
+      <if test="modifyDate != null" >
+        MODIFY_DATE = #{modifyDate,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where SOFTWARE_VERSION_ID = #{softwareVersionId,jdbcType=DECIMAL}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.system.model.SoftwareVersion" >
+    update TB_BASE_SOFT_VERS
+    set SOFTWARE_ID = #{softwareId,jdbcType=DECIMAL},
+      VERSION_NUM = #{versionNum,jdbcType=VARCHAR},
+      VERSION_INFO = #{versionInfo,jdbcType=VARCHAR},
+      DRIVATE_TYPE = #{drivateType,jdbcType=DECIMAL},
+      STATE = #{state,jdbcType=DECIMAL},
+      FILE_PATH = #{filePath,jdbcType=VARCHAR},
+      FILE_NAME = #{fileName,jdbcType=VARCHAR},
+      IF_FORCE_UPDATE = #{ifForceUpdate,jdbcType=DECIMAL},
+      COMMENTS = #{comments,jdbcType=DECIMAL},
+      REMARKS = #{remarks,jdbcType=VARCHAR},
+      CREATE_STAFF = #{createStaff,jdbcType=DECIMAL},
+      CREATE_DATE = #{createDate,jdbcType=TIMESTAMP},
+      MODIFY_STAFF = #{modifyStaff,jdbcType=DECIMAL},
+      MODIFY_DATE = #{modifyDate,jdbcType=TIMESTAMP}
+    where SOFTWARE_VERSION_ID = #{softwareVersionId,jdbcType=DECIMAL}
+  </update>
+  
+  <select id="getAppDownLoadPath" parameterType="String" resultType="String">
+  	select FILE_PATH
+  from tb_base_soft_vers a
+ where a.SOFTWARE_VERSION_ID = #{_parameter}
+  </select>
+  
+</mapper>

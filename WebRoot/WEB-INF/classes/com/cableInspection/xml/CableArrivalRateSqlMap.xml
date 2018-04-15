@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.CableArrivalRateDao">
+<select id="sum1" parameterType="map" resultType="map">
+	select count(t.staff_id) sum1,t.${area_type} area_id from tb_base_staff t 
+	where 
+  <![CDATA[
+  t.create_date >=to_date(#{begin_time}, 'yyyy-mm-dd') 
+  and t.create_date<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  ]]>
+	group by t.${area_type}
+</select>
+
+<select id="sum2" parameterType="map" resultType="map">
+select count(t.line_id) sum2,t.${area_type} area_id from tb_ins_line t 
+where 
+ <![CDATA[
+  t.create_TIME >=to_date(#{begin_time}, 'yyyy-mm-dd') 
+  and t.create_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  ]]>
+  group by t.${area_type}
+</select>
+
+<select id="sum3" parameterType="map" resultType="map">
+	select count(distinct(task.task_id)) sum3,t.${area_type} area_id from
+	tb_ins_plan t,tb_ins_task task 
+	where
+	t.plan_kind = 1 and t.plan_id=task.plan_id
+  <![CDATA[
+  and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') 
+  and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  ]]>
+	group by t.${area_type}
+</select>
+<select id="sum4" parameterType="map" resultType="map">
+	select count(distinct(task.task_id)) sum4,t.${area_type} area_id from
+	tb_ins_plan t,tb_ins_task task 
+	where t.plan_kind = 1 and
+	t.plan_id=task.plan_id
+          <![CDATA[
+          and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') 
+          and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          ]]>
+	group by t.${area_type}
+</select>
+<select id="sum5" parameterType="map" resultType="map">
+  select count(*) sum5,t.${area_type} area_id from tb_ins_point t
+   where t.point_type in (1,4)
+  group by t.${area_type}
+</select>
+<select id="sum6" parameterType="map" resultType="map">
+	select count(distinct(point_id)) sum6,area_id from (
+	select distinct(t.point_id) point_id,plan.${area_type} area_id from tb_ins_point
+	t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point
+	llp,tb_ins_task task
+	where
+	llp.point_id=t.point_id
+	and llp.line_id=pd.inspect_object_id
+	and pd.plan_id=plan.plan_id
+   <![CDATA[
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    ]]>
+	and task.plan_id=plan.plan_id
+	and plan.isdeleted=0
+	and t.point_type in (1,4)
+	and plan.plan_circle!=2
+	union all
+	select distinct(t.point_id) point_id,plan.${area_type} area_id from tb_ins_point
+	t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point
+	llp,tb_ins_task task
+	where
+	llp.point_id=t.point_id
+	and llp.line_id=pd.inspect_object_id
+	and pd.plan_id=plan.plan_id
+   <![CDATA[
+    and task.create_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    ]]>
+	and task.plan_id=plan.plan_id
+	and plan.isdeleted=0
+	and t.point_type in (1,4)
+	and plan.plan_circle=2
+	) 
+	group by area_id
+</select>
+<select id="sum7" parameterType="map" resultType="map">
+ select count(distinct(point_id)) sum7,area_id
+  from (select distinct(t.point_id),plan.${area_type} area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   <![CDATA[
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    ]]>
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and   t.point_type in (1,4)
+   union all
+   select t.point_id,t.${area_type} area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+   and t.point_level not in (6,9,0) 
+   <![CDATA[
+   and t.create_time<to_date(#{begin_time}, 'yyyy-mm-dd')
+   ]]>
+   ) 
+	group by area_id
+</select>
+<select id="sum8" parameterType="map" resultType="map">
+ select count(t.point_id) sum8,t.${area_type} area_id from tb_ins_point t 
+  where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+  group by t.${area_type}
+</select>
+<select id="sum9" parameterType="map" resultType="map">
+	select nvl(count(distinct(t.point_id)),0) sum9,plan.${area_type} area_id from tb_ins_point
+	t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point
+	llp,tb_ins_task task
+	where
+	llp.point_id=t.point_id
+	and llp.line_id=pd.inspect_object_id
+	and pd.plan_id=plan.plan_id
+   <![CDATA[
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    ]]>
+	and task.plan_id=plan.plan_id
+	and plan.isdeleted=0
+	and t.point_type in (1,4)
+	group by plan.${area_type}
+</select>
+<select id="sum11" parameterType="map" resultType="map">
+	select count(t.point_id) sum11,t.${area_type} area_id from tb_ins_point t 
+	where t.point_type
+	= 2
+	 <![CDATA[
+	and t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and
+	t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss')
+	]]>
+	group by t.${area_type}
+</select>
+<select id="sum12" parameterType="map" resultType="map">
+	select count(t.point_id) sum12,t.${area_type} area_id from tb_ins_point t 
+	where t.point_type
+	= 2
+	<![CDATA[
+	and t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd')
+	and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss')
+	]]>
+	group by t.${area_type}
+</select>
+<select id="sum13" parameterType="map" resultType="map">
+	select count(t.point_id) sum13,t.${area_type} area_id from tb_ins_point t 
+	where t.point_type
+	= 3
+	<![CDATA[
+	and t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and
+	t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss')
+	]]>
+	group by t.${area_type}
+</select>
+<select id="sum14" parameterType="map" resultType="map">
+	select count(*) sum14,t.${area_type} area_id from tb_ins_plan t,tb_ins_task task
+	where t.plan_kind = 2 and t.plan_id=task.plan_id
+	<![CDATA[
+	and task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd')
+	and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss')
+	]]>
+	group by t.${area_type}
+</select>
+<select id="sum15" parameterType="map" resultType="map">
+	select count(*) sum15,t.${area_type} area_id from tb_ins_plan t,tb_ins_task task
+	where t.plan_kind = 3 and t.plan_id=task.plan_id
+	<![CDATA[
+	and task.start_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and
+	task.start_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss')
+	]]>
+	group by t.${area_type}
+</select>
+<select id="sum16" parameterType="map" resultType="map">
+	select count(*) sum16,t.${area_type} area_id from tb_ins_record t where
+	t.record_type = 5
+	<![CDATA[
+	and t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and
+	t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss')
+	]]>
+	group by t.${area_type}
+</select>
+<select id="sum17" parameterType="map" resultType="map">
+	select area_id,count(times) sum17 from (
+	select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0)
+	times,t.${area_type} area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail
+	pd,tb_ins_line_point llp,tb_ins_task task
+	where
+	llp.point_id=t.point_id
+	and llp.line_id=pd.inspect_object_id
+	and pd.plan_id=plan.plan_id
+	and task.plan_id=plan.plan_id
+	<![CDATA[
+	and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+	and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss')
+	and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+	]]>
+	and plan.isdeleted=0
+	and t.point_type in (4)
+	) group by area_id order by area_id
+</select>
+<select id="sum18" parameterType="map" resultType="map">
+select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+  ( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+    left join (
+   select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.${area_type} area_id from tb_ins_point o where  o.point_type=4 and o.point_level  is not null
+   <![CDATA[
+   and o.create_time<=to_date(#{begin_time}, 'yyyy-mm-dd')
+   ]]>
+   and not exists (
+   select 1 from (
+  select t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   <![CDATA[
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    ]]>
+    and plan.isdeleted=0
+    and   t.point_type =4
+   ) b1 where b1.point_id=o.point_id
+   )
+   ) c1 on a.area_id=c1.area_id 
+   group by a.area_id order by a.area_id) b3
+   left join (
+   select area_id,count(point_id) sum22 from (
+  select t.point_id,t.${area_type} area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   <![CDATA[
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    ]]>
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+   ) b2 on b2.area_id=b3.area_id
+</select>
+<select id="sum19" parameterType="map" resultType="map">
+	select sum(sumti) sum19,area_id from (
+	select count(distinct ti.point_id) sumti,ti.area_id from (
+	select t.point_id,s.${area_type} area_id,to_char(t.create_time,'yyyy-mm')
+	create_time from tb_ins_record t,tb_base_staff s where t.task_id is not
+	null
+	and s.staff_id=t.inspector 
+   <![CDATA[
+  and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') 
+  and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') 
+  ]]>
+	and t.record_type=0
+	) ti group by create_time,ti.area_id) group by area_id
+</select>
+<select id="sum20" parameterType="map" resultType="map">
+	select count(*) sum20,s.${area_type} area_id from tb_ins_record
+	t,tb_base_staff s where t.task_id is not null
+	<![CDATA[
+	and s.staff_id=t.inspector and t.create_time>=to_date(#{begin_time}, 'yyyy-mm-dd') and
+	t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd
+	hh24:mi:ss') 
+	]]>
+	and t.record_type=0
+	group by s.${area_type}
+</select>
+<select id="sum21" parameterType="map" resultType="map">
+ select count(0) sum21,s.${area_type} area_id from tb_base_staff_role sr ,tb_base_staff s 
+  where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+  group by s.${area_type}
+</select>
+<select id="sum22" parameterType="map" resultType="map">
+ select count(0) sum22,s.${area_type} area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+  and sr.role_id=7 and s.isdeleted=0
+  group by s.${area_type}
+</select>
+<select id="sum23" parameterType="map" resultType="map">
+  select count(distinct t.inspector) sum23,s.${area_type} area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector 
+  <![CDATA[
+  and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') 
+  and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  ]]>
+  group by s.${area_type}
+</select>
+<select id="sum24" parameterType="map" resultType="map">
+select nvl(bill.sum24,0) sum24,a.area_id from area a
+      left join (select count(1) sum24,b.${area_type} area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+       <![CDATA[
+      and b.COMPLETE_TIME>=to_date(#{begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.${area_type}) bill
+      ]]>
+       on bill.area_id=a.area_id
+</select>
+<select id="getArea" parameterType="map" resultType="map">
+select area_id,name area from area where parent_area_id=#{area_id} order by area_id
+</select>
+</mapper>

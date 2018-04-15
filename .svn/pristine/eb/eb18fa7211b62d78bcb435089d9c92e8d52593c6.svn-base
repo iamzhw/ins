@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.roomInspection.dao.CompanyDao">
+
+
+	<sql id="dynamicWhere">
+		<if
+			test="queryParams.COMPANY_NAME != null and queryParams.COMPANY_NAME != ''">  
+            <![CDATA[
+	    	AND tbc.COMPANY_NAME like '%'||#{queryParams.COMPANY_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND tbc.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tbc.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</sql>
+
+
+
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		SELECT tbc.company_id,
+		tbc.company_name,
+		a.name area_name,
+		b.name
+		son_area_name,
+		tbs.staff_name,
+		to_char(tbc.create_date,'yyyy-MM-dd') as
+		create_time
+		FROM tb_base_company tbc,
+		tb_base_staff tbs, AREA A, AREA B
+		WHERE tbc.AREA_ID = A.AREA_ID
+		AND tbc.SON_AREA_ID = B.AREA_ID
+		and
+		tbc.create_staff = tbs.staff_id
+		<include refid="dynamicWhere" />
+		ORDER BY tbc.AREA_ID, tbc.SON_AREA_ID
+	</select>
+
+	<select id="getCompany" parameterType="int" resultType="map">
+		SELECT *
+		FROM tb_base_company tbc
+		WHERE tbc.company_id=#{id}
+		
+	</select>
+
+	<select id="getSonAreaListByCompanyId" parameterType="int"
+		resultType="map">
+		SELECT A.*
+		FROM AREA A, TB_BASE_COMPANY F
+		WHERE A.PARENT_AREA_ID = F.AREA_ID
+		AND F.COMPANY_ID = #{companyId}
+		ORDER BY A.AREA_ID
+ 	</select>
+	<insert id="insert" parameterType="map">
+		INSERT INTO tb_base_company
+		(company_id,
+		company_name,
+		area_id,
+		son_area_id,
+		create_staff,
+		create_date)
+		VALUES
+		(SEQ_TB_base_company.Nextval,#{COMPANY_NAME},#{AREA_ID},#{SON_AREA_ID},#{CREATE_STAFF},
+		SYSDATE)
+	</insert>
+
+
+	<update id="update" parameterType="map">
+		UPDATE tb_base_company F
+		SET
+		F.COMPANY_NAME = #{COMPANY_NAME},
+		F.AREA_ID =#{AREA_ID},
+		F.SON_AREA_ID
+		= #{SON_AREA_ID},
+		F.MODIFY_STAFF = #{MODIFY_STAFF},
+		F.MODIFY_DATE =
+		SYSDATE
+		WHERE F.COMPANY_ID = #{COMPANY_ID}
+	</update>
+
+	<delete id="delete" parameterType="int">
+		DELETE tb_base_company WHERE
+		company_id=#{id}
+	</delete>
+</mapper>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.CheckRecordDao">
+	
+	<select id="queryCheckRecord" parameterType="map" resultType="map">
+	   select distinct m.*,sj.glbh,to_char(sj.bdsj,'yyyy-mm-dd')bdsj,g.grid_name from (
+			select distinct a.name area,b.name son_area,re.eqp_id,re.eqp_no,re.eqp_name,re.port_id,re.port_no,count(distinct re.ischeckok)check_times
+			from tb_cablecheck_record re 
+			left join area a on a.area_id = re.area_id
+			left join area b on b.area_id =re.son_area_id
+			where re.port_id is not null 
+				 and re.record_type in (0,1,3,4)
+				 <if test="queryParams.check_start_time != null and queryParams.check_start_time != ''">
+				  <![CDATA[
+					   AND re.create_time >= to_date(#{queryParams.check_start_time},'yyyy-mm-dd')
+				  ]]>
+				</if>
+				<if test="queryParams.check_end_time != null and queryParams.check_end_time != ''">
+			     <![CDATA[
+			    	  AND re.create_time <= to_date(#{queryParams.check_end_time},'yyyy-mm-dd')
+			     ]]>
+				</if>				 			    						
+			group by a.name,b.name,re.eqp_id,re.eqp_no,re.eqp_name,re.port_id,re.port_no			
+		)m
+		left join tb_cablecheck_dtsj sj on sj.sbid=m.eqp_id and sj.dzid = m.port_id 
+		left join tb_cablecheck_equipment tb on tb.equipment_id=m.eqp_id
+		 left join tb_cablecheck_grid g on g.grid_id=tb.grid_id
+		where m.check_times=2 	
+			<if test="queryParams.area != null and queryParams.area != ''">
+				    AND tb.parent_area_id = #{queryParams.area}
+			</if>
+			<if test="queryParams.son_area != null and queryParams.son_area != ''">
+					AND tb.area_id = #{queryParams.son_area}
+			</if>
+			<if test="queryParams.whwg != null and queryParams.whwg != ''">
+					AND tb.grid_id = #{queryParams.whwg}
+			</if>
+			<if test="queryParams.static_month != null and queryParams.static_month != ''">
+				    AND to_char(sj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+			</if>
+			<if test="queryParams.dz_start_time != null and queryParams.dz_start_time != ''">
+				<![CDATA[
+					AND  sj.bdsj  >= to_date(#{queryParams.dz_start_time}, 'yyyy-mm-dd')
+				]]>
+			</if>
+			<if test="queryParams.dz_end_time != null and queryParams.dz_end_time != ''">
+				<![CDATA[
+					AND  sj.bdsj  <= to_date(#{queryParams.dz_end_time},'yyyy-mm-dd')
+				]]>
+			</if>
+			
+			<if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">
+				   <![CDATA[
+				   AND TB.RES_TYPE_ID in (${queryParams.RES_TYPE_ID})
+				   ]]>
+			</if>	
+			order by m.eqp_id, m.port_id, to_char(sj.bdsj,'yyyy-mm-dd')desc 
+	</select>
+	
+	
+	<select id="querySamePortRecord" parameterType="map" resultType="map">
+		select distinct re.eqp_no,re.eqp_name,re.port_id,re.port_no,
+           case re.ischeckok
+                 when '0' then '合格'
+                 when '1' then '不合格'
+           end ischeckok,
+           
+           f.staff_name create_staff,
+           to_char(re.create_time,'yyyy-mm-dd hh24:mi')create_time
+       from tb_cablecheck_record re 
+           left join tb_base_staff f on f.staff_id = re.create_staff
+       where re.port_id is not null 
+       	   <if test="queryParams.PORT_ID != null and queryParams.PORT_ID != ''">
+			   <![CDATA[
+			   AND re.port_id = #{queryParams.PORT_ID}
+			    ]]>
+		   </if>
+		    <if test="queryParams.AREA != null and queryParams.AREA != ''">
+			   <![CDATA[
+			   AND re.area_id = #{queryParams.AREA}
+			    ]]>
+		   </if>
+		    <if test="queryParams.SON_AREA != null and queryParams.SON_AREA != ''">
+			   <![CDATA[
+			   AND re.son_area_id = #{queryParams.SON_AREA}
+			    ]]>
+		   </if>
+		   <if test="queryParams.check_start_time != null and queryParams.check_start_time != ''">
+				  <![CDATA[
+				   AND re.create_time >= to_date(#{queryParams.check_start_time},'yyyy-mm-dd')
+					]]>
+			</if>
+			<if test="queryParams.check_end_time != null and queryParams.check_end_time != ''">
+				   <![CDATA[
+				   AND re.create_time <= to_date(#{queryParams.check_end_time},'yyyy-mm-dd')
+				    ]]>
+			</if>		   
+	       order by  to_char(re.create_time,'yyyy-mm-dd hh24:mi')desc              
+	</select>
+	
+	<select id="exportPortsRecord" parameterType="map" resultType="map">
+	  select distinct m.*,sj.glbh,to_char(sj.bdsj,'yyyy-mm-dd')bdsj,g.grid_name from (
+			select distinct a.name area,b.name son_area,re.eqp_id,re.eqp_no,re.eqp_name,re.port_id,re.port_no,count(distinct re.ischeckok)check_times
+			from tb_cablecheck_record re 
+			left join area a on a.area_id = re.area_id
+			left join area b on b.area_id =re.son_area_id
+			where re.port_id is not null 
+				 and re.record_type in (0,1,3,4)
+				 <if test="check_start_time != null and check_start_time != ''">
+				  <![CDATA[
+				  	 AND re.create_time >= to_date(#{check_start_time},'yyyy-mm-dd')
+				  ]]>
+				</if>
+				<if test="check_end_time != null and check_end_time != ''">
+			     <![CDATA[
+			    	 AND re.create_time <= to_date(#{check_end_time},'yyyy-mm-dd')
+			     ]]>
+				</if>				 			    						
+			group by a.name,b.name,re.eqp_id,re.eqp_no,re.eqp_name,re.port_id,re.port_no			
+		)m
+		left join tb_cablecheck_dtsj sj on sj.sbid=m.eqp_id and sj.dzid = m.port_id 
+		left join tb_cablecheck_equipment tb on tb.equipment_id=m.eqp_id
+		 left join tb_cablecheck_grid g on g.grid_id=tb.grid_id
+		where m.check_times=2 	
+			<if test="area != null and area != ''">
+				    AND tb.parent_area_id = #{area}
+			</if>
+			<if test="son_area != null and on_area != ''">
+					AND tb.area_id = #{son_area}
+			</if>
+			<if test="whwg != null and whwg != ''">
+					AND tb.grid_id = #{queryParams.whwg}
+			</if>
+			<if test="static_month != null and static_month != ''">
+				    AND to_char(sj.bdsj,'yyyy-mm') = #{static_month}
+			</if>
+			<if test="dz_start_time != null and dz_start_time != ''">
+				<![CDATA[
+					AND  sj.bdsj  >= to_date(#{dz_start_time}, 'yyyy-mm-dd')
+				]]>
+			</if>
+			<if test="dz_end_time != null and dz_end_time != ''">
+				<![CDATA[
+					AND  sj.bdsj  <= to_date(#{dz_end_time},'yyyy-mm-dd')
+				]]>
+			</if>
+			
+			<if test="RES_TYPE_ID != null and RES_TYPE_ID != ''">
+				   <![CDATA[
+				   AND TB.RES_TYPE_ID in (${RES_TYPE_ID})
+				   ]]>
+			</if>	
+			order by m.eqp_id, m.port_id, to_char(sj.bdsj,'yyyy-mm-dd')desc 
+	</select>
+	
+</mapper>

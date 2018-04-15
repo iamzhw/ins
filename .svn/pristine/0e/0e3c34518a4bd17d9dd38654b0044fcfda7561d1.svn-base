@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.WrongPortReportDao">
+
+		
+<select id="query" parameterType="map" resultType="map">
+
+
+select distinct r.eqp_no,
+                r.port_id,
+                r.port_no,
+                r.descript,
+                r.area_id,
+                r.son_area_id,
+                 TO_CHAR(dtsj.bdsj, 'yyyy-MM-dd HH24:mi:ss') bdsj ,
+                dtsj.glbh,
+                dtsj.sggh,
+                dtsj.xz,
+                TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time ,
+                
+                dtsj.glmc,
+                t.name,
+                a1.name   city,
+                a2.name   town
+  from tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail td
+    on r.detail_id = td.detail_id
+  left join Tb_Cablecheck_Dtsj dtsj
+    on dtsj.id = td.dtsj_id
+  left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE t
+    on dtsj.xz = t.pso_type_id
+  left join area a1
+    on a1.area_id = r.area_id
+  left join area a2
+    on a2.area_id = r.son_area_id
+     left join tb_cablecheck_task task 
+                     on task.task_id = r.task_id 
+ where r.ischeckok = 1
+   and td.check_flag = 1
+   and td.inspect_object_type = 1
+   and td.dtsj_id is not null
+   and r.record_type != 2
+   and task.task_type != 3
+   and to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+    and r.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+            <if test="queryParams.son_area != null and queryParams.son_area != ''">  
+	            <![CDATA[
+		    	AND r.son_area_id = #{queryParams.son_area}
+		    	]]>
+		  </if>
+         
+        <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and r.area_id = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>
+union
+
+select distinct m.eqp_no,
+                m.port_id,
+                m.port_no,
+                m.descript,
+                m.area_id,
+                m.son_area_id,
+                TO_CHAR(m.bdsj, 'yyyy-MM-dd HH24:mi:ss') bdsj ,
+                m.glbh,
+                m.sggh,
+                m.xz,
+                TO_CHAR(m.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time ,
+                
+                m.glmc,
+                t.name,
+                a1.name city,
+                a2.name town
+  from (select r.*,
+               dtsj.*,
+               rank() over(partition by dtsj.dzid order by dtsj.bdsj desc) rank
+          from tb_cablecheck_record r
+          left join tb_cablecheck_taskdetail td
+            on r.detail_id = td.detail_id
+          left join tb_cablecheck_dtsj dtsj
+            on dtsj.dzid = r.port_id
+             left join tb_cablecheck_task task 
+                     on task.task_id = r.task_id 
+         where to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+           and  r.ischeckok = 1
+           and td.check_flag = 1
+           and td.inspect_object_type = 1
+           and td.dtsj_id is null
+           and dtsj.bdsj &lt;= r.create_time
+           and r.record_type != 2
+            and task.task_type != 3
+           and r.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+            <if test="queryParams.son_area != null and queryParams.son_area != ''">  
+	            <![CDATA[
+		    	AND r.son_area_id = #{queryParams.son_area}
+		    	]]>
+		  </if>
+         
+        <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and r.area_id = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>
+           ) m
+           left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE t on m.xz = t.pso_type_id
+           left join area a1 on a1.area_id = m.area_id
+           left join area a2 on a2.area_id = m.son_area_id
+ where m.rank = 1
+                    
+</select>
+	
+<select id="selArea" resultType="map">
+		select area_id,name from area
+		where area_level=3
+</select>
+
+
+<select id="queryDown" parameterType="map" resultType="map">
+
+
+select distinct r.eqp_no,
+                r.port_id,
+                r.port_no,
+                r.descript,
+                r.area_id,
+                r.son_area_id,
+                 TO_CHAR(dtsj.bdsj, 'yyyy-MM-dd HH24:mi:ss') bdsj ,
+                dtsj.glbh,
+                dtsj.sggh,
+                dtsj.xz,
+                TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time ,
+                
+                dtsj.glmc,
+                t.name,
+                a1.name   city,
+                a2.name   town
+  from tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail td
+    on r.detail_id = td.detail_id
+  left join Tb_Cablecheck_Dtsj dtsj
+    on dtsj.id = td.dtsj_id
+  left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE t
+    on dtsj.xz = t.pso_type_id
+  left join area a1
+    on a1.area_id = r.area_id
+  left join area a2
+    on a2.area_id = r.son_area_id
+     left join tb_cablecheck_task task 
+                     on task.task_id = r.task_id 
+ where r.ischeckok = 1
+   and td.check_flag = 1
+   and td.inspect_object_type = 1
+   and td.dtsj_id is not null
+   and r.record_type != 2
+   and task.task_type != 3
+   and to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+    and r.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+            <if test="son_area != null and son_area != ''">  
+	            <![CDATA[
+		    	AND r.son_area_id = #{son_area}
+		    	]]>
+		  </if>
+         
+        <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and r.area_id = #{AREA_ID} 
+		    	]]>
+		  </if>
+union
+
+select distinct m.eqp_no,
+                m.port_id,
+                m.port_no,
+                m.descript,
+                m.area_id,
+                m.son_area_id,
+                TO_CHAR(m.bdsj, 'yyyy-MM-dd HH24:mi:ss') bdsj ,
+                m.glbh,
+                m.sggh,
+                m.xz,
+                TO_CHAR(m.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time ,
+                
+                m.glmc,
+                t.name,
+                a1.name city,
+                a2.name town
+  from (select r.*,
+               dtsj.*,
+               rank() over(partition by dtsj.dzid order by dtsj.bdsj desc) rank
+          from tb_cablecheck_record r
+          left join tb_cablecheck_taskdetail td
+            on r.detail_id = td.detail_id
+          left join tb_cablecheck_dtsj dtsj
+            on dtsj.dzid = r.port_id
+             left join tb_cablecheck_task task 
+                     on task.task_id = r.task_id 
+         where to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+           and  r.ischeckok = 1
+           and td.check_flag = 1
+           and td.inspect_object_type = 1
+           and td.dtsj_id is null
+           and dtsj.bdsj &lt;= r.create_time
+           and r.record_type != 2
+            and task.task_type != 3
+           and r.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+            <if test="son_area != null and son_area != ''">  
+	            <![CDATA[
+		    	AND r.son_area_id = #{son_area}
+		    	]]>
+		  </if>
+         
+        <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and r.area_id = #{AREA_ID} 
+		    	]]>
+		  </if>
+           ) m
+           left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE t on m.xz = t.pso_type_id
+           left join area a1 on a1.area_id = m.area_id
+           left join area a2 on a2.area_id = m.son_area_id
+ where m.rank = 1
+
+</select>
+
+<select id="queryPersonalQuality" parameterType="map" resultType="map">
+      select t.*,
+           decode(t.num1, 0, 0, round((t.num / t.num1), 4) * 100) || '%' percent1,
+           decode(t.num3, 0, 0, round((t.num2 / t.num3), 4) * 100) || '%' percent2
+      from (select tbs.staff_name,
+                   count(case
+                           when tcr.record_type != 2 and tct.task_type
+                            ! = 3 and tcr.ischeckok = 0 then
+                            1
+                         end) num,
+                   count(case
+                           when tcr.record_type != 2 and tct.task_type ! = 3 then
+                            1
+                         end) num1,
+                   
+                   count(case
+                           when tcr.record_type = 2 and tct.status_id = 8 and
+                                tcr.ischeckok = 0 then
+                            1
+                         end) num2,
+                   count(case
+                           when tcr.record_type = 2 and tcr.ischeckok = 0 then
+                            1
+                         end) num3,
+                         A1.NAME TOWN,
+                         A2.NAME CITY
+            
+              from tb_cablecheck_record tcr
+              join tb_cablecheck_task tct
+                on tcr.task_id = tct.task_id
+              join tb_base_staff tbs
+                on tbs.staff_id = tcr.create_staff
+             
+            JOIN AREA A1 ON A1.AREA_ID = TBS.SON_AREA_ID 
+              JOIN AREA A2 ON A2.AREA_ID  = TBS.AREA_ID 
+            
+             where tcr.port_id is not null
+             
+             and tcr.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(tcr.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                <if test="queryParams.son_area != null and queryParams.son_area != ''">  
+	            <![CDATA[
+		    	AND tbs.son_area_id = #{queryParams.son_area}
+		    	]]>
+		  </if>
+         
+        <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and tbs.area_id = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>
+		  
+		  
+		
+		  
+		  <if test="queryParams.STAFFNAME != null and queryParams.STAFFNAME!= ''">  
+	            <![CDATA[
+		     and tbs.staff_name LIKE  '%'||#{queryParams.STAFFNAME}||'%'
+		    	]]>
+		  </if>
+             group by tbs.staff_name,A1.NAME,A2.NAME,tbs.staff_no) t
+
+
+</select>
+
+
+<select id="personalCheckDown" parameterType="map" resultType="map">
+    select t.*,
+           decode(t.num1, 0, 0, round((t.num / t.num1), 4) * 100) || '%' percent1,
+           decode(t.num3, 0, 0, round((t.num2 / t.num3), 4) * 100) || '%' percent2
+      from (select tbs.staff_name,
+                   count(case
+                           when tcr.record_type != 2 and tct.task_type
+                            ! = 3 and tcr.ischeckok = 0 then
+                            1
+                         end) num,
+                   count(case
+                           when tcr.record_type != 2 and tct.task_type ! = 3 then
+                            1
+                         end) num1,
+                   
+                   count(case
+                           when tcr.record_type = 2 and tct.status_id = 8 and
+                                tcr.ischeckok = 0 then
+                            1
+                         end) num2,
+                   count(case
+                           when tcr.record_type = 2 and tcr.ischeckok = 0 then
+                            1
+                         end) num3,
+                         A1.NAME TOWN,
+                         A2.NAME CITY
+            
+              from tb_cablecheck_record tcr
+              join tb_cablecheck_task tct
+                on tcr.task_id = tct.task_id
+              join tb_base_staff tbs
+                on tbs.staff_id = tcr.create_staff
+             
+            JOIN AREA A1 ON A1.AREA_ID = TBS.SON_AREA_ID 
+              JOIN AREA A2 ON A2.AREA_ID  = TBS.AREA_ID 
+             
+             where tcr.port_id is not null
+             
+             and tcr.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(tcr.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                <if test="son_area != null and son_area != ''">  
+	            <![CDATA[
+		    	AND tbs.son_area_id = #{son_area}
+		    	]]>
+		  </if>
+         
+        <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and tbs.area_id = #{AREA_ID} 
+		    	]]>
+		  </if>
+		  
+		  
+		  
+		  
+		  <if test="STAFFNAME != null and STAFFNAME!= ''">  
+	            <![CDATA[
+		     and tbs.staff_name LIKE  '%'||#{STAFFNAME}||'%'
+		    	]]>
+		  </if>
+             group by tbs.staff_name,A1.NAME,A2.NAME,tbs.staff_no) t
+
+</select>
+             
+</mapper>

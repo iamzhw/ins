@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.ExcelTeamDao">
+	
+	<select id="getTeamId" parameterType="map" resultType="java.util.Map">
+		
+		select team_id from (
+			select b.*,rownum rn 
+		    from tb_base_staff_zw b
+		 	<!-- where b.team_name like '%'||#{teamName}||'%'  -->
+		 	where b.team_name  = #{teamName}
+		 ) where rn=1
+		<!-- select team_id from tb_base_staff_zw b where b.team_name like '%'||#{teamName}||'%' 
+		and b.team_spec_id=10 
+		and b.son_area_id in (select area_id from area a where a.name like '%'||#{areaName}||'%' ) -->
+	</select>
+	
+	
+	<select id="getStaffId" parameterType="map" resultType="map">
+		select * from (
+		select z.*,rownum rn  from  tb_base_staff_zw z where z.staff_no=#{staffNo}
+			<if test="teamId !=null and teamId !=''">
+		            <![CDATA[
+		            	and z.team_id=#{teamId}
+			    	]]>
+			   </if>
+		) where rn =1
+	</select>
+	
+	
+	<select id="isZwExists" parameterType="map" resultType="map">
+		select * from (select z.id,z.staff_no,z.staff_name,z.id_number,rownum rn  from  tb_base_staff_zw z where z.staff_no=#{staffNo})where rn=1
+	</select>
+	
+	<select id="ifNoWithName" parameterType="map" resultType="map">
+		select * from (select z.id,z.staff_no,z.staff_name,z.id_number,rownum rn  from  tb_base_staff_zw z 
+		where z.staff_no=#{staffNo} and z.staff_name = #{staffName})where rn=1
+	</select>
+	
+	<insert id="addStaffZw" parameterType="map">
+		insert into tb_base_staff_zw
+		(id,staff_no,staff_name,id_number,is_leader,is_auditor,team_id,team_name,is_from,status)
+		(select id,staff_no,staff_name,id_number,1 is_leader, 1 is_auditor,#{teamId} team_id,
+		(select distinct  team_name from tb_base_staff_zw b where b.team_id = #{teamId}) team_name,
+		1 is_from,2
+		from (
+		select z.id,z.staff_no,z.staff_name,z.id_number,rownum rn  from  tb_base_staff_zw z where z.staff_no=#{staffNo}
+		) where rn =1)
+	</insert>
+	
+	
+	<insert id="insertCableRole" parameterType="map">
+		insert into tb_base_staff_role(staff_id,role_id) 
+		select distinct f.staff_id,466 from tb_base_staff_zw z,tb_base_staff f
+		where  f.staff_no = z.staff_no and f.id_number = z.id_number
+ 		and z.staff_no = #{staffNo}
+	</insert>
+	
+	<select id="isExistCableRole" parameterType="map" resultType="java.lang.Integer">
+		select count(*) from  tb_base_staff_role r where r.staff_id in (
+		select distinct f.staff_id from tb_base_staff_zw z,tb_base_staff f
+ 		where  f.staff_no = z.staff_no and f.id_number = z.id_number
+ 		and z.staff_no = #{staffNo}) and r.role_id = 466
+	</select>
+	
+	<update id="updateLeader"  parameterType="map">
+	   update tb_base_staff_zw f  set f.is_leader=#{upType},f.is_auditor=#{upType} 
+	   where 1=1 
+	   <if test="staffNo !=null and staffNo !=''">
+            <![CDATA[
+            	and f.staff_no=#{staffNo}
+	    	]]>
+	   </if> 
+   	   <if test="teamId !=null and teamId !=''">
+            <![CDATA[
+            	and f.team_id=#{teamId}
+	    	]]>
+	   </if>
+	</update>
+	
+	
+	<select id="getCompanyId"  parameterType="string" resultType="map">
+		select company_id from tb_base_maintain_company p where p.company_name = #{comName}
+	</select>
+	
+	<insert id="addCompany"  parameterType="map">
+		insert into tb_base_maintain_company 
+		(company_id,company_name,create_time,update_time)
+		values (seq_maintain_company_id.nextval,#{comName},sysdate,sysdate)
+		
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+				keyProperty="COMPANY_ID">
+				SELECT seq_maintain_company_id.CURRVAL FROM DUAL
+		</selectKey>
+		
+	</insert>
+	
+	<select id="ifExistRelation" parameterType="map" resultType="java.lang.Integer">
+		select count(*) cou from tb_base_company_banzu_relation where company_id =#{comId} and banzu_id=#{teamId}
+	</select>	
+	
+	<insert id="addRelation" parameterType="map">
+		insert into tb_base_company_banzu_relation (id,company_id,banzu_id) 
+		values (SEQ_COMPANY_BANZU_ID.NEXTVAL,  #{comId} , #{teamId})
+	</insert>	
+	
+	
+	<select id="ifExitStaff" parameterType="map" resultType="java.lang.Integer">
+		select count(*) cou from tb_base_staff f where f.staff_no = #{staffNo}
+	</select>
+	
+	
+	<delete id="deleteImportLog"  parameterType="map">
+		delete from tb_cablecheck_banzu_import_log  where  create_staff = #{staffId}
+	</delete>
+	
+	<insert id="insertImportLog"  parameterType="map">
+		insert into tb_cablecheck_banzu_import_log 
+		(import_id, area_name, team_name, company, staff_no, create_staff, create_date, staff_name,status,fail_desc)
+		values 
+		(seq_banzu_import_log.nextval,#{areaName},#{teamName},#{comName},#{staffNo},#{staffId},sysdate,#{staffName},#{status},#{failDesc})
+	</insert>
+	
+</mapper> 

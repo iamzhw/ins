@@ -1,0 +1,1662 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.TaskMangerDao">
+
+	<sql id="dynamicWhere_plan">
+		<if test="queryParams.TASK_NAME != null and queryParams.TASK_NAME != ''">  
+            <![CDATA[
+	    	AND TASK_NAME like '%'||#{queryParams.TASK_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_TYPE != null and queryParams.TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND TASK_TYPE = #{queryParams.TASK_TYPE} 
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere_dtsj">
+		<if test="queryParams.DZ_START_TIME != null and queryParams.DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ >= TO_DATE(#{queryParams.DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.DZ_END_TIME != null and queryParams.DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ <= TO_DATE(#{queryParams.DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.xz != null and queryParams.xz != '' and queryParams.xz != 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz in (${queryParams.xz})
+	    	]]>
+		</if>
+		<if test="queryParams.xz != null and queryParams.xz != '' and queryParams.xz == 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz not in (13,17,18,60,10000)
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere_device">
+		<if test="queryParams.EQUIPMENT_CODE != null and queryParams.EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_CODE like  '%'||#{queryParams.EQUIPMENT_CODE}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.EQUIPMENT_NAME != null and queryParams.EQUIPMENT_NAME != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_NAME like  '%'||#{queryParams.EQUIPMENT_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.EQUIPMENT_ADDRESS != null and queryParams.EQUIPMENT_ADDRESS != ''">  
+            <![CDATA[
+	    		AND TB.ADDRESS like  '%'||#{queryParams.EQUIPMENT_ADDRESS}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">
+			<![CDATA[
+				AND TB.AREA_ID IN (SELECT C.AREA_ID FROM AREA C WHERE (C.PARENT_AREA_ID= #{queryParams.AREA_ID} OR C.AREA_ID=#{queryParams.AREA_ID}) )
+			]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.MANAGE_AREA_ID != null and queryParams.MANAGE_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.manage_area like '%'||#{queryParams.MANAGE_AREA_ID}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.RES_TYPE_ID != null and  queryParams.RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID in (${queryParams.RES_TYPE_ID})
+	    	]]>
+		</if>
+		<if test="queryParams.WHWG != null and  queryParams.WHWG != ''">  
+            <![CDATA[
+	    		AND TB.GRID_ID = #{queryParams.WHWG}
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere_queryDevice">
+		<if test="queryParams.DZ_START_TIME != null and queryParams.DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ >= TO_DATE(#{queryParams.DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.DZ_END_TIME != null and queryParams.DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ <= TO_DATE(#{queryParams.DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.SFPF != null and queryParams.SFPF != ''">  
+            <![CDATA[
+	    		AND TD.SFPF = #{queryParams.SFPF}
+	    	]]>
+		</if>
+		<if test="queryParams.AREA != null and queryParams.AREA != ''">
+			<![CDATA[
+				AND TB.AREA_ID IN (SELECT C.AREA_ID FROM AREA C WHERE (C.PARENT_AREA_ID= #{queryParams.AREA} OR C.AREA_ID=#{queryParams.AREA}) )
+			]]>
+		</if>
+		<if test="queryParams.SON_AREA != null and queryParams.SON_AREA != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{queryParams.SON_AREA}
+	    	]]>
+		</if>
+		<if test="queryParams.EQUIPMENT_CODE != null and queryParams.EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_CODE like  '%'||#{queryParams.EQUIPMENT_CODE}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.MANAGE_AREA_ID != null and queryParams.MANAGE_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.MANAGE_AREA_ID = #{queryParams.MANAGE_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.RES_TYPE_ID != null and  queryParams.RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere_records">
+		<if test="queryParams.cStartTime != null and  queryParams.cStartTime != ''">  
+            <![CDATA[
+	    		AND TR.CREATE_TIME >= TO_DATE(#{queryParams.cStartTime}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.cEndTime != null and  queryParams.cEndTime != ''">  
+            <![CDATA[
+	    		AND TR.CREATE_TIME <= TO_DATE(#{queryParams.cEndTime}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.area != null and  queryParams.area != ''">  
+            <![CDATA[
+	    		AND TR.AREA_ID = #{queryParams.area}
+	    	]]>
+		</if>
+		<if test="queryParams.son_area != null and  queryParams.son_area != ''">  
+            <![CDATA[
+	    		AND TR.SON_AREA_ID = #{queryParams.son_area}
+	    	]]>
+		</if>
+		<if test="queryParams.staff != null and  queryParams.staff != ''">  
+            <![CDATA[
+	    		AND TR.CREATE_STAFF = #{queryParams.staff}
+	    	]]>
+		</if>
+		<if test="queryParams.equipmentCode != null and  queryParams.equipmentCode != ''">  
+            <![CDATA[
+	    		AND TR.EQP_NO LIKE '%'||#{queryParams.equipmentCode}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.recordType != null and  queryParams.recordType != ''">  
+            <![CDATA[
+	    		AND TR.RECORD_TYPE = #{queryParams.recordType}
+	    	]]>
+		</if>
+	</sql>
+	<select id="query" parameterType="map" resultType="map">
+		SELECT T.TASK_ID,
+		T.TASK_NAME,
+		T.TASK_NO,
+		CASE TASK_TYPE
+       	WHEN 0 THEN '周期性任务'
+       	ELSE '隐患任务'END TASK_TYPE,
+		S.STAFF_NAME INSPECTOR,
+		TO_CHAR(T.CREATE_TIME, 'yyyy/mm/dd') CREATE_TIME,
+		TO_CHAR(T.COMPLETE_TIME, 'yyyy/mm/dd') COMPLETE_TIME,
+		TO_CHAR(T.ACTUAL_COMPLETE_TIME, 'yyyy/mm/dd') ACTUAL_COMPLETE_TIME,
+		'是' IFFINSHED,
+       	'100%' PERCENT
+		FROM TB_CABLECHECK_TASK T,TB_BASE_STAFF S
+		WHERE T.INSPECTOR=S.STAFF_ID AND T.ENABLE = 0
+		<include refid="dynamicWhere_plan" />
+		ORDER BY T.CREATE_TIME DESC
+	</select>
+	
+	<select id="addTaskQueryNotGroup" parameterType="map" resultType="map">
+	select * from 
+	(
+		select c.*,
+		(case y.record_type 
+			when 2 then '已整改'
+				 else '未整改' end) record_type
+		
+		 from (SELECT 
+			TB.EQUIPMENT_ID SBIDS,
+       		TB.EQUIPMENT_NAME,
+       		TB.EQUIPMENT_CODE,
+       		TB.ADDRESS EQUIPMENT_ADDRESS,
+       		TB.RES_TYPE,
+			B.NAME AREA,
+      		A.NAME SON_AREA,
+       		TB.manage_area  MANAGE_AREA_ID,
+       		TB.GRID_ID,
+            G.GRID_NAME ZHHWHWG,
+       		1 NUM,
+       		 oed.net_layer_id,
+       		 case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+       		COUNT(DISTINCT(Td.DZID)) DZNUM,
+       		COUNT(1) GLNUM,
+		    sum(to_number(td.h)) HNUM,
+		    sum(to_number(td.xz)) XZNUM,
+            COUNT(1)*60 ISXZNUM,
+		    TBS.STAFF_NAME,
+		    ce.contract_persion_name,
+		   <!--  (select count(sj.xz) from tb_cablecheck_dtsj sj where sj.install_sbid=tb.equipment_id and sj.xz in(2,17,31)	 
+		   <if test="queryParams.DZ_START_TIME != null and queryParams.DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND sj.BDSJ >= TO_DATE(#{queryParams.DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		   </if>
+		   <if test="queryParams.DZ_END_TIME != null and queryParams.DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND sj.BDSJ <= TO_DATE(#{queryParams.DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		   </if>
+		   ) --> '0' chaijinum,
+		   <!-- (select count(sj.glbh) from tb_cablecheck_dtsj sj where sj.install_sbid=tb.equipment_id and (sj.glbh like 'F17%' or sj.glbh like 'E17%')
+	    	<if test="queryParams.DZ_START_TIME != null and queryParams.DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND sj.BDSJ >= TO_DATE(#{queryParams.DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		    </if>
+		    <if test="queryParams.DZ_END_TIME != null and queryParams.DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND sj.BDSJ <= TO_DATE(#{queryParams.DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		    </if>   
+		   ) --> '0' addnum, 
+			to_char(TBR.CREATE_TIME,'yyyy-mm-dd hh24:mi:ss') CREATE_TIME,
+			rank() OVER(PARTITION BY TBR.EQP_ID ORDER BY TBR.CREATE_TIME) rank
+		  FROM TB_CABLECHECK_EQUIPMENT TB 
+		  left join tb_base_contract_equipment ce on tb.equipment_id=ce.equipment_id
+		  LEFT JOIN AREA A ON TB.AREA_ID = A.AREA_ID
+		  LEFT JOIN AREA B ON A.PARENT_AREA_ID = B.AREA_ID
+		  join TB_CABLECHECK_DTSJ TD on TB.EQUIPMENT_ID = TD.Install_Sbid
+		  	 LEFT JOIN TB_CABLECHECK_RECORD TBR ON TBR.EQP_ID = TB.EQUIPMENT_ID
+    	  LEFT JOIN TB_BASE_STAFF TBS ON TBS.STAFF_ID = TBR.CREATE_STAFF
+    	  LEFT JOIN TB_CABLECHECK_GRID G ON TB.GRID_ID=G.GRID_ID
+    	   left join odso_eqp_daily oed on oed.phy_eqp_id = tb.equipment_id
+             and oed.local_area_id =tb.parent_area_id
+		 WHERE TD.SFPF = 0
+			<include refid="dynamicWhere_dtsj" />
+		AND TB.RES_TYPE_ID !=2530
+	    <if test="queryParams.contract_person_name != null and queryParams.contract_person_name != ''">  
+           <![CDATA[
+    		AND ce.contract_persion_name like  '%'||#{queryParams.contract_person_name}||'%'    		
+    	   ]]>
+	    </if> 
+		<include refid="dynamicWhere_device" />
+		<if test="queryParams.wljb != null and queryParams.wljb  != ''">  
+            <![CDATA[
+	    		AND oed.net_layer_id =#{queryParams.wljb}
+	    	]]>
+		</if>
+		group by TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_NAME,
+			TB.EQUIPMENT_CODE,
+			TB.ADDRESS,
+			TB.RES_TYPE,
+			TBS.STAFF_NAME,
+			TBR.CREATE_TIME,
+			ce.contract_persion_name,
+			B.NAME,
+			A.NAME,
+			TBR.EQP_ID,
+			TB.manage_area,
+			TB.GRID_ID,
+			G.GRID_NAME,
+			oed.net_layer_id
+			)C
+	left join 
+       (select re.record_type,re.eqp_id,re.eqp_no,
+          ROW_NUMBER() OVER(PARTITION BY re.eqp_id ORDER BY re.create_time desc) rank2
+        from tb_cablecheck_record re where re.port_id is null)y	     
+     on c.SBIDS=y.eqp_id and c.EQUIPMENT_CODE=y.eqp_no
+     where C.RANK = 1  and (y.rank2=1 or y.rank2 is null)
+			 
+			 <if test="queryParams.ish != null and queryParams.ish != '' and queryParams.ish == 0">  
+            	<![CDATA[
+	    			AND C.GLNUM-HNUM = 0
+	    		]]>
+			</if>
+			 <if test="queryParams.ish != null and queryParams.ish != '' and queryParams.ish == 1">  
+            	<![CDATA[
+	    			AND C.GLNUM-HNUM != 0
+	    		]]>
+			</if>) 
+				temp 
+				<if test="queryParams.isxz != null and queryParams.isxz != '' and queryParams.isxz == 0">  
+            	<![CDATA[
+				WHERE temp.XZNUM != temp.ISXZNUM
+	    		]]>
+			</if>
+				
+				order by  temp.DZNUM desc,temp.GLNUM desc,temp.HNUM desc
+	</select>
+	
+	<select id="addTaskQuery" parameterType="map" resultType="map">
+		SELECT 
+			B.NAME AREA,
+			A.NAME SON_AREA,
+			B.AREA_ID AREA_ID,
+       		A.AREA_ID SON_AREA_ID,
+       		<if test="queryParams.selectType1 != null and queryParams.selectType1 != ''">
+       			TB.GRID_ID,
+       			G.GRID_NAME ZHHWHWG,
+       		</if>
+       		<if test="queryParams.selectType1 == ''">
+       			'所有' ZHHWHWG,
+       		</if>
+			<if test="queryParams.selectType3 != null and queryParams.selectType3 != ''">
+				TB.RES_TYPE_ID,
+				TB.RES_TYPE,
+			</if>
+			<if test="queryParams.selectType3 == ''">
+				'所有' RES_TYPE,
+			</if>
+      		<if test="queryParams.selectType2 != null and queryParams.selectType2 != ''">
+				TB.manage_area MANAGE_AREA_ID,
+			</if>
+			<if test="queryParams.selectType2 == ''">
+				'所有' MANAGE_AREA_ID,
+			</if>
+       		<!-- WM_CONCAT(TB.EQUIPMENT_ID) AS SBIDS, -->
+       		<!-- WM_CONCAT(TB.EQUIPMENT_CODE) AS CODES, -->
+       		COUNT (distinct(TB.EQUIPMENT_ID)) NUM
+		  FROM TB_CABLECHECK_EQUIPMENT TB
+		  LEFT JOIN AREA A ON TB.AREA_ID = A.AREA_ID
+		  LEFT JOIN AREA B ON A.PARENT_AREA_ID = B.AREA_ID
+		  join TB_CABLECHECK_DTSJ TD on TB.EQUIPMENT_ID = TD.Install_Sbid
+		  LEFT JOIN TB_CABLECHECK_GRID G ON TB.GRID_ID=G.GRID_ID
+		 WHERE TD.SFPF = 0
+			<include refid="dynamicWhere_dtsj" />
+		AND TB.RES_TYPE_ID !=2530
+		<include refid="dynamicWhere_device" />
+		GROUP BY 
+			<if test="queryParams.selectType3 != null and queryParams.selectType3 != ''">
+				TB.RES_TYPE_ID,
+				TB.RES_TYPE,
+			</if>
+			<if test="queryParams.selectType2 != null and queryParams.selectType2 != ''">
+				TB.manage_area,
+			</if>
+			<if test="queryParams.selectType1 != null and queryParams.selectType1 != ''">
+				TB.GRID_ID,
+				G.GRID_NAME,
+			</if>
+			A.NAME,
+			B.NAME,
+			B.AREA_ID,
+			A.AREA_ID
+	</select>
+	
+	<select id="queryNumAndDeviceIdByGroup" parameterType="map" resultType="map">
+	select * from (	SELECT  TB.EQUIPMENT_ID ,
+       		    TB.EQUIPMENT_CODE,
+        		(SELECT COUNT(DISTINCT(T.DZID)) FROM TB_CABLECHECK_DTSJ T WHERE T.INSTALL_SBID=TB.EQUIPMENT_ID) DZNUM,
+       			(SELECT COUNT(1) FROM TB_CABLECHECK_DTSJ T WHERE T.INSTALL_SBID=TB.EQUIPMENT_ID) GLNUM,
+       			(SELECT COUNT(1) FROM TB_CABLECHECK_DTSJ T WHERE T.INSTALL_SBID=TB.EQUIPMENT_ID AND T.H=1) HNUM
+       	FROM TB_CABLECHECK_EQUIPMENT TB
+	  	WHERE TB.EQUIPMENT_ID IN (
+          SELECT DISTINCT(TD.SBID) FROM TB_CABLECHECK_DTSJ TD
+      		WHERE TD.SFPF = 0
+        	
+			<if test="DZ_START_TIME != null and DZ_START_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ >= TO_DATE(#{DZ_START_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="DZ_END_TIME != null and DZ_END_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ <= TO_DATE(#{DZ_END_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+          )
+		AND TB.RES_TYPE_ID !=2530
+		<if test="AREA_ID != null and AREA_ID != ''">
+			<![CDATA[
+				AND TB.AREA_ID IN (SELECT C.AREA_ID FROM AREA C WHERE (C.PARENT_AREA_ID= #{AREA_ID} OR C.AREA_ID=#{AREA_ID}) )
+			]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="MANAGE_AREA != null and MANAGE_AREA != ''">  
+            <![CDATA[
+	    		AND TB.manage_area like '%'||#{MANAGE_AREA}||'%'
+	    	]]>
+		</if>
+		<if test="RES_TYPE_ID != null and  RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID = #{RES_TYPE_ID}
+	    	]]>
+		</if>)M  where 1= 1 
+		 
+	</select>
+	
+	<select id="queryDzNum" parameterType="map" resultType="Integer">
+		SELECT COUNT(DISTINCT(T.DZID)) 
+			FROM TB_CABLECHECK_DTSJ T 
+			WHERE T.INSTALL_SBBM IN (
+				SELECT TB.EQUIPMENT_CODE FROM TB_CABLECHECK_EQUIPMENT TB WHERE TB.EQUIPMENT_ID IN (${SBIDS})
+			)
+	</select>
+	
+	<select id="queryGlNum" parameterType="map" resultType="Integer">
+		SELECT COUNT(1) 
+			FROM TB_CABLECHECK_DTSJ T 
+			WHERE T.INSTALL_SBBM IN (
+				SELECT TB.EQUIPMENT_CODE FROM TB_CABLECHECK_EQUIPMENT TB WHERE TB.EQUIPMENT_ID IN (${SBIDS})
+			)
+	</select>
+	
+	<select id="queryHNum" parameterType="map" resultType="Integer">
+		SELECT COUNT(1) 
+			FROM TB_CABLECHECK_DTSJ T 
+			WHERE T.INSTALL_SBBM IN (
+				SELECT TB.EQUIPMENT_CODE FROM TB_CABLECHECK_EQUIPMENT TB WHERE TB.EQUIPMENT_ID IN (${SBIDS})
+			)
+			AND T.H = 1
+	</select>
+	
+	<select id="equipmentQuery" parameterType="map" resultType="map">
+    	SELECT 
+       C.EQUIPMENT_ID,
+       C.EQUIPMENT_CODE,
+       C.EQUIPMENT_NAME,
+       C.AREA_ID,
+       C.SON_AREA_ID,
+       C.RES_TYPE_ID,
+       C.RES_TYPE,
+      
+       C.MANAGE_AREA,
+       C.MANAGE_AREA_ID,
+       C.SFPF,
+       C.DZNUM,
+        C.CREATE_TIME,
+         c.net_layer_id,
+       		 case c.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+         C.STAFF_NAME
+  FROM(SELECT 
+			TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_CODE,
+			TB.EQUIPMENT_NAME,
+			B.AREA_ID AREA_ID,
+      		A.AREA_ID SON_AREA_ID,
+			TB.RES_TYPE_ID,
+			TB.RES_TYPE,
+			
+			TB.MANAGE_AREA,
+			TB.MANAGE_AREA_ID,
+			TBS.STAFF_NAME,
+			to_char(TBR.CREATE_TIME,'yyyy-mm-dd hh24:mi:ss') CREATE_TIME,
+			CASE TD.SFPF WHEN '0' THEN '否' ELSE '是' END SFPF,
+			 oed.net_layer_id,
+       		
+      		COUNT(DISTINCT(TD.DZID)) DZNUM,<!-- ,
+      		RTRIM(XMLAGG(XMLPARSE(CONTENT TD.ID || ',' WELLFORMED)).GETCLOBVAL(), ',') AS DZIDS -->
+      		 rank() OVER(PARTITION BY TBR.EQP_ID ORDER BY TBR.CREATE_TIME) rank
+		FROM TB_CABLECHECK_EQUIPMENT TB
+		LEFT JOIN AREA A ON TB.AREA_ID=A.AREA_ID
+    	LEFT JOIN AREA B ON A.PARENT_AREA_ID=B.AREA_ID
+    	LEFT JOIN TB_CABLECHECK_DTSJ TD ON TD.Install_Sbid=TB.EQUIPMENT_ID
+    	 LEFT JOIN TB_CABLECHECK_RECORD TBR ON TBR.EQP_ID = TB.EQUIPMENT_ID
+    	  LEFT JOIN TB_BASE_STAFF TBS ON TBS.STAFF_ID = TBR.CREATE_STAFF
+    	  left join odso_eqp_daily oed on oed.phy_eqp_id = tb.equipment_id
+             and oed.local_area_id =tb.parent_area_id
+    	WHERE TB.EQUIPMENT_ID IN (${queryParams.EQUIPMENT_ID})
+    	and TD.SFPF = 0
+    <include refid="dynamicWhere_queryDevice" />
+    GROUP BY 
+            TBR.EQP_ID,
+            TBR.CREATE_TIME,
+      		TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_CODE,
+			TB.EQUIPMENT_NAME,
+			B.AREA_ID,
+      		A.AREA_ID,
+			TB.RES_TYPE_ID,
+			TB.RES_TYPE,
+			TBS.STAFF_NAME,
+			TB.MANAGE_AREA,
+			TB.MANAGE_AREA_ID,
+			 oed.net_layer_id,
+			TB.CHECK_DATE,
+			TD.SFPF)C
+			WHERE C.RANK = 1
+	<!-- UNION ALL
+	SELECT 
+			TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_CODE,
+			TB.EQUIPMENT_NAME,
+			B.AREA_ID AREA_ID,
+      		A.AREA_ID SON_AREA_ID,
+			TB.RES_TYPE_ID,
+			TB.RES_TYPE,
+			TB.STAFF_ID,
+			TB.MANAGE_AREA,
+			TB.MANAGE_AREA_ID,
+			TB.CHECK_DATE,
+			CASE TD.SFPF WHEN '0' THEN '否' ELSE '是' END SFPF,
+      		COUNT(DISTINCT(TD.DZID)) DZNUM,
+      		WM_CONCAT(TD.ID) AS DZIDS
+		FROM TB_CABLECHECK_EQUIPMENT TB
+		LEFT JOIN AREA A ON TB.AREA_ID=A.AREA_ID
+    	LEFT JOIN AREA B ON A.PARENT_AREA_ID=B.AREA_ID
+    	LEFT JOIN TB_CABLECHECK_DTSJ TD ON TD.SBID=TB.EQUIPMENT_ID
+    	WHERE TB.EQUIPMENT_ID IN (
+    		 SELECT T.SBID FROM TB_CABLECHECK_DTSJ T 
+    		 	WHERE T.INSTALL_SBID IN (${queryParams.EQUIPMENT_ID}) 
+    		 	AND T.SBLX = 2530
+    	)
+    <include refid="dynamicWhere_queryDevice" />
+    GROUP BY 
+      		TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_CODE,
+			TB.EQUIPMENT_NAME,
+			B.AREA_ID,
+      		A.AREA_ID,
+			TB.RES_TYPE_ID,
+			TB.RES_TYPE,
+			TB.STAFF_ID,
+			TB.MANAGE_AREA,
+			TB.MANAGE_AREA_ID,
+			TB.CHECK_DATE,
+			TD.SFPF -->
+	</select>
+	
+	<select id="equipmentQuery1" parameterType="map" resultType="map">
+		SELECT 
+			TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_CODE,
+			TB.EQUIPMENT_NAME,
+			B.AREA_ID AREA_ID,
+      		A.AREA_ID SON_AREA_ID,
+			TB.RES_TYPE_ID,
+			TB.RES_TYPE
+			<!-- TB.STAFF_ID,
+			TB.MANAGE_AREA,
+			TB.MANAGE_AREA_ID,
+			TB.CHECK_DATE -->
+		FROM TB_CABLECHECK_EQUIPMENT TB
+		LEFT JOIN AREA A ON TB.AREA_ID=A.AREA_ID
+    	LEFT JOIN AREA B ON A.PARENT_AREA_ID=B.AREA_ID
+		WHERE TB.EQUIPMENT_ID in (${EQUIPMENT_ID})
+	</select>
+	
+	<select id="terminalQuery" parameterType="map" resultType="map">
+		
+
+SELECT
+      TD.ID,
+      TD.DZID,
+      TD.SBBM,
+      TD.SBMC,
+      TD.DZBM,
+      TD.GLMC,
+      TD.GLBH,
+      'oss' datafrom,
+      tclo.iom_order_no,
+      TD.INSTALL_SBBM,
+      TO_CHAR(TD.GDJGSJ, 'yyyy/mm/dd') GDJGSJ,
+      TO_CHAR(TD.GXSJ, 'yyyy/mm/dd') GXSJ,
+      TD.GDBH,
+     
+      spt.name XZ,
+      TD.PZGH,
+      
+      TD.GQGH,
+      CASE TD.H 
+      WHEN '0' THEN '否'
+      WHEN '1' THEN '是'
+      END H 
+    FROM TB_CABLECHECK_DTSJ TD
+     left join tb_cablecheck_link_odso tclo on td.glbh=tclo.opt_code
+    left join OSSPAD.tb_cablecheck_srv_pso_type SPT on spt.pso_type_id = TD.XZ
+    WHERE 1=1
+		and TD.SFPF = 0
+		<!-- and spt.pso_type_id = TD.XZ -->
+		<if test="queryParams.EQUIPMENT_ID !=null and queryParams.EQUIPMENT_ID != ''">
+				AND TD.Install_Sbid = #{queryParams.EQUIPMENT_ID}
+		</if>
+		<if test="queryParams.IDS != null and queryParams.IDS != ''">
+				AND	TD.ID IN (${queryParams.IDS})
+		</if>
+		<if test="queryParams.GLBH != null and queryParams.GLBH != ''">
+				AND	TD.GLBH = #{queryParams.GLBH}
+		</if>
+		<if test="queryParams.GLMC != null and queryParams.GLMC != ''">
+				AND	TD.GLMC = #{queryParams.GLMC}
+		</if>
+		<if test="queryParams.DZ_START_TIME != null and queryParams.DZ_START_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ >= TO_DATE(#{queryParams.DZ_START_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="queryParams.DZ_END_TIME != null and queryParams.DZ_END_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ <= TO_DATE(#{queryParams.DZ_END_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+	</select>
+	
+	<select id="terminalQuery1" parameterType="map" resultType="map">
+		SELECT 
+			TD.ID,
+			TD.DZID,
+			TD.DZBM,
+			TD.GLBH,
+			TD.GLMC,
+			td.sbid,td.sbbm,td.sbmc,td.xz,to_char(td.bdsj,'yyyy-mm-dd')bdsj	,spt.name action_type		 
+		FROM TB_CABLECHECK_DTSJ TD 
+		left join tb_cablecheck_srv_pso_type spt on spt.pso_type_id=td.xz
+		WHERE TD.INSTALL_SBID IN (${EQUIPMENT_ID})
+		and TD.SFPF = 0
+		<if test="DZ_START_TIME != null and DZ_START_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ >= TO_DATE(#{DZ_START_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="DZ_END_TIME != null and DZ_END_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ <= TO_DATE(#{DZ_END_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="gltype != null and gltype!= ''">
+			<![CDATA[
+	    			AND  TD.GLBH LIKE   #{gltype}||'%'  
+	    		]]>
+			</if>
+			
+	</select>
+	
+	<select id="queryHandler" parameterType="map" resultType="map">
+		SELECT 
+			TS.STAFF_ID,
+			TS.STAFF_NO,
+			TS.STAFF_NAME,
+			B.NAME SON_AREA_ID 
+		FROM TB_BASE_STAFF TS 
+		LEFT JOIN AREA A ON A.AREA_ID=TS.AREA_ID
+		LEFT JOIN AREA B ON B.AREA_ID=TS.SON_AREA_ID
+		LEFT JOIN TB_BASE_STAFF_SOFT S ON S.STAFF_ID = TS.STAFF_ID
+		 left join tb_base_staff_role tbsr on tbsr.staff_id = ts.staff_id
+		WHERE S.SOFTWARE_ID=17
+		and tbsr.role_id = 286
+		and ts.status=0 
+  	    and ts.isdeleted=0
+		<if test="queryParams.areaId != null and queryParams.areaId != ''">
+				AND	TS.AREA_ID = #{queryParams.areaId}
+		</if>
+		<if test="queryParams.sonAreaId != null and queryParams.sonAreaId != ''">
+				AND TS.SON_AREA_ID = #{queryParams.sonAreaId}
+		</if>
+		<if test="queryParams.staff_no != null and queryParams.staff_no != ''">
+				AND TS.STAFF_NO LIKE '%'||#{queryParams.staff_no}||'%'
+		</if>
+		<if test="queryParams.staff_name != null and queryParams.staff_name != ''">
+				AND TS.STAFF_NAME LIKE '%'||#{queryParams.staff_name}||'%'
+		</if>
+	</select>
+	
+	<insert id="doSaveTask" parameterType="map">
+	insert into
+    tb_cablecheck_task(
+		TASK_ID,
+		TASK_NO,
+		TASK_NAME,
+		TASK_TYPE,
+		STATUS_ID,
+		INSPECTOR,
+		CREATE_STAFF,
+		CREATE_TIME,
+		START_TIME,
+		LAST_UPDATE_TIME,
+		SON_AREA_ID,
+		AREA_ID,
+		ENABLE,
+		REMARK,
+		INFO,
+		SBID,
+		AUDITOR,
+		COMPLETE_TIME
+		
+		)
+		values
+		(SQP_TB_CABLECHECK_TASK.nextVAL,
+		#{TASK_NO},
+		#{TASK_NAME},
+		#{TASK_TYPE},
+		#{STATUS_ID},
+		#{INSPECTOR},
+		#{CREATE_STAFF},
+		sysdate,
+		sysdate,
+		sysdate,
+		#{SON_AREA_ID},
+		#{AREA_ID},
+		#{ENABLE},
+		#{REMARK},
+		#{INFO},
+		#{SBID},
+		#{AUDITOR},
+		to_date(#{complete_time},'yyyy-mm-dd')
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="TASK_ID">
+			SELECT SQP_TB_CABLECHECK_TASK.CURRVAL FROM DUAL
+		</selectKey>
+</insert>
+
+<insert id="doSaveTaskDetail" parameterType="map" >
+	insert into
+    tb_cablecheck_taskdetail(
+		DETAIL_ID,
+		TASK_ID,
+		INSPECT_OBJECT_ID,
+		INSPECT_OBJECT_TYPE,
+		INSPECT_OBJECT_NO,
+		CHECK_FLAG,
+		PORT_ID,
+		DTSJ_ID,
+		GLBM,
+		GLMC,sbid,sbbm,sbmc,xz,bdsj_port,action_type)
+		values
+		(SQP_TB_CABLECHECK_TASK_DETAIL.nextVAL,
+		#{TASK_ID},
+		#{INSPECT_OBJECT_ID},
+		#{INSPECT_OBJECT_TYPE},
+		#{INSPECT_OBJECT_NO},
+		#{CHECK_FLAG},
+		#{DZID},
+		#{DTSJ_ID},
+		#{GLBH},
+		#{GLMC},#{SBID},#{SBBM},#{SBMC},#{XZ},to_date(#{BDSJ},'yyyy-mm-dd'),#{ACTION_TYPE})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="DETAIL_ID">
+			SELECT SQP_TB_CABLECHECK_TASK_DETAIL.CURRVAL FROM DUAL
+		</selectKey>
+</insert>
+<update id="updateDtsj" parameterType="map">
+	UPDATE 
+		TB_CABLECHECK_DTSJ 
+		SET SFPF=1 
+		WHERE ID = #{ID}
+</update>
+
+<select id="queryDeviceRecords" parameterType="map" resultType="map">
+	SELECT 
+       TR.RECORD_ID,
+       TR.TASK_ID,
+       TR.DETAIL_ID,
+       TR.EQP_ID,
+       TR.EQP_NO,
+       TR.EQP_NAME,
+       TR.PORT_ID,
+       TR.PORT_NO,
+       TR.PORT_NAME,
+       TR.LONGITUDE,
+       TR.LATITUDE,
+       TR.COMMENTS,
+       TR.EQPADDRESS,
+       TS.STAFF_NAME,
+       TO_CHAR(TR.CREATE_TIME, 'yyyy/mm/dd') CREATE_TIME,
+       TR.REMARK,
+       TR.INFO,
+       TR.DESCRIPT,
+       TR.RECORD_TYPE,
+       <!-- CASE TR.RECORD_TYPE WHEN 1 THEN '隐患上报拍照' WHEN 3 THEN '回单' END RECORD_TYPE,   不清楚状态对应的意思，暂不写-->
+       TR.ISCHECKOK,
+       A.NAME AREA,
+       B.NAME SON_AREA
+	FROM TB_CABLECHECK_RECORD TR
+	LEFT JOIN TB_BASE_STAFF TS ON TR.CREATE_STAFF=TS.STAFF_ID
+	LEFT JOIN AREA A ON A.AREA_ID=TR.AREA_ID
+	LEFT JOIN AREA B ON B.AREA_ID=TR.SON_AREA_ID
+	WHERE 1=1
+	<include refid="dynamicWhere_records" />      
+</select>
+	<select id="getOssGlList" parameterType="map" resultType="map">
+	select distinct t1.* from (
+  select T.*,
+           to_char(nvl(lbl.no,' ')) glbh,
+           to_char(nvl(lbl.name,' ')) glmc
+      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS,
+                   SPEC.NAME,
+                   PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end z_phy_port_id,
+                    case when  alplc.z_phy_port_id is null
+                   then min(zlplc.link_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.link_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end link_id,
+                    case when  alplc.WO_ID is null
+                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end WO_ID            
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id    
+             WHERE PTP.PHY_PORT_ID = #{portId}
+           ) T
+      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+  
+     ) t1
+      ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+<!--	SELECT DISTINCT T.*
+	  FROM (SELECT '' ID,
+	               TO_CHAR(PTP.PHY_PORT_ID) DZID,
+	               CASE
+	               WHEN PE.Res_Spec_Id IN ('2530', '414') THEN
+	                 PTP.NO
+	               ELSE
+	              PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+	             END DZBM,
+	               TO_CHAR(PTP.PHY_EQP_ID) SBID,
+	               PE.NO SBBM,
+	               PE.RES_SPEC_ID SBLX,
+	               PE.NAME SBMC,
+	               '' BDSJ,
+	               PE.ADDRESS,
+	               SPEC.NAME,
+	               PU.NO SEQ_IN_no,
+	               PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+	              nvl( CASE
+	                 WHEN (SELECT TO_CHAR(LB.NO)
+	                         FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+	                              ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+	                              ${jndi}.LNK_BUSINESS_LINK      LB
+	                        WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+	                          AND LP.LINK_ID = LBL.LINK_ID(+)
+	                          AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+	                          AND ROWNUM = 1) IS NOT NULL THEN
+	                  (SELECT TO_CHAR(LB.NO)
+	                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+	                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+	                          ${jndi}.LNK_BUSINESS_LINK      LB
+	                    WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+	                      AND LP.LINK_ID = LBL.LINK_ID(+)
+	                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+	                      AND ROWNUM = 1)
+	                 ELSE
+	                  (SELECT TO_CHAR(LB.NO)
+	                     FROM ${jndi}.LNK_PHY_LINK_COMPONENT LP,
+	                          ${jndi}.LNK_BUSI_LINK_2_LINK   LBL,
+	                          ${jndi}.LNK_BUSINESS_LINK      LB
+	                    WHERE PTP.PHY_PORT_ID = LP.Z_PHY_PORT_ID
+	                      AND LP.LINK_ID = LBL.LINK_ID(+)
+	                      AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+	                      AND ROWNUM = 1)
+	               END ,' ')GLBH,
+	               '' GDJGSJ,
+	               '' JCSJ,
+	               '' GXSJ,
+	               '' PZGH,
+	               '' SGGH,
+	               '' GQGH,
+	               '' XZ,
+	               PU.NO KH
+	          FROM ${jndi}.PHY_EQUIPMENT PE,
+	               ${jndi}.PHY_TERM_PORT PTP,
+	               ${jndi}.PHY_EQP_UNIT PU,
+	               ${jndi}.pub_resource_spec SPEC
+	         WHERE PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+	         AND PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+	         AND PTP.PHY_PORT_ID = #{portId}
+	         AND PTP.UNIT_ID = PU.UNIT_ID(+)) T
+	  ORDER BY  to_number(regexp_substr(t.dzbm,'[0-9]*[0-9]',1)) asc,T.SEQ_IN_UNIT ASC-->
+	</select>
+	
+	
+	
+	
+	<select id="downTaskQueryNotGroup" parameterType="map" resultType="map">
+	select * from 
+	(
+		select * from (SELECT 
+			TB.EQUIPMENT_ID SBIDS,
+       		TB.EQUIPMENT_NAME,
+       		TB.EQUIPMENT_CODE,
+       		TB.ADDRESS EQUIPMENT_ADDRESS,
+       		TB.RES_TYPE,
+			B.NAME AREA,
+      		A.NAME SON_AREA,
+       		TB.manage_area MANAGE_AREA_ID,
+       		TB.GRID_ID,
+            G.GRID_NAME ZHHWHWG,
+       		1 NUM,
+       		COUNT(DISTINCT(Td.DZID)) DZNUM,
+       		COUNT(1) GLNUM,
+		    sum(to_number(td.h)) HNUM,
+		     sum(to_number(td.xz)) XZNUM,
+            COUNT(1)*60 ISXZNUM,
+		    TBS.STAFF_NAME,
+		     oed.net_layer_id,
+       		 case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+			to_char(TBR.CREATE_TIME,'yyyy-mm-dd hh24:mi:ss') CREATE_TIME,
+			rank() OVER(PARTITION BY TBR.EQP_ID ORDER BY TBR.CREATE_TIME) rank
+		  FROM TB_CABLECHECK_EQUIPMENT TB
+		  LEFT JOIN AREA A ON TB.AREA_ID = A.AREA_ID
+		  LEFT JOIN AREA B ON A.PARENT_AREA_ID = B.AREA_ID
+		  join TB_CABLECHECK_DTSJ TD on TB.EQUIPMENT_ID = TD.Install_Sbid
+		  	 LEFT JOIN TB_CABLECHECK_RECORD TBR ON TBR.EQP_ID = TB.EQUIPMENT_ID
+    	  LEFT JOIN TB_BASE_STAFF TBS ON TBS.STAFF_ID = TBR.CREATE_STAFF
+    	  LEFT JOIN TB_CABLECHECK_GRID G ON TB.GRID_ID=G.GRID_ID
+    	  left join odso_eqp_daily oed on oed.phy_eqp_id = tb.equipment_id
+             and oed.local_area_id =tb.parent_area_id
+		 WHERE TD.SFPF = 0
+					<if test="wljb != null and wljb  != ''">  
+            <![CDATA[
+	    		AND oed.net_layer_id =#{wljb}
+	    	]]>
+		</if>
+		<if test="DZ_START_TIME != null and DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ >= TO_DATE(#{DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test=" DZ_END_TIME != null and DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ <= TO_DATE(#{DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="xz != null and xz != '' and xz != 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz in (${xz})
+	    	]]>
+		</if>
+		<if test="xz != null and xz != '' and xz == 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz not in (13,17,18,60,10000)
+	    	]]>
+		</if>
+	
+		AND TB.RES_TYPE_ID !=2530
+		<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">
+			<![CDATA[
+				AND TB.AREA_ID IN (SELECT C.AREA_ID FROM AREA C WHERE (C.PARENT_AREA_ID= #{AREA_ID} OR C.AREA_ID=#{AREA_ID}) )
+			]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="MANAGE_AREA_ID != null and MANAGE_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.manage_area like '%'||#{MANAGE_AREA_ID}||'%'
+	    	]]>
+		</if>
+		<if test="RES_TYPE_ID != null and  RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID in (${RES_TYPE_ID})
+	    	]]>
+		</if>
+			<if test="WHWG != null and  WHWG != ''">  
+            <![CDATA[
+	    		AND TB.GRID_ID = #{WHWG}
+	    	]]>
+		</if>
+		<if test="EQUIPMENT_NAME != null and EQUIPMENT_NAME != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_NAME like  '%'||#{EQUIPMENT_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="EQUIPMENT_ADDRESS != null and EQUIPMENT_ADDRESS != ''">  
+            <![CDATA[
+	    		AND TB.ADDRESS like  '%'||#{EQUIPMENT_ADDRESS}||'%'
+	    	]]>
+		</if>
+			group by TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_NAME,
+			TB.EQUIPMENT_CODE,
+			TB.ADDRESS,
+			TB.RES_TYPE,
+			TBS.STAFF_NAME,
+			TBR.CREATE_TIME,
+			B.NAME,
+			A.NAME,
+			TBR.EQP_ID,
+			TB.manage_area,
+			TB.GRID_ID,
+			oed.net_layer_id,
+			G.GRID_NAME)C WHERE C.RANK = 1 
+           <if test="ish != null and ish != '' and ish == 0">  
+            	<![CDATA[
+	    			AND C.GLNUM-HNUM = 0
+	    		]]>
+			</if>
+			 <if test="ish != null and ish != '' and ish == 1">  
+            	<![CDATA[
+	    			AND C.GLNUM-HNUM != 0
+	    		]]>
+			</if>)
+			
+          temp
+          <if test="isxz != null and isxz != '' and isxz == 0">  
+            	<![CDATA[
+				WHERE temp.XZNUM != temp.ISXZNUM
+	    		]]>
+			</if> 
+          order by  temp.DZNUM desc,temp.GLNUM desc,temp.HNUM desc
+	</select>
+	
+	<select id="downTaskQuery" parameterType="map" resultType="map">
+		SELECT 
+			B.NAME AREA,
+			A.NAME SON_AREA,
+			B.AREA_ID AREA_ID,
+       		A.AREA_ID SON_AREA_ID,
+       		'' ZHHWHWG,
+			<if test="selectType3 != null and selectType3 != ''">
+				TB.RES_TYPE_ID,
+				TB.RES_TYPE,
+			</if>
+			<if test="selectType3 == ''">
+				'所有' RES_TYPE,
+			</if>
+     <if test="selectType2 != null and selectType2 != ''">
+				TB.manage_area MANAGE_AREA_ID,
+			</if>
+			<if test="selectType2 == ''">
+				'所有' MANAGE_AREA_ID,
+			</if>
+       		<!-- WM_CONCAT(TB.EQUIPMENT_ID) AS SBIDS, -->
+       		<!-- WM_CONCAT(TB.EQUIPMENT_CODE) AS CODES, -->
+       		COUNT(TB.EQUIPMENT_ID) NUM
+		  FROM TB_CABLECHECK_EQUIPMENT TB
+		  LEFT JOIN AREA A ON TB.AREA_ID = A.AREA_ID
+		  LEFT JOIN AREA B ON A.PARENT_AREA_ID = B.AREA_ID
+		  join TB_CABLECHECK_DTSJ TD on TB.EQUIPMENT_ID = TD.Install_Sbid
+		 WHERE TD.SFPF = 0
+      
+		<if test="DZ_START_TIME != null and DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ >= TO_DATE(#{DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="DZ_END_TIME != null and DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ <= TO_DATE(#{DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="xz != null and xz != '' and xz != 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz in (${xz})
+	    	]]>
+		</if>
+		<if test="xz != null and xz != '' and xz == 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz not in (13,17,18,60,10000)
+	    	]]>
+		</if>
+		AND TB.RES_TYPE_ID !=2530
+		<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">
+			<![CDATA[
+				AND TB.AREA_ID IN (SELECT C.AREA_ID FROM AREA C WHERE (C.PARENT_AREA_ID= #{AREA_ID} OR C.AREA_ID=#{AREA_ID}) )
+			]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="MANAGE_AREA_ID != null and MANAGE_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.manage_area like '%'||#{MANAGE_AREA_ID}||'%'
+	    	]]>
+		</if>
+		<if test="RES_TYPE_ID != null and  RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID in ${RES_TYPE_ID}
+	    	]]>
+		</if>
+		GROUP BY 
+			<if test="selectType3 != null and selectType3 != ''">
+				TB.RES_TYPE_ID,
+				TB.RES_TYPE,
+			</if>
+			<if test="selectType2 != null and selectType2 != ''">
+				TB.manage_area,
+			</if>
+			A.NAME,
+			B.NAME,
+			B.AREA_ID,
+			A.AREA_ID
+	</select>
+	
+	
+	
+	
+	
+	
+	<select id="downEquipmentQuery" parameterType="map" resultType="map">
+    	SELECT 
+       C.EQUIPMENT_ID,
+       C.EQUIPMENT_CODE,
+       C.EQUIPMENT_NAME,
+       C.AREA_ID,
+       C.SON_AREA_ID,
+       C.RES_TYPE_ID,
+       C.RES_TYPE,
+       C.STAFF_NAME,
+       C.MANAGE_AREA,
+       C.MANAGE_AREA_ID,
+       C.SFPF,
+       C.DZNUM,
+        c.net_layer_id,
+       		 case c.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+        C.CREATE_TIME
+  FROM(SELECT 
+			TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_CODE,
+			TB.EQUIPMENT_NAME,
+			B.AREA_ID AREA_ID,
+      		A.AREA_ID SON_AREA_ID,
+			TB.RES_TYPE_ID,
+			TB.RES_TYPE,
+			TBS.STAFF_NAME,
+			TB.MANAGE_AREA,
+			TB.MANAGE_AREA_ID,
+			to_char(TBR.CREATE_TIME,'yyyy-mm-dd hh24:mi:ss') CREATE_TIME,
+			CASE TD.SFPF WHEN '0' THEN '否' ELSE '是' END SFPF,
+			oed.net_layer_id ,
+      		COUNT(DISTINCT(TD.DZID)) DZNUM,<!-- ,
+      		RTRIM(XMLAGG(XMLPARSE(CONTENT TD.ID || ',' WELLFORMED)).GETCLOBVAL(), ',') AS DZIDS -->
+      		 rank() OVER(PARTITION BY TBR.EQP_ID ORDER BY TBR.CREATE_TIME) rank
+		FROM TB_CABLECHECK_EQUIPMENT TB
+		LEFT JOIN AREA A ON TB.AREA_ID=A.AREA_ID
+    	LEFT JOIN AREA B ON A.PARENT_AREA_ID=B.AREA_ID
+    	LEFT JOIN TB_CABLECHECK_DTSJ TD ON TD.Install_Sbid=TB.EQUIPMENT_ID
+    	 LEFT JOIN TB_CABLECHECK_RECORD TBR ON TBR.EQP_ID = TB.EQUIPMENT_ID
+    	 LEFT JOIN TB_BASE_STAFF TBS ON TBS.STAFF_ID = TBR.CREATE_STAFF
+    	  left join odso_eqp_daily oed on oed.phy_eqp_id = tb.equipment_id
+             and oed.local_area_id =tb.parent_area_id
+    	WHERE TB.EQUIPMENT_ID IN (${EQUIPMENT_ID})
+    	and TD.SFPF = 0
+    <if test="DZ_START_TIME != null and DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ >= TO_DATE(#{DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="DZ_END_TIME != null and DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ <= TO_DATE(#{DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="SFPF != null and SFPF != ''">  
+            <![CDATA[
+	    		AND TD.SFPF = #{SFPF}
+	    	]]>
+		</if>
+		<if test="AREA != null and AREA != ''">
+			<![CDATA[
+				AND TB.AREA_ID IN (SELECT C.AREA_ID FROM AREA C WHERE (C.PARENT_AREA_ID= #{AREA} OR C.AREA_ID=#{AREA}) )
+			]]>
+		</if>
+		<if test="SON_AREA != null and SON_AREA != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{SON_AREA}
+	    	]]>
+		</if>
+		<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+	    	]]>
+		</if>
+		<if test="MANAGE_AREA_ID != null and MANAGE_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.MANAGE_AREA_ID = #{MANAGE_AREA_ID}
+	    	]]>
+		</if>
+		<if test="RES_TYPE_ID != null and  RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID = #{RES_TYPE_ID}
+	    	]]>
+		</if>
+    GROUP BY 
+            TBR.EQP_ID,
+            TBR.CREATE_TIME,
+      		TB.EQUIPMENT_ID,
+			TB.EQUIPMENT_CODE,
+			TB.EQUIPMENT_NAME,
+			B.AREA_ID,
+      		A.AREA_ID,
+			TB.RES_TYPE_ID,
+			TB.RES_TYPE,
+			TBS.STAFF_NAME,
+			TB.MANAGE_AREA,
+			TB.MANAGE_AREA_ID,
+			TB.CHECK_DATE,
+			oed.net_layer_id ,
+			TD.SFPF)C
+			WHERE C.RANK = 1
+	
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	<select id="downTerminalQuery" parameterType="map" resultType="map">
+		SELECT
+			TD.ID,
+			TD.DZID,
+			TD.SBBM,
+			TD.SBMC,
+			TD.DZBM,
+			TD.GLMC,
+			TD.GLBH,
+			TD.INSTALL_SBBM,
+			TO_CHAR(TD.GDJGSJ, 'yyyy/mm/dd') GDJGSJ,
+			TO_CHAR(TD.GXSJ, 'yyyy/mm/dd') GXSJ,
+			TD.GDBH,
+			spt.name XZ,
+			TD.PZGH,
+			TD.SGGH,
+			TD.GQGH,
+			CASE TD.H 
+			WHEN '0' THEN '否'
+			WHEN '1' THEN '是'
+			END H 
+		FROM TB_CABLECHECK_DTSJ TD left join OSSPAD.tb_cablecheck_srv_pso_type SPT on spt.pso_type_id = TD.XZ
+		WHERE 1=1
+		and TD.SFPF = 0
+		<if test="EQUIPMENT_ID !=null and EQUIPMENT_ID != ''">
+				AND TD.Install_Sbid = #{EQUIPMENT_ID}
+		</if>
+		<if test="IDS != null and IDS != ''">
+				AND	TD.ID IN (${IDS})
+		</if>
+		<if test="GLBH != null and GLBH != ''">
+				AND	TD.GLBH = #{GLBH}
+		</if>
+		<if test="GLMC != null and GLMC != ''">
+				AND	TD.GLMC = #{GLMC}
+		</if>
+		<if test="DZ_START_TIME != null and DZ_START_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ >= TO_DATE(#{DZ_START_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="DZ_END_TIME != null and DZ_END_TIME != ''">  
+            	<![CDATA[
+	    			AND TD.BDSJ <= TO_DATE(#{DZ_END_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+	</select>
+	
+	<select id="downPortQueryNotGroup" parameterType="map" resultType="map">
+		select  
+         temp.sbid,
+         temp.sbbm,
+         temp.sbmc,
+         temp.dzid,
+         temp.dzbm,
+         temp.glbh,  
+         temp.glmc,
+         temp.H,
+         temp.install_sbbm,
+         temp.GDJGSJ,
+         temp.GXSJ,
+         temp.GDBH,
+         temp.XZ,
+         temp.PZGH,  
+         temp.SGGH,    
+         temp.GQGH,
+         temp.iom_order_no   
+      from  
+      (select 
+          c.sbid,
+          c.sbbm,
+          c.sbmc,
+          c.dzid,
+          c.dzbm,
+          c.glbh,
+          c.glmc,
+          c.H,
+          c.install_sbbm,
+          c.GDJGSJ,
+          c.GXSJ,
+          c.GDBH,
+          c.XZ,
+          c.PZGH,
+          c.SGGH,
+          c.GQGH,
+          c.GLNUM,
+          c.HNUM,
+          c.XZNUM,
+          c.ISXZNUM,
+          c.iom_order_no
+ 
+    from ( 
+       SELECT 
+           td.sbid,
+           td.sbbm,
+           td.sbmc,
+           td.dzid,
+           td.dzbm,
+           td.glbh,
+           td.glmc,
+           CASE TD.H 
+              WHEN '0' THEN '否'
+              WHEN '1' THEN '是'
+           END H ,
+           td.install_sbbm,
+           TO_CHAR(TD.GDJGSJ, 'yyyy/mm/dd') GDJGSJ,
+           TO_CHAR(TD.GXSJ, 'yyyy/mm/dd') GXSJ,
+           TD.GDBH,
+           spt.name XZ,
+           TD.PZGH,
+           TD.SGGH,
+           TD.GQGH,         
+           COUNT(1) GLNUM,
+           sum(to_number(td.h)) HNUM,
+           sum(to_number(td.xz)) XZNUM,
+           COUNT(1)*60 ISXZNUM,
+            (SELECT to_char(wm_concat(distinct odso.iom_order_no)) iom_order_no FROM TB_CABLECHECK_LINK_ODSO odso where odso.opt_code=td.glbh)iom_order_no,
+           rank() OVER(PARTITION BY TBR.EQP_ID ORDER BY TBR.CREATE_TIME) rank
+      FROM TB_CABLECHECK_EQUIPMENT TB
+      LEFT JOIN AREA A ON TB.AREA_ID = A.AREA_ID
+      LEFT JOIN AREA B ON A.PARENT_AREA_ID = B.AREA_ID
+      join TB_CABLECHECK_DTSJ TD on TB.EQUIPMENT_ID = TD.Install_Sbid
+      LEFT JOIN TB_CABLECHECK_RECORD TBR ON TBR.EQP_ID = TB.EQUIPMENT_ID
+      left join OSSPAD.tb_cablecheck_srv_pso_type SPT on spt.pso_type_id = TD.XZ
+     WHERE TD.SFPF = 0
+         AND TB.RES_TYPE_ID !=2530
+
+	    <if test="DZ_START_TIME != null and DZ_START_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ >= TO_DATE(#{DZ_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test=" DZ_END_TIME != null and DZ_END_TIME != ''">  
+            <![CDATA[
+	    		AND TD.BDSJ <= TO_DATE(#{DZ_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="xz != null and xz != '' and xz != 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz in (${xz})
+	    	]]>
+		</if>
+		<if test="xz != null and xz != '' and xz == 'qita' ">  
+            <![CDATA[
+	    		AND TD.xz not in (13,17,18,60,10000)
+	    	]]>
+		</if>
+		<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">
+			<![CDATA[
+				AND TB.parent_area_id = #{AREA_ID}
+			]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="MANAGE_AREA_ID != null and MANAGE_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.manage_area like  '%'||#{MANAGE_AREA_ID}||'%' 
+	    	]]>
+		</if>
+		<if test="RES_TYPE_ID != null and  RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID in (${RES_TYPE_ID})
+	    	]]>
+		</if>
+		<if test="WHWG != null and  WHWG != ''">  
+           <![CDATA[
+    			AND TB.GRID_ID = #{WHWG}
+    		]]>
+		</if>
+		<if test="EQUIPMENT_NAME != null and EQUIPMENT_NAME != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_NAME like  '%'||#{EQUIPMENT_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="EQUIPMENT_ADDRESS != null and EQUIPMENT_ADDRESS != ''">  
+            <![CDATA[
+	    		AND TB.ADDRESS like  '%'||#{EQUIPMENT_ADDRESS}||'%'
+	    	]]>
+		</if> 
+		group by td.sbid,
+           td.sbbm,
+           td.sbmc,
+           td.dzid,
+           td.dzbm,
+           td.glbh,
+           td.glmc,
+           td.install_sbbm,
+           TD.GDBH,
+           spt.name,
+           TD.PZGH,
+           TD.SGGH,
+           TD.GQGH,
+           td.h,
+           TD.GDJGSJ,
+           TD.GXSJ,
+           TBR.EQP_ID,
+           TBR.CREATE_TIME 
+      )c   WHERE C.RANK = 1
+    	   <if test="ish != null and ish != '' and ish == 0">  
+            	<![CDATA[
+	    			AND C.GLNUM-HNUM = 0
+	    		]]>
+			</if>
+		    <if test="ish != null and ish != '' and ish == 1">  
+            	<![CDATA[
+	    			AND C.GLNUM-HNUM != 0
+	    		]]>
+			</if> 
+			)temp where 1=1
+			 <if test="isxz != null and isxz != '' and isxz == 0">  
+            	<![CDATA[
+				  and  temp.XZNUM != temp.ISXZNUM 
+	    		]]>
+			 </if>  
+    	    
+	</select>
+	
+	<select id="getAreaName"  parameterType="string" resultType="string">
+		select a.name from area a where a.area_id=#{areaId}
+	
+	</select>
+	<select id="queryElectron" parameterType="map" resultType="map">
+	SELECT 
+      TB.EQUIPMENT_ID SBIDS,
+           TB.EQUIPMENT_NAME,
+           TB.EQUIPMENT_CODE,
+           TB.ADDRESS EQUIPMENT_ADDRESS,
+           TB.RES_TYPE,
+      B.NAME AREA,
+          A.NAME SON_AREA,
+           TB.MANAGE_AREA_ID,
+           TB.GRID_ID,
+            G.GRID_NAME ZHHWHWG,
+   case tb.isdeal 
+      when 1 then '已整治' 
+        when 0 then '未整治' end  isdeal,
+     to_char(tb.deal_time,'yyyy-mm-dd hh24:mi:ss') deal_time
+      FROM TB_CABLECHECK_EQUIPMENT TB
+      LEFT JOIN AREA A ON TB.AREA_ID = A.AREA_ID
+      LEFT JOIN AREA B ON A.PARENT_AREA_ID = B.AREA_ID
+        LEFT JOIN TB_CABLECHECK_GRID G ON TB.GRID_ID=G.GRID_ID
+     WHERE 1=1
+     
+    AND TB.RES_TYPE_ID !=2530
+    <choose>
+    <when test="queryParams.isdeal ==0">and   tb.isdeal = 0</when>
+	<when test="queryParams.isdeal ==1">and   tb.isdeal = 1
+    and tb.deal_time&gt;=to_date(#{queryParams.start_time},'yyyy-MM-dd')
+    and trunc(tb.deal_time)&lt;=to_date(#{queryParams.end_time},'yyyy-MM-dd') </when>
+	</choose>
+	<include refid="dynamicWhere_device" />
+	   order by deal_time desc,tb.equipment_code
+	</select>
+	
+		<select id="downElectron" parameterType="map" resultType="map">
+	SELECT 
+      TB.EQUIPMENT_ID SBIDS,
+           TB.EQUIPMENT_NAME,
+           TB.EQUIPMENT_CODE,
+           TB.ADDRESS EQUIPMENT_ADDRESS,
+           TB.RES_TYPE,
+      B.NAME AREA,
+          A.NAME SON_AREA,
+           TB.MANAGE_AREA_ID,
+           TB.GRID_ID,
+            G.GRID_NAME ZHHWHWG,
+   case tb.isdeal 
+      when 1 then '已整治' 
+        when 0 then '未整治' end  isdeal,
+     to_char(tb.deal_time,'yyyy-mm-dd hh24:mi:ss') deal_time
+      FROM TB_CABLECHECK_EQUIPMENT TB
+      LEFT JOIN AREA A ON TB.AREA_ID = A.AREA_ID
+      LEFT JOIN AREA B ON A.PARENT_AREA_ID = B.AREA_ID
+        LEFT JOIN TB_CABLECHECK_GRID G ON TB.GRID_ID=G.GRID_ID
+     WHERE 1=1
+     
+    AND TB.RES_TYPE_ID !=2530
+    <choose>
+    <when test="isdeal ==0">and   tb.isdeal = 0</when>
+	<when test="isdeal ==1">and   tb.isdeal = 1
+    and tb.deal_time&gt;=to_date(#{start_time},'yyyy-MM-dd')
+    and trunc(tb.deal_time)&lt;=to_date(#{end_time},'yyyy-MM-dd') </when>
+	</choose>
+	<if test="EQUIPMENT_CODE != null and EQUIPMENT_CODE != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_CODE like  '%'||#{EQUIPMENT_CODE}||'%'
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">
+			<![CDATA[
+				AND TB.parent_area_id = #{AREA_ID}
+			]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="MANAGE_AREA_ID != null and MANAGE_AREA_ID != ''">  
+            <![CDATA[
+	    		AND TB.MANAGE_AREA_ID = #{MANAGE_AREA_ID}
+	    	]]>
+		</if>
+		<if test="RES_TYPE_ID != null and  RES_TYPE_ID != ''">  
+            <![CDATA[
+	    		AND TB.RES_TYPE_ID in (${RES_TYPE_ID})
+	    	]]>
+		</if>
+		<if test="WHWG != null and  WHWG != ''">  
+           <![CDATA[
+    			AND TB.GRID_ID = #{WHWG}
+    		]]>
+		</if>
+		<if test="EQUIPMENT_NAME != null and EQUIPMENT_NAME != ''">  
+            <![CDATA[
+	    		AND TB.EQUIPMENT_NAME like  '%'||#{EQUIPMENT_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="EQUIPMENT_ADDRESS != null and EQUIPMENT_ADDRESS != ''">  
+            <![CDATA[
+	    		AND TB.ADDRESS like  '%'||#{EQUIPMENT_ADDRESS}||'%'
+	    	]]>
+		</if> 
+	   order by deal_time desc,tb.equipment_code
+	</select>
+		<select id="terminalQuery2" parameterType="map" resultType="map">
+		SELECT 
+			TD.ID,
+			TD.DZID,
+			TD.DZBM,
+			TD.GLBH,
+			TD.GLMC,
+			td.sbid,td.sbbm,td.sbmc,td.xz,to_char(td.bdsj,'yyyy-mm-dd')bdsj	,spt.name action_type
+		FROM TB_CABLECHECK_DTSJ TD 
+		left join tb_cablecheck_srv_pso_type spt on spt.pso_type_id=td.xz
+		WHERE TD.INSTALL_SBID IN (${EQUIPMENT_ID})
+		and TD.SFPF = 0
+	    and TD.BDSJ &gt;=trunc(add_months(sysdate,-1),'mm')
+        and TD.BDSJ &lt;=trunc(last_day(add_months(sysdate,-1)))  
+	    	
+	
+			
+	</select>
+	
+	<select id="queryContractEqp" parameterType="map" resultType="map">
+		SELECT 
+		      TB.EQUIPMENT_ID,
+		      TB.EQUIPMENT_CODE,
+		      TB.EQUIPMENT_NAME,
+		      B.AREA_ID AREA_ID,
+		      A.AREA_ID SON_AREA_ID,
+		      TB.RES_TYPE_ID,
+		      TB.RES_TYPE,
+		     
+		      TB.MANAGE_AREA,
+		      TB.MANAGE_AREA_ID,
+		      f.staff_id,
+		      TB.CHECK_DATE
+		    FROM TB_CABLECHECK_EQUIPMENT TB
+		    LEFT JOIN AREA A ON TB.AREA_ID=A.AREA_ID
+		    LEFT JOIN AREA B ON A.PARENT_AREA_ID=B.AREA_ID
+		    left  join tb_base_contract_equipment tce on tce.equipment_id=tb.equipment_id
+		    left join tb_base_staff f on f.id_number=tce.identifyid
+		    left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+		
+		  WHERE f.status=0 and f.isdeleted=0 and sr.role_id=286
+		  and  TB.EQUIPMENT_ID in (${EQUIPMENT_ID})
+	</select>
+	
+	<insert id="doSaveTaskByContract" parameterType="map">
+	insert into
+    tb_cablecheck_task(
+		TASK_ID,
+		TASK_NO,
+		TASK_NAME,
+		TASK_TYPE,
+		STATUS_ID,
+		INSPECTOR,
+		CREATE_STAFF,
+		CREATE_TIME,
+		START_TIME,
+		LAST_UPDATE_TIME,
+		SON_AREA_ID,
+		AREA_ID,
+		ENABLE,
+		REMARK,
+		INFO,
+		SBID,
+		AUDITOR
+		
+		)
+		values
+		(SQP_TB_CABLECHECK_TASK.nextVAL,
+		#{TASK_NO},
+		#{TASK_NAME},
+		#{TASK_TYPE},
+		#{STATUS_ID},
+		#{INSPECTOR},
+		#{CREATE_STAFF},
+		sysdate,
+		sysdate,
+		sysdate,
+		#{SON_AREA_ID},
+		#{AREA_ID},
+		#{ENABLE},
+		#{REMARK},
+		#{INFO},
+		#{SBID},
+		#{AUDITOR}
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="TASK_ID">
+			SELECT SQP_TB_CABLECHECK_TASK.CURRVAL FROM DUAL
+		</selectKey>
+</insert>
+</mapper> 

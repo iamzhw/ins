@@ -1,0 +1,48 @@
+body {
+	background-color: #ffffff;
+}
+
+div {
+	border: 0px solid;
+}
+
+.content {
+	height: 660px;
+	width: 100%;
+}
+
+.province {
+	height: 100%;
+	width: 50%;
+	float: left
+}
+
+.charts {
+	height: 100%;
+	width: 50%;
+	float: left;
+}
+
+.top {
+	height: 70%;
+	width: 100%;
+	clear: both;
+}
+
+.left {
+	height: 100%;
+	width: 60%;
+	float: left;
+}
+
+.right {
+	height: 100%;
+	width: 40%;
+	float: left;
+}
+
+.bottom {
+	height: 30%;
+	width: 100%;
+	clear: both;
+}

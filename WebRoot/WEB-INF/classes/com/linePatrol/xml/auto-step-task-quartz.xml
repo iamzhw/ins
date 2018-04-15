@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans default-lazy-init="true">
+   <description>auto dispatch step part task</description>  
+    <bean id="StepPartTaskScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" lazy-init="false">
+      <property name="triggers">
+         <list>   
+         	<ref bean="partTaskTrigger"/>
+         	<ref bean="TaskDateTrigger"/>
+         </list>
+      </property>
+      <property name="quartzProperties">
+         <props>
+            <prop key="org.quartz.threadPool.threadCount">3</prop>
+         </props>
+      </property>
+   </bean>  
+   
+   <bean id="partTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="partTaskDetail" />
+      <property name="cronExpression" value="0 0 2 1 * ?" />
+     <!--  <property name="cronExpression" value="0 29 * * * ?" /> -->
+   </bean>   
+   
+   <bean id="partTaskDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="partTask" />
+      <property name="targetMethod" value="execute" />
+      <property name="concurrent" value="true" />
+   </bean>   
+   
+   <bean id="TaskDateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="TaskDateDetail" />
+      <property name="cronExpression" value="0 0 1 * * ?" />
+   </bean>   
+   
+   <bean id="TaskDateDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="taskDate" />
+      <property name="targetMethod" value="generateData" />
+      <property name="concurrent" value="true" />
+   </bean>   
+   
+   <bean id="partTask" class="com.linePatrol.service.impl.GeneratePartTaskJob"></bean>
+   <bean id="taskDate" class="com.linePatrol.service.impl.GenerateDataForStepTaskJob"></bean>
+</beans>

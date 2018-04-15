@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/jee
+		http://www.springframework.org/schema/jee/spring-jee-3.0.xsd">
+		
+	<!-- <jee:jndi-lookup id="smart" jndi-name="jdbc/smart" /> -->
+	<jee:jndi-lookup id="pn" jndi-name="jdbc/pn" />
+	
+	<jee:jndi-lookup id="local" jndi-name="jdbc/inslocal" />
+	<jee:jndi-lookup id="radio" jndi-name="jdbc/local" />
+	<jee:jndi-lookup id="remote" jndi-name="jdbc/insremote" />
+	<jee:jndi-lookup id="ressz" jndi-name="jdbc/ressz" />
+	<jee:jndi-lookup id="resnj" jndi-name="jdbc/resnj" />
+	
+	<jee:jndi-lookup id="rescz" jndi-name="jdbc/rescz" />
+	<jee:jndi-lookup id="resha" jndi-name="jdbc/resha" />
+	<jee:jndi-lookup id="reslyg" jndi-name="jdbc/reslyg" />
+	<jee:jndi-lookup id="resnt" jndi-name="jdbc/resnt" />
+	<jee:jndi-lookup id="ressq" jndi-name="jdbc/ressq" />
+	<jee:jndi-lookup id="restz" jndi-name="jdbc/restz" />
+	<jee:jndi-lookup id="resxz" jndi-name="jdbc/resxz" />
+	<jee:jndi-lookup id="resyc" jndi-name="jdbc/resyc" />
+	<jee:jndi-lookup id="resyz" jndi-name="jdbc/resyz" />
+	<jee:jndi-lookup id="reszj" jndi-name="jdbc/reszj" />
+	<jee:jndi-lookup id="reswx" jndi-name="jdbc/reswx" />
+
+	<jee:jndi-lookup id="cpf83" jndi-name="jdbc/cpf83" />
+	<jee:jndi-lookup id="orcl153" jndi-name="jdbc/ORCL153" />
+	<jee:jndi-lookup id="ossgxl" jndi-name="jdbc/ODSO1_208.129" />
+	
+	</beans>

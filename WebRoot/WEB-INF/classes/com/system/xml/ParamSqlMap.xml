@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.system.dao.ParamDao">
+
+	<select id="query" parameterType="map" resultType="map">
+ 		SELECT t.PARAM_NAME,t.PARAM_VALUE FROM AXX_T_PARAM t where t.AREA_ID=#{AREA_ID}
+	</select>
+	
+	<update id="saveAll" parameterType="map">
+		update AXX_T_PARAM t set t.PARAM_VALUE=#{PARAM_VALUE} where t.PARAM_NAME=#{PARAM_NAME}
+	</update>
+	
+	<update id="save" parameterType="map">
+		update AXX_T_PARAM t set t.PARAM_VALUE=#{PARAM_VALUE} where t.PARAM_NAME=#{PARAM_NAME} and t.AREA_ID=#{AREA_ID}
+	</update>
+	
+	<!-- 修改各地市步巡段频次如果比省频次大的 -->
+	<update id="upPartCirByCityCir" parameterType="map">
+	  update axx_step_equip_allot a1 set a1.circle_id=#{PARAM_VALUE} where a1.allot_id in(
+	 select a.allot_id from axx_step_equip_allot a join (select atc.cable_id,
+	 atc.fiber_grade, atc.cable_name,case when atc.fiber_grade = '1' then
+	 'asteptour' when atc.fiber_grade = '2' then 'twodrysteptour' end as TRUNKGRADE
+	  from axx_t_cable atc) c on a.cable_id = c.cable_id
+	  where c.trunkgrade = #{PARAM_NAME} 
+	  and a.circle_id &gt; #{PARAM_VALUE}
+	  and a.delete_flag=0)
+	</update>
+	
+	<select id="getParamValue" parameterType="map" resultType="map">
+ 		SELECT t.PARAM_NAME,t.PARAM_VALUE FROM AXX_T_PARAM t where t.AREA_ID=#{AREA_ID} and t.PARAM_NAME=#{PARAM_NAME}
+	</select>
+	<select id="getParamValueByName" parameterType="map" resultType="string">
+ 		SELECT t.PARAM_VALUE FROM AXX_T_PARAM t where t.AREA_ID=#{areaId} and t.PARAM_NAME=#{paramName}
+	</select>
+	<select id="getAllAreaByJS" parameterType="map" resultType="map">
+		SELECT area_id,name,code,parent_area_id,area_level,state,code_ FROM AREA T WHERE T.PARENT_AREA_ID=2
+	</select>
+	
+	<!--获取用户巡线轨迹时间-->
+  <select id="getLineStaffs" parameterType="map"  resultType="map">
+  		select tbs.staff_id,tbs.area_id from tb_base_staff tbs 
+		inner join tb_base_staff_role tbsr on tbsr.staff_id=tbs.staff_id
+		inner join tb_base_role tbr on tbsr.role_id=tbr.role_id where tbr.role_no='AXX_XXY'
+		and tbs.area_id =#{AREA_ID}
+  </select>
+  
+  <!--获取用户巡线轨迹时间-->
+  <select id="getAllTrackTime" parameterType="map" resultType="map">
+	SELECT T.USER_ID,
+	       T.TRACK_ID,
+	       T.GPS_FLAG,
+	       T.IS_GPS,
+	       T.GPS_SWITCH,
+	       TO_CHAR(T.TRACK_TIME, 'yyyy-mm-dd hh24:mi:ss') TRACK_TIME,
+	       (SELECT COUNT(1)
+	          FROM AXX_T_MACTH_SITE TMS
+	         WHERE TMS.TRACK_ID = T.TRACK_ID) IS_MATCH
+	  FROM AXX_AUTO_USER_TRACK T
+	 WHERE T.USER_ID = #{USER_ID}
+	   AND T.TRACK_TIME BETWEEN
+	       TO_DATE(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss') - 1 / 288 AND
+	       TO_DATE(#{END_TIME}, 'yyyy-mm-dd hh24:mi:ss') + 1 / 288
+	 ORDER BY T.TRACK_TIME
+  </select>  
+  <select id="getInvalidSiteStayTime" parameterType="map" resultType="map">
+  select distinct user_id,to_char(min(track_time), 'yyyy-mm-dd hh24:mi:ss') START_TIME,to_char(max(track_time), 'yyyy-mm-dd hh24:mi:ss') END_TIME,site_id
+		 from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time 
+					  from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+					  and aut.user_id=#{USER_ID} and tms.site_type in (1,2) 
+					  and aut.track_time between to_date(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss') 
+					  and to_date(#{END_TIME}, 'yyyy-mm-dd hh24:mi:ss'))t
+		 group by con_label,user_id,site_id having (max(track_time)-min(track_time))*1440 &gt; 40 order by START_TIME,END_TIME
+  </select>
+  
+  <select id="getNoDataUploadTime" parameterType="map" resultType="map">
+     select USER_ID,START_TIME,END_TIME from (
+     select t.USER_ID,to_char(greatest(t.start_time,to_date(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss')), 'yyyy-mm-dd hh24:mi:ss') START_TIME,
+     to_char(least(t.end_time,to_date(#{END_TIME}, 'yyyy-mm-dd hh24:mi:ss')), 'yyyy-mm-dd hh24:mi:ss') END_TIME  from 
+   	(select aut.track_time start_time,lead(aut.track_time,1,aut.track_time) over (order by aut.track_time) end_time,aut.user_id 
+  	 from axx_auto_user_track aut where aut.user_id=#{USER_ID} and trunc(aut.track_time)=to_date(#{QUERY_DATE},'yyyy-mm-dd'))t
+   	where (t.end_time-t.start_time)*1440&gt;20) where end_time > start_time
+  </select>
+  
+  <!--获取轨迹匹配数量-->
+  <select id="getTrackMatchCount" parameterType="map" resultType="int">
+  	select count(tms.match_id) from axx_auto_user_track aut 
+	  inner join axx_t_macth_site tms on aut.track_id=tms.track_id where aut.track_id=#{TRACK_ID}
+ </select>
+ 
+   <!--获取看护时间段-->
+  <select id="getGuardPlanTime" parameterType="map" resultType="map">
+    select aosp.user_id,aosp.plan_id,aospp.start_time,aospp.end_time from AXX_OUT_SITE_PLAN aosp 
+   inner join AXX_OUT_SITE_PLAN_PART_TIME aospp on aosp.plan_id=aospp.plan_id
+  where aosp.user_id=#{USER_ID} order by aospp.start_time
+ </select>
+    <!--获取看护轨迹时间-->
+  <select id="getGuardTrackTime" parameterType="map" resultType="map">
+	select * from (select GROUP_FLAG,max(TRACK_TIME) end_time,min(TRACK_TIME) start_time from AXX_OUT_SITE_PLAN_POLYGN
+ 	where CREATED_BY=16698 AND IS_GUARD=0 group by GROUP_FLAG)t 
+ 	where not((t.start_time&gt;TO_DATE(#{start_time}, 'yyyy-mm-dd hh24:mi:ss')) or (t.end_time&lt;TO_DATE(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')))
+  </select>
+  <select id="getSitesByUser" parameterType="map" resultType="map">
+   select ts.site_id,ts.longitude,ts.latitude from axx_t_site ts where ts.area_id=#{AREA_ID} order by ts.SITE_ID
+  </select>
+  <update id="updateSites" parameterType="map" >
+  	update axx_t_site set longitude=trunc(#{LONGITUDE},6),latitude=trunc(#{LATITUDE},6) where site_id=#{SITE_ID}
+  </update>
+  <insert id="saveInvalidSites" parameterType="map">
+  	insert into temp_invalid_site(SITE_ID,AREA_ID) values(#{SITE_IDS},#{AREA_ID})
+  </insert>
+  
+  <delete id="deleteInpsectTime" parameterType="map">
+ 	delete from AXX_T_VALID_TIME tvt where tvt.inspect_date=to_date(#{QUERY_DATE},'yyyy-mm-dd') and tvt.area_id=#{AREA_ID}
+ </delete>
+ <select id="getInspectTimes" parameterType="map" resultType="map">
+ 	select * from axx_t_valid_time tvt where tvt.inspect_date=to_date(#{QUERY_DATE},'yyyy-mm-dd') and tvt.user_id=#{USER_ID}
+ </select>
+ <insert id="saveInValidTime" parameterType="map">
+  insert into AXX_T_INVALID_TIME(USER_ID,LINE_DATE,START_TIME,END_TIME,INVALID_TYPE,REMARK) 
+  values(#{USER_ID},trunc(TO_DATE(#{LINE_DATE}, 'yyyy-mm-dd hh24:mi:ss')),TO_DATE(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss'),TO_DATE(#{END_TIME}, 'yyyy-mm-dd hh24:mi:ss'),#{INVALID_TYPE},#{REMARK,jdbcType=VARCHAR})
+ </insert>
+ 
+  <insert id="saveLogInfo" parameterType="map">
+  insert into T_MESSAGE_LOG(CLASS_NAME,METHOD_PARAM,LOG_TYPE,CREATE_TIME,LOG_INFO) values(#{CLASS_NAME},#{METHOD_PARAM},#{LOG_TYPE},SYSDATE,#{LOG_INFO})
+  </insert>
+  
+  <insert id="insertPushMessage" parameterType="map">
+  	insert into T_PUSH_MESSAGE(PUSH_ID,PUSH_TITLE,PUSH_CONTENT,PUSH_STAFF,PUSH_TYPE,PUSH_RESULT,CREATE_TIME)
+  	values(SEQ_PUSH_MESSAGE_ID.Nextval,#{PUSH_TITLE,jdbcType=VARCHAR},#{PUSH_CONTENT,jdbcType=VARCHAR},#{PUSH_STAFF,jdbcType=VARCHAR},#{PUSH_TYPE},#{PUSH_RESULT},SYSDATE)
+  </insert>
+  <select id="getPushMessageList" parameterType="map" resultType="map">
+  	select PUSH_ID,PUSH_TITLE,PUSH_CONTENT,PUSH_STAFF,PUSH_TYPE,PUSH_RESULT,CREATE_TIME from T_PUSH_MESSAGE
+  </select>
+    <insert id="inserPushMessageHis" parameterType="map">
+  	insert into T_PUSH_MESSAGE_HIS(PUSH_ID,PUSH_TITLE,PUSH_CONTENT,PUSH_STAFF,PUSH_TYPE,PUSH_RESULT,CREATE_TIME,PUSH_TIME)
+  	values(#{PUSH_ID},#{PUSH_TITLE,jdbcType=VARCHAR},#{PUSH_CONTENT,jdbcType=VARCHAR},#{PUSH_STAFF,jdbcType=VARCHAR},#{PUSH_TYPE},#{PUSH_RESULT},#{CREATE_TIME},SYSDATE)
+  </insert>
+  <delete id="deletePushMessage" parameterType="map">
+  	delete from T_PUSH_MESSAGE where PUSH_ID = #{PUSH_ID}
+  </delete>
+  <update id="updatePushMessage" parameterType="map">
+  	update T_PUSH_MESSAGE set PUSH_RESULT=#{PUSH_RESULT} where PUSH_ID=#{PUSH_ID}
+  </update>
+  
+  <insert id="saveValidTime" parameterType="map">
+  	insert into AXX_T_VALID_TIME(USER_ID,INSPECT_DATE,START_TIME,END_TIME,VALID_M_TIME,VALID_A_TIME,OUT_COOPERATION_TIME,AREA_ID)
+	select tc.user_id,inspect_date,tc.start_time,tc.end_time,
+			nvl(td.ins_time_valid_morning,0),
+			nvl(ins_time_valid_afternoon,0),
+        	nvl(tf.stay_time,0),tc.area_id
+       	from (select t.user_id,t.area_id,trunc(t.track_time) inspect_date,
+                  min(t.track_time) start_time,max(t.track_time) end_time from AXX_AUTO_USER_TRACK t
+                  where trunc(t.track_time)&gt;=to_date(#{start_date}, 'yyyy-mm-dd') 
+                  and trunc(t.track_time)&lt;=to_date(#{end_date}, 'yyyy-mm-dd') 
+                  and t.area_id=#{area_id}
+                  and exists (select tms.match_id from axx_t_macth_site tms,axx_t_task att  where att.task_id=tms.task_id and att.status=0 and  tms.track_id=t.track_id)
+                 group by t.user_id,t.area_id,trunc(t.track_time)) tc,--全天轨迹时间
+            (select t.line_date,t.user_id,to_number(#{total_min_m}) - round(sum(to_number(least(to_date(to_char(t.line_date,'yyyy-mm-dd') ||#{end_date_m}||':00','yyyy-mm-dd hh24:mi:ss'),t.end_time)
+                       - greatest(to_date(to_char(t.line_date,'yyyy-mm-dd') ||#{start_date_m}||':00','yyyy-mm-dd hh24:mi:ss'),t.start_time)) * 1440)) ins_time_valid_morning
+                       from AXX_T_INVALID_TIME t
+                       where t.line_date between to_date(#{start_date}, 'yyyy-mm-dd') and to_date(#{end_date}, 'yyyy-mm-dd')
+                       and to_char(t.start_time, 'hh24:mi') &lt;= #{end_date_m}
+                       and to_char(t.end_time, 'hh24:mi') &gt;= #{start_date_m}
+                       group by t.line_date, t.user_id) td,--上午有效时间
+            (select t.line_date,t.user_id,to_number(#{total_min_a}) - round(sum(to_number(least(to_date(to_char(t.line_date,'yyyy-mm-dd') ||#{end_date_a}||':00','yyyy-mm-dd hh24:mi:ss'),t.end_time)
+                       - greatest(to_date(to_char(t.line_date,'yyyy-mm-dd') ||#{start_date_a}||':00','yyyy-mm-dd hh24:mi:ss'),t.start_time)) * 1440)) ins_time_valid_afternoon
+                       from AXX_T_INVALID_TIME t
+                       where t.line_date between to_date(#{start_date}, 'yyyy-mm-dd') and to_date(#{end_date}, 'yyyy-mm-dd')
+                       and to_char(t.start_time, 'hh24:mi') &lt;= #{end_date_a}
+                       and to_char(t.end_time, 'hh24:mi') &gt;= #{start_date_a}
+                       group by t.line_date, t.user_id) te,--下午有效时间
+            (select t.user_id,trunc(t.start_time) inspect_time,sum(stay_time) stay_time
+                   	from AXX_T_STAY t
+                 	where trunc(t.start_time) between to_date(#{start_date}, 'yyyy-mm-dd') and to_date(#{end_date}, 'yyyy-mm-dd')
+                 	and t.stay_type = 1 group by t.user_id, trunc(t.start_time)) tf--外力施工配合时长
+     	where tc.user_id = td.user_id(+) and tc.inspect_date = td.line_date(+)     
+     	and tc.user_id = tf.user_id(+) and tc.inspect_date = tf.inspect_time(+)   
+    	and tc.user_id = te.user_id(+) and tc.inspect_date = te.line_date(+)
+  </insert>
+  
+   <select id="getTaskSitesByUser" parameterType="map" resultType="map">
+	select distinct t.* from (select tt.TASK_ID,ts.SITE_ID,ts.SITE_NAME,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS,nvl(ts.SITE_MATCH,300) SITE_MATCH from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+    where tt.INSPECT_ID=#{USER_ID} AND tt.STATUS=0 AND tt.START_DATE &lt;= to_date(#{QUERY_DATE},'yyyy-mm-dd')
+    AND tt.END_DATE &gt;= to_date(#{QUERY_DATE},'yyyy-mm-dd')
+ 	UNION ALL
+	select tt.TASK_ID,tto.out_site_id SITE_ID,mos.site_name,3 SITE_TYPE, mos.x LONGITUDE,mos.y LATITUDE,mos.con_address ADDRESS,nvl(mos.SITE_MATCH ,300) SITE_MATCH
+	from AXX_T_TASK_OUTSITE tto inner join axx_main_out_site mos on tto.out_site_id=mos.out_site_id
+	inner join  AXX_T_TASK tt on tto.TASK_ID=tt.TASK_ID 
+	 where tt.INSPECT_ID=#{USER_ID} AND tt.STATUS=0 AND tt.START_DATE &lt;= to_date(#{QUERY_DATE},'yyyy-mm-dd')
+	AND tt.END_DATE &gt;= to_date(#{QUERY_DATE},'yyyy-mm-dd'))t
+  </select>
+  <select id="getCalTrackList" parameterType="map" resultType="map">
+  	select aut.track_id,to_char(aut.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,aut.track_type,aut.longitude,aut.latitude,
+    	aut.user_id,aut.gps_flag,aut.speed,aut.area_id,aut.user_id,aut.is_gps,aut.gps_switch
+     from AXX_AUTO_USER_TRACK aut where aut.user_id=#{USER_ID} and trunc(track_time)=to_date(#{QUERY_DATE},'yyyy-mm-dd') order by aut.TRACK_TIME
+  </select>
+  <delete id="deleteMatchSitebyTaskId" parameterType="map" >
+ 	delete from axx_t_macth_site tms where tms.task_id=#{TASK_ID} and tms.track_id is not null
+  </delete>
+  <insert id="insertLogin" parameterType="map">
+  insert into T_BASE_LOGIN(USER_ID,OPERATOR_TIME,SN,IS_LOGIN,RELEASE_ID) values
+  	(#{USER_ID},sysdate,#{SN,jdbcType=VARCHAR},#{IS_LOGIN},#{RELEASE_ID,jdbcType=NUMERIC})
+  </insert>
+  <select id="getBaseLoginInfo" parameterType="map" resultType="map">
+  	select tbl.user_id,tbl.operator_time,tbl.sn,tbl.is_login from T_BASE_LOGIN tbl
+	where tbl.user_id=#{USER_ID} order by tbl.operator_time desc
+  </select>
+  
+  <select id="getInspectArrayRates" parameterType="map" resultType="map">
+   select tt.inspect_id,tt.task_id,t1.TASK_NUM,t2.TASK_KEY_NUM,nvl(t3.morning_actual_site,0) morning_actual_site,
+        nvl(t4.after_actual_site,0) after_actual_site,nvl(t5.key_actual_site,0) key_actual_site,
+        nvl(t6.task_outsite,0) task_outsite,nvl(t7.actual_outsite,0)actual_outsite from axx_t_task tt,
+       (select tt.task_id,count(distinct(atls.site_id)) TASK_NUM from axx_t_task tt 
+               inner join AXX_T_TASK_LINE attl on tt.task_id=attl.task_id
+               inner join AXX_T_LINE_SITE atls on atls.line_id=attl.line_id 
+               group by tt.task_id)t1,
+       (select tt.task_id,count(distinct(atls.site_id)) TASK_KEY_NUM from axx_t_task tt 
+               inner join AXX_T_TASK_LINE attl on tt.task_id=attl.task_id
+               inner join AXX_T_LINE_SITE atls on atls.line_id=attl.line_id
+               inner join axx_t_site ts on atls.site_id=ts.site_id and ts.site_type=1
+               group by tt.task_id)t2,
+       (select task_id,count(distinct(site_id)) morning_actual_site from axx_t_macth_site
+               where (to_char(match_time,'hh24:mi:ss') between '06:00:00' and '13:00:00') and site_type != 3
+               group by task_id)t3,
+       (select task_id,count(distinct(site_id)) after_actual_site from axx_t_macth_site
+               where (to_char(match_time,'hh24:mi:ss') between '13:00:00' and '20:00:00') and site_type != 3 
+               group by task_id)t4,
+       (select task_id,count(distinct(site_id)) key_actual_site from axx_t_macth_site
+               where sign_id is not null
+               group by task_id)t5,
+       (select tt.task_id,count(distinct(tto.out_site_id)) task_outsite from axx_t_task tt 
+               inner join axx_t_task_outsite tto on tt.task_id=tto.task_id
+               group by tt.task_id)t6,
+       (select task_id,count(1) actual_outsite from 
+	  	         (select distinct task_id,site_id
+                from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time 
+                from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+                inner join axx_main_out_site mos on mos.out_site_id=tms.site_id
+                and tms.site_type =3 and mos.site_danger_level !=4)t
+                group by task_id,con_label,site_id having (max(track_time)-min(track_time))*1440 > 5
+	            union all
+	            select distinct task_id,site_id from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time 
+                from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+                inner join axx_main_out_site mos on mos.out_site_id=tms.site_id
+                and tms.site_type =3 and mos.site_danger_level =4)t
+                group by task_id, con_label,site_id having (max(track_time)-min(track_time))*1440 > 5)
+                group by task_id)t7 
+        where tt.STATUS=0 
+        and tt.task_id=t1.task_id(+)
+        and tt.task_id=t2.task_id(+)
+        and tt.task_id=t3.task_id(+)
+        and tt.task_id=t4.task_id(+)
+        and tt.task_id=t5.task_id(+)
+        and tt.task_id=t6.task_id(+)
+        and tt.task_id=t7.task_id(+)
+  </select>
+  <select id="getInspectArrate" parameterType="map" resultType="int">
+  	select count(1) from AXX_T_INSPECT_ARRATE tia where tia.USER_ID=#{USER_ID} and tia.TASK_ID=#{TASK_ID}
+  </select>
+  <delete id="deleteInspectArrate" parameterType="map">
+  	delete from AXX_T_INSPECT_ARRATE tia where exists (
+	select tt.task_id from axx_t_task tt where to_date(#{executeDate},'yyyy-mm-dd') between tt.start_date and tt.end_date
+        and tt.area_id=#{areaId} and tt.task_id=tia.task_id)
+  </delete>
+  <insert id="insertInspectArrate" parameterType="map">
+     insert into AXX_T_INSPECT_ARRATE(USER_ID,TASK_ID,INSPECT_DATE,TASK_NUM,MORNING_NUM,AFTERNOON_NUM,TASK_KEY_NUM,ACTUAL_KEY_NUM,ACTUAL_OUT_SITE,TASK_OUT_SITE,AREA_ID,ACTUAL_NUM)
+  	select tt.inspect_id,tt.task_id,to_date(#{executeDate},'yyyy-mm-dd') INSPECT_DATE,nvl(t1.TASK_NUM,0) TASK_NUM,nvl(t3.morning_actual_site,0) morning_actual_site,
+        nvl(t4.after_actual_site,0) after_actual_site,nvl(t2.TASK_KEY_NUM,0) TASK_KEY_NUM,nvl(t5.key_actual_site,0) key_actual_site
+        ,nvl(t7.actual_outsite,0)actual_outsite,nvl(t6.task_outsite,0) task_outsite,tt.area_id,nvl(t8.actual_site,0) from axx_t_task tt,
+       (select tt.task_id,count(distinct(atls.site_id)) TASK_NUM from axx_t_task tt 
+               inner join AXX_T_TASK_LINE attl on tt.task_id=attl.task_id
+               inner join AXX_T_LINE_SITE atls on atls.line_id=attl.line_id 
+               group by tt.task_id)t1,
+       (select tt.task_id,count(distinct(atls.site_id)) TASK_KEY_NUM from axx_t_task tt 
+               inner join AXX_T_TASK_LINE attl on tt.task_id=attl.task_id
+               inner join AXX_T_LINE_SITE atls on atls.line_id=attl.line_id
+               inner join axx_t_site ts on atls.site_id=ts.site_id and ts.site_type=1
+               group by tt.task_id)t2,
+       (select task_id,count(distinct(site_id)) morning_actual_site from axx_t_macth_site
+               where (to_char(match_time,'hh24:mi') between #{start_date_m} and #{end_date_m}) and site_type != 3
+               group by task_id)t3,
+       (select task_id,count(distinct(site_id)) after_actual_site from axx_t_macth_site
+               where (to_char(match_time,'hh24:mi') between #{start_date_a} and #{end_date_a}) and site_type != 3 
+               group by task_id)t4,
+       (select task_id,count(distinct(site_id)) key_actual_site from axx_t_macth_site
+               where sign_id is not null
+               group by task_id)t5,
+       (select tt.task_id,count(distinct(tto.out_site_id)) task_outsite from axx_t_task tt 
+               inner join axx_t_task_outsite tto on tt.task_id=tto.task_id
+               group by tt.task_id)t6,
+       (select task_id,count(1) actual_outsite from 
+               (select distinct task_id,site_id
+                from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time 
+                from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+                inner join axx_main_out_site mos on mos.out_site_id=tms.site_id
+                and tms.site_type =3 and mos.site_danger_level !=4)t
+                group by task_id,con_label,site_id having (max(track_time)-min(track_time))*1440 > #{OutSiteStay}
+              union all
+              select distinct task_id,site_id from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time 
+                from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+                inner join axx_main_out_site mos on mos.out_site_id=tms.site_id
+                and tms.site_type =3 and mos.site_danger_level =4)t
+                group by task_id, con_label,site_id having (max(track_time)-min(track_time))*1440 > #{UnSafeOutSiteStay})
+                group by task_id)t7,
+       (select task_id,count(distinct(site_id)) actual_site from axx_t_macth_site
+               where site_type != 3
+               group by task_id)t8 
+        where to_date(#{executeDate},'yyyy-mm-dd') between tt.start_date and tt.end_date
+        and tt.area_id=#{areaId} and tt.STATUS=0  
+        and tt.task_id=t1.task_id(+)
+        and tt.task_id=t2.task_id(+)
+        and tt.task_id=t3.task_id(+)
+        and tt.task_id=t4.task_id(+)
+        and tt.task_id=t5.task_id(+)
+        and tt.task_id=t6.task_id(+)
+        and tt.task_id=t7.task_id(+)
+        and tt.task_id=t8.task_id(+)
+  </insert>
+  <update id="updateInspectArrate" parameterType="map">
+  	update AXX_T_INSPECT_ARRATE tia set tia.INSPECT_DATE=to_date(#{INSPECT_DATE},'yyyy-mm-dd') and tia.TASK_NUM=#{TASK_NUM} and tia.MORNING_NUM=#{MORNING_NUM} 
+  	and tia.AFTERNOON_NUM=#{AFTERNOON_NUM} and tia.ACTUAL_OUT_SITE=#{ACTUAL_OUT_SITE} and tia.TASK_OUT_SITE=#{TASK_OUT_SITE}
+  	and tia.TASK_KEY_NUM=#{TASK_KEY_NUM} and tia.ACTUAL_KEY_NUM=#{ACTUAL_KEY_NUM}
+  </update>
+  <select id="getInspectTaskAreas" parameterType="map" resultType="map">
+  	select distinct tt.area_id from axx_t_task tt 
+  </select>
+  
+   <select id="getOtherLoginInfo" parameterType="map" resultType="map">
+  	select tbl.user_id,tbl.operator_time,tbl.sn,tbl.is_login from T_BASE_LOGIN tbl
+  where tbl.user_id=#{USER_ID} and  (sysdate - tbl.operator_time)&lt;=1/2 order by tbl.operator_time desc
+  </select>
+  
+  <select id="getOnlineLoginInfo" parameterType="map" resultType="map">
+  	select tbl.user_id,tbl.operator_time,tbl.sn,tbl.is_login from T_BASE_LOGIN tbl
+  where tbl.user_id=#{USER_ID} and  (sysdate - tbl.operator_time)&lt;=1/2  order by tbl.operator_time desc
+  </select>
+  
+  
+  <select id="getIsLoginInfo" parameterType="map" resultType="map">
+  	select tbl.user_id,tbl.operator_time,tbl.sn,tbl.is_login from T_BASE_LOGIN tbl
+  where tbl.user_id=#{USER_ID} and  (sysdate - tbl.operator_time)&lt;=6/24  order by tbl.operator_time desc
+  </select>
+  
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.system.dao.ResourceDao">
+	<update id="updateGns" parameterType="map" >
+UPDATE TB_BASE_GNS S
+   SET S.NAME       = #{NAME},
+       S.ACTIONNAME = #{ACTIONNAME},
+       S.ISPARENT   = #{ISPARENT}
+ WHERE S.ID = #{ID}
+   	</update>
+	<update id="delChildGns" parameterType="map" >
+DELETE TB_BASE_GNS S
+ WHERE EXISTS (SELECT TBG.ID
+          FROM TB_BASE_GNS TBG
+         WHERE TBG.ID != #{ID}
+           AND S.ID = TBG.ID
+         START WITH ID = #{ID}
+        CONNECT BY PRIOR ID = PARENTID)
+   	</update>
+   	<update id="delGns" parameterType="map" >
+DELETE TB_BASE_GNS S
+ WHERE EXISTS (SELECT TBG.ID
+          FROM TB_BASE_GNS TBG
+         WHERE S.ID = TBG.ID
+         START WITH ID = #{ID}
+        CONNECT BY PRIOR ID = PARENTID)
+   	</update>
+   	<insert id="addGns" parameterType="map" >
+INSERT INTO TB_BASE_GNS
+  (ID, NAME, PARENTID, ISPARENT, ACTIONNAME)
+VALUES
+  (SEQ_TB_BASE_GNS.NEXTVAL, #{NAME}, #{PARENTID}, #{ISPARENT}, #{ACTIONNAME})
+   	</insert>
+   	<update id="updateParentPoint" parameterType="map" >
+UPDATE TB_BASE_GNS T SET T.ISPARENT = 1 WHERE T.ID = #{PARENTID}
+   	</update>
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.TeamUserDao">
+	<select id="listTeamUser" resultType="map">
+	
+		select z.id staff_id,z.staff_no,z.staff_name,z.team_id,z.team_name,z.moblephone,
+		(select a.name from area a where a.area_id = n.area_id) area_name,
+		(select a.name from area a where a.area_id = n.son_area_id) son_area_name,m.company_name,
+		(CASE WHEN z.is_leader = '1' THEN '审核员/接单人,维护员' ELSE '维护员' END ) role_name
+		from tb_base_staff_zw z 
+		left join tb_base_staff_zw_banzu n on n.team_id = z.team_id
+		left join tb_base_company_banzu_relation r on r.banzu_id = n.team_id
+		left join tb_base_maintain_company m on m.company_id = r.company_id
+	
+		<!-- select id staff_id,staff_no,staff_name,team_name,z.moblephone from tb_base_staff_zw z --> 
+		where z.status = 0 and z.team_id = #{queryParams.team_id}
+		<if test="queryParams.staff_name != null and queryParams.staff_name != ''">  
+            <![CDATA[
+    			AND (z.staff_name like '%'||#{queryParams.staff_name}||'%' or z.staff_no like '%'||#{queryParams.staff_name}||'%')
+    		]]>
+  		</if>
+	</select>
+</mapper> 

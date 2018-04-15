@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.cableCheck.dao.CheckMyworkDao">
+	<select id="countEqpNum" parameterType="String" resultType="int">
+	   select count(distinct ts.sbid)
+	     from tb_cablecheck_task ts
+	     left join tb_cablecheck_record r
+	       on ts.task_id = r.task_id
+	    where (ts.task_type in (1, 2) or
+	          (ts.task_type in (0,8) and ts.status_id = 8))
+	      and r.port_id is null
+	      and ts.inspector = r.create_staff
+	      and r.create_staff = #{staffId}
+	      and to_char(r.create_time,'mm')=to_char(sysdate,'mm')
+	</select>
+	<select id="countzgEqpNum" parameterType="String" resultType="int">
+	    select count( distinct ts.sbid)
+	      from tb_cablecheck_task ts
+	      left join tb_cablecheck_record r
+	        on ts.task_id = r.task_id
+	     where (ts.task_type = 3 and ts.status_id in (7, 8))
+	       and r.port_id is null
+	       and ts.inspector = r.create_staff
+	       and r.create_staff = #{staffId}
+	       and to_char(r.create_time,'mm')=to_char(sysdate,'mm')
+	</select>
+	<select id="countPortNum" parameterType="String" resultType="int">  
+	   select count(distinct r.port_id)
+	     from tb_cablecheck_task ts
+	     left join tb_cablecheck_record r
+	       on ts.task_id = r.task_id
+	    where (ts.task_type in (1, 2) or
+	          (ts.task_type in (0,8) and ts.status_id = 8))
+	      and r.port_id is not null
+	      and ts.inspector = r.create_staff
+	      and r.create_staff = #{staffId}
+	      and to_char(r.create_time,'mm')=to_char(sysdate,'mm')
+	</select>
+	<select id="countzgPortNum" parameterType="String" resultType="int">
+	select count( distinct ts.task_no)
+	      from tb_cablecheck_task ts
+	      left join tb_cablecheck_record r
+	        on ts.task_id = r.task_id
+	     where (ts.task_type = 3 and ts.status_id in (7, 8))
+	       and r.port_id is not null
+	       and ts.inspector = r.create_staff
+	       and r.create_staff = #{staffId}
+	       and to_char(r.create_time,'mm')=to_char(sysdate,'mm')
+	</select>
+	
+	<select id="countTodayEqpNum" parameterType="String" resultType="int">
+	   select count(distinct ts.sbid)
+	     from tb_cablecheck_task ts
+	     left join tb_cablecheck_record r
+	       on ts.task_id = r.task_id
+	    where (ts.task_type in (1, 2) or
+	          (ts.task_type in (0,8) and ts.status_id = 8))
+	      and r.port_id is null
+	      and ts.inspector = r.create_staff
+	      and r.create_staff = #{staffId}
+	      and to_char(r.create_time,'yyyy')= to_char(sysdate,'yyyy') 
+          and to_char(r.create_time,'mm')= to_char(sysdate,'mm') 
+	      and to_char(r.create_time,'dd')=to_char(sysdate,'dd')
+	</select>
+	<select id="countTodayzgEqpNum" parameterType="String" resultType="int">
+	    select count( distinct ts.sbid)
+	      from tb_cablecheck_task ts
+	      left join tb_cablecheck_record r
+	        on ts.task_id = r.task_id
+	     where (ts.task_type = 3 and ts.status_id in (7, 8))
+	       and r.port_id is null
+	       and ts.inspector = r.create_staff
+	       and r.create_staff = #{staffId}
+	       and to_char(r.create_time,'yyyy')= to_char(sysdate,'yyyy') 
+           and to_char(r.create_time,'mm')= to_char(sysdate,'mm') 
+	       and to_char(r.create_time,'dd')=to_char(sysdate,'dd')
+	</select>
+	<select id="countTodayPortNum" parameterType="String" resultType="int">  
+	   select count(distinct r.port_id)
+	     from tb_cablecheck_task ts
+	     left join tb_cablecheck_record r
+	       on ts.task_id = r.task_id
+	    where (ts.task_type in (1, 2) or
+	          (ts.task_type in (0,8) and ts.status_id = 8))
+	      and r.port_id is not null
+	      and ts.inspector = r.create_staff
+	      and r.create_staff = #{staffId}
+	      and to_char(r.create_time,'yyyy')= to_char(sysdate,'yyyy') 
+          and to_char(r.create_time,'mm')= to_char(sysdate,'mm') 
+	      and to_char(r.create_time,'dd')=to_char(sysdate,'dd')
+	</select>
+	<select id="countTodayzgPortNum" parameterType="String" resultType="int">
+	select count( distinct ts.task_no)
+	      from tb_cablecheck_task ts
+	      left join tb_cablecheck_record r
+	        on ts.task_id = r.task_id
+	     where (ts.task_type = 3 and ts.status_id in (7, 8))
+	       and r.port_id is not null
+	       and ts.inspector = r.create_staff
+	       and r.create_staff = #{staffId}
+	       and to_char(r.create_time,'yyyy')= to_char(sysdate,'yyyy') 
+           and to_char(r.create_time,'mm')= to_char(sysdate,'mm') 
+	       and to_char(r.create_time,'dd')=to_char(sysdate,'dd')
+	</select>
+	<select id="getIdentify" parameterType="String" resultType="string">
+		select f.id_number from tb_base_staff f where f.staff_id=#{staffId} and f.status=0 and f.isdeleted=0
+	</select>
+</mapper>

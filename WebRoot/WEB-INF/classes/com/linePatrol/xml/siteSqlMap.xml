@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.SiteDao">
+	<sql id="dynamicWhere">
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select t.* from AXX_T_SITE t
+		<include refid="dynamicWhere" />
+	</select>
+
+	<insert id="siteSave" parameterType="map" >
+		INSERT INTO AXX_T_SITE(
+		SITE_ID,
+		SITE_NAME,
+		LONGITUDE,
+		LATITUDE,
+		ADDRESS,
+		RELAY_ID,
+		UPDATE_TIME,
+		SITE_TYPE,
+		MAINTAIN_RANK
+		)
+		values(
+		SEQ_AXX_T_SITE.NEXTVAL,
+		#{site_name},
+		#{longitude},
+		#{latitude},
+		#{address},
+		#{relay_id},
+		to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+		#{site_type},
+		#{maintain_rank}
+		)
+	</insert>
+
+	<delete id="siteDelete" parameterType="String">
+		DELETE FROM AXX_T_SITE WHERE SITE_ID=#{site_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_T_SITE WHERE SITE_ID=#{site_id}
+	</select>
+
+	<update id="siteUpdate" parameterType="map">
+		UPDATE AXX_T_SITE set
+		<if test=" site_name  != null and site_name  != ''"> 
+ <![CDATA[ 
+SITE_NAME=#{site_name},
+ ]]>
+		</if>
+		<if test=" longitude  != null and longitude  != ''"> 
+ <![CDATA[ 
+LONGITUDE=#{longitude},
+ ]]>
+		</if>
+		<if test=" latitude  != null and latitude  != ''"> 
+ <![CDATA[ 
+LATITUDE=#{latitude},
+ ]]>
+		</if>
+		<if test=" address  != null "> 
+ <![CDATA[ 
+ADDRESS=#{address},
+ ]]>
+		</if>
+		<if test=" relay_id  != null and relay_id  != ''"> 
+ <![CDATA[ 
+RELAY_ID=#{relay_id},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME=#{update_time},
+ ]]>
+		</if>
+		<if test=" site_type  != null and site_type  != ''"> 
+ <![CDATA[ 
+SITE_TYPE=#{site_type},
+ ]]>
+		</if>
+		<if test=" maintain_rank  != null and maintain_rank  != ''"> 
+ <![CDATA[ 
+MAINTAIN_RANK=#{maintain_rank},
+ ]]>
+		</if>
+		<if test=" site_match  != null and site_match  != ''"> 
+ <![CDATA[ 
+SITE_MATCH=#{site_match},
+ ]]>
+		</if>
+		SITE_ID=#{site_id}
+		where SITE_ID=#{site_id}
+	</update>
+	
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_T_SITE
+	</select>
+	
+	<select id="findSiteByLine" resultType="map">
+	SELECT ts.SITE_ID,
+	ts.SITE_NAME,
+	ts.LONGITUDE,
+	ts.LATITUDE,
+	ts.ADDRESS,
+	ts.RELAY_ID,
+	TS.SITE_MATCH,
+	
+	to_char(ts.UPDATE_TIME, 'yyyy-mm-dd HH:MI:ss') UPDATE_TIME,
+	ts.SITE_TYPE
+	FROM AXX_T_SITE TS,AXX_T_LINE_SITE LS
+	WHERE TS.SITE_ID=LS.SITE_ID(+)
+	 <if test=" line_id  != null and line_id  != ''"> 
+		 <![CDATA[ 
+		    AND LS.LINE_ID=#{line_id}
+		 ]]>
+   </if>
+	AND TS.Relay_Id=#{relay_id} and TS.AREA_ID=#{areaId} 
+   <if test=" site_type  != null and site_type  != ''"> 
+ <![CDATA[ 
+    AND TS.SITE_TYPE IN (${site_type})
+ ]]>
+		</if>
+  
+		
+	</select>
+	
+	<select id="findSiteByLine2" resultType="map">
+        
+SELECT ts.SITE_ID,
+  ts.SITE_NAME,
+  ts.LONGITUDE,
+  ts.LATITUDE,
+  ts.ADDRESS,
+  ts.RELAY_ID,
+  TS.SITE_MATCH,
+  
+  to_char(ts.UPDATE_TIME, 'yyyy-mm-dd HH:MI:ss') UPDATE_TIME,
+  ts.SITE_TYPE
+  FROM AXX_T_SITE TS,axx_t_line_site ls
+  WHERE 1=1 
+   <if test=" site_type  != null and site_type  != ''"> 
+ <![CDATA[ 
+    AND TS.SITE_TYPE IN (${site_type})
+ ]]>
+		</if>
+and  ts.site_id=ls.site_id and ls.line_id =#{line_id}  order by ls.site_order asc
+  
+		
+	</select>
+	
+	<!-- TO_CHAR(TS.UPDATE_TIME, 'YYYY-MM-DD HH:MI:SS') UPDATE_TIME, -->
+	<select id="getSiteByRelayId" parameterType="map" resultType="map">
+          SELECT TS.SITE_ID,
+       TS.SITE_NO,
+  TS.SITE_NAME,
+  TS.LONGITUDE,
+  TS.LATITUDE,
+  TS.ADDRESS,
+  TS.RELAY_ID,
+  TO_CHAR(TS.UPDATE_TIME, 'YYYY-MM-DD HH:MI:SS') UPDATE_TIME,
+  TS.SITE_TYPE
+  FROM AXX_T_SITE TS
+  WHERE not exists (select 1 from  AXX_T_LINE_SITE  ls where ts.site_id=ls.site_id) 
+  and TS.RELAY_ID= #{relay_id}
+  and ts.area_id=#{area_id}
+  ORDER BY TS.SITE_NO,TS.SITE_ID	
+	</select>
+	
+	
+	<select id="getLocalSitesByRelayId" parameterType="map" resultType="map">
+           
+SELECT TS.SITE_ID,
+       TS.SITE_NO,
+       TS.SITE_NAME,
+       TS.LONGITUDE,
+       TS.LATITUDE,
+       TS.ADDRESS,
+       TS.RELAY_ID,
+       TO_CHAR(TS.UPDATE_TIME, 'YYYY-MM-DD HH:MI:SS') UPDATE_TIME,
+       TS.SITE_TYPE
+  FROM AXX_T_SITE TS
+ WHERE not exists
+ (select 1 from AXX_T_LINE_SITE ls where ts.site_id = ls.site_id)
+   and ts.area_id=#{local_id}
+   and TS.RELAY_ID = #{relay_id}
+
+union all
+
+SELECT TS.SITE_ID,
+       TS.SITE_NO,
+       TS.SITE_NAME,
+       TS.LONGITUDE,
+       TS.LATITUDE,
+       TS.ADDRESS,
+       TS.RELAY_ID,
+       TO_CHAR(TS.UPDATE_TIME, 'YYYY-MM-DD HH:MI:SS') UPDATE_TIME,
+       TS.SITE_TYPE
+  FROM AXX_T_SITE TS, AXX_T_LINE_SITE TLS
+ WHERE TS.SITE_ID = TLS.SITE_ID
+   AND TLS.LINE_ID = #{line_id}
+
+ ORDER BY SITE_NO, SITE_ID
+           
+	</select>
+	
+	
+	
+	<select id="getSiteInfoNextVal" parameterType="String">
+	  SELECT SEQ_AXX_T_LINE_INFO.NEXTVAL FROM DUAL 
+	</select>
+	
+	
+	
+	<!-- 1 连表查询空值情况 2 日期类型格式转换 -->
+	
+	<select id="getSitesByIds" parameterType="map" resultType="map">
+	    SELECT T.*,T.SITE_ID SITE_ID2 FROM AXX_T_SITE T WHERE T.SITE_ID IN (${markersIds}) ORDER BY T.SITE_ID
+	</select>
+	
+	<select id="getSitePhotoList" parameterType="String" resultType="map">
+	  select p.file_id,p.staff_id,p.photo_path,p.micro_photo,p.site_id,p.photo_type
+ 		from axx_t_photo p where p.photo_type =0 and site_id in(  
+	 select SIGN_ID from AXX_T_MACTH_SITE where site_id = #{id} and sign_id is not null)
+	  order by p.upload_time desc    
+	</select>
+	
+	<!-- 判断巡线点是否在巡线段中 -->
+	<select id="ifSiteInPart" parameterType="map" resultType="map">
+		select * from AXX_T_LINE_SITE ls where ls.site_id in (${ids})
+	</select>
+	
+	<!-- 删除巡线点 -->
+	<delete id="deleteSiteById" parameterType="map">
+		delete from AXX_T_SITE s where s.SITE_ID in (${ids})
+	</delete>
+	<!-- 根据中继段id查找巡线点 -->
+	<select id="getSitesByRelayId" parameterType="String" resultType="map">
+		select s.site_id,
+		       s.site_name,
+		       s.longitude,
+		       s.latitude,
+		       decode(s.site_type,1,'关键点','非关键点') site_type,
+		       r.relay_id,
+		       r.relay_name,
+		       c.cable_id,
+		       c.cable_name,
+		       a.area_id,
+		       a.name area_name
+		  from AXX_T_SITE s, AXX_T_CABLE c, AXX_T_RELAY r,area a
+		 where s.relay_id = r.relay_id
+		   and r.cable_id = c.cable_id
+		   and s.area_id = a.area_id
+		   and s.relay_id=#{relayId}
+	</select>
+	
+	<!-- 查询巡线点序列 -->
+	<select id="getSiteSeq" resultType="int">
+		select SEQ_AXX_T_SITE.NEXTVAL from DUAL
+	</select>	
+	
+	<!-- 查询巡线点列表 -->
+	<select id="querySiteList" resultType="map" parameterType="map">
+		SELECT 
+			TS.SITE_ID,
+			TS.SITE_NAME,
+			TS.LONGITUDE,
+			TS.LATITUDE,
+			TS.ADDRESS,
+			TS.RELAY_ID,
+			TS.SITE_MATCH,
+			TS.SITE_PROPERTY,
+			TS.AREA_ID,
+			A.NAME AREA_NAME,
+			DECODE(TS.SITE_TYPE,1,'是','否') KEYFLAG,
+			to_char(TS.UPDATE_TIME, 'yyyy-mm-dd HH:MI:ss') UPDATE_TIME,
+			TS.SITE_TYPE
+		FROM 
+			AXX_T_SITE TS,
+			AXX_T_LINE_SITE LS,
+			AREA A
+		WHERE TS.AREA_ID = A.AREA_ID
+		<if test="longitude != null and longitude != ''"> 
+			 <![CDATA[ 
+			    AND TS.LONGITUDE = #{longitude}
+			 ]]>
+		</if>
+		<if test="latitude != null and latitude != ''"> 
+			 <![CDATA[ 
+			    AND TS.LATITUDE = #{latitude}
+			 ]]>
+		</if>
+		<if test="longitude_gps != null and longitude_gps != ''"> 
+			 <![CDATA[ 
+			    AND TS.LONGITUDEGPS = #{longitude_gps}
+			 ]]>
+		</if>
+		<if test="latitude_gps != null and latitude_gps != ''"> 
+			 <![CDATA[ 
+			    AND TS.LATITUDEGPS = #{latitude_gps}
+			 ]]>
+		</if>
+		<if test="site_type != null and site_type != ''"> 
+			 <![CDATA[ 
+			    AND TS.SITE_TYPE IN (${site_type})
+			 ]]>
+		</if>
+			AND TS.SITE_ID=LS.SITE_ID 
+			AND LS.LINE_ID =#{line_id} 
+		ORDER BY
+			LS.SITE_ORDER
+	</select>
+	
+	<!-- 更新巡线点顺序-->
+	<update id="updateSiteOrder" parameterType="map">
+		UPDATE 
+			AXX_T_LINE_SITE
+		SET
+		    SITE_ORDER = #{site_order}
+		WHERE
+			SITE_ID = #{site_id}
+			AND LINE_ID = #{line_id}
+	</update>
+	
+	<!-- 新增巡线点 -->
+	<insert id="addSite" parameterType="map" >
+		INSERT INTO AXX_T_SITE(
+		SITE_ID,
+		SITE_NAME,
+   		LONGITUDE,
+		LATITUDE,
+		ADDRESS,
+		RELAY_ID,
+		UPDATE_TIME,
+		SITE_TYPE,
+		<if test="site_match != null and site_match != ''"> 
+	    		SITE_MATCH,
+		</if>
+		AREA_ID,
+		<if test="longitude_gps != null and longitude_gps != ''"> 
+			 <![CDATA[ 
+	    		LONGITUDEGPS,
+				LATITUDEGPS,
+				COORDINATE_TYPE,
+			 ]]>
+		</if>
+		SITE_PROPERTY
+		)
+		values(
+		#{site_id},
+		#{site_name},
+		#{longitude},
+		#{latitude},
+		#{address},
+		#{relay_id},
+		sysdate,
+		#{site_type},
+		<if test="site_match != null and site_match != ''"> 
+	    		#{site_match},
+		</if>
+		#{area_id},
+		<if test="longitude_gps != null and longitude_gps != ''"> 
+			 <![CDATA[ 
+   				#{longitude_gps},
+				#{latitude_gps},
+				#{coordinate_type},
+			 ]]>
+		</if>
+		#{site_property}
+		)
+	</insert>
+	
+</mapper>

@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.system.dao.UnifiedPageDao">
+	<sql id="dynamicWhere">
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STATUS != null and queryParams.STATUS != ''">  
+            <![CDATA[
+	    	AND STATUS = #{queryParams.STATUS}
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.ORG_NAME != null and queryParams.ORG_NAME != ''">  
+            <![CDATA[
+	    	AND ORG_NAME like '%'||#{queryParams.ORG_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.ID_NUMBER != null and queryParams.ID_NUMBER != ''">  
+            <![CDATA[
+	    	AND ID_NUMBER like '%'||#{queryParams.ID_NUMBER}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.ROLE_NAME != null and queryParams.ROLE_NAME !='' ">
+			<![CDATA[
+	   		and role_name like '%'||#{queryParams.ROLE_NAME}||'%' 
+	   		]]>
+	 	</if>
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+	select * from (
+		select s.staff_id,
+		       s.staff_no,
+		       s.staff_name,
+		       (select to_char(wm_concat(distinct role_name)) from tb_base_staff_role bsr, tb_base_role br where s.staff_id = bsr.staff_id and bsr.role_id = br.role_id) role_name,
+		       (select to_char(wm_concat(distinct software_name)) from tb_base_staff_soft ss, tb_base_soft bs where s.staff_id = ss.staff_id and ss.software_id = bs.software_id) software_name,
+		       s.tel,
+		       (select to_char(wm_concat(distinct dept_name)) from TB_INS_STAFF_DEPT isd, TB_INS_DEPT tid where s.staff_id = isd.staff_id and isd.dept_id = tid.dept_id) dept_name,
+		       s.id_number,
+		       ul.area_level,
+		       ul.manage_level,
+		       a1.name area,
+		       a2.name son_area,
+		       o.org_name,
+		       s.status,
+		       s.isdeleted
+		  from tb_base_staff_unified s
+		  left join AXX_T_USER_LEVEL ul on s.staff_id = ul.staff_id
+		  left join area a1 on s.area_id = a1.area_id
+		  left join area a2 on s.son_area_id = a2.area_id
+		  left join AXX_T_ORGANIZATION o on s.org_id = o.org_id
+		  ) 
+		 where status=0 
+		<include refid="dynamicWhere" />
+	 	order by staff_id desc, AREA, SON_AREA
+	</select>
+	
+	<update id="update" parameterType="map">
+		UPDATE tb_base_staff_unified F
+		SET F.STAFF_NO = #{STAFF_NO},
+		F.PASSWORD = #{PASSWORD},
+		F.PASSWORD_ = #{PASSWORD_},
+		F.STAFF_NAME = #{STAFF_NAME},
+		<if test="TEL != null and TEL != ''">  
+	   <![CDATA[
+		F.TEL=#{TEL},
+		]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+	   <![CDATA[
+		F.ID_NUMBER=#{ID_NUMBER},
+		]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+	   <![CDATA[
+		F.EMAIL=#{EMAIL},
+		]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			F.ORG_ID=#{OWN_COMPANY},
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			F.MAINTOR_TYPE=#{MAINTOR_TYPE},
+			]]>
+		</if>
+		F.STATUS = #{STATUS},
+		F.ISDELETED = #{STATUS},
+		F.AREA_ID = #{AREA_ID},
+		F.SON_AREA_ID = #{SON_AREA_ID},
+		<if test="MODIFY_STAFF != null and MODIFY_STAFF != ''">  
+		   <![CDATA[
+			F.MODIFY_STAFF = #{MODIFY_STAFF},
+			]]>
+		</if>
+		F.modify_date = SYSDATE
+		WHERE F.STAFF_ID = #{STAFF_ID}
+	</update>
+	
+	<select id="getRoles" parameterType="String" resultType="String">
+		select t.role_id from tb_base_staff_role t where t.staff_id = #{STAFF_ID}
+	</select>
+	
+	<select id="getSofts" parameterType="String" resultType="String">
+		select t.software_id from tb_base_staff_soft t where t.staff_id = #{STAFF_ID}
+	</select>
+	
+	<select id="getOutSitePermissions"  parameterType="string"  resultType="map">
+		select nvl(a.area_level,'' )area_level ,nvl(a.manage_level,'') manage_level from AXX_T_USER_LEVEL a where a.staff_id=#{staff_id}
+	</select>
+	
+	<insert id="insert" parameterType="map">
+		INSERT INTO tb_base_staff_unified
+		(STAFF_ID,
+		STAFF_NO,
+		PASSWORD,
+		PASSWORD_,
+		STAFF_NAME,
+		<if test="TEL != null and TEL != ''">  
+		   <![CDATA[
+			TEL,
+			]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+		   <![CDATA[
+			ID_NUMBER,
+			]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+		   <![CDATA[
+			EMAIL,
+			]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			ORG_ID,
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			MAINTOR_TYPE,
+			]]>
+		</if>
+		STATUS,
+		AREA_ID,
+		<if test="CREATE_STAFF != null and CREATE_STAFF != ''">  
+		   <![CDATA[
+			CREATE_STAFF,
+			]]>
+		</if>
+		<if test="MODIFY_STAFF != null and MODIFY_STAFF != ''">  
+		   <![CDATA[
+			MODIFY_STAFF,
+			]]>
+		</if>
+		SON_AREA_ID
+		)
+		VALUES
+		(osspad.design_order_seq.NEXTVAL,
+		#{STAFF_NO},
+		#{PASSWORD},
+		#{PASSWORD_},
+		#{STAFF_NAME},
+		<if test="TEL != null and TEL != ''">  
+		   <![CDATA[
+			#{TEL},
+			]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+		   <![CDATA[
+			#{ID_NUMBER},
+			]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+		   <![CDATA[
+			#{EMAIL},
+			]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			#{OWN_COMPANY},
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			#{MAINTOR_TYPE},
+			]]>
+		</if>
+		#{STATUS},
+		#{AREA_ID},
+		<if test="CREATE_STAFF != null and CREATE_STAFF != ''">  
+		   <![CDATA[
+			#{CREATE_STAFF},
+			]]>
+		</if>
+		<if test="MODIFY_STAFF != null and MODIFY_STAFF != ''">  
+		   <![CDATA[
+			#{MODIFY_STAFF},
+			]]>
+		</if>
+		#{SON_AREA_ID}
+		)
+	</insert>
+	<select id="getStaff" parameterType="String" resultType="map">
+		SELECT T.*
+		FROM tb_base_staff_unified T
+		 WHERE T.STAFF_ID = #{STAFF_ID}
+	</select>
+
+	<update id="delete" parameterType="map">
+		UPDATE tb_base_staff_unified F
+		SET
+		F.isdeleted =1,
+		F.STATUS =1
+		WHERE F.STAFF_ID =
+		#{STAFF_ID}
+	</update>
+
+</mapper>

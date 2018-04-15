@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.SynchronizePointDao">
+
+	<select id="queryJndiList"  resultType="map">
+		select distinct t.area_code from sys_dblink t
+	</select>	
+
+	<select id="queryEquipmentList"  parameterType="util.page.Query"
+		resultType="com.cableInspection.model.EquipmentModel" statementType="STATEMENT">
+		<!-- select 
+			pe.PHY_EQP_ID as phy_eqp_id,
+			pe.NAME as name,
+			pe.NO as no,
+			pe.RES_SPEC_ID as res_spec_id,
+			sa.PARENT_AREA_ID as parent_area_id,
+			pe.AREA_ID as area_id,
+			pe.ADDRESS as address
+		from  phy_equipment@${queryParams.jndi} pe
+		left join spc_area@${queryParams.jndi} sa on sa.area_id=pe.area_id
+		where 1=1 
+		<if test="queryParams.res_spec_id != null and queryParams.res_spec_id != ''">  
+            <![CDATA[
+	    	and pe.RES_SPEC_ID in (${queryParams.res_spec_id})
+	    	]]>
+		</if>
+		order by pe.PHY_EQP_ID -->
+		    select 
+			pe.PHY_EQP_ID,
+			pe.NAME as name,
+			pe.NO as no,
+			pe.RES_SPEC_ID as res_spec_id,
+			pe.PARENT_AREA_ID as parent_area_id,
+			pe.AREA_ID as area_id,
+			pe.ADDRESS as address,
+			pe.point_level,
+			pe.son_zone
+			from  ossequipment pe
+			order by pe.PHY_EQP_ID
+	</select>
+
+	<select id="queryEquipmentLevelList"  parameterType="util.page.Query"
+		resultType="com.cableInspection.model.EquipmentModel">
+		select pe.PHY_EQP_ID as phy_eqp_id,
+			   pe.NO as no, 
+			   pr.CODE as point_level
+		  from pub_restriction@${queryParams.jndi} pr
+		  inner join phy_equipment@${queryParams.jndi} pe 
+		  on pe.mnt_level_id = pr.serial_no
+		where 1=1 
+		<if test="queryParams.res_spec_id != null and queryParams.res_spec_id != ''">  
+            <![CDATA[
+	    		and pe.RES_SPEC_ID in (${queryParams.res_spec_id})
+	    	]]>
+		</if>
+	</select>
+
+	<select id="isEquipmentExist" parameterType="map" resultType="int">
+		select count(0) from tb_ins_point p where p.point_no=#{equipmentNo} and area_id=#{area_id}
+	</select>	
+
+	<insert id="saveEquipmentInfo" parameterType="map">
+		insert into tb_ins_point(POINT_ID,
+			POINT_NO,
+			POINT_NAME,
+			POINT_LEVEL,
+			POINT_TYPE,
+			LONGITUDE,
+			LATITUDE,
+			CREATE_TIME,
+			AREA_ID,
+			SON_AREA_ID,
+			ADDRESS,
+			EQP_TYPE_ID,
+			PHY_EQP_ID,
+			ORIGIN_TYPE)
+		values(SEQ_TB_INS_POINT.NEXTVAL,
+			#{point_no},
+			#{point_name},
+			#{point_level},
+			#{point_type},
+			#{longitude},
+			#{latitude},
+			sysdate,
+			#{area_id},
+			#{son_area_id},
+			#{address},
+			#{eqp_type_id},
+			#{phy_eqp_id},
+			#{origin_type}
+		)
+	</insert>
+	
+	<update id="updateEquipmentLevel" parameterType="map">
+		update tb_ins_point 
+			set 
+				modify_time = sysdate
+				<if test="equipmentLevel != null and equipmentLevel != ''">  
+				,point_level = #{equipmentLevel}
+				</if>
+				<if test="address != null and address != ''">  
+				,address =#{address}
+				</if>
+				<if test="longitude != null and longitude != ''">  
+				,longitude =#{longitude}
+				</if>
+				<if test="latitude != null and latitude != ''">  
+				,latitude =#{latitude}
+				</if>
+		where point_no = #{point_no}
+		and area_id=#{area_id}
+		and origin_type=1
+	</update>
+	<update id="truncateTableArea" parameterType="map">
+		truncate table tml_2_area
+	</update>
+	<update id="insertTableArea" parameterType="String">
+		  insert into tml_2_area  
+      select t3.tml_id,
+             t3.zone
+             from (
+      select t2.tml_id,
+             t2.zone,
+             row_number() over(partition by t2.tml_id order by count desc) hx
+        from (select t.tml_id, t.zone, count(0) count
+                from (select b.tml_id,
+                             substr(substr(a.description,
+                                           instr(a.description, '市') + 1),
+                                    0,
+                                    instr(substr(a.description,
+                                                 instr(a.description, '市') + 1),
+                                          '区')) zone
+                        from SPC_LOCATION@${_parameter} a
+                        join SPC_TML_2_LOCATION@${_parameter} b on a.location_id =
+                                                           b.location_id
+                     ) t
+               group by t.tml_id, t.zone
+               order by count(0) desc) t2
+               )t3
+               where hx&lt;2
+	</update>
+	<select id="createOssEquipment" parameterType="java.util.Map">
+     
+        <![CDATA[ 
+          call P_SYNCOSSEQUIPMENT(#{jndi,mode=IN,jdbcType=VARCHAR}, #{res_spec_id,mode=IN,jdbcType=VARCHAR}) 
+        ]]>
+     
+    </select>
+    
+    <select id="getAreaId" resultType="string">
+		select mod(seq_updatePointCoordinate.nextval,12) from dual
+	</select>
+</mapper>

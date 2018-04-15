@@ -1,0 +1,1613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns1="http://org.apache.axis2/xsd" xmlns:ns="http://server.webservice.eoms.zbiti.com" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://server.webservice.eoms.zbiti.com">
+    <wsdl:documentation>Wfworkitemflow</wsdl:documentation>
+    <wsdl:types>
+        <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://server.webservice.eoms.zbiti.com">
+            <xs:element name="voidprocess">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="xmlData" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="voidprocessResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="tywykDispatchTask">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="tywykDispatchTaskResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="taskReadyInfo">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="appid" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="ticketinfoType" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="taskReadyInfoResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="dispatchAppTask">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="dispatchAppTaskResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="dealDl">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="xml" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="dealDlResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="addOperationPlanInfo">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="addOperationPlanInfoResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="addBusTaskOrder">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="addBusTaskOrderResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="WebSearchNetGridTask">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="xmlData" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="WebSearchNetGridTaskResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ResourceBrushHDORTD">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="msgId" nillable="true" type="xs:string"/>
+                        <xs:element minOccurs="0" name="state" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ResourceBrushHDORTDResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ResourceBrushData">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="xmlData" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ResourceBrushDataResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ReceiveCancel">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ReceiveCancelResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetZoneMaterInfo">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetZoneMaterInfoResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetRoleView">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetRoleViewResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DealWirelessTask">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DealWirelessTaskResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="BatchOperating">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="info" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="BatchOperatingResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppWirelessCount">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppWirelessCountResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppShield">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppShieldResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppReceiveTask">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppReceiveTaskResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperatingForZd">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperatingForZdResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperatingForLine">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperatingForLineResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperating">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperatingResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperatCount">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppOperatCountResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowListForLine">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowListForLineResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowList">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowListResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowCountForLine">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowCountForLineResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowCount">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowCountResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowCirculation">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppFlowCirculationResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDlExcDevice">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="infoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDlExcDeviceResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDetails">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDetailsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDelDlExcDevice">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="infoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDelDlExcDeviceResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDealedFlowList">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="InfoString" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="AppDealedFlowListResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="BatchOperatingRequest">
+        <wsdl:part name="parameters" element="ns:BatchOperating"/>
+    </wsdl:message>
+    <wsdl:message name="BatchOperatingResponse">
+        <wsdl:part name="parameters" element="ns:BatchOperatingResponse"/>
+    </wsdl:message>
+    <wsdl:message name="WebSearchNetGridTaskRequest">
+        <wsdl:part name="parameters" element="ns:WebSearchNetGridTask"/>
+    </wsdl:message>
+    <wsdl:message name="WebSearchNetGridTaskResponse">
+        <wsdl:part name="parameters" element="ns:WebSearchNetGridTaskResponse"/>
+    </wsdl:message>
+    <wsdl:message name="ReceiveCancelRequest">
+        <wsdl:part name="parameters" element="ns:ReceiveCancel"/>
+    </wsdl:message>
+    <wsdl:message name="ReceiveCancelResponse">
+        <wsdl:part name="parameters" element="ns:ReceiveCancelResponse"/>
+    </wsdl:message>
+    <wsdl:message name="dispatchAppTaskRequest">
+        <wsdl:part name="parameters" element="ns:dispatchAppTask"/>
+    </wsdl:message>
+    <wsdl:message name="dispatchAppTaskResponse">
+        <wsdl:part name="parameters" element="ns:dispatchAppTaskResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowCountRequest">
+        <wsdl:part name="parameters" element="ns:AppFlowCount"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowCountResponse">
+        <wsdl:part name="parameters" element="ns:AppFlowCountResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatCountRequest">
+        <wsdl:part name="parameters" element="ns:AppOperatCount"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatCountResponse">
+        <wsdl:part name="parameters" element="ns:AppOperatCountResponse"/>
+    </wsdl:message>
+    <wsdl:message name="ResourceBrushHDORTDRequest">
+        <wsdl:part name="parameters" element="ns:ResourceBrushHDORTD"/>
+    </wsdl:message>
+    <wsdl:message name="ResourceBrushHDORTDResponse">
+        <wsdl:part name="parameters" element="ns:ResourceBrushHDORTDResponse"/>
+    </wsdl:message>
+    <wsdl:message name="GetRoleViewRequest">
+        <wsdl:part name="parameters" element="ns:GetRoleView"/>
+    </wsdl:message>
+    <wsdl:message name="GetRoleViewResponse">
+        <wsdl:part name="parameters" element="ns:GetRoleViewResponse"/>
+    </wsdl:message>
+    <wsdl:message name="dealDlRequest">
+        <wsdl:part name="parameters" element="ns:dealDl"/>
+    </wsdl:message>
+    <wsdl:message name="dealDlResponse">
+        <wsdl:part name="parameters" element="ns:dealDlResponse"/>
+    </wsdl:message>
+    <wsdl:message name="DealWirelessTaskRequest">
+        <wsdl:part name="parameters" element="ns:DealWirelessTask"/>
+    </wsdl:message>
+    <wsdl:message name="DealWirelessTaskResponse">
+        <wsdl:part name="parameters" element="ns:DealWirelessTaskResponse"/>
+    </wsdl:message>
+    <wsdl:message name="addBusTaskOrderRequest">
+        <wsdl:part name="parameters" element="ns:addBusTaskOrder"/>
+    </wsdl:message>
+    <wsdl:message name="addBusTaskOrderResponse">
+        <wsdl:part name="parameters" element="ns:addBusTaskOrderResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppDlExcDeviceRequest">
+        <wsdl:part name="parameters" element="ns:AppDlExcDevice"/>
+    </wsdl:message>
+    <wsdl:message name="AppDlExcDeviceResponse">
+        <wsdl:part name="parameters" element="ns:AppDlExcDeviceResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowListRequest">
+        <wsdl:part name="parameters" element="ns:AppFlowList"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowListResponse">
+        <wsdl:part name="parameters" element="ns:AppFlowListResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatingForLineRequest">
+        <wsdl:part name="parameters" element="ns:AppOperatingForLine"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatingForLineResponse">
+        <wsdl:part name="parameters" element="ns:AppOperatingForLineResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppShieldRequest">
+        <wsdl:part name="parameters" element="ns:AppShield"/>
+    </wsdl:message>
+    <wsdl:message name="AppShieldResponse">
+        <wsdl:part name="parameters" element="ns:AppShieldResponse"/>
+    </wsdl:message>
+    <wsdl:message name="GetZoneMaterInfoRequest">
+        <wsdl:part name="parameters" element="ns:GetZoneMaterInfo"/>
+    </wsdl:message>
+    <wsdl:message name="GetZoneMaterInfoResponse">
+        <wsdl:part name="parameters" element="ns:GetZoneMaterInfoResponse"/>
+    </wsdl:message>
+    <wsdl:message name="voidprocessRequest">
+        <wsdl:part name="parameters" element="ns:voidprocess"/>
+    </wsdl:message>
+    <wsdl:message name="voidprocessResponse">
+        <wsdl:part name="parameters" element="ns:voidprocessResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowCirculationRequest">
+        <wsdl:part name="parameters" element="ns:AppFlowCirculation"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowCirculationResponse">
+        <wsdl:part name="parameters" element="ns:AppFlowCirculationResponse"/>
+    </wsdl:message>
+    <wsdl:message name="addOperationPlanInfoRequest">
+        <wsdl:part name="parameters" element="ns:addOperationPlanInfo"/>
+    </wsdl:message>
+    <wsdl:message name="addOperationPlanInfoResponse">
+        <wsdl:part name="parameters" element="ns:addOperationPlanInfoResponse"/>
+    </wsdl:message>
+    <wsdl:message name="taskReadyInfoRequest">
+        <wsdl:part name="parameters" element="ns:taskReadyInfo"/>
+    </wsdl:message>
+    <wsdl:message name="taskReadyInfoResponse">
+        <wsdl:part name="parameters" element="ns:taskReadyInfoResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppWirelessCountRequest">
+        <wsdl:part name="parameters" element="ns:AppWirelessCount"/>
+    </wsdl:message>
+    <wsdl:message name="AppWirelessCountResponse">
+        <wsdl:part name="parameters" element="ns:AppWirelessCountResponse"/>
+    </wsdl:message>
+    <wsdl:message name="ResourceBrushDataRequest">
+        <wsdl:part name="parameters" element="ns:ResourceBrushData"/>
+    </wsdl:message>
+    <wsdl:message name="ResourceBrushDataResponse">
+        <wsdl:part name="parameters" element="ns:ResourceBrushDataResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppDelDlExcDeviceRequest">
+        <wsdl:part name="parameters" element="ns:AppDelDlExcDevice"/>
+    </wsdl:message>
+    <wsdl:message name="AppDelDlExcDeviceResponse">
+        <wsdl:part name="parameters" element="ns:AppDelDlExcDeviceResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowCountForLineRequest">
+        <wsdl:part name="parameters" element="ns:AppFlowCountForLine"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowCountForLineResponse">
+        <wsdl:part name="parameters" element="ns:AppFlowCountForLineResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppDetailsRequest">
+        <wsdl:part name="parameters" element="ns:AppDetails"/>
+    </wsdl:message>
+    <wsdl:message name="AppDetailsResponse">
+        <wsdl:part name="parameters" element="ns:AppDetailsResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppDealedFlowListRequest">
+        <wsdl:part name="parameters" element="ns:AppDealedFlowList"/>
+    </wsdl:message>
+    <wsdl:message name="AppDealedFlowListResponse">
+        <wsdl:part name="parameters" element="ns:AppDealedFlowListResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppReceiveTaskRequest">
+        <wsdl:part name="parameters" element="ns:AppReceiveTask"/>
+    </wsdl:message>
+    <wsdl:message name="AppReceiveTaskResponse">
+        <wsdl:part name="parameters" element="ns:AppReceiveTaskResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatingRequest">
+        <wsdl:part name="parameters" element="ns:AppOperating"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatingResponse">
+        <wsdl:part name="parameters" element="ns:AppOperatingResponse"/>
+    </wsdl:message>
+    <wsdl:message name="tywykDispatchTaskRequest">
+        <wsdl:part name="parameters" element="ns:tywykDispatchTask"/>
+    </wsdl:message>
+    <wsdl:message name="tywykDispatchTaskResponse">
+        <wsdl:part name="parameters" element="ns:tywykDispatchTaskResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatingForZdRequest">
+        <wsdl:part name="parameters" element="ns:AppOperatingForZd"/>
+    </wsdl:message>
+    <wsdl:message name="AppOperatingForZdResponse">
+        <wsdl:part name="parameters" element="ns:AppOperatingForZdResponse"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowListForLineRequest">
+        <wsdl:part name="parameters" element="ns:AppFlowListForLine"/>
+    </wsdl:message>
+    <wsdl:message name="AppFlowListForLineResponse">
+        <wsdl:part name="parameters" element="ns:AppFlowListForLineResponse"/>
+    </wsdl:message>
+    <wsdl:portType name="WfworkitemflowPortType">
+        <wsdl:operation name="BatchOperating">
+            <wsdl:input message="ns:BatchOperatingRequest" wsaw:Action="urn:BatchOperating"/>
+            <wsdl:output message="ns:BatchOperatingResponse" wsaw:Action="urn:BatchOperatingResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="WebSearchNetGridTask">
+            <wsdl:input message="ns:WebSearchNetGridTaskRequest" wsaw:Action="urn:WebSearchNetGridTask"/>
+            <wsdl:output message="ns:WebSearchNetGridTaskResponse" wsaw:Action="urn:WebSearchNetGridTaskResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="ReceiveCancel">
+            <wsdl:input message="ns:ReceiveCancelRequest" wsaw:Action="urn:ReceiveCancel"/>
+            <wsdl:output message="ns:ReceiveCancelResponse" wsaw:Action="urn:ReceiveCancelResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="dispatchAppTask">
+            <wsdl:input message="ns:dispatchAppTaskRequest" wsaw:Action="urn:dispatchAppTask"/>
+            <wsdl:output message="ns:dispatchAppTaskResponse" wsaw:Action="urn:dispatchAppTaskResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCount">
+            <wsdl:input message="ns:AppFlowCountRequest" wsaw:Action="urn:AppFlowCount"/>
+            <wsdl:output message="ns:AppFlowCountResponse" wsaw:Action="urn:AppFlowCountResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatCount">
+            <wsdl:input message="ns:AppOperatCountRequest" wsaw:Action="urn:AppOperatCount"/>
+            <wsdl:output message="ns:AppOperatCountResponse" wsaw:Action="urn:AppOperatCountResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushHDORTD">
+            <wsdl:input message="ns:ResourceBrushHDORTDRequest" wsaw:Action="urn:ResourceBrushHDORTD"/>
+            <wsdl:output message="ns:ResourceBrushHDORTDResponse" wsaw:Action="urn:ResourceBrushHDORTDResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetRoleView">
+            <wsdl:input message="ns:GetRoleViewRequest" wsaw:Action="urn:GetRoleView"/>
+            <wsdl:output message="ns:GetRoleViewResponse" wsaw:Action="urn:GetRoleViewResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="dealDl">
+            <wsdl:input message="ns:dealDlRequest" wsaw:Action="urn:dealDl"/>
+            <wsdl:output message="ns:dealDlResponse" wsaw:Action="urn:dealDlResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="DealWirelessTask">
+            <wsdl:input message="ns:DealWirelessTaskRequest" wsaw:Action="urn:DealWirelessTask"/>
+            <wsdl:output message="ns:DealWirelessTaskResponse" wsaw:Action="urn:DealWirelessTaskResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="addBusTaskOrder">
+            <wsdl:input message="ns:addBusTaskOrderRequest" wsaw:Action="urn:addBusTaskOrder"/>
+            <wsdl:output message="ns:addBusTaskOrderResponse" wsaw:Action="urn:addBusTaskOrderResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppDlExcDevice">
+            <wsdl:input message="ns:AppDlExcDeviceRequest" wsaw:Action="urn:AppDlExcDevice"/>
+            <wsdl:output message="ns:AppDlExcDeviceResponse" wsaw:Action="urn:AppDlExcDeviceResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowList">
+            <wsdl:input message="ns:AppFlowListRequest" wsaw:Action="urn:AppFlowList"/>
+            <wsdl:output message="ns:AppFlowListResponse" wsaw:Action="urn:AppFlowListResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForLine">
+            <wsdl:input message="ns:AppOperatingForLineRequest" wsaw:Action="urn:AppOperatingForLine"/>
+            <wsdl:output message="ns:AppOperatingForLineResponse" wsaw:Action="urn:AppOperatingForLineResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppShield">
+            <wsdl:input message="ns:AppShieldRequest" wsaw:Action="urn:AppShield"/>
+            <wsdl:output message="ns:AppShieldResponse" wsaw:Action="urn:AppShieldResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="GetZoneMaterInfo">
+            <wsdl:input message="ns:GetZoneMaterInfoRequest" wsaw:Action="urn:GetZoneMaterInfo"/>
+            <wsdl:output message="ns:GetZoneMaterInfoResponse" wsaw:Action="urn:GetZoneMaterInfoResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="voidprocess">
+            <wsdl:input message="ns:voidprocessRequest" wsaw:Action="urn:voidprocess"/>
+            <wsdl:output message="ns:voidprocessResponse" wsaw:Action="urn:voidprocessResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCirculation">
+            <wsdl:input message="ns:AppFlowCirculationRequest" wsaw:Action="urn:AppFlowCirculation"/>
+            <wsdl:output message="ns:AppFlowCirculationResponse" wsaw:Action="urn:AppFlowCirculationResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="addOperationPlanInfo">
+            <wsdl:input message="ns:addOperationPlanInfoRequest" wsaw:Action="urn:addOperationPlanInfo"/>
+            <wsdl:output message="ns:addOperationPlanInfoResponse" wsaw:Action="urn:addOperationPlanInfoResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="taskReadyInfo">
+            <wsdl:input message="ns:taskReadyInfoRequest" wsaw:Action="urn:taskReadyInfo"/>
+            <wsdl:output message="ns:taskReadyInfoResponse" wsaw:Action="urn:taskReadyInfoResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppWirelessCount">
+            <wsdl:input message="ns:AppWirelessCountRequest" wsaw:Action="urn:AppWirelessCount"/>
+            <wsdl:output message="ns:AppWirelessCountResponse" wsaw:Action="urn:AppWirelessCountResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushData">
+            <wsdl:input message="ns:ResourceBrushDataRequest" wsaw:Action="urn:ResourceBrushData"/>
+            <wsdl:output message="ns:ResourceBrushDataResponse" wsaw:Action="urn:ResourceBrushDataResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppDelDlExcDevice">
+            <wsdl:input message="ns:AppDelDlExcDeviceRequest" wsaw:Action="urn:AppDelDlExcDevice"/>
+            <wsdl:output message="ns:AppDelDlExcDeviceResponse" wsaw:Action="urn:AppDelDlExcDeviceResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCountForLine">
+            <wsdl:input message="ns:AppFlowCountForLineRequest" wsaw:Action="urn:AppFlowCountForLine"/>
+            <wsdl:output message="ns:AppFlowCountForLineResponse" wsaw:Action="urn:AppFlowCountForLineResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppDetails">
+            <wsdl:input message="ns:AppDetailsRequest" wsaw:Action="urn:AppDetails"/>
+            <wsdl:output message="ns:AppDetailsResponse" wsaw:Action="urn:AppDetailsResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppDealedFlowList">
+            <wsdl:input message="ns:AppDealedFlowListRequest" wsaw:Action="urn:AppDealedFlowList"/>
+            <wsdl:output message="ns:AppDealedFlowListResponse" wsaw:Action="urn:AppDealedFlowListResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppReceiveTask">
+            <wsdl:input message="ns:AppReceiveTaskRequest" wsaw:Action="urn:AppReceiveTask"/>
+            <wsdl:output message="ns:AppReceiveTaskResponse" wsaw:Action="urn:AppReceiveTaskResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperating">
+            <wsdl:input message="ns:AppOperatingRequest" wsaw:Action="urn:AppOperating"/>
+            <wsdl:output message="ns:AppOperatingResponse" wsaw:Action="urn:AppOperatingResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="tywykDispatchTask">
+            <wsdl:input message="ns:tywykDispatchTaskRequest" wsaw:Action="urn:tywykDispatchTask"/>
+            <wsdl:output message="ns:tywykDispatchTaskResponse" wsaw:Action="urn:tywykDispatchTaskResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForZd">
+            <wsdl:input message="ns:AppOperatingForZdRequest" wsaw:Action="urn:AppOperatingForZd"/>
+            <wsdl:output message="ns:AppOperatingForZdResponse" wsaw:Action="urn:AppOperatingForZdResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowListForLine">
+            <wsdl:input message="ns:AppFlowListForLineRequest" wsaw:Action="urn:AppFlowListForLine"/>
+            <wsdl:output message="ns:AppFlowListForLineResponse" wsaw:Action="urn:AppFlowListForLineResponse"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="WfworkitemflowSoap11Binding" type="ns:WfworkitemflowPortType">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="WebSearchNetGridTask">
+            <soap:operation soapAction="urn:WebSearchNetGridTask" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="BatchOperating">
+            <soap:operation soapAction="urn:BatchOperating" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ReceiveCancel">
+            <soap:operation soapAction="urn:ReceiveCancel" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="dispatchAppTask">
+            <soap:operation soapAction="urn:dispatchAppTask" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCount">
+            <soap:operation soapAction="urn:AppFlowCount" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatCount">
+            <soap:operation soapAction="urn:AppOperatCount" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushHDORTD">
+            <soap:operation soapAction="urn:ResourceBrushHDORTD" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetRoleView">
+            <soap:operation soapAction="urn:GetRoleView" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="dealDl">
+            <soap:operation soapAction="urn:dealDl" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="DealWirelessTask">
+            <soap:operation soapAction="urn:DealWirelessTask" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addBusTaskOrder">
+            <soap:operation soapAction="urn:addBusTaskOrder" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForLine">
+            <soap:operation soapAction="urn:AppOperatingForLine" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDlExcDevice">
+            <soap:operation soapAction="urn:AppDlExcDevice" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowList">
+            <soap:operation soapAction="urn:AppFlowList" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetZoneMaterInfo">
+            <soap:operation soapAction="urn:GetZoneMaterInfo" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppShield">
+            <soap:operation soapAction="urn:AppShield" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCirculation">
+            <soap:operation soapAction="urn:AppFlowCirculation" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="voidprocess">
+            <soap:operation soapAction="urn:voidprocess" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="taskReadyInfo">
+            <soap:operation soapAction="urn:taskReadyInfo" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addOperationPlanInfo">
+            <soap:operation soapAction="urn:addOperationPlanInfo" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDelDlExcDevice">
+            <soap:operation soapAction="urn:AppDelDlExcDevice" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushData">
+            <soap:operation soapAction="urn:ResourceBrushData" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppWirelessCount">
+            <soap:operation soapAction="urn:AppWirelessCount" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCountForLine">
+            <soap:operation soapAction="urn:AppFlowCountForLine" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDetails">
+            <soap:operation soapAction="urn:AppDetails" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDealedFlowList">
+            <soap:operation soapAction="urn:AppDealedFlowList" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppReceiveTask">
+            <soap:operation soapAction="urn:AppReceiveTask" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperating">
+            <soap:operation soapAction="urn:AppOperating" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="tywykDispatchTask">
+            <soap:operation soapAction="urn:tywykDispatchTask" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForZd">
+            <soap:operation soapAction="urn:AppOperatingForZd" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowListForLine">
+            <soap:operation soapAction="urn:AppFlowListForLine" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="WfworkitemflowSoap12Binding" type="ns:WfworkitemflowPortType">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="WebSearchNetGridTask">
+            <soap12:operation soapAction="urn:WebSearchNetGridTask" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="BatchOperating">
+            <soap12:operation soapAction="urn:BatchOperating" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ReceiveCancel">
+            <soap12:operation soapAction="urn:ReceiveCancel" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="dispatchAppTask">
+            <soap12:operation soapAction="urn:dispatchAppTask" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCount">
+            <soap12:operation soapAction="urn:AppFlowCount" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatCount">
+            <soap12:operation soapAction="urn:AppOperatCount" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushHDORTD">
+            <soap12:operation soapAction="urn:ResourceBrushHDORTD" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetRoleView">
+            <soap12:operation soapAction="urn:GetRoleView" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="dealDl">
+            <soap12:operation soapAction="urn:dealDl" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="DealWirelessTask">
+            <soap12:operation soapAction="urn:DealWirelessTask" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addBusTaskOrder">
+            <soap12:operation soapAction="urn:addBusTaskOrder" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForLine">
+            <soap12:operation soapAction="urn:AppOperatingForLine" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDlExcDevice">
+            <soap12:operation soapAction="urn:AppDlExcDevice" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowList">
+            <soap12:operation soapAction="urn:AppFlowList" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetZoneMaterInfo">
+            <soap12:operation soapAction="urn:GetZoneMaterInfo" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppShield">
+            <soap12:operation soapAction="urn:AppShield" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCirculation">
+            <soap12:operation soapAction="urn:AppFlowCirculation" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="voidprocess">
+            <soap12:operation soapAction="urn:voidprocess" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="taskReadyInfo">
+            <soap12:operation soapAction="urn:taskReadyInfo" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addOperationPlanInfo">
+            <soap12:operation soapAction="urn:addOperationPlanInfo" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDelDlExcDevice">
+            <soap12:operation soapAction="urn:AppDelDlExcDevice" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushData">
+            <soap12:operation soapAction="urn:ResourceBrushData" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppWirelessCount">
+            <soap12:operation soapAction="urn:AppWirelessCount" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCountForLine">
+            <soap12:operation soapAction="urn:AppFlowCountForLine" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDetails">
+            <soap12:operation soapAction="urn:AppDetails" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDealedFlowList">
+            <soap12:operation soapAction="urn:AppDealedFlowList" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppReceiveTask">
+            <soap12:operation soapAction="urn:AppReceiveTask" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperating">
+            <soap12:operation soapAction="urn:AppOperating" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="tywykDispatchTask">
+            <soap12:operation soapAction="urn:tywykDispatchTask" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForZd">
+            <soap12:operation soapAction="urn:AppOperatingForZd" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowListForLine">
+            <soap12:operation soapAction="urn:AppFlowListForLine" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="WfworkitemflowHttpBinding" type="ns:WfworkitemflowPortType">
+        <http:binding verb="POST"/>
+        <wsdl:operation name="WebSearchNetGridTask">
+            <http:operation location="WebSearchNetGridTask"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="BatchOperating">
+            <http:operation location="BatchOperating"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ReceiveCancel">
+            <http:operation location="ReceiveCancel"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="dispatchAppTask">
+            <http:operation location="dispatchAppTask"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCount">
+            <http:operation location="AppFlowCount"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatCount">
+            <http:operation location="AppOperatCount"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushHDORTD">
+            <http:operation location="ResourceBrushHDORTD"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetRoleView">
+            <http:operation location="GetRoleView"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="dealDl">
+            <http:operation location="dealDl"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="DealWirelessTask">
+            <http:operation location="DealWirelessTask"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addBusTaskOrder">
+            <http:operation location="addBusTaskOrder"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForLine">
+            <http:operation location="AppOperatingForLine"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDlExcDevice">
+            <http:operation location="AppDlExcDevice"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowList">
+            <http:operation location="AppFlowList"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="GetZoneMaterInfo">
+            <http:operation location="GetZoneMaterInfo"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppShield">
+            <http:operation location="AppShield"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCirculation">
+            <http:operation location="AppFlowCirculation"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="voidprocess">
+            <http:operation location="voidprocess"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="taskReadyInfo">
+            <http:operation location="taskReadyInfo"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="addOperationPlanInfo">
+            <http:operation location="addOperationPlanInfo"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDelDlExcDevice">
+            <http:operation location="AppDelDlExcDevice"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="ResourceBrushData">
+            <http:operation location="ResourceBrushData"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppWirelessCount">
+            <http:operation location="AppWirelessCount"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowCountForLine">
+            <http:operation location="AppFlowCountForLine"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDetails">
+            <http:operation location="AppDetails"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppDealedFlowList">
+            <http:operation location="AppDealedFlowList"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppReceiveTask">
+            <http:operation location="AppReceiveTask"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperating">
+            <http:operation location="AppOperating"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="tywykDispatchTask">
+            <http:operation location="tywykDispatchTask"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppOperatingForZd">
+            <http:operation location="AppOperatingForZd"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="AppFlowListForLine">
+            <http:operation location="AppFlowListForLine"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="Wfworkitemflow">
+        <wsdl:port name="WfworkitemflowHttpSoap11Endpoint" binding="ns:WfworkitemflowSoap11Binding">
+            <soap:address location="http://132.228.198.59:8080/zbiti.servicebus/services/Wfworkitemflow.WfworkitemflowHttpSoap11Endpoint/"/>
+        </wsdl:port>
+        <wsdl:port name="WfworkitemflowHttpSoap12Endpoint" binding="ns:WfworkitemflowSoap12Binding">
+            <soap12:address location="http://132.228.198.59:8080/zbiti.servicebus/services/Wfworkitemflow.WfworkitemflowHttpSoap12Endpoint/"/>
+        </wsdl:port>
+        <wsdl:port name="WfworkitemflowHttpEndpoint" binding="ns:WfworkitemflowHttpBinding">
+            <http:address location="http://132.228.198.59:8080/zbiti.servicebus/services/Wfworkitemflow.WfworkitemflowHttpEndpoint/"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

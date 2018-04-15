@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.LineInfoDao">
+	<sql id="dynamicWhere">
+		<if test="queryParams.p_line_no  != null and queryParams.p_line_no  != ''"> 
+<![CDATA[ and  T.line_no  like '%'||#{queryParams.p_line_no }||'%'    ]]>
+		</if>
+		<if
+			test="queryParams.p_line_name  != null and queryParams.p_line_name  != ''"
+		> 
+<![CDATA[ and  T.line_name  like '%'||#{queryParams.p_line_name }||'%'    ]]>
+		</if>
+		<if
+			test="queryParams.p_inspect_name  != null and queryParams.p_inspect_name  != ''"
+		> 
+<![CDATA[ and  BS.STAFF_NAME  LIKE '%'||#{queryParams.p_inspect_name}||'%'    ]]>
+		</if>
+		
+		<if
+			test="queryParams.p_cable_id  != null and queryParams.p_cable_id  != ''"
+		> 
+<![CDATA[ and  Tc.cable_id=#{queryParams.p_cable_id}    ]]>
+		</if>
+		<if
+			test="queryParams.p_relay_id  != null and queryParams.p_relay_id  != ''"
+		> 
+<![CDATA[ and  Tr.relay_id=#{queryParams.p_relay_id}    ]]>
+		</if>
+		
+	</sql>
+	<select id="querySitePartForMap" parameterType="map" resultType="map">
+		select li.line_id,
+		       li.line_name,
+		       r.relay_id,
+		       r.relay_name,
+		       c.cable_id,
+		       c.cable_name,
+		       c.fiber_grade
+		  from AXX_T_LINE_INFO li, AXX_T_RELAY r, AXX_T_CABLE c
+		 where li.relay_id = r.relay_id
+		   and r.cable_id = c.cable_id
+		   and li.area_id = #{area_id}
+	</select>
+	<select id="queryForMap" parameterType="map" resultType="map">
+		select s.site_id,
+		       s.site_name,
+		       s.longitude,
+		       s.latitude,
+		       li.line_id,
+		       li.line_name,
+		       li.line_color,
+		       li.distance,
+		       li.relay_id,
+		       li.inspect_id,
+		       li.area_id,
+		       li.zone_id,
+		       li.line_no,
+		       li.create_person,
+		       to_char(li.create_time, 'yyyy-MM-dd hh:mi:ss') create_time,
+		       r.relay_id,
+		       r.relay_name,
+		       c.cable_id,
+		       c.cable_name,
+		       c.fiber_grade
+		  from AXX_T_SITE s
+		  left join AXX_T_LINE_SITE ls on s.site_id = ls.site_id
+		  left join AXX_T_LINE_INFO li on ls.line_id = li.line_id
+		  left join AXX_T_RELAY r on li.relay_id = r.relay_id 
+		  left join AXX_T_CABLE c on r.cable_id = c.cable_id
+		where li.area_id=#{area_id}
+		order by ls.line_id,ls.site_order
+	</select>
+	
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		
+		SELECT T.LINE_ID,
+		       T.LINE_NAME,
+		     
+		       T.LINE_COLOR,
+		       T.DISTANCE,
+		       T.RELAY_ID,
+		       BS.STAFF_NAME INSPECT_NAME,
+		       A.NAME AREA_NAME,
+		       T.ZONE_ID,
+		       T.LINE_NO,
+		       BS1.STAFF_NAME CREATE_PERSON, 
+		       TO_CHAR(T.CREATE_TIME, 'YYYY-MM-DD HH:MI:SS') CREATE_TIME,
+		       TR.RELAY_NAME,
+		       TC.CABLE_NAME
+		       
+		  FROM AXX_T_LINE_INFO T, AREA A, TB_BASE_STAFF BS, TB_BASE_STAFF BS1,AXX_T_RELAY TR,AXX_T_CABLE TC
+		 WHERE T.AREA_ID = A.AREA_ID
+		   AND T.INSPECT_ID = BS.STAFF_ID(+)
+		   AND T.CREATE_PERSON=BS1.STAFF_ID(+)
+		   AND T.RELAY_ID=TR.RELAY_ID AND TR.CABLE_ID=TC.CABLE_ID
+		   AND T.AREA_ID=#{queryParams.area_id}
+		<include refid="dynamicWhere" />
+	</select>
+
+	<insert id="lineInfoSave" parameterType="map">
+	INSERT INTO AXX_T_LINE_INFO(
+	LINE_ID,
+	LINE_NAME,
+  
+
+	<if test=" line_color  != null and line_color  != ''"> 
+ <![CDATA[ 
+	LINE_COLOR,
+ ]]>
+	</if>
+
+	<if test=" distance  != null and distance  != ''"> 
+ <![CDATA[ 
+DISTANCE,
+ ]]>
+	</if>
+	RELAY_ID,
+
+	<if test=" inspect_id  != null and inspect_id  != ''"> 
+ <![CDATA[ 
+	INSPECT_ID,
+ ]]>
+	</if>
+	AREA_ID,
+   
+	CREATE_PERSON,
+	CREATE_TIME
+	)
+	values(
+	#{line_id},
+	#{line_name},
+	
+
+	<if test=" line_color  != null and line_color  != ''"> 
+ <![CDATA[ 
+#{line_color},
+ ]]>
+	</if>
+
+	<if test=" distance  != null and distance  != ''"> 
+ <![CDATA[ 
+#{distance},
+ ]]>
+	</if>
+	#{relay_id},
+
+	<if test=" inspect_id  != null and inspect_id  != ''"> 
+ <![CDATA[ 
+#{inspect_id},
+ ]]>
+	</if>
+	#{area_id},
+	
+	#{create_person},
+	to_date(#{create_time},'yyyy-mm-dd hh24:mi:ss')
+	)
+	</insert>
+
+	<delete id="lineInfoDelete" parameterType="String">
+		DELETE FROM AXX_T_LINE_INFO WHERE LINE_ID=#{line_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		<!-- SELECT * FROM AXX_T_LINE_INFO WHERE LINE_ID=#{line_id} -->
+		SELECT T.LINE_ID,
+		       T.LINE_NAME,
+		       T.LINE_COLOR,
+		       T.DISTANCE,
+		       T.RELAY_ID,
+		       T.INSPECT_ID,
+		       BS1.STAFF_NAME INSPACT_PERSON,
+		       T.AREA_ID,
+		       T.ZONE_ID,
+		       T.LINE_NO,
+		       T.CREATE_PERSON,
+		       BS2.STAFF_NAME CREATE_PERSON_NAME,
+		       TO_CHAR(T.CREATE_TIME, 'YYYY-MM-DD HH:MI:SS') CREATE_TIME
+		  FROM AXX_T_LINE_INFO T
+		  LEFT JOIN TB_BASE_STAFF BS1 ON BS1.STAFF_ID = T.INSPECT_ID
+		  LEFT JOIN TB_BASE_STAFF BS2 ON BS2.STAFF_ID = T.CREATE_PERSON
+		 WHERE t.LINE_ID=#{line_id}
+	</select>
+
+	<update id="lineInfoUpdate" parameterType="map">
+		UPDATE AXX_T_LINE_INFO set
+		<if test=" line_name  != null and line_name  != ''"> 
+ <![CDATA[ 
+LINE_NAME=#{line_name},
+ ]]>
+		</if>
+		<if test=" line_color  != null and line_color  != ''"> 
+ <![CDATA[ 
+LINE_COLOR=#{line_color},
+ ]]>
+		</if>
+		<if test=" distance  != null and distance  != ''"> 
+ <![CDATA[ 
+DISTANCE=#{distance},
+ ]]>
+		</if>
+		<if test=" relay_id  != null and relay_id  != ''"> 
+ <![CDATA[ 
+RELAY_ID=#{relay_id},
+ ]]>
+		</if>
+		<if test=" inspect_id  != null and inspect_id  != ''"> 
+ <![CDATA[ 
+INSPECT_ID=#{inspect_id},
+ ]]>
+		</if>
+		<if test=" area_id  != null and area_id  != ''"> 
+ <![CDATA[ 
+AREA_ID=#{area_id},
+ ]]>
+		</if>
+		<if test=" zone_id  != null and zone_id  != ''"> 
+ <![CDATA[ 
+ZONE_ID=#{zone_id},
+ ]]>
+		</if>
+		<if test=" line_no  != null and line_no  != ''"> 
+ <![CDATA[ 
+LINE_NO=#{line_no},
+ ]]>
+		</if>
+		<if test=" create_person  != null and create_person  != ''"> 
+ <![CDATA[ 
+CREATE_PERSON=#{create_person},
+ ]]>
+ </if>
+		CREATE_TIME=SYSDATE,
+		LINE_ID=#{line_id}
+		where LINE_ID=#{line_id}
+	</update>
+	
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_T_LINE_INFO
+	</select>
+	
+	<select id="findLineInfoByAreaId" parameterType="String" resultType="map">
+		select * from AXX_T_LINE_INFO t where t.area_id=#{area_id}
+	</select>
+	
+	<select id="getRelayByGl" parameterType="map" resultType="map">
+		<!-- SELECT * FROM AXX_T_RELAY T WHERE T.CABLE_ID=#{gldId} -->
+		
+		SELECT *
+  FROM AXX_T_RELAY T
+ WHERE T.RELAY_ID IN
+       (SELECT RA.RELAY_ID FROM AXX_T_RELAY_AREA RA WHERE RA.AREA_ID = #{localId})
+   AND T.CABLE_ID = #{gldId}
+		
+	</select>
+	
+<!-- 	班组长登陆查询代训休假管理获取该组长所在组群 -->
+	<select id="getOrgByRole" parameterType="String" resultType="string">
+		select bs.org_id
+     from TB_BASE_STAFF bs inner join TB_BASE_STAFF_ROLE bsr on  bs.staff_id = bsr.staff_id
+     where bsr.role_id=226 and bs.staff_id=#{_paramter}
+	</select>
+	
+	<select id="getLocalPerson" parameterType="map" resultType="map">
+	     SELECT BS.*
+    FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+   WHERE BS.STAFF_ID = BSR.STAFF_ID
+     AND BR.ROLE_ID = BSR.ROLE_ID
+     AND BR.ROLE_NO = 'AXX_XXY'
+     AND BS.STATUS=0
+     AND BS.AREA_ID = #{localId}
+     <if test="orgId !=null and orgId != '' ">
+     	 and BS.Org_Id=#{orgId}
+     </if>
+	</select>
+	
+	<!-- 本地的巡线员 -->
+	<select id="getLocalInspactPerson" parameterType="String" resultType="map">
+	     SELECT distinct BS.STAFF_ID,BS.STAFF_NAME
+    FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+   WHERE BS.STAFF_ID = BSR.STAFF_ID
+     AND BR.ROLE_ID = BSR.ROLE_ID
+     AND BR.ROLE_NO like '%AXX%'
+     AND BS.STATUS!=1
+     AND BS.ISDELETED != 1
+     AND BS.AREA_ID = #{localId}
+	</select>
+	
+	<insert id="insertSite2LineInfo" parameterType="map" >
+	 INSERT INTO AXX_T_LINE_SITE(SITE_ID,LINE_ID,SITE_ORDER) VALUES(#{site_id},#{line_id},#{site_order})
+	</insert>
+	
+	<select id="getGldAndRelay" parameterType="string" resultType="map">
+	      
+SELECT TR.RELAY_ID, TR.RELAY_NAME, TC.CABLE_ID, TC.CABLE_NAME
+  FROM AXX_T_LINE_INFO TLI
+  LEFT JOIN AXX_T_RELAY TR
+    ON TLI.RELAY_ID = TR.RELAY_ID
+  LEFT JOIN AXX_T_CABLE TC
+    ON TR.CABLE_ID = TC.CABLE_ID
+ WHERE TLI.LINE_ID = #{line_id}
+	      
+	</select>
+	
+	<select id="getSelectedSiteList" parameterType="string" resultType="map">
+	      <!-- SELECT TS.*
+  FROM AXX_T_SITE TS, AXX_T_LINE_SITE TLS
+ WHERE TS.SITE_ID = TLS.SITE_ID
+   AND TLS.LINE_ID = #{line_id} -->
+   
+         SELECT TS.*
+  FROM AXX_T_SITE TS, AXX_T_LINE_SITE TLS
+ WHERE TS.SITE_ID = TLS.SITE_ID
+   AND TLS.LINE_ID = #{line_id}
+   order by tls.site_order asc
+
+	 </select>
+	
+	<select id="getSiteInfoNextVal"  resultType="string">
+	     SELECT SEQ_AXX_T_LINE_INFO.NEXTVAL FROM DUAL 
+	</select>
+	
+	<delete id="deleteLine2Site" parameterType="string">
+	   
+          DELETE FROM AXX_T_LINE_SITE T WHERE T.LINE_ID=#{line_id}
+	
+	</delete>
+	
+	
+	<select id="getLocalInspactPersonWithCondition" parameterType="map" resultType="map">
+	    SELECT BS.*
+    FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+   WHERE BS.STAFF_ID = BSR.STAFF_ID
+     AND BR.ROLE_ID = BSR.ROLE_ID
+     AND BR.ROLE_NO = 'AXX_XXY'
+     AND BS.AREA_ID = #{localId}
+     <if test=" staff_no  != null and staff_no  != ''"> 
+ <![CDATA[ 
+      and bs.staff_no like '%'||#{staff_no}||'%'
+    
+ ]]>
+		</if>
+		<if test=" staff_name  != null and staff_name  != ''"> 
+ <![CDATA[ 
+ and bs.staff_name like '%'||#{staff_name}||'%'
+ ]]>
+		</if>
+	
+	</select>
+	
+	
+	<select id="gaotiegetLocalInspactPersonWithCondition" parameterType="map" resultType="map">
+	    SELECT BS.*
+	    FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+	   WHERE BS.STAFF_ID = BSR.STAFF_ID
+	     AND BR.ROLE_ID = BSR.ROLE_ID
+	     AND BR.ROLE_NO = 'AXX_GT_XXY'
+      <if test=" staff_no  != null and staff_no  != ''"> 
+ 	    <![CDATA[ 
+      	  and bs.staff_no like '%'||#{staff_no}||'%'
+ 	 	]]>
+	  </if>
+     <if test=" staff_name  != null and staff_name  != ''"> 
+	 	<![CDATA[ 
+	 	   and bs.staff_name like '%'||#{staff_name}||'%'
+	 	 ]]>
+	 </if>
+	</select>
+	
+	<select id= "getTimeList"  parameterType="map" resultType="map">
+	    select distinct to_char(ast.start_time,'yyyy-mm-dd') start_time, to_char(ast.end_time,'yyyy-mm-dd') end_time , ast.circle_id
+	  from axx_step_task ast
+	 where ast.area_id = 3
+	   and trunc(sysdate) between ast.start_time and ast.end_time
+	 order by ast.circle_id
+	</select>
+	
+	<select id="getLineByRelayId" parameterType="map" resultType="map">
+	
+	 SELECT LI.*,BS.STAFF_NAME  FROM AXX_T_LINE_INFO LI,TB_BASE_STAFF BS WHERE LI.INSPECT_ID=BS.STAFF_ID  AND   li.area_id=#{areaId} and  LI.RELAY_ID=#{relay_id} 
+     ORDER BY LI.INSPECT_ID
+	</select>
+</mapper>

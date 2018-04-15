@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.linePatrol.dao.DotConvertDao">
+  <select id="getAllEquip" parameterType="map" resultType="map">
+   	select e.equip_id,e.longitude,e.latitude,e.status from AXX_STEP_TOUR_EQUIP e where e.status=0 order by e.equip_id
+  </select>
+ 
+  <update id="updatedDotXY" parameterType="map">
+  	update AXX_STEP_TOUR_EQUIP e set 
+	<if test=" LONGITUDE != null and LONGITUDE  != ''"> 
+		<![CDATA[ e.LONGITUDE=#{LONGITUDE},]]>
+	</if>
+	<if test=" LATITUDE != null and LATITUDE  != ''"> 
+		<![CDATA[ e.LATITUDE=#{LATITUDE},]]>
+	</if>
+	e.STATUS=#{STATUS}
+  	where e.EQUIP_ID=#{EQUIP_ID}
+  </update>
+  
+  <select id="getCountEquip" parameterType="map" resultType="int">
+   	select count(*) from AXX_STEP_TOUR_EQUIP where status=0
+  </select>
+  
+  <select id="getPageCountEquip" parameterType="map" resultType="map">
+   	SELECT *
+  FROM (SELECT ROWNUM AS ROWNO,
+               E.EQUIP_ID,
+               E.LONGITUDE,
+               E.LATITUDE,
+               E.STATUS      
+          FROM AXX_STEP_TOUR_EQUIP E
+         WHERE e.status=0 AND ROWNUM  <![CDATA[<=10000]]> ) a
+	 WHERE a.ROWNO  <![CDATA[>=0]]>
+  </select>
+  
+</mapper>

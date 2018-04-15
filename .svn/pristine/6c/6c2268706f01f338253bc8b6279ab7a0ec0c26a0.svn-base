@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.StepPartDao">
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select a.allot_id,a.start_equip, a.end_equip,a.cable_id,a.relay_id,
+		to_char(a.create_time, 'yyyy-mm-dd') create_time,
+		a.steppart_name,case when a.circle_id = 1 then '一个月'
+		when a.circle_id = 2 then '两个月'
+		when a.circle_id = 3 then '三个月'
+		when a.circle_id = 6 then '半年'
+		when a.circle_id = 12 then '一年' end as CIRCLE_ID,
+		s.staff_name inspect_name,s1.staff_name creator_name,
+		c.cable_name cable_name,r.relay_name relay_name,
+		area.name area_name,tt.allot_id is_task from AXX_STEP_EQUIP_ALLOT a
+		left join tb_base_staff s on a.inspect_id = s.staff_id
+		left join tb_base_staff s1 on a.creator = s1.staff_id
+		left join axx_t_cable c on a.cable_id = c.cable_id
+		left join axx_t_relay r on a.relay_id = r.relay_id
+		left join area area on a.area_id = area.area_id
+		left join(select * from (SELECT taske.task_id,taske.allot_id,
+     ROW_NUMBER() OVER(PARTITION BY taske.allot_id ORDER BY equip_id) rn
+     FROM axx_step_task_equip taske) t where t.rn = 1)tt on tt.allot_id=a.allot_id
+		where  1=1
+		<if test="queryParams.p_inspect_name != null and queryParams.p_inspect_name != ''">  
+            <![CDATA[
+	  		and s.staff_name like '%'||#{queryParams.p_inspect_name}||'%'
+	  		]]>
+		</if>
+		<if test="queryParams.steppart_name != null and queryParams.steppart_name != ''">  
+            <![CDATA[
+	  		and a.steppart_name like '%'||#{queryParams.steppart_name}||'%'
+	  		]]>
+		</if>
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">
+			and a.area_id =#{queryParams.area_id}
+		</if>
+		<if test="queryParams.p_cable_id != null and queryParams.p_cable_id != ''">
+			and a.cable_id =#{queryParams.p_cable_id}
+		</if>
+		<if test="queryParams.p_relay_id != null and queryParams.p_relay_id != ''">
+			and a.relay_id =#{queryParams.p_relay_id}
+		</if>
+           and a.delete_flag=0
+           order by a.create_time desc
+	</select>
+
+	<select id="getGldByAreaId" resultType="map" parameterType="string">
+
+		select c.* from axx_t_cable c
+	  join axx_t_cable_area ca on ca.area_id = #{area_id}  and c.cable_id = ca.cable_id
+	  join (select distinct te.cable_id
+          from axx_step_tour_equip te
+          join axx_line_equip l on te.area_id=#{area_id} and te.equip_id=l.equip_id
+         where te.IS_LOSE = 0 and te.is_del = 0) e on c.cable_id = e.cable_id
+
+	</select>
+
+	<select id="getRelayByCableId" resultType="map" parameterType="map">
+
+		select r.* from axx_t_relay r
+  		join (select distinct te.relay_id from axx_step_tour_equip te
+          join axx_line_equip l on te.equip_id = l.equip_id
+                               and l.cable_id = te.cable_id
+         where te.IS_LOSE = 0 and te.is_del = 0
+          and l.cable_id = #{cable_id} and te.area_id = #{area_id}) e on r.relay_id = e.relay_id
+ 		where r.cable_id = #{cable_id}
+
+
+	</select>
+
+
+	<select id="selNameByCRID" parameterType="map" resultType="map">
+
+		select c.cable_name,r.relay_name from axx_t_cable c
+		join axx_t_relay r
+		on c.cable_id=r.cable_id
+		where c.cable_id=#{cable_id} and
+		r.relay_id=#{relay_id}
+
+	</select>
+
+	
+	
+	<select id="selOnlyStepPartName" resultType="map" parameterType="string">
+	
+		select * from AXX_STEP_EQUIP_ALLOT a where a.steppart_name=#{steppart_name} and a.delete_flag=0
+	
+	</select>
+
+	<select id="judgeIsTaskEquip" parameterType="map" resultType="map">
+	
+	select e.equip_id,e.area_id from axx_line_equip le join ( SELECT *
+	  FROM (select asea.start_equip,
+	               asea.end_equip,
+	               ale1."ORDER" start_order,
+	               ale2."ORDER" end_order,
+	               asea.cable_id,
+	               asea.relay_id,
+                   asea.area_id,
+                   asea.allot_id
+	          from AXX_STEP_EQUIP_ALLOT asea
+	         inner join axx_line_equip ale1 on ale1.equip_id = asea.start_equip
+	         inner join axx_line_equip ale2 on ale2.equip_id = asea.end_equip
+	         where asea.delete_flag = 0
+	           and asea.cable_id = #{cable_id}
+	           and asea.relay_id = #{relay_id}
+	           <if test="allot_id != null and allot_id != ''">
+	           <![CDATA[ 
+	           and asea.allot_id <> #{allot_id}
+	           ]]>
+	           </if>) T
+	    <![CDATA[      
+	 WHERE (t.start_order <= #{new_start_order} and t.end_order >= #{new_start_order})
+	    or (t.start_order <= #{new_end_order} and t.end_order >= #{new_end_order})
+	    or (t.start_order >= #{new_start_order} and t.end_order <= #{new_end_order}))t1 
+	    on le.cable_id=t1.cable_id and le.relay_id =t1.relay_id
+	  join axx_step_tour_equip e on le.equip_id=e.equip_id and e.area_id = t1.area_id 
+	  where le."ORDER">= t1.start_order and le."ORDER" <= t1.end_order and e.area_id =#{areaId}
+	   ]]>
+	   
+	</select>
+	
+	<select id="judgeCircle" resultType="string" parameterType="map">
+	<![CDATA[
+		select p.param_value
+		  from (select case
+		                 when c.fiber_grade = 1 then
+		                  'asteptour'
+		                 when c.fiber_grade = 2 then
+		                  'twodrysteptour'
+		               end as TRUNKGRADE
+		          from axx_t_cable c
+		         where c.cable_id = #{cable_id}) c
+		  join AXX_T_PARAM p on c.TRUNKGRADE = p.param_name
+		 where p.area_id = #{areaId}
+	]]>
+	</select>
+	
+	<select id="selOrderByEquipID" resultType="String" parameterType="String">
+		select "ORDER" from axx_line_equip where equip_id=#{equip_Id}
+	</select>
+	
+	<insert id="insertEquipAllot" parameterType="map">
+	  insert into axx_step_equip_allot
+	  (allot_id,
+	   start_equip,
+	   end_equip,
+	   inspect_id,
+	   cable_id,
+	   relay_id,
+	   create_time,
+	   creator,
+	   area_id,
+	   circle_id,
+	   steppart_name)
+	  values
+	  (TB_CODE_SEQUENCE.NEXTVAL,
+	   #{start_equip},
+	   #{end_equip},
+	   #{inspect_id},
+	   #{cable_id},
+	   #{relay_id},
+	    sysdate,
+	   #{creator},
+	   #{areaId},
+	   #{circle_id},
+	   #{steppart_name}
+	   )	
+	</insert>
+	
+	<update id="upIsPartByMap" parameterType="map">
+	<![CDATA[
+	update axx_step_tour_equip line set line.is_part = 1 where line.equip_id in
+       (select le.equip_id from (select l."ORDER" start_order,l1."ORDER" end_order,
+       a.cable_id,a.relay_id,a.area_id from AXX_STEP_EQUIP_ALLOT a
+      inner join axx_line_equip l on a.start_equip = l.equip_id 
+      and l.cable_id = a.cable_id and l.relay_id = a.relay_id
+      inner join axx_line_equip l1 on a.end_equip = l1.equip_id
+      and l1.cable_id = a.cable_id and l1.relay_id = a.relay_id
+      where a.cable_id = #{cable_id} and a.relay_id = #{relay_id}
+      and a.start_equip = #{start_equip} and a.end_equip = #{end_equip}) t
+         inner join axx_line_equip le on le.cable_id = t.cable_id
+                                     and le.relay_id = t.relay_id
+         inner join axx_step_tour_equip e on le.equip_id = e.equip_id and t.area_id=e.area_id
+         where t.start_order <= le."ORDER" and le."ORDER" <= t.end_order
+         and e.is_lose = 0  and e.is_del = 0 and e.area_id =#{areaId})
+	]]>
+	</update>
+	
+	<select id="stepPartEquip" parameterType="String" resultType="map">
+
+		select aste.equip_id,
+		aste.longitude,
+		aste.latitude,
+		aste.equip_code,
+       	aste.description,
+		aste.equip_type,
+		ale."ORDER",
+		aste.cable_id,
+		aste.relay_id,
+		aste.is_equip,
+		aste.is_part
+		from AXX_STEP_TOUR_EQUIP aste
+		inner join AXX_LINE_EQUIP ale on aste.EQUIP_ID = ale.EQUIP_ID
+		where aste.IS_DEL = 0
+		and aste.is_lose = 0
+		and aste.RELAY_ID = #{relay_id}
+		and aste.area_id  = #{areaId}
+		order by ale."ORDER" asc
+
+	</select>
+	
+	<select id="judgeCircleByAllotID" resultType="string" parameterType="map">
+	<![CDATA[
+	 select p.param_value
+  		from (select case
+                 when c.fiber_grade = 1 then
+                  'asteptour'
+                 when c.fiber_grade = 2 then
+                  'twodrysteptour'
+               end as TRUNKGRADE
+          from axx_t_cable c
+         where c.cable_id =
+               (select cable_id from axx_step_equip_allot where allot_id = #{allot_id})) c
+	  join AXX_T_PARAM p on c.TRUNKGRADE = p.param_name
+	 where p.area_id = #{areaId}
+
+	]]>
+	</select>
+	
+	<select id="selCRByAllotID" parameterType="String" resultType="map">
+	 select a.allot_id,a.start_equip, a.end_equip,a.steppart_name,a.circle_id,
+       a.cable_id,c.cable_name,a.relay_id,r.relay_name,tbs.staff_name,a.inspect_id,tbs.staff_id
+	  from axx_step_equip_allot a
+	 inner join axx_t_cable c on a.cable_id = c.cable_id
+	 inner join axx_t_relay r on a.relay_id = r.relay_id
+	 left join tb_base_staff tbs on tbs.staff_id=a.inspect_id
+	 where a.allot_id =#{allot_id}
+	</select>
+	
+	<select id="upSelEquip" parameterType="map" resultType="map">
+	<![CDATA[
+	select * from (select e.equip_id,
+               e.longitude,
+               e.latitude,
+               e.equip_code,
+               e.description,
+               e.equip_type,
+               ale."ORDER",
+               e.cable_id,
+               e.relay_id,
+               e.is_equip,
+               e.is_part
+          from axx_line_equip ale
+          join (select a.start_equip,
+                      l1."ORDER" start_order,
+                      a.end_equip,
+                      l2."ORDER" end_order,
+                      a.relay_id,
+                      a.area_id
+                 from axx_step_equip_allot a
+                 JOIN AXX_LINE_EQUIP l1 on l1.equip_id = a.start_equip
+                 join AXX_LINE_EQUIP l2 on l2.equip_id = a.end_equip
+                where a.allot_id = #{allot_id}) t1 on ale.relay_id =
+                                                      t1.relay_id
+          join axx_step_tour_equip e on e.relay_id = ale.relay_id
+                                    and ale.equip_id = e.equip_id
+                                    and t1.area_id = e.area_id
+         where t1.start_order <= ale."ORDER"
+           and t1.end_order >= ale."ORDER"
+           and e.is_lose = 0
+           and e.is_del = 0
+           and e.area_id = #{areaId}
+        union
+        select aste.equip_id,
+               aste.longitude,
+               aste.latitude,
+               aste.equip_code,
+               aste.description,
+               aste.equip_type,
+               ale."ORDER",
+               aste.cable_id,
+               aste.relay_id,
+               aste.is_equip,
+               aste.is_part
+          from AXX_STEP_TOUR_EQUIP aste
+          join axx_step_equip_allot a on a.relay_id = aste.relay_id
+                                     and a.allot_id = #{allot_id}
+          join AXX_LINE_EQUIP ale on a.relay_id = ale.relay_id
+                                 and aste.EQUIP_ID = ale.EQUIP_ID
+         where aste.IS_DEL = 0
+           and aste.is_lose = 0
+           and aste.is_part = 0
+           and aste.area_id = #{areaId}) mp
+ 	order by mp."ORDER" asc
+	]]>
+	</select>
+	
+	<update id="upIsPartByAllotID" parameterType="map">
+	  update axx_step_tour_equip lea set lea.is_part = 0  where lea.equip_id in
+       (select e.equip_id
+          from axx_line_equip ale
+         inner join (select a.start_equip,
+                                   l1."ORDER" start_order,
+                                   a.end_equip,
+                                   l2."ORDER" end_order,
+                                   a.relay_id,
+                                   a.area_id
+                              from axx_step_equip_allot a
+                             INNER JOIN AXX_LINE_EQUIP l1 on l1.equip_id =a.start_equip
+                             inner join AXX_LINE_EQUIP l2 on l2.equip_id =a.end_equip
+                             where a.allot_id = #{allot_id}) t1 on ale.relay_id = t1.relay_id
+         inner join axx_step_tour_equip e on ale.equip_id = e.equip_id and t1.area_id = e.area_id
+         <![CDATA[
+         where t1.start_order <= ale."ORDER"
+           and t1.end_order >= ale."ORDER"
+           and e.area_id=#{areaId}
+             ]]>  
+           and e.is_lose = 0
+           and e.is_del = 0)	
+	</update>
+	
+	<update id="upStepAllotByAllotID" parameterType="map">
+		update axx_step_equip_allot set 
+		  start_equip=#{start_equip},
+		  end_equip= #{end_equip},
+		  inspect_id= #{inspect_id},
+		  cable_id= #{cable_id},
+		  relay_id= #{relay_id},
+		  update_time=sysdate, 
+		  updator= #{updator},
+		  circle_id= #{circle_id},
+		  steppart_name=#{steppart_name}
+		where  allot_id=#{allot_id}
+	</update>
+	
+	<update id="delStepPart" parameterType="String">
+		update axx_step_equip_allot a set a.delete_flag=1  where allot_id=#{allot_id}
+	</update>
+	
+	<!-- 将删除步巡段的点给备份到历史表中 -->
+	<insert id="intoHisDelAllot" parameterType="map">
+		insert into axx_step_task_equip_history
+		select e.*,sysdate,#{user_id} from axx_step_task_equip e  where allot_id = #{allot_id}
+	</insert>
+	
+	<!-- 将删除步巡段的点删除掉-->
+	<delete id="delHisDelAllot" parameterType="map">
+	    delete from axx_step_task_equip e  where allot_id = #{allot_id}
+	</delete>
+	
+	<!-- 查询设施点序列 -->
+	<select id="getStepEquipSeq" resultType="int">
+		select SEQ_STEP_TOUR_EQUIP.NEXTVAL from DUAL
+	</select>
+	
+	 <!-- 	查询所有设施点 -->
+	<select id="queryStepEquipList" parameterType="map" resultType="map">
+		select 
+		aste.equip_type,
+		aste.owner_tel,
+		aste.updator,
+		aste.description,
+		aste.equip_code,
+		aste.creator,
+		to_char(aste.create_date,'yyyy-mm-dd hh24:mi:ss') create_date, 
+		aste.equip_address,
+		aste.equip_id,
+		aste.latitude,
+		aste.protecter,
+		aste.owner_name,
+		aste.protect_tel,
+		aste.longitude,
+		aste.is_lose,
+		aste.depth,
+		a.name area_name,
+		decode(aste.is_equip,1,'是','否') IS_EQUIPDES,
+		ale.cable_id, 
+		ale.relay_id,
+		atc.cable_name,
+		atr.relay_name,
+		p.equip_type_name
+  from axx_step_tour_equip aste
+ inner join axx_line_equip ale
+    on aste.equip_id = ale.equip_id
+ inner join axx_t_cable atc
+ 	on ale.cable_id=atc.cable_id
+ inner join axx_t_relay atr
+ 	on ale.relay_id=atr.relay_id,
+ (select distinct equip_type_id, equip_type_name
+          from axx_equip_danger_param) p,area a
+ where aste.equip_type = p.equip_type_id
+ and aste.area_id = a.area_id
+ <if test="cable_id !=null and cable_id !=''">
+ 	and ale.cable_id=#{cable_id} 
+ </if>
+ <if test="relay_id !=null and relay_id !=''">
+ 	and ale.relay_id=#{relay_id} 
+ </if>
+ <if test="equip_id !=null and equip_id !=''">
+ 	and aste.equip_id=#{equip_id} 
+ </if>
+ <if test="longitude != null and longitude != ''"> 
+    and aste.longitude = #{longitude}
+</if>
+<if test="latitude != null and latitude != ''"> 
+    and aste.latitude = #{latitude}
+</if>
+<if test="longitude_gps != null and longitude_gps != ''"> 
+    and aste.longitudegps = #{longitude_gps}
+</if>
+<if test="latitude_gps != null and latitude_gps != ''"> 
+    and aste.latitudegps = #{latitude_gps}
+</if>
+    order by ale."ORDER"
+	</select>
+	
+	<!--  新增设施点 -->
+	  <insert id="addStepEquip" parameterType="map">
+	 	insert into AXX_STEP_TOUR_EQUIP( 
+	 		equip_id,
+ 			equip_code,
+ 			equip_address, 
+ 			cable_id,
+ 			relay_id,
+ 			description, 
+ 			longitude,
+ 			latitude,
+ 			equip_type,
+ 			owner_name,
+ 			owner_tel,
+ 			protecter,
+ 			protect_tel,
+ 			creator,
+ 			create_date,
+ 			updator,
+ 			update_date,
+ 			is_equip, 
+ 			<if test="depth != null and depth != ''"> 
+	    		depth,
+			</if>
+ 		 	<if test="longitude_gps != null and longitude_gps != ''"> 
+	    		longitudegps,
+				latitudegps,
+				coordinate_type,
+			</if>
+ 		 	area_id
+ 		) values(
+      		#{equip_id},
+ 			#{equip_code}, 
+ 			#{equip_address}, 
+ 			#{cable_id},
+ 			#{relay_id},
+ 			#{description}, 
+ 			#{longitude},
+ 			#{latitude},
+ 			#{equip_type},
+ 			#{owner_name},
+ 			#{owner_tel},
+ 			#{protecter},
+ 			#{protect_tel},
+ 			#{creator},
+ 			sysdate, 
+ 			#{updator},
+ 			sysdate,
+ 			#{is_equip}, 
+ 			<if test="depth != null and depth != ''"> 
+	    		#{depth},
+			</if> 
+ 			<if test="longitude_gps != null and longitude_gps != ''"> 
+   				#{longitude_gps},
+				#{latitude_gps},
+				#{coordinate_type},
+			</if>
+ 			#{area_id}
+		)
+	 </insert>
+	 
+	 <!-- 新增设施点顺序-->
+ 	<insert id="insertEquipOrder" parameterType="map" >
+	 INSERT INTO AXX_LINE_EQUIP(EQUIP_ID,CABLE_ID,RELAY_ID,"ORDER") VALUES(#{equip_id},#{cable_id},#{relay_id},#{order})
+	</insert>
+	 
+	<!-- 更新巡线点顺序-->
+	<update id="updateEquipOrder" parameterType="map">
+		UPDATE 
+			AXX_LINE_EQUIP
+		SET
+		    "ORDER" = #{order}
+		WHERE
+			EQUIP_ID = #{equip_id}
+			AND CABLE_ID = #{cable_id}
+			AND RELAY_ID = #{relay_id}
+	</update>
+	
+	<!-- 查询设施类型-->
+	<select id="queryEquipType" parameterType="map" resultType="map">
+		SELECT 
+			DISTINCT EQUIP_TYPE_ID, 
+			EQUIP_TYPE_NAME
+		FROM 
+			AXX_EQUIP_DANGER_PARAM
+        WHERE 1=1
+        <if test="equip_type_id != null and equip_type_id != ''"> 
+		    AND EQUIP_TYPE_ID = #{equip_type_id}
+		</if>
+		<if test="equip_type_name != null and equip_type_name != ''"> 
+		    AND EQUIP_TYPE_NAME = #{equip_type_name}
+		</if>
+	</select>
+	
+	<!-- 修改步巡段-->
+	<update id="updateStepPart" parameterType="map">
+		UPDATE
+			AXX_STEP_EQUIP_ALLOT 
+		SET
+			<if test="start_equip != null and start_equip != ''"> 
+			    START_EQUIP = #{start_equip}
+			</if>
+			<if test="end_equip != null and end_equip != ''"> 
+			    END_EQUIP = #{end_equip}
+			</if>
+		WHERE
+			CABLE_ID = #{cable_id}
+			AND RELAY_ID = #{relay_id}
+	</update>
+	
+</mapper>

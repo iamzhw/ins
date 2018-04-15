@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.CityCheckTownReportDao">
+
+		
+<select id="query" parameterType="map" resultType="map">
+
+
+select a.area_id,
+A.NAME,
+        nvl(modelA.num, 0)num1,
+       nvl(modelA.num2, 0)num2,
+       '暂无数据' num3,
+       '暂无数据' num4,
+       nvl(modelD.num3, 0)num5,
+       nvl(modelD.num4, 0)num6, 
+       nvl(modelD.num5, 0)num7,
+       nvl(modelD.num6, 0)num8,
+       '暂无数据' num9,
+       '暂无数据' num10,
+       '暂无数据' num11,
+       '暂无数据' num12,
+       nvl(modelB.num13, 0)num13,
+      nvl(modelB.num14, 0)num14,
+       '暂无数据' num15,
+       '暂无数据' num16,
+       '暂无数据' n1
+  from area a
+  left join (select count(tcr.port_id) num,
+                    count(case
+                            when tcr.ischeckok = 1 and
+                                 (tcr.descript like '%光设施无标签或标签手写%' or
+                                 tcr.descript like '%子框无标签或标签手写%' or
+                                 tcr.descript like '%光路无标签或标签手写%') then
+                             1
+                          end) num2,
+                    tcr.area_id
+               from tb_cablecheck_record tcr, tb_base_staff_role tbsr
+              where tcr.create_staff = tbsr.staff_id(+)
+                and tbsr.role_id = 266
+                and tcr.create_staff!= 15339
+                 and tcr.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(tcr.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+           <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and tcr.area_id = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>  
+              group by tcr.area_id) modelA
+    on a.area_id = modelA.area_id
+    
+    
+         left join (select COUNT(TASK.TASK_ID) NUM13,
+       COUNT(CASE
+               WHEN TASK.IS_NEED_ZG = 1 THEN
+                TASK.TASK_ID
+             END) NUM14,
+       TASK.AREA_ID
+  from tb_cablecheck_task task, tb_base_staff_role tbsr
+ where task.inspector = tbsr.staff_id(+)
+   and tbsr.role_id = 266 and task.inspector !=15339
+   and task.task_type = 6
+    and TASK.CREATE_TIME &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(TASK.CREATE_TIME) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+   <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and TASK.AREA_ID  = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>  
+   GROUP BY TASK.AREA_ID) modelB
+    on a.area_id = modelB.area_id
+LEFT JOIN 
+ (select count(case
+                       when n1 = 1 then
+                        1
+                     end) NUM3,
+               count(case
+                       when n2 = 1 then
+                        1
+                     end) NUM4,
+               count(case
+                       when n3 = 1 then
+                        1
+                     end) NUM5,
+               count(case
+                       when n4 = 1 then
+                        1
+                     end) NUM6,
+               C.parent_area_id
+          from (select case
+                         when modelB.num1 &gt;=1  then
+                          0
+                         else
+                          1
+                       end as n1,
+                       case
+                         when modelB.num2 &gt;=1 then
+                          0
+                         else
+                          1
+                       end as n2,
+                       case
+                         when modelB.num3 &gt;=1 then
+                          0
+                         else
+                          1
+                       end as n3,
+                       case
+                         when modelB.num4 &gt;=1 then
+                          0
+                         else
+                          1
+                       end as n4,
+                       a.area_id,
+                       A.PARENT_AREA_ID
+                  from TOWN a
+                  left join (select count(case
+                                           when e.isdeal = 0 and e.res_type_id = 703 then
+                                            r.record_id
+                                         end) num1,
+                                   count(case
+                                           when e.isdeal = 1 and e.res_type_id = 703 then
+                                            r.record_id
+                                         end) num2,
+                                   count(case
+                                           when e.isdeal = 0 and e.res_type_id = 411 then
+                                            r.record_id
+                                         end) num3,
+                                   count(case
+                                           when e.isdeal = 1 and e.res_type_id = 411 then
+                                            r.record_id
+                                         end) num4,
+                                   e.area_id
+                              from tb_cablecheck_record r
+                              left join tb_cablecheck_equipment e
+                                on r.eqp_id = e.equipment_id
+                              left join tb_base_staff ss
+                                on ss.staff_id = r.create_staff
+                             where r.port_id is null
+                               and r.record_type in (0, 1, 3,4,5)
+                               and r.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                               and trunc(r.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                               
+                               and e.area_id in
+                                   (select t.area_id from town t)
+                               and ss.son_area_id in
+                                   (select c. area_id from city c)
+                               <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and e.parent_area_id = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if> 
+                             group by e.area_id
+                             ) modelB
+                    ON A.AREA_ID = modelB.area_id
+                    where 1= 1  
+                    <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and a.parent_area_id = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if> ) c
+         group by c.parent_area_id) modelD ON
+ A.AREA_ID = modelD.parent_area_id
+ where a.area_level = 3
+       <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and a.area_id = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>  
+        
+
+</select>
+	
+<select id="selArea" resultType="map">
+		select area_id,name from area
+		where area_level=3
+</select>
+
+
+<select id="queryDown" parameterType="map" resultType="map">
+
+select a.area_id,
+A.NAME,
+        nvl(modelA.num, 0)num1,
+       nvl(modelA.num2, 0)num2,
+       '暂无数据' num3,
+       '暂无数据' num4,
+       nvl(modelD.num3, 0)num5,
+       nvl(modelD.num4, 0)num6, 
+       nvl(modelD.num5, 0)num7,
+       nvl(modelD.num6, 0)num8,
+       '暂无数据' num9,
+       '暂无数据' num10,
+       '暂无数据' num11,
+       '暂无数据' num12,
+       nvl(modelB.num13, 0)num13,
+      nvl(modelB.num14, 0)num14,
+       '暂无数据' num15,
+       '暂无数据' num16,
+       '暂无数据' n1
+  from area a
+  left join (select count(tcr.port_id) num,
+                    count(case
+                            when tcr.ischeckok = 1 and
+                                 (tcr.descript like '%光设施无标签或标签手写%' or
+                                 tcr.descript like '%子框无标签或标签手写%' or
+                                 tcr.descript like '%光路无标签或标签手写%') then
+                             1
+                          end) num2,
+                    tcr.area_id
+               from tb_cablecheck_record tcr, tb_base_staff_role tbsr
+              where tcr.create_staff = tbsr.staff_id(+)
+                and tbsr.role_id = 266
+                and tcr.create_staff!= 15339
+                 and tcr.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(tcr.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+           <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and tcr.area_id = #{AREA_ID} 
+		    	]]>
+		  </if>  
+              group by tcr.area_id) modelA
+    on a.area_id = modelA.area_id
+    
+         left join (select COUNT(TASK.TASK_ID) NUM13,
+       COUNT(CASE
+               WHEN TASK.IS_NEED_ZG = 1 THEN
+                TASK.TASK_ID
+             END) NUM14,
+       TASK.AREA_ID
+  from tb_cablecheck_task task, tb_base_staff_role tbsr
+ where task.inspector = tbsr.staff_id(+)
+   and tbsr.role_id = 266 and task.inspector !=15339
+   and task.task_type = 6
+    and TASK.CREATE_TIME &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+           and trunc(TASK.CREATE_TIME) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+   <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and TASK.AREA_ID  = #{AREA_ID} 
+		    	]]>
+		  </if>  
+   GROUP BY TASK.AREA_ID) modelB
+    on a.area_id = modelB.area_id
+LEFT JOIN 
+ (select count(case
+                       when n1 = 1 then
+                        1
+                     end) NUM3,
+               count(case
+                       when n2 = 1 then
+                        1
+                     end) NUM4,
+               count(case
+                       when n3 = 1 then
+                        1
+                     end) NUM5,
+               count(case
+                       when n4 = 1 then
+                        1
+                     end) NUM6,
+               C.parent_area_id
+          from (select case
+                         when modelB.num1 &gt;=1  then
+                          0
+                         else
+                          1
+                       end as n1,
+                       case
+                         when modelB.num2 &gt;=1 then
+                          0
+                         else
+                          1
+                       end as n2,
+                       case
+                         when modelB.num3 &gt;=1 then
+                          0
+                         else
+                          1
+                       end as n3,
+                       case
+                         when modelB.num4 &gt;=1 then
+                          0
+                         else
+                          1
+                       end as n4,
+                       a.area_id,
+                       A.PARENT_AREA_ID
+                  from TOWN a
+                  left join (select count(case
+                                           when e.isdeal = 0 and e.res_type_id = 703 then
+                                            r.record_id
+                                         end) num1,
+                                   count(case
+                                           when e.isdeal = 1 and e.res_type_id = 703 then
+                                            r.record_id
+                                         end) num2,
+                                   count(case
+                                           when e.isdeal = 0 and e.res_type_id = 411 then
+                                            r.record_id
+                                         end) num3,
+                                   count(case
+                                           when e.isdeal = 1 and e.res_type_id = 411 then
+                                            r.record_id
+                                         end) num4,
+                                   e.area_id
+                              from tb_cablecheck_record r
+                              left join tb_cablecheck_equipment e
+                                on r.eqp_id = e.equipment_id
+                              left join tb_base_staff ss
+                                on ss.staff_id = r.create_staff
+                             where r.port_id is null
+                               and r.record_type in (0, 1, 3,4,5)
+                               and r.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                               and trunc(r.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                               
+                               and e.area_id in
+                                   (select t.area_id from town t)
+                               and ss.son_area_id in
+                                   (select c. area_id from city c)
+                               <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and e.parent_area_id = #{AREA_ID} 
+		    	]]>
+		  </if> 
+                             group by e.area_id
+                             ) modelB
+                    ON A.AREA_ID = modelB.area_id
+                    where 1= 1  
+                    <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and a.parent_area_id = #{AREA_ID} 
+		    	]]>
+		  </if> ) c
+         group by c.parent_area_id) modelD ON
+ A.AREA_ID = modelD.parent_area_id
+ where a.area_level = 3
+       <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and a.area_id = #{AREA_ID} 
+		    	]]>
+		  </if>  
+        
+
+</select>
+
+<select id="getSonAreaList" parameterType="String" resultType="map">
+		SELECT * FROM city c WHERE c.PARENT_AREA_ID = #{AREA_ID} ORDER BY c.AREA_ID
+	</select>
+             
+</mapper>

@@ -1,0 +1,916 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableInspection.dao.CableDao">
+	<select id="query" parameterType="util.page.Query" resultType="map">
+	<!--  
+    SELECT til.LINE_ID AS CABLE_ID,
+    til.LINE_ID AS CABLEID,
+    til.LINE_NO AS CABLE_NO,
+    l.line_name parent_cable_name,
+    l.line_no parent_cable_no,
+    til.line_type,
+    til.LINE_NAME AS
+    CABLE_NAME,
+    TBS.STAFF_NAME as CREATE_STAFF,
+    TO_CHAR(TIL.CREATE_TIME,
+    'yyyy-MM-dd hh24:mi:ss') AS CREATE_TIME,
+    A.NAME AS AREA_NAME,
+    B.NAME AS
+    SON_AREA_NAME,
+    til.parent_line_id
+    FROM TB_INS_LINE TIL,
+    TB_BASE_STAFF TBS,
+    AREA A,
+    AREA B,
+    TB_INS_LINE L
+    WHERE TIL.CREATE_STAFF = TBS.STAFF_ID
+    AND A.AREA_ID(+)=TIL.AREA_ID
+    and TIL.line_type in (0,1,4)
+    AND B.AREA_ID(+)=TIL.SON_AREA_ID
+    and l.line_id(+)=til.parent_line_id
+		<if test="queryParams.CABLE_NO != null and queryParams.CABLE_NO != ''">  
+            <![CDATA[
+	    	AND TIL.LINE_NO like '%'||#{queryParams.CABLE_NO}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.CABLE_NAME != null and queryParams.CABLE_NAME != ''">  
+            <![CDATA[
+	    	AND TIL.LINE_NAME like  '%'||#{queryParams.CABLE_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND TIL.AREA_ID =#{queryParams.AREA_ID} 
+	    	]]>
+		</if>
+		<if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND TIL.SON_AREA_ID =#{queryParams.SON_AREA_ID} 
+	    	]]>
+		</if>
+		<if test="queryParams.PARENT_CABLE_NAME != null and queryParams.PARENT_CABLE_NAME != ''">  
+            <![CDATA[
+	    	AND l.LINE_NAME like '%'||#{queryParams.PARENT_CABLE_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.PARENT_CABLE_NO != null and queryParams.PARENT_CABLE_NO != ''">  
+            <![CDATA[
+	    	AND l.LINE_NO like '%'||#{queryParams.PARENT_CABLE_NO}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.LINE_TYPE != null and queryParams.LINE_TYPE != ''">  
+            <![CDATA[
+	    	and til.LINE_TYPE = #{queryParams.LINE_TYPE}
+	    	]]>
+		</if>
+		order by TIL.CREATE_TIME DESC
+		-->
+		
+select t.line_id as CABLE_ID,
+       t.line_id as CABLEID,
+       t.line_no as CABLE_NO,
+       t.line_name as CABLE_NAME,
+       t.parent_line_id,
+       t.parent_line_name as parent_cable_name,
+       t.parent_line_no as parent_cable_no,
+       t.line_type,
+       t.staff_name CREATE_STAFF,
+       t.CREATE_TIME,
+       t.AREA_NAME,
+       t.SON_AREA_NAME,
+       decode(t.line_type,1,'-',decode(t.line_level, 1, '中继光缆', 2, '主干光缆', 3,'其他','-')) as line_level,
+       decode(t.line_type,1,'-',round(nvl(t.leng, 0) / 1000, 2)) as dis,
+       nvl(max(decode(t.point_type, '关键点', sum1)), 0) as key_point,
+       nvl(max(decode(t.point_type, '非关键点', sum1)), 0) as nor_point
+  from (select distinct l.line_id,
+                        l.line_no,
+                        l.line_name,
+                        l.line_level,
+                        l.length leng,
+                        decode(p.point_type, -1, '非关键点', '关键点') point_type,
+                        count(p.point_id) over(partition by p.point_type, l.line_id) sum1,
+                        l2.line_no parent_line_no,
+                        l2.line_name parent_line_name,
+                        l2.line_id parent_line_id,
+                        l.line_type,
+                        s.staff_name,
+                        TO_CHAR(l.create_time, 'yyyy-MM-dd hh24:mi:ss') as CREATE_TIME,
+                        a1.name AREA_NAME,
+                        a2.name SON_AREA_NAME
+          from tb_ins_line l
+          left join tb_ins_line_point lp
+            on lp.line_id = l.line_id
+          left join tb_ins_point p
+            on p.point_id = lp.point_id
+          left join area a1
+            on a1.area_id = l.area_id
+          left join area a2
+            on a2.area_id = l.son_area_id
+          left join tb_ins_line l2
+            on l2.line_id = l.parent_line_id
+          join tb_base_staff s
+            on s.staff_id = l.create_staff
+         where l.line_type in (0, 1, 4) 
+         <if test="queryParams.CABLE_NO != null and queryParams.CABLE_NO != ''">  
+            <![CDATA[
+	    	AND l.LINE_NO like '%'||#{queryParams.CABLE_NO}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.CABLE_NAME != null and queryParams.CABLE_NAME != ''">  
+            <![CDATA[
+	    	AND l.LINE_NAME like  '%'||#{queryParams.CABLE_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND l.AREA_ID =#{queryParams.AREA_ID} 
+	    	]]>
+		</if>
+		<if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND l.SON_AREA_ID =#{queryParams.SON_AREA_ID} 
+	    	]]>
+		</if>
+		<if test="queryParams.PARENT_CABLE_NAME != null and queryParams.PARENT_CABLE_NAME != ''">  
+            <![CDATA[
+	    	AND l2.LINE_NAME like '%'||#{queryParams.PARENT_CABLE_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.PARENT_CABLE_NO != null and queryParams.PARENT_CABLE_NO != ''">  
+            <![CDATA[
+	    	AND l2.LINE_NO like '%'||#{queryParams.PARENT_CABLE_NO}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.LINE_TYPE != null and queryParams.LINE_TYPE != ''">  
+            <![CDATA[
+	    	and l.LINE_TYPE = #{queryParams.LINE_TYPE}
+	    	]]>
+		</if>
+         ) t
+ group by t.line_id,
+          t.line_no,
+          t.line_name,
+          t.parent_line_id,
+          t.parent_line_name,
+          t.parent_line_no,
+          t.line_level,
+          t.leng,
+          t.line_type,
+          t.staff_name,
+          t.CREATE_TIME,
+          t.line_level,
+          t.AREA_NAME,
+          t.SON_AREA_NAME
+          order by t.CREATE_TIME DESC
+	</select>
+	<select id="queryEquipmentType" resultType="map">
+		SELECT
+		equipment_type_id,equipment_type_name FROM TB_INS_EQUIPMENT_TYPE
+	</select>
+	<select id="queryDept" resultType="map" parameterType="map">
+		select tide.DEPT_NAME,tide.DEPT_NO from tb_ins_dept tide where 1=1
+		<if test="AREA_ID!=null and AREA_ID !=''">
+   			<![CDATA[
+   				and  tide.AREA_ID = #{AREA_ID}
+   			]]>
+		</if>
+		<if test="SON_AREA_ID!=null and SON_AREA_ID !=''">
+   			<![CDATA[
+   				 and tide.SON_AREA_ID = #{SON_AREA_ID}
+   			]]>
+		</if>
+	</select>
+	
+	
+	
+	
+	<select id="queryPoints" resultType="map" parameterType="map">
+		select t.*,tid.dept_no,
+		s.staff_name STAFF_NAME,
+		to_char(t.create_time,'yyyy-mm-dd hh24:mi:ss') create_time2,
+		case (select count(0) from tb_ins_line_point lp where lp.point_id = t.point_id)
+     		when 0 then 0
+     		else 1 end is_used 
+		from tb_ins_point t
+		left join tb_base_staff s on s.staff_id=t.create_staff
+		left join tb_ins_point_dept tipd on t.point_no=tipd.point_no
+		left join tb_ins_dept tid  on tid.dept_no=tipd.dept_no
+		where 1 = 1
+		and t.point_type &lt;&gt; -1
+		and t.point_level !=6
+		and t.point_level !=9
+		<if test="eqpType != null and eqpType != ''">  
+            <![CDATA[
+	    	AND t.EQP_TYPE_ID = #{eqpType} 
+	    	]]>
+		</if>
+		<if test="eqpName != null and eqpName != ''">  
+            <![CDATA[
+	    	AND t.POINT_NAME like '%'||#{eqpName}||'%' 
+	    	]]>
+		</if>
+		<if test="roadName != null and roadName != ''">  
+            <![CDATA[
+	    	AND t.point_name like '%'||#{roadName}||'%' 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.AREA_ID =#{AREA_ID} 
+	    	]]>
+		</if>
+		
+		<if test="dept_no != null and dept_no != ''">  
+            <![CDATA[
+	    	AND tipd.dept_no = #{dept_no} 
+	    	]]>
+		</if>
+		
+		<if
+			test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.SON_AREA_ID =#{SON_AREA_ID} 
+	    	]]>
+		</if>
+		<if test="isUsed != null and isUsed == '0'">
+			<![CDATA[
+			and exists (select 0 from tb_ins_line_point lp where lp.point_id = t.point_id)
+			]]>
+		</if>	
+		<if test="isUsed != null and isUsed == '1'">
+			<![CDATA[
+			and not exists (select 0 from tb_ins_line_point lp where lp.point_id = t.point_id)
+			]]>
+		</if>
+		<if test="area_type != null and area_type != ''">
+			<![CDATA[
+			AND t.area_type =#{area_type} 
+			]]>
+		</if>
+	</select>
+	
+	<select id="queryPointsByPlayKind" resultType="map" parameterType="map">
+		select t.*,tid.dept_no,
+		s.staff_name STAFF_NAME,
+		to_char(t.create_time,'yyyy-mm-dd hh24:mi:ss') create_time2,
+		case (select count(0) from tb_ins_line_point lp where lp.point_id = t.point_id)
+     		when 0 then 0
+     		else 1 end is_used 
+		from tb_ins_point t
+		left join tb_base_staff s on s.staff_id=t.create_staff
+		left join tb_ins_point_dept tipd on t.point_no=tipd.point_no
+		left join tb_ins_dept tid  on tid.dept_no=tipd.dept_no
+		where 1 = 1
+		and t.point_type &lt;&gt; -1
+		<if test="eqpType != null and eqpType != ''">  
+            <![CDATA[
+	    	AND t.EQP_TYPE_ID = #{eqpType} 
+	    	]]>
+		</if>
+		<if test="eqpName != null and eqpName != ''">  
+            <![CDATA[
+	    	AND t.POINT_NAME like '%'||#{eqpName}||'%' 
+	    	]]>
+		</if>
+		<if test="roadName != null and roadName != ''">  
+            <![CDATA[
+	    	AND t.point_name like '%'||#{roadName}||'%' 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.AREA_ID =#{AREA_ID} 
+	    	]]>
+		</if>
+		
+		<if test="dept_no != null and dept_no != ''">  
+            <![CDATA[
+	    	AND tipd.dept_no = #{dept_no} 
+	    	]]>
+		</if>
+		<if test="point_levels != null and point_levels != ''">  
+            <![CDATA[
+	    	AND t.point_level in (${point_levels})
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.SON_AREA_ID =#{SON_AREA_ID} 
+	    	]]>
+		</if>
+		<if test="isUsed != null and isUsed == '0'">
+			<![CDATA[
+			and exists (select 0 from tb_ins_line_point lp where lp.point_id = t.point_id)
+			]]>
+		</if>	
+		<if test="isUsed != null and isUsed == '1'">
+			<![CDATA[
+			and not exists (select 0 from tb_ins_line_point lp where lp.point_id = t.point_id)
+			]]>
+		</if>
+		<if test="area_type != null and area_type != ''">
+			<![CDATA[
+			AND t.area_type =#{area_type} 
+			]]>
+		</if>
+	</select>
+
+	<select id="queryPointId" parameterType="map" resultType="map">
+		select
+		nvl(tip.point_id,0) as countsum from tb_ins_point tip where
+		tip.longitude=#{LONGITUDE} and tip.latitude=#{LATITUDE} and tip.point_type>0
+	</select>
+
+	<insert id="insertPoint" parameterType="map">
+		<selectKey resultType="int" order="BEFORE" keyProperty="point_id">
+			SELECT seq_tb_ins_point.nextval as point_id FROM DUAL
+      </selectKey>
+		insert into tb_ins_point
+		(point_id,point_type, longitude, latitude,
+		create_time, create_staff)
+		values
+		(#{point_id},-1, #{LONGITUDE},
+		#{LATITUDE}, sysdate, #{CREATE_STAFF})
+	</insert>
+
+	<insert id="insertLine" parameterType="map">
+		<selectKey resultType="int" order="BEFORE" keyProperty="line_id">
+			SELECT seq_tb_ins_line.nextval as line_id FROM DUAL
+      </selectKey>
+		insert into tb_ins_line
+		(line_id, line_no, line_name, create_time,
+		create_staff,area_id,son_area_id, line_level,line_type,parent_line_id
+		<if test="DEPT_NO != null and DEPT_NO == ''">
+			,dept_no
+		</if>	
+		)
+		values
+		(#{line_id}, #{LINE_NO},
+		#{LINE_NAME},
+		sysdate,
+		#{CREATE_STAFF},#{AREA_ID},#{SON_AREA_ID}, #{LINE_LEVEL}, #{LINE_TYPE},#{PARENT_LINE_ID}
+		<if test="DEPT_NO != null and DEPT_NO == ''">
+			,#{DEPT_NO}
+		</if>	
+		)
+	</insert>
+
+	<insert id="inserLinePoint" parameterType="map">
+		insert into
+		tb_ins_line_point
+		(line_id, point_id,POINT_SEQ,MODIFY_STAFF,modify_time)
+		values
+		(#{LINE_ID}, #{POINT_ID},#{POINT_SEQ},#{MODIFY_STAFF},sysdate)
+	</insert>
+	<select id="queryAreaName" resultType="String">
+		SELECT decode(a.name, '集团公司', '南京', a.name) as area_name
+   from  area a
+ where  a.area_id=#{areaId}
+	</select>
+	<delete id="deletePoint" parameterType="int">
+		delete tb_ins_point where
+		point_id=#{pointId} and point_type=-1
+	</delete>
+
+	<select id="selectLinePoint" resultType="map" parameterType="int">
+		select
+		lp.line_id,lp.point_id from tb_ins_line_point lp,tb_ins_line l where lp.line_Id=l.line_Id and  (l.line_id=#{lineId} or l.parent_line_id = #{lineId}) order by lp.point_seq asc
+	</select>
+	<delete id="deleteCable" parameterType="int">
+		delete tb_ins_line where
+		line_id=#{lineId}
+		or parent_line_id = #{lineId}
+	</delete>
+	
+	<delete id="deleteLineCable" parameterType="int">
+		delete tb_ins_line where
+		line_id=#{lineId}
+	</delete>
+	
+	<select id="getLineTypeById" parameterType="int" resultType="map">
+		select l.line_type,l.line_level from tb_ins_line l where l.line_id=#{lineId}
+	</select>
+	
+	<select id="getSonLineCount" parameterType="string" resultType="int">
+		select count(l2.line_id) flag from tb_ins_line l 
+		join tb_ins_line l2 on l2.parent_line_id=l.line_id
+		where l.line_type=4 and l.line_id=#{lineId}
+	</select>
+
+	<delete id="deleteLinePoint" parameterType="int">
+		delete
+		tb_ins_line_point where line_id in 
+		(
+			select l.line_id from tb_ins_line l where  (l.line_id=#{lineId} or l.parent_line_id = #{lineId})
+		)
+	</delete>
+
+	<select id="getCable" resultType="map" parameterType="map">
+		select til.* ,
+			case  (select count(*) from TB_INS_PLAN_DETAIL tipd where tipd.inspect_object_id=til.line_id )
+				when 0 then 0
+				else 1
+			end isExistPlan 
+		from tb_ins_line til WHERE til.line_type in (0,1)
+		<if test="LINE_ID!=null and LINE_ID !=''">
+   			<![CDATA[
+   				 and til.line_id = #{LINE_ID}
+   			]]>
+		</if>
+		<if test="AREA_ID!=null and AREA_ID !=''">
+   			<![CDATA[
+   				 and til.AREA_ID = #{AREA_ID}
+   			]]>
+		</if>
+		<if test="SON_AREA_ID!=null and SON_AREA_ID !=''">
+   			<![CDATA[
+   				 and til.SON_AREA_ID = #{SON_AREA_ID}
+   			]]>
+		</if>
+		<if test="cable_name!=null and cable_name !=''">
+   				 and til.line_name like '%'||#{cable_name}||'%'
+		</if>
+		<if test="cable_no!=null and cable_no !=''">
+   				 and til.line_no like '%'||#{cable_no}||'%'
+		</if>
+		<if test="dept_no!=null and dept_no !=''">
+   				 and til.dept_no like '%'||#{dept_no}||'%'
+		</if>
+	</select>
+	<select id="queryPoint" parameterType="map" resultType="map">
+		select
+		tip.longitude, tip.latitude,tip.point_name,tip.point_type
+		from tb_ins_line_point tilp, tb_ins_point
+		tip
+		where tilp.point_id = tip.point_id
+		and tilp.line_id = #{LINE_ID}
+		order by tilp.point_seq asc
+	</select>
+	
+	
+	<select id="queryPlanPoint" parameterType="map" resultType="map">
+		select
+    tip.longitude, tip.latitude
+    from tb_ins_line_point tilp, tb_ins_point
+    tip
+    where tilp.point_id = tip.point_id
+    and tilp.line_id in (select til.line_id
+		from tb_ins_line til
+		where til.line_id = #{LINE_ID})
+    order by tilp.point_seq asc
+	</select>
+	<select id="getPointsInCable" parameterType="map" resultType="map">
+		select
+		tip.longitude, tip.latitude,tip.point_no,tip.point_name,tip.point_type,tip.point_id,tilp.point_seq
+		from tb_ins_line_point tilp, tb_ins_point
+		tip
+		where tilp.point_id = tip.point_id
+		and tilp.line_id = #{LINE_ID}
+		order by tilp.point_seq asc
+	</select>
+	<update id="updateLine" parameterType="map">
+		update tb_ins_line l set 
+		l.line_no= #{LINE_NO},
+		l.line_name= #{LINE_NAME},
+		l.modify_time= sysdate,
+		l.modify_staff= #{CREATE_STAFF},
+		l.line_level= #{LINE_LEVEL}
+		where l.line_id=#{LINE_ID}
+	</update>
+	<delete id="deletePointInLine" parameterType="map">
+		delete from  tb_ins_line_point lp where lp.line_id = #{LINE_ID}
+	</delete>
+		<select id="queryNotDistributePoints" resultType="map" parameterType="map">
+		SELECT DISTINCT temp.* from(
+		select t.*,
+		s.staff_name STAFF_NAME,
+		to_char(t.create_time,'yyyy-mm-dd hh24:mi:ss') create_time2,
+		case (select count(0) from tb_ins_line_point lp where lp.point_id = t.point_id)
+     		when 0 then 0
+     		else 1 end is_used 
+		from tb_ins_point t
+		left join tb_base_staff s on s.staff_id=t.create_staff
+		left join tb_ins_point_dept pd on t.point_id=pd.point_id
+    	left join tb_ins_dept d on d.dept_id=pd.dept_id
+		where 1 = 1
+		and t.point_type=4
+		and not exists (select 0 from tb_ins_line_point lp where lp.point_id = t.point_id )
+		<if test="eqpType != null and eqpType != ''">  
+            <![CDATA[
+	    	AND t.EQP_TYPE_ID = #{eqpType} 
+	    	]]>
+		</if>
+		<if test="dept_no != null and dept_no != ''">  
+            <![CDATA[
+		 	AND D.DEPT_NO=#{dept_no}
+	    	]]>
+		</if>
+
+		<if test="eqpName != null and eqpName != ''">  
+            <![CDATA[
+	    	AND t.POINT_NAME like '%'||#{eqpName}||'%' 
+	    	]]>
+		</if>
+		<if test="roadName != null and roadName != ''">  
+            <![CDATA[
+	    	AND t.point_name like '%'||#{roadName}||'%' 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.AREA_ID =#{AREA_ID} 
+	    	]]>
+		</if>
+		<if
+			test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.SON_AREA_ID =#{SON_AREA_ID} 
+	    	]]>
+		</if>
+		<if test="LINE_ID != null and LINE_ID != ''">  
+			union
+			select t.*,
+			    s.staff_name STAFF_NAME,
+			    to_char(t.create_time,'yyyy-mm-dd hh24:mi:ss') create_time2,
+			    case (select count(0) from tb_ins_line_point lp where lp.point_id = t.point_id)
+			         when 0 then 0
+			         else 1 end is_used 
+			    from tb_ins_point t
+			    left join tb_base_staff s on s.staff_id=t.create_staff
+			     join tb_ins_line_point lp on  lp.point_id = t.point_id
+			    join tb_ins_line l on lp.line_id=l.line_id
+			    where 1 = 1
+			    and t.point_type =4
+			<if test="eqpType != null and eqpType != ''">  
+	            <![CDATA[
+		    	AND t.EQP_TYPE_ID = #{eqpType} 
+		    	]]>
+			</if>
+			<if test="eqpName != null and eqpName != ''">  
+	            <![CDATA[
+		    	AND t.POINT_NAME like '%'||#{eqpName}||'%' 
+		    	]]>
+			</if>
+			<if test="roadName != null and roadName != ''">  
+	            <![CDATA[
+		    	AND t.point_name like '%'||#{roadName}||'%' 
+		    	]]>
+			</if>
+			<if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    	AND t.AREA_ID =#{AREA_ID} 
+		    	]]>
+			</if>
+			<if
+				test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+	            <![CDATA[
+		    	AND t.SON_AREA_ID =#{SON_AREA_ID} 
+		    	]]>
+			</if>
+			<if test="LINE_ID != null and LINE_ID != ''">  
+	            <![CDATA[
+		    	AND (LP.LINE_ID =#{LINE_ID}  or l.PARENT_LINE_ID =#{LINE_ID})
+		    	]]>
+			</if>
+		</if>
+		)temp
+	</select>
+	
+	<select id="queryPointsByZone" parameterType="map" resultType="map">
+		SELECT M.LEVEL_NAME LEVELS,
+       		   ET.EQUIPMENT_TYPE_NAME TYPE,
+       		   P.POINT_NAME NAME,
+       		   P.LONGITUDE,
+       		   P.LATITUDE
+        FROM TB_INS_POINT P,TB_INS_MNT M,TB_INS_EQUIPMENT_TYPE ET
+		WHERE M.LEVEL_ID=P.POINT_LEVEL AND P.EQP_TYPE_ID=ET.EQUIPMENT_TYPE_ID
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND p.AREA_ID =#{AREA_ID} 
+	    	]]>
+		</if>
+		<if
+			test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND p.SON_AREA_ID =#{SON_AREA_ID} 
+	    	]]>
+		</if>
+	</select>
+	
+	<select id="getAllAreaLines" resultType="map">
+		SELECT L.PARENT_LINE_ID,L.LINE_ID,L.AREA_ID,L.SON_AREA_ID,L.LINE_LEVEL,L.CREATE_STAFF
+		FROM TB_INS_LINE L WHERE L.LINE_TYPE='2'
+	</select>
+	
+	<select id="getLinePointById" parameterType="string" resultType="map">
+		 SELECT PO.LONGITUDE,PO.LATITUDE FROM TB_INS_LINE L 
+	    JOIN TB_INS_LINE_POINT LP ON LP.LINE_ID=L.LINE_ID
+	    JOIN TB_INS_POINT PO ON PO.POINT_ID = LP.POINT_ID
+	    WHERE L.LINE_ID=#{LINE_ID}
+	    ORDER BY LP.POINT_SEQ
+	</select>
+	
+	<select id="getMaxPointSeq" parameterType="string" resultType="int">
+		select max(point_seq) point_seq from tb_ins_line_point lp where lp.line_id=#{LINE_ID}
+	</select>
+	
+	<select id="getPlanPoints" parameterType="string" resultType="map">
+		SELECT t.*,
+			    s.staff_name STAFF_NAME,
+			    to_char(t.create_time,'yyyy-mm-dd hh24:mi:ss') create_time2,
+			    case (select count(0) from tb_ins_line_point lp where lp.point_id = t.point_id)
+			         when 0 then 0
+			         else 1 end is_used 
+       FROM TB_INS_LINE_POINT LP
+			  join tb_ins_point t on  lp.point_id = t.point_id
+        left join tb_base_staff s on s.staff_id=t.create_staff
+      WHERE t.point_type=4
+      and LP.LINE_ID=#{LINE_ID}
+	</select>
+	
+	<select id="getAllZones" resultType="map">
+		SELECT L.LINE_ID,L.LINE_NO,L.LINE_NAME,L.CREATE_STAFF,L.AREA_ID,L.SON_AREA_ID,
+		L.PARENT_LINE_ID,L.DEPT_NO FROM TB_INS_LINE l
+        WHERE LINE_ID
+    	IN (SELECT A.PARENT_LINE_ID
+		FROM TB_INS_LINE A WHERE A.LINE_TYPE='2' GROUP BY A.PARENT_LINE_ID)
+		  <!--
+		SELECT L.LINE_ID,L.LINE_NO,L.LINE_NAME,L.CREATE_STAFF,L.AREA_ID,L.SON_AREA_ID,
+		L.PARENT_LINE_ID FROM TB_INS_LINE l
+        WHERE LINE_ID
+    	IN (SELECT A.PARENT_LINE_ID
+		FROM TB_INS_LINE A WHERE A.LINE_TYPE='2'  and a.son_area_id in (18,19) GROUP BY A.PARENT_LINE_ID)
+		-->
+	</select>
+	
+	<select id="getLineInfosByParentLine" parameterType="string" resultType="map">
+		SELECT P.PLAN_ID,L.LINE_ID,L.AREA_ID,L.SON_AREA_ID,L.LINE_LEVEL,L.CREATE_STAFF
+        FROM TB_INS_PLAN P 
+        JOIN TB_INS_PLAN_DETAIL PD ON PD.PLAN_ID=P.PLAN_ID
+        JOIN TB_INS_LINE L ON PD.INSPECT_OBJECT_ID=L.LINE_ID
+        WHERE L.LINE_TYPE='2' 
+        AND P.PLAN_END_TIME>SYSDATE  AND L.PARENT_LINE_ID=#{PARENT_LINE_ID}
+	</select>
+	
+	<select id="getcountByLevel" parameterType="map" resultType="int">
+		SELECT count(1)
+    	FROM TB_INS_LINE L WHERE L.LINE_TYPE='2' 
+    	and L.LINE_LEVEL=#{LINE_LEVEL} 
+    	and L.PARENT_LINE_ID=#{PARENT_LINE_ID}
+	</select>
+	
+	<select id="getSartEndTime" parameterType="map" resultType="map">
+		SELECT TO_CHAR(P.PLAN_START_TIME,'YYYY-MM-DD') PLAN_START_TIME,
+		TO_CHAR(P.PLAN_END_TIME,'YYYY-MM-DD') PLAN_END_TIME,
+    P.INSPECTOR_TYPE,
+    P.TASK_INSPECTOR,
+    P.TASK_CREATOR
+    FROM TB_INS_PLAN P 
+    JOIN TB_INS_PLAN_DETAIL PD ON PD.PLAN_ID=P.PLAN_ID
+    JOIN TB_INS_LINE L ON PD.INSPECT_OBJECT_ID=L.LINE_ID
+    WHERE L.PARENT_LINE_ID=#{PARENT_LINE_ID}
+    AND P.INSPECTOR_TYPE IS NOT NULL
+    AND P.TASK_INSPECTOR IS NOT NULL
+    AND P.TASK_CREATOR IS NOT NULL
+    AND P.PLAN_END_TIME>SYSDATE
+    GROUP BY P.PLAN_START_TIME,P.PLAN_END_TIME,
+     P.INSPECTOR_TYPE,
+    P.TASK_INSPECTOR,
+    P.TASK_CREATOR
+	</select>
+	
+	<update id="editModify" parameterType="map">
+		UPDATE TB_INS_PLAN P SET P.MODIFY_TIME=SYSDATE,P.MODIFY_STAFF=#{MODIFY_STAFF}
+		WHERE P.PLAN_ID=#{PLAN_ID}
+	</update>
+	
+	<delete id="deleteLinePointById" parameterType="map">
+		DELETE FROM TB_INS_LINE_POINT LP WHERE LP.LINE_ID=#{LINE_ID}
+	</delete>
+	
+	<update id="addDistance" parameterType="string">
+	UPDATE TB_INS_LINE L SET L.LENGTH=(
+	SELECT C.DISTANCE FROM (
+	SELECT LINE_ID,SUM(DIS) DISTANCE FROM(
+	SELECT LP.LINE_ID,LP.POINT_SEQ,
+	ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(P.LONGITUDE,P.LATITUDE,0),NULL,NULL),
+	MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(B.LONGITUDE,B.LATITUDE,0),NULL,NULL),1),2)
+	DIS
+	FROM TB_INS_POINT P
+	JOIN TB_INS_LINE_POINT LP ON LP.POINT_ID=P.POINT_ID
+	JOIN TB_INS_PLAN_DETAIL PD ON PD.INSPECT_OBJECT_ID=LP.LINE_ID
+	JOIN TB_INS_PLAN PP ON PP.PLAN_ID=PD.PLAN_ID
+	JOIN (
+	SELECT DISTINCT LP.LINE_ID,LP.POINT_SEQ-1 POINT_SEQ,P.LONGITUDE,P.LATITUDE
+	FROM TB_INS_POINT P
+	JOIN TB_INS_LINE_POINT LP ON LP.POINT_ID=P.POINT_ID
+	JOIN TB_INS_PLAN_DETAIL PD ON PD.INSPECT_OBJECT_ID=LP.LINE_ID
+	JOIN TB_INS_PLAN PP ON PP.PLAN_ID=PD.PLAN_ID
+	WHERE LP.LINE_ID=#{line_id}
+	ORDER BY LP.LINE_ID,POINT_SEQ
+	) B ON B.LINE_ID=LP.LINE_ID AND LP.POINT_SEQ=B.POINT_SEQ
+	WHERE LP.LINE_ID=#{line_id}
+	ORDER BY LP.LINE_ID,LP.POINT_SEQ
+	) GROUP BY LINE_ID
+	) C WHERE C.LINE_ID=#{line_id}
+	) WHERE L.LINE_ID=#{line_id}
+	</update>
+	
+	<select id="queryPointById" parameterType="string" resultType="map">
+		select distinct p.POINT_ID,
+       p.POINT_NO,
+       p.POINT_NAME,
+       p.POINT_TYPE,
+       et.EQUIPMENT_TYPE_NAME,
+       p.LONGITUDE,
+       p.LATITUDE,
+       a2.NAME                as SON_AREA,
+       p.SON_AREA_ID,
+       p.point_level,
+       MNT.LEVEL_NAME,
+       p.EQP_TYPE_ID,
+       p.area_type,
+       pd.dept_no,
+       pd.dept_name
+  from TB_INS_POINT          p,
+       TB_INS_POINT_TYPE     pt,
+       AREA                  a2,
+       TB_INS_EQUIPMENT_TYPE et,
+       tb_ins_mnt  MNT,
+       tb_ins_point_dept pd
+ where  p.POINT_TYPE = pt.POINT_TYPE_ID(+)
+   and p.SON_AREA_ID = a2.AREA_ID(+)
+   and p.EQP_TYPE_ID = et.EQUIPMENT_TYPE_ID(+)
+   AND P.POINT_LEVEL=MNT.LEVEL_ID(+)
+   and p.point_id=pd.point_id(+)
+   and p.point_id=#{point_id}
+	</select>
+	
+	<update id="editToNormalPoint" parameterType="string">
+		UPDATE TB_INS_POINT P SET P.POINT_LEVEL='',P.POINT_TYPE=-1,P.EQP_TYPE_ID='',P.AREA_TYPE='',P.ORIGIN_TYPE='' 
+		WHERE P.POINT_ID=#{point_id}
+	</update>
+	
+	<select id="getCableByName" parameterType="util.page.Query" resultType="map">
+	SELECT CC.CABLE_ID,CC.NO,CC.NAME FROM ${queryParams.jndi}.CBL_CABLE CC 
+	WHERE instr(CC.NAME ,#{queryParams.name})>0
+	AND CC.GRADE_ID=#{queryParams.GRADE_ID}
+	</select>
+	
+	<select id="exportCableByName" parameterType="map" resultType="map">
+	SELECT CC.CABLE_ID,CC.NO,CC.NAME FROM ${queryParams.jndi}.CBL_CABLE CC 
+	WHERE instr(CC.NAME ,#{name})>0
+	AND CC.GRADE_ID=#{GRADE_ID}
+	</select>
+	
+	<select id="checkCableExists" parameterType="map" resultType="boolean">
+	select deocode(count(1),0,false,true) from tb_ins_line l where l.line_no=#{NO}
+	</select>
+	
+	<select id="getEqpByCableId" parameterType="map" resultType="map">
+	SELECT distinct BE.BSE_EQP_ID,
+            BE.NAME,
+            BE.NO,
+            BE.AREA_ID
+    FROM ${jndi}.BSE_EQUIPMENT BE
+    join ${jndi}.BSE_EQP_FACE BEF on BEF.BSE_EQP_ID=BE.BSE_EQP_ID 
+    join ${jndi}.BSE_CHANNEL BC on bc.bse_sect_id=bef.bse_sect_id
+    join ${jndi}.BSE_CHANNEL_CBLSECT bcc on BCC.BSE_CHANNEL_ID=BC.BSE_CHANNEL_ID
+    join ${jndi}.CBL_CABLE_2_SECT ccs on ccs.cbl_sect_id=bcc.cbl_sect_id
+    join ${jndi}.CBL_CABLE CC on cc.cable_id=ccs.cable_id
+    where be.res_spec_id=508 and cc.cable_id=${cable_id}
+    order by BE.NO
+	</select>
+	
+	<select id="getCableSectionByCableId" parameterType="util.page.Query" resultType="map">
+		select cs.cbl_sect_id, cs.no, cs.name
+		  from ${queryParams.jndi}.cbl_cable cc
+		  join ${queryParams.jndi}.cbl_cable_2_sect c2s
+		    on c2s.cable_id = cc.cable_id
+		  join ${queryParams.jndi}.cbl_section cs
+		    on cs.cbl_sect_id = c2s.cbl_sect_id
+		 where cc.cable_id = #{queryParams.cable_id}
+	</select>
+	
+	<select id="getEqpByCblSectionId" parameterType="map" resultType="map">
+		select be.bse_eqp_id, be.name, be.no, be.area_id
+		  from ${jndi}.cbl_section cs
+		  join ${jndi}.bse_channel_cblsect bcc
+		    on bcc.cbl_sect_id = cs.cbl_sect_id
+		  join ${jndi}.bse_channel bc
+		    on bc.bse_channel_id = bcc.bse_channel_id
+		  join ${jndi}.bse_eqp_face bef
+		    on bef.bse_sect_id = bc.BSE_SECT_ID
+		  join ${jndi}.bse_equipment be
+		    on be.bse_eqp_id = bef.bse_eqp_id
+		 where cs.cbl_sect_id in( ${cbl_sect_id})
+		   and be.res_spec_id = 508
+	</select>
+	
+	<insert id="addWells" parameterType="map">
+	insert into TB_INS_POINT(POINT_ID, POINT_NO, POINT_NAME, POINT_TYPE, LONGITUDE, LATITUDE, CREATE_TIME, 
+			CREATE_STAFF, EQP_TYPE_ID, AREA_ID, SON_AREA_ID, CHECKED,ORIGIN_TYPE)
+	 select SEQ_TB_INS_POINT.NEXTVAL point_id,
+	 				#{NO} no,
+			 		#{NAME} name,
+			 		'4' type,
+			 		#{LONGITUDE} longitude,
+					#{LATITUDE} latitude,
+					sysdate create_time,
+					#{CREATE_STAFF} create_staff,
+					'1005' eqp_type_id,
+					#{AREA_ID} area_id,
+					#{SON_AREA_ID} son_area_id,
+					'1' checked,
+					'1' origin_type
+					 from dual
+		WHERE NOT EXISTS (SELECT 1 FROM TB_INS_POINT P WHERE P.POINT_NO=#{NO})
+		
+	<!--  
+		insert into TB_INS_POINT(POINT_ID, POINT_NO, POINT_NAME, POINT_TYPE, LONGITUDE, LATITUDE, CREATE_TIME, 
+			CREATE_STAFF, EQP_TYPE_ID, AREA_ID, SON_AREA_ID, CHECKED,ORIGIN_TYPE)
+		select SEQ_TB_INS_POINT.NEXTVAL,a.no,a.name,a.type,a.longitude,a.latitude,a.create_time,a.create_staff,a.eqp_type_id,a.area_id,a.son_area_id
+    ,a.checked,a.origin_type from (
+		<foreach collection="list" item="ITEM" separator="union" index="index">
+			 select #{ITEM.NO} no,
+			 		#{ITEM.NAME} name,
+			 		'4' type,
+			 		#{ITEM.LONGITUDE} longitude,
+					#{ITEM.LATITUDE} latitude,
+					sysdate create_time,
+					#{ITEM.CREATE_STAFF} create_staff,
+					'1005' eqp_type_id,
+					#{ITEM.AREA_ID} area_id,
+					#{ITEM.SON_AREA_ID} son_area_id,
+					'1' checked,
+					'1' origin_type
+					 from dual 
+		</foreach>
+		) a
+		WHERE NOT EXISTS (SELECT 1 FROM TB_INS_POINT P WHERE P.POINT_NO=A.NO)
+		-->
+	</insert>
+	
+	
+	<delete id="deleteWells">
+	DELETE FROM TB_INS_POINT P
+	WHERE NOT EXISTS (
+	SELECT 1 FROM TB_INS_LINE_POINT LP WHERE LP.POINT_ID=P.POINT_ID
+	) AND P.ORIGIN_TYPE=1
+	and p.eqp_type_id=1005
+	</delete>
+	
+	<select id="exportLinePoint" parameterType="string" resultType="map">
+	SELECT
+	ROWNUM,P.POINT_ID,P.POINT_NO,P.POINT_NAME,PT.POINT_TYPE_NAME,ET.EQUIPMENT_TYPE_NAME,LP.POINT_SEQ,L.LINE_ID,L.LINE_NO,L.LINE_NAME
+	FROM TB_INS_LINE_POINT LP
+	JOIN TB_INS_POINT P ON P.POINT_ID=LP.POINT_ID
+	JOIN TB_INS_LINE L ON L.LINE_ID=LP.LINE_ID
+	LEFT JOIN TB_INS_POINT_TYPE
+	PT ON PT.POINT_TYPE_ID=P.POINT_TYPE
+	LEFT JOIN TB_INS_EQUIPMENT_TYPE ET
+	ON ET.EQUIPMENT_TYPE_ID=P.EQP_TYPE_ID
+	WHERE LP.LINE_ID=#{line_id}
+	ORDER
+	BY LP.POINT_SEQ
+	</select>
+	
+	<insert id="editLinePoint" parameterType="map">
+	  INSERT INTO TB_INS_LINE_POINT
+  	  VALUES(#{line_id},#{point_id},#{point_seq},#{staff_id},sysdate)
+	</insert>
+	
+	<delete id="delLinePoint" parameterType="string">
+	  DELETE FROM TB_INS_LINE_POINT WHERE LINE_ID=#{line_id}
+	</delete>
+	
+	<select id="checkParentLine" parameterType="map" resultType="string">
+	select line_id from tb_ins_line l where l.line_type=4 and l.line_no=#{PARENT_LINE_NO}
+	</select>
+	
+	<select id="queryParentLine" parameterType="util.page.Query" resultType="map">
+	select l.line_id,l.line_no,l.line_name
+	from tb_ins_line l where l.line_type=4
+	<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">
+		and l.area_id= #{queryParams.AREA_ID}
+</if>
+	<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">
+		and l.son_area_id=#{queryParams.SON_AREA_ID}
+</if>
+<if test="queryParams.CABLE_NO != null and queryParams.CABLE_NO != ''">
+		and l.line_NO like '%'||#{queryParams.CABLE_NO}||'%'
+</if>
+<if test="queryParams.CABLE_NAME != null and queryParams.CABLE_NAME != ''">
+		and l.line_name like '%'||#{queryParams.CABLE_NAME}||'%'
+</if>
+	</select>
+	<update id="editParentLine" parameterType="map">
+		update tb_ins_line set parent_line_id=#{parent_line_id} where line_id=#{line_id}
+	</update>
+	
+	<select id="getAreaByLineId" parameterType="string" resultType="map">
+	select area_id,son_area_id from tb_ins_line where line_id=#{line_id}
+	</select>
+</mapper>

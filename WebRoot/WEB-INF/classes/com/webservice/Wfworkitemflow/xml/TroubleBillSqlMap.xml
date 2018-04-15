@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webservice.Wfworkitemflow.dao.TroubleBillDao">
+	<select id="getStaffId" parameterType="string" resultType="string">
+		select s.staff_id from tb_base_staff s where s.staff_no=#{no}
+	</select>
+	<select id="getAUDITOR" parameterType="string" resultType="string">
+		select b.auditor from tb_ins_bill b where b.bill_id=#{bill_id}
+	</select>
+</mapper>

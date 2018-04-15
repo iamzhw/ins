@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.CableStatementsDao">
+	
+<!-- 	光纤通道后向散射信号曲线检查表的填报人，填报时间等信息	 -->
+	<select id="BaseInfoOfReport203" resultType="map" parameterType="map">
+		select * from report0203 where 1=1  
+		<if test="city_name !=null and city_name !=''">
+			and CITYKEY = #{city_name} 
+		</if>
+		<if test="localId != null and localId != ''">
+			and CITYKEY = #{localId} 
+		</if>
+		<if test="yearPart != null and yearPart != ''">
+			and YEARPART = #{yearPart}
+		</if>
+	</select>
+	
+	
+	<select id="report203Query" parameterType="util.page.Query" resultType="map">
+		select distinct model.*
+  from (select rs.*,
+               ar.name,
+               atc.cable_name,
+               atr.relay_name,
+               atc.fiber_grade,
+               (case
+               <![CDATA[
+               	 when (oneNumber > 0 and oneNumber <= 0.3) then
+               ]]>
+                  '合格'
+                 else
+                  '不合格'
+               end) as IsheGe
+          from report0203sub rs
+         inner join AXX_T_CABLE_AREA atca
+            on rs.citykey = atca.area_id
+         inner join area ar
+            on atca.area_id = ar.area_id
+         inner join axx_t_cable atc
+            on rs.lineId = atc.cable_id
+         inner join axx_t_relay atr
+            on rs.relayid = atr.relay_id
+         where 1=1 
+    <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+		and rs.cityKey= #{queryParams.city_name}   
+    </if>
+    <if test="queryParams.yearPart != null and queryParams.yearPart != ''">
+     	and yearpart = #{queryParams.yearPart}
+    </if>
+    <if test="queryParams.rowIndex != null and queryParams.rowIndex != ''">
+    	and rs.ROWINDEX = #{queryParams.rowIndex} 
+    </if>
+    <if test="queryParams.cable_name != null and queryParams.cable_name != ''">
+     	and rs.lineId =#{queryParams.cable_name} 
+    </if> 
+    <if test="queryParams.relay_name != null and queryParams.relay_name != ''">
+     	and rs.relayId = #{queryParams.relay_name}
+    </if> 
+         order by rowindex
+         ) model
+	</select>
+	
+	
+	<select id="report207Query" parameterType="util.page.Query" resultType="map">
+		select a.r_id           AS mainId,
+       a.citykey,
+       a.yearPart,
+       a.lineId,
+       l.cable_name,
+       a.relayId,
+       r.relay_name,
+       b.r_id           as subId,
+       to_char(b.testDate,'yyyy-mm-dd') testDate,
+       b.tester,
+       b.testlineLength,
+       b.testMeter,
+       b.testnumber,
+	   to_char(b.editDate,'yyyy-mm-dd') editDate,
+       b.testStartEnd,
+       b.weather,
+       b.Resistance,
+       b.ResistanceSet,
+       b.mome,
+       r.fiberlengthatnow
+  FROM (SELECT r_id, citykey, yearPart, lineId, relayId
+          FROM Report0207
+         where 1=1  
+	     <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+			and cityKey= #{queryParams.city_name}  
+	     </if>
+	     <if test="queryParams.yearPart != null and queryParams.yearPart != ''">
+	     	and yearpart = #{queryParams.yearPart} 
+	     </if>
+         <if test="queryParams.cable_name != null and queryParams.cable_name != ''">
+         	and lineId =#{queryParams.cable_name} 
+         </if> 
+         <if test="queryParams.relay_name != null and queryParams.relay_name != ''">
+         	and relayId = #{queryParams.relay_name}
+         </if> 
+         ) a
+  LEFT JOIN Report0207Sub b
+    ON a.r_Id = b.reportId
+  LEFT JOIN axx_t_cable l
+    ON a.lineId = l.cable_id
+  LEFT JOIN axx_t_relay r
+    ON a.relayId = r.Relay_Id
+    where 1=1 
+    <if test="queryParams.r_id != null and queryParams.r_id != ''">
+		and b.r_id = #{queryParams.r_id}
+	</if>
+	<if test="queryParams.testdate != null and queryParams.testdate != ''">
+		and to_char(b.testdate,'yyyy-mm-dd') = #{queryParams.testdate}
+	</if>
+	    
+	</select>
+
+
+	<select id="get207collection" parameterType="util.page.Query" resultType="map">
+select test.*, (total - part1) part2,
+case 
+	when total!=0 then round(part1*100/total,2)
+    else 0
+	end 
+as yield
+  from (SELECT MAINID,
+               CABLE_NAME,
+               RELAY_NAME,
+               TESTDATE,
+               TESTER,
+               lineid,
+               relayid,
+               COUNT(RESISTANCESET) total,
+               (SELECT COUNT(RESISTANCESET)
+                  FROM Report0207Sub s
+                 inner join Report0207 r
+                    on s.reportid = r.r_id
+                 WHERE 1 = 1
+                 <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+					and cityKey= #{queryParams.city_name}  
+			     </if>
+			     <if test="queryParams.yearPart != null and queryParams.yearPart != ''">
+			     	and yearpart = #{queryParams.yearPart} 
+			     </if>
+		         <if test="queryParams.cable_name != null and queryParams.cable_name != ''">
+		         	and lineId =#{queryParams.cable_name} 
+		         </if> 
+		         <if test="queryParams.relay_name != null and queryParams.relay_name != ''">
+		         	and relayId = #{queryParams.relay_name}
+		         </if> 
+                   AND s.REPORTID = MAINID
+                   AND s.RESISTANCESET > 0) part1
+          FROM (select a.r_id AS mainId,
+          			   a.lineid,
+                       a.relayid,
+                       l.cable_name,
+                       r.relay_name,
+                       to_char(b.testDate, 'yyyy-mm-dd') testDate,
+                       b.tester,
+                       b.ResistanceSet
+                  FROM (SELECT r_id, citykey, yearPart, lineId, relayId
+                          FROM Report0207
+                         where 1 = 1
+                         <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+							and cityKey= #{queryParams.city_name}  
+					     </if>
+					     <if test="queryParams.yearPart != null and queryParams.yearPart != ''">
+					     	and yearpart = #{queryParams.yearPart} 
+					     </if>
+				         <if test="queryParams.cable_name != null and queryParams.cable_name != ''">
+				         	and lineId =#{queryParams.cable_name} 
+				         </if> 
+				         <if test="queryParams.relay_name != null and queryParams.relay_name != ''">
+				         	and relayId = #{queryParams.relay_name}
+				         </if> 
+       			  ) a
+                  LEFT JOIN Report0207Sub b
+                    ON a.r_Id = b.reportId
+                  LEFT JOIN axx_t_cable l
+                    ON a.lineId = l.cable_id
+                  LEFT JOIN axx_t_relay r
+                    ON a.relayId = r.Relay_Id) MODEL
+         GROUP BY MAINID, CABLE_NAME, RELAY_NAME, TESTDATE, TESTER,lineid,relayid) test
+	</select>
+	
+	<select id="report204Query" parameterType="util.page.Query" resultType="map">
+		 select 
+		 	   Report0204Sub.r_Id,
+		 	   unit,
+               editoruid,
+               tel,
+               testTool,
+               editdate,
+               atc.cable_name,
+               atr.relay_name,
+               Report0204Sub.lineid,
+               Report0204Sub.relayid,
+               to_char(TestDate,'yyyy-mm-dd') testdate,
+               weather,
+               poleNum,
+               resistance
+          from Report0204
+         inner join Report0204Sub
+            on Report0204Sub.citykey = Report0204.citykey
+           and Report0204.yearpart = Report0204Sub.yearpart
+         inner join axx_t_cable atc
+            on atc.cable_id = Report0204Sub.lineID
+         inner join axx_t_relay atr
+            on atr.relay_id=Report0204sub.Relayid
+            where 1=1 
+         <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+			and Report0204Sub.cityKey= #{queryParams.city_name}  
+	     </if>
+	     <if test="queryParams.yearPart != null and queryParams.yearPart != ''">
+	     	and Report0204Sub.yearpart = #{queryParams.yearPart} 
+	     </if>
+         <if test="queryParams.cable_name != null and queryParams.cable_name != ''">
+         	and lineId =#{queryParams.cable_name} 
+         </if> 
+         <if test="queryParams.relay_name != null and queryParams.relay_name != ''">
+         	and relayId = #{queryParams.relay_name}
+         </if> 
+         <if test="queryParams.r_id !=null and queryParams.r_id != ''">
+         	and Report0204Sub.r_id = #{queryParams.r_id}
+         </if>
+	</select>
+	
+	
+	<select id="get204collection" parameterType="util.page.Query" resultType="map">
+		select model.*,
+       total - part1 part2,
+       case
+         when total != 0 then
+          round(part1 * 100 / total, 2)
+         else
+          0
+       end as yield
+  from (select unit,
+               count(resistance) total,
+               (select count(resistance)
+                  from Report0204 r
+                 inner join Report0204Sub rs
+                    on rs.citykey = r.citykey
+                   and r.yearpart = rs.yearpart
+                   where 1=1 
+                  	 <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+						and rs.cityKey= #{queryParams.city_name}  
+				     </if>
+				     <if test="queryParams.yearPart != null and queryParams.yearPart != ''">
+				     	and rs.yearpart = #{queryParams.yearPart} 
+				     </if>
+			         <if test="queryParams.cable_name != null and queryParams.cable_name != ''">
+			         	and lineId =#{queryParams.cable_name} 
+			         </if> 
+			         <if test="queryParams.relay_name != null and queryParams.relay_name != ''">
+			         	and relayId = #{queryParams.relay_name}
+			         </if>
+                   and r.unit = unit
+                   and rs.resistance>0) part1
+          from Report0204
+         inner join Report0204Sub
+            on Report0204Sub.citykey = Report0204.citykey
+           and Report0204.yearpart = Report0204Sub.yearpart
+         where 1 = 1
+           <if test="queryParams.city_name !=null and queryParams.city_name !=''">
+			and Report0204Sub.cityKey= #{queryParams.city_name}  
+	     </if>
+	     <if test="queryParams.yearPart != null and queryParams.yearPart != ''">
+	     	and Report0204Sub.yearpart = #{queryParams.yearPart} 
+	     </if>
+         <if test="queryParams.cable_name != null and queryParams.cable_name != ''">
+         	and lineId =#{queryParams.cable_name} 
+         </if> 
+         <if test="queryParams.relay_name != null and queryParams.relay_name != ''">
+         	and relayId = #{queryParams.relay_name}
+         </if>
+         group by unit) model
+	</select>
+	
+	
+	<delete id="delReport203" parameterType="map">
+		delete from report0203sub where 1=1
+		<if test="cityKey != null and cityKey != ''">
+			and CITYKEY = #{cityKey} 
+		</if>
+		<if test="rowIndex != null and rowIndex != ''">
+			and ROWINDEX = #{rowIndex} 
+		</if>
+		<if test="yearPart != null and yearPart != ''">
+			and YEARPART = #{yearPart}
+		</if>
+	</delete>
+	
+	<delete id="delReport204" parameterType="map">
+		delete from Report0204Sub where 1=1
+		<if test="r_id != null and r_id != ''">
+			and R_ID = #{r_id}
+		</if>
+	</delete>
+	
+	
+	<delete id="delReport207" parameterType="map">
+		delete from Report0207Sub where 1=1
+		<if test="subId != null and subId != ''">
+			and R_ID = #{subId}
+		</if>
+	</delete>
+	
+	
+	<update id="updReport203Info" parameterType="map">
+		update report0203sub set XINNUMBER = #{xinNumber},ONENUMBER = #{oneNumber},JUNNUMBER = #{junNumber}
+		where 1=1 
+		<if test="cityKey != null and cityKey != ''">
+			and CITYKEY= #{cityKey}
+		</if>
+		<if test="rowIndex != null and rowIndex !=''">
+		    and ROWINDEX = #{rowIndex}
+		</if>
+		<if test="yearPart != null and yearPart !=''">
+			and YEARPART = #{yearPart}
+		</if>
+	</update>
+	
+	<update id="updReport204Info" parameterType="map">
+		update 	report0204sub set TESTDATE = to_date(#{testDate},'yyyy/mm/dd'),WEATHER=#{weather},POLENUM=#{poleNum},RESISTANCE=#{resistance}
+		where R_ID = #{r_id}
+	</update>
+	
+	<update id="updReport207Info" parameterType="map">
+		update report0207sub set RESISTANCE = #{resistance},RESISTANCESET=#{resistanceset},TESTDATE=to_date(#{testdate},'yyyy/mm/dd'),
+				TESTMETER=#{testmeter},	WEATHER=#{weather},TESTLINELENGTH=#{testlinelength},
+				TESTNUMBER=#{testnumber},TESTSTARTEND=#{teststartend},EDITDATE=to_date(#{editdate},'yyyy/mm/dd'),MOME=#{mome}
+		where R_ID=#{r_id}	 
+	</update>
+	
+<!-- 	中继段光纤通道后向散射信号曲线检查记录统计表数据源（一线，二线干线合格率） -->
+	<select id="getFYPbyPart" parameterType="map" resultType="map">
+select model.*, total - part1 part2, round(part1 * 100 / total, 2) per
+  from (select nvl(model01.part1,0) part1 , model02.*
+          from (select atc.fiber_grade, count(atc.cable_id) part1,area.name
+                  from report0203sub rs
+                 inner join axx_t_cable atc
+                    on rs.lineid = atc.cable_id
+                 inner join area 
+                    on area.area_id=rs.citykey
+                    <![CDATA[
+                 		where (rs.onenumber > 0 and rs.onenumber <= 0.3)   
+                    ]]>
+                   and atc.fiber_grade in ('1', '2')
+                   <if test="city_name != null and city_name != ''">
+                   		and rs.citykey = #{city_name}		
+                   </if>
+                   <if test="yearPart != null and yearPart != ''">
+                   		and rs.yearpart = #{yearPart}
+                   </if>
+                 group by atc.fiber_grade,area.name) model01
+         right join (select atc.fiber_grade, count(atc.cable_id) total,area.name
+                      from report0203sub rs
+                     inner join axx_t_cable atc
+                        on rs.lineid = atc.cable_id
+                     inner join area 
+                        on area.area_id=rs.citykey
+                     where atc.fiber_grade in ('1', '2')
+                   <if test="city_name != null and city_name != ''">
+                		and rs.citykey = #{city_name}		
+               	   </if>
+                   <if test="yearPart != null and yearPart != ''">
+                 		and rs.yearpart = #{yearPart}
+                   </if>
+                     group by atc.fiber_grade,area.name) model02
+            on model01.fiber_grade = model02.fiber_grade) model
+	</select>
+	
+	<insert id="addReport203" parameterType="map">
+		insert into report0203sub(citykey,yearpart,rowindex
+		<if test="cable_name != null and cable_name != ''">
+			,lineid 
+		</if>
+		<if test="relay_name != null and relay_name != ''">
+			,relayid 
+		</if>
+		<if test="xinnumber != null and xinnumber != ''">
+			,xinnumber 
+		</if>
+		<if test="onenumber != null and onenumber !=''">
+			,onenumber 
+		</if>
+		<if test="junnumber != null and junnumber !=''">
+			,junnumber 
+		</if>
+		) values( #{city_name},#{yearpart},
+       case 
+          when ((select max(rowindex) from report0203sub where citykey =#{city_name} and yearPart=#{yearpart}) is null ) then 1 
+          else (select max(rowindex) from report0203sub where citykey =#{city_name} and yearPart=#{yearpart}) +1
+       end
+          <if test="cable_name != null and cable_name != ''">
+			, #{cable_name}
+		</if>
+		<if test="relay_name != null and relay_name != ''">
+			, #{relay_name}
+		</if>
+		<if test="xinnumber != null and xinnumber != ''">
+			, #{xinnumber}
+		</if>
+		<if test="onenumber != null and onenumber !=''">
+			, #{onenumber}
+		</if>
+		<if test="junnumber != null and junnumber != ''">
+			, #{junnumber}
+		</if>
+       )
+	</insert>
+	
+	<insert id="addReport204" parameterType="map">
+		insert into report0204sub(
+			R_ID,
+			CITYKEY,
+			YEARPART,
+			ROWINDEX,
+			TESTDATE,
+			LINEID,
+			RELAYID
+			<if test="weather !=null and weather !=''">
+				,WEATHER	
+			</if>
+			<if test="polenum !=null and polenum !=''">
+				,POLENUM
+			</if>
+			<if test="resistance !=null and resistance !=''">
+				,RESISTANCE
+			</if>
+		) values(
+			seq_report204sub_rid.nextVal,
+			#{city_name},
+			#{yearpart},
+			case 
+	          when ((select max(rowindex) from report0204sub where citykey =#{city_name} and yearPart=#{yearpart}) is null ) then 1 
+	          else (select max(rowindex) from report0204sub where citykey =#{city_name} and yearPart=#{yearpart}) +1
+	        end ,
+	        to_date(#{testdate},'yyyy/mm/dd'),
+	        #{cable_name},
+	        #{relay_name}
+	        <if test="weather !=null and weather !=''">
+				,#{weather}	
+			</if>
+			<if test="polenum !=null and polenum !=''">
+				,#{polenum}
+			</if>
+			<if test="resistance !=null and resistance !=''">
+				,#{resistance}
+			</if>
+		)
+	</insert>
+</mapper>

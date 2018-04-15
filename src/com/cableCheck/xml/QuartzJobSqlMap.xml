@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.QuartzJobDao">
+
+	<select id="createOssChangePorts" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call p_sync_oss_change_port(#{jndi,mode=IN,jdbcType=VARCHAR}, #{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	
+	<select id="createOssChangePortsSZ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_SZ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsNJ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_NJ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsZJ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_ZJ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsWX" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_WX(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsNT" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_NT(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsYZ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_YZ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsLYG" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_LYG(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsXZ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_XZ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsHA" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_HA(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsYC" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_YC(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsCZ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_CZ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsTZ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_TZ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="createOssChangePortsSQ" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call P_SYNC_OSS_CHANGE_PORT_SQ(#{startDate,mode=IN,jdbcType=VARCHAR}, #{endDate,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	 
+	</select>
+	<select id="queryOssChangePorts" resultType="map">
+		select 
+			DZID,
+			DZBM,
+			SBID,
+			SBBM,
+			SBLX,
+			SBMC,
+			BDSJ,
+			GLBH,
+			to_char(GDJGSJ,'yyyy-mm-dd hh24:mi:ss') GDJGSJ,
+			JCSJ,
+			to_char(GXSJ,'yyyy-mm-dd hh24:mi:ss') GXSJ,
+			AREAID,
+			SFPF,
+			PZGH,
+			SGGH,
+			GQGH,
+			XZ,
+			GDBH,
+			GLMC,
+			INSTALL_DZBM,
+			INSTALL_SBBM,
+			H,
+			INSTALL_SBID,
+			RO_TYPE_ID
+ 		from tmp_gwzs_change_port_install
+	</select>
+	
+	<select id="queryEquipments" parameterType="util.page.Query" resultType="map">
+	 select e.equipment_code,e.equipment_id  from tb_cablecheck_equipment e where e.parent_area_id = #{queryParams.areaid}
+	</select>
+	<update id="insertDtsj"  parameterType="map">
+	insert into tb_cablecheck_dtsj( 
+			ID,
+			DZID,
+			DZBM,
+			SBID,
+			SBBM,
+			SBLX,
+			SBMC,
+			BDSJ,
+			GLBH,
+			GDJGSJ,
+			GXSJ,
+			AREAID,
+			SFPF,
+			PZGH,
+			SGGH,
+			GQGH,
+			XZ,
+			GDBH,
+			GLMC,
+			INSTALL_DZBM,
+			INSTALL_SBBM,
+			H,
+			INSTALL_SBID,
+			RO_TYPE_ID
+			)
+			values(
+			SEQ_CABLECHECK_DTSJ_ID.nextval,
+			#{DZID,jdbcType=NUMERIC},
+			#{DZBM,jdbcType=VARCHAR},
+			#{SBID,jdbcType=NUMERIC},
+			#{SBBM,jdbcType=VARCHAR},
+			#{SBLX,jdbcType=NUMERIC},
+			#{SBMC,jdbcType=VARCHAR},
+			to_date(#{BDSJ,jdbcType=VARCHAR},'yyyy-MM-dd'),
+			#{GLBH,jdbcType=VARCHAR},
+			to_date(#{GDJGSJ,jdbcType=VARCHAR},'yyyy-MM-dd hh24:mi:ss'),
+			to_date(#{GXSJ,jdbcType=VARCHAR},'yyyy-MM-dd hh24:mi:ss'),
+			#{AREAID,jdbcType=NUMERIC},
+			#{SFPF,jdbcType=NUMERIC},
+			#{PZGH,jdbcType=VARCHAR},
+			#{SGGH,jdbcType=VARCHAR},
+			#{GQGH,jdbcType=VARCHAR},
+			#{XZ,jdbcType=NUMERIC},
+			#{GDBH,jdbcType=VARCHAR},
+			#{GLMC,jdbcType=VARCHAR},
+			#{INSTALL_DZBM,jdbcType=VARCHAR},
+			#{INSTALL_SBBM,jdbcType=VARCHAR},
+			#{H},
+			#{INSTALL_SBID,jdbcType=NUMERIC},
+			#{RO_TYPE_ID,jdbcType=NUMERIC}
+			)
+	</update>
+	<select id="queryJndiList"  resultType="map">
+		select distinct t.area_code from sys_dblink t
+	</select>	
+
+	<select id="queryEquipmentList"  parameterType="util.page.Query"
+		resultType="com.cableInspection.model.EquipmentModel" statementType="STATEMENT">
+		<!-- select 
+			pe.PHY_EQP_ID as phy_eqp_id,
+			pe.NAME as name,
+			pe.NO as no,
+			pe.RES_SPEC_ID as res_spec_id,
+			sa.PARENT_AREA_ID as parent_area_id,
+			pe.AREA_ID as area_id,
+			pe.ADDRESS as address
+		from  phy_equipment@${queryParams.jndi} pe
+		left join spc_area@${queryParams.jndi} sa on sa.area_id=pe.area_id
+		where 1=1 
+		<if test="queryParams.res_spec_id != null and queryParams.res_spec_id != ''">  
+            <![CDATA[
+	    	and pe.RES_SPEC_ID in (${queryParams.res_spec_id})
+	    	]]>
+		</if>
+		order by pe.PHY_EQP_ID -->
+		    select 
+			pe.PHY_EQP_ID,
+			pe.NAME as name,
+			pe.NO as no,
+			pe.RES_SPEC_ID as res_spec_id,
+			pe.PARENT_AREA_ID as parent_area_id,
+			pe.AREA_ID as area_id,
+			pe.ADDRESS as address,
+			pe.point_level,
+			pe.son_zone
+			from  ossequipment pe
+			order by pe.PHY_EQP_ID
+	</select>
+	<select id="queryDynamicOssEquipments" parameterType="util.page.Query" resultType="com.cableInspection.model.OSSEquipmentModel" statementType="STATEMENT">
+		select do.equipment_id,
+		       do.equipment_code,
+		       do.equipment_name,
+		       do.area_id,
+		       do.address,
+		       do.res_type_id,
+		       do.res_type,
+		       do.manage_area_id,
+		       do.manage_area,
+		       do.management_mode,
+		       do.isrelated,
+		       do.staff_id,
+		       do.create_date,
+		       do.operate_staff,
+		       do.parent_area_id,
+		       do.grid_id,
+		       do.install_sbid,
+		       do.install_sbbm,
+		       do.install_dzbm,
+		       do.longitude,
+		       do.latitude,
+		       do.station_id
+		  from tb_dynamic_ossequipment do
+	</select>
+	<select id="queryEquipmentLevelList"  parameterType="util.page.Query"
+		resultType="com.cableInspection.model.EquipmentModel">
+		select pe.PHY_EQP_ID as phy_eqp_id,
+			   pe.NO as no, 
+			   pr.CODE as point_level
+		  from pub_restriction@${queryParams.jndi} pr
+		  inner join phy_equipment@${queryParams.jndi} pe 
+		  on pe.mnt_level_id = pr.serial_no
+		where 1=1 
+		<if test="queryParams.res_spec_id != null and queryParams.res_spec_id != ''">  
+            <![CDATA[
+	    		and pe.RES_SPEC_ID in (${queryParams.res_spec_id})
+	    	]]>
+		</if>
+	</select>
+	<!-- over_sync_time:距离上次同步时间差 -->
+	<select id="isEquipmentExist" parameterType="map" resultType="map">
+		select e.equipment_id,
+		       e.equipment_code,
+		       e.parent_area_id,
+		       e.update_time,
+		       floor(to_number(sysdate - e.update_time)) over_sync_time
+		  from tb_cablecheck_equipment e
+		 where e.equipment_code = #{equipment_code}
+		   and e.equipment_id = #{equipment_id}
+	</select>
+	
+	<select id="isEquipmentExistNew" parameterType="map" resultType="map">
+		select e.equipment_id,
+		       e.equipment_code,
+		       e.parent_area_id,
+		       e.update_time,
+		       floor(to_number(sysdate - e.update_time)) over_sync_time
+		  from tb_cablecheck_equipment e
+		 where e.equipment_code = #{equipment_code}
+		   and e.equipment_id = #{equipment_id}
+		   and e.parent_area_id=#{parent_area_id}
+	</select>	
+
+	<insert id="saveEquipmentInfo" parameterType="map">
+		insert into tb_cablecheck_equipment(
+			equipment_id,
+			equipment_code,
+			equipment_name,
+			area_id,
+			<if test="address != null and address != ''">  
+            <![CDATA[
+	    		address,
+	    	]]>
+		</if>
+			res_type_id,
+			res_type,
+			manage_area_id,
+			manage_area,
+			<if test="station_id != null and station_id != ''">  
+            <![CDATA[
+	    		station_id,
+	    	]]>
+		</if>
+			create_date,
+			parent_area_id,
+			<if test="install_sbid != null and install_sbid != ''">  
+            <![CDATA[
+	    		install_sbid,
+	    	]]>
+		</if>
+		<if test="install_sbbm != null and install_sbbm != ''">  
+            <![CDATA[
+	    		install_sbbm,
+	    	]]>
+		</if>
+			<if test="longitude != null and longitude != ''">  
+            <![CDATA[
+	    		longitude,
+	    	]]>
+		</if>
+		<if test="latitude != null and latitude != ''">  
+            <![CDATA[
+	    		latitude,
+	    	]]>
+		</if>
+	
+			update_time) 
+		values(
+			#{equipment_id},
+			#{equipment_code},
+			#{equipment_name},
+			#{area_id},
+			<if test="address != null and address != ''">  
+            <![CDATA[
+	    		#{address},
+	    	]]>
+		</if>
+			
+			#{res_type_id},
+			#{res_type},
+			#{manage_area_id},
+			#{manage_area},
+			<if test="station_id != null and station_id != ''">  
+            <![CDATA[
+	    		#{station_id},
+	    	]]>
+		</if>
+			
+			#{create_date},
+			#{parent_area_id},
+			<if test="install_sbid != null and install_sbid != ''">  
+            <![CDATA[
+	    		#{install_sbid},
+	    	]]>
+		</if>
+			
+			<if test="install_sbbm != null and install_sbbm != ''">  
+            <![CDATA[
+	    		#{install_sbbm},
+	    	]]>
+		</if>
+		<if test="longitude != null and longitude != ''">  
+            <![CDATA[
+	    		#{longitude},
+	    	]]>
+		</if>
+		<if test="latitude != null and latitude != ''">  
+            <![CDATA[
+	    		#{latitude},
+	    	]]>
+		</if>
+			
+
+			sysdate)
+	</insert>
+	
+	<update id="updateEquipmentLevel" parameterType="map">
+		update tb_cablecheck_equipment e
+		set e.update_time = sysdate
+			<if test="longitude != null and longitude != ''">
+				,e.longitude = #{longitude}
+			</if>
+			<if test="latitude != null and latitude != ''">
+				,e.latitude = #{latitude}
+			</if>
+			<if test="equipment_name != null and equipment_name != ''">
+				,e.equipment_name = #{equipment_name}
+			</if>
+			<if test="create_date != null and create_date != ''">
+				,e.create_date = #{create_date}
+			</if>
+			<if test="station_id != null and station_id != ''">
+				,e.station_id = #{station_id}
+			</if>
+			<if test="address != null and address != ''">
+				,e.address = #{address}
+			</if>
+			
+			<if test="manage_area_id != null and manage_area_id != ''">
+				,e.manage_area_id = #{manage_area_id}
+			</if>
+			<if test="manage_area != null and manage_area != ''">
+				,e.manage_area = #{manage_area}
+			</if>
+			<if test="management_mode != null and management_mode != ''">
+				,e.management_mode = #{management_mode}
+			</if>
+			<if test="install_sbid != null and install_sbid != ''">
+				,e.install_sbid = #{install_sbid}
+			</if>
+			<if test="install_sbbm != null and install_sbbm != ''">
+				,e.install_sbbm = #{install_sbbm}
+			</if>
+		where e.equipment_code = #{equipment_code}
+		  and e.equipment_id = #{equipment_id}
+		  and e.parent_area_id=#{parent_area_id}
+	</update>
+	<update id="truncateTableArea" parameterType="map">
+		truncate table tml_2_area
+	</update>
+	<update id="insertTableArea" parameterType="String">
+		  insert into tml_2_area  
+      select t3.tml_id,
+             t3.zone
+             from (
+      select t2.tml_id,
+             t2.zone,
+             row_number() over(partition by t2.tml_id order by count desc) hx
+        from (select t.tml_id, t.zone, count(0) count
+                from (select b.tml_id,
+                             substr(substr(a.description,
+                                           instr(a.description, '市') + 1),
+                                    0,
+                                    instr(substr(a.description,
+                                                 instr(a.description, '市') + 1),
+                                          '区')) zone
+                        from SPC_LOCATION@${_parameter} a
+                        join SPC_TML_2_LOCATION@${_parameter} b on a.location_id =
+                                                           b.location_id
+                     ) t
+               group by t.tml_id, t.zone
+               order by count(0) desc) t2
+               )t3
+               where hx&lt;2
+	</update>
+	<select id="createOssEquipment" parameterType="java.util.Map">
+     
+        <![CDATA[ 
+          call P_SYNCOSSEQUIPMENT(#{jndi,mode=IN,jdbcType=VARCHAR}, #{res_spec_id,mode=IN,jdbcType=VARCHAR}) 
+        ]]>
+     
+    </select>
+    
+    <select id="createDynamicOssEquipment" parameterType="java.util.Map">
+     
+        <![CDATA[ 
+          call P_SYNC_DYNAMIC_OSSEQUIPMENT(#{jndi,mode=IN,jdbcType=VARCHAR}) 
+        ]]>
+     
+    </select>
+    
+     <select id="createDynamicEquipment">
+     
+        <![CDATA[ 
+          call P_SYNC_DYNAMIC_OSSEQUIPMENT()
+        ]]>
+     
+    </select>
+    
+    <select id="queryObdsData" parameterType="map" resultType="map">
+		select distinct t.phy_eqp_id,t.area_id,t.install_sbid,t.install_sbbm from tmp_gwzs_obd_install t
+    </select>
+     <update id="updateObds" parameterType="map" >
+		update tb_cablecheck_equipment e
+		   set e.install_sbid = #{INSTALL_SBID},
+		       e.install_sbbm = #{INSTALL_SBBM}
+		 where e.equipment_id = #{PHY_EQP_ID}
+		   and e.area_id = #{AREA_ID}
+    </update>
+    
+    
+    <update id="updateEqp" parameterType="map">
+      update tb_cablecheck_equipment e
+    set e.isdeal =#{isDeal} 
+    <if test="dealTime != null and dealTime != ''">
+				,e.deal_time=to_date(#{dealTime,jdbcType=VARCHAR},'yyyy-MM-dd hh24:mi:ss')
+			</if>
+     where e.parent_area_id = #{areaid}
+     and e.equipment_code = #{eqpNo}
+    </update>
+    <select id="queryOssGxl" parameterType="util.page.Query" resultType="map">
+    select fgs_id, 
+			fgs_name, 
+			area_name, 
+			order_code, 
+			order_title, 
+			order_type, 
+			service_name, 
+			batch_id, 
+			TO_CHAR(finish_date,'yyyy-MM-dd hh24:mi:ss')finish_date, 
+			add_opt_code, 
+			del_opt_code, 
+			action_type, 
+			action_type_name, 
+			in_net_type_name, 
+			post_name, 
+			party_name, 
+			is_change_flow, 
+			flow_id, 
+			ro_id from reportdev.RPT_OSS_FROM_IOM_LIGHT_ROAD
+    </select>
+    <update id="insertList"  parameterType="map">
+	insert into tb_cablecheck_ossgxl( 
+			fgs_id, 
+			fgs_name, 
+			area_name, 
+			order_code, 
+			order_title, 
+			order_type, 
+			service_name, 
+			batch_id, 
+			finish_date, 
+			add_opt_code, 
+			del_opt_code, 
+			action_type, 
+			action_type_name, 
+			in_net_type_name, 
+			post_name, 
+			party_name, 
+			is_change_flow, 
+			flow_id, 
+			ro_id
+			)
+			values(
+			#{FGS_ID,jdbcType=VARCHAR}, 
+			#{FGS_NAME,jdbcType=VARCHAR}, 
+			#{AREA_NAME,jdbcType=VARCHAR}, 
+			#{ORDER_CODE,jdbcType=VARCHAR}, 
+			#{ORDER_TITLE,jdbcType=VARCHAR}, 
+			#{ORDER_TYPE,jdbcType=VARCHAR}, 
+			#{SERVICE_NAME,jdbcType=VARCHAR}, 
+			#{BATCH_ID,jdbcType=NUMERIC},
+			to_date(#{FINISH_DATE,jdbcType=VARCHAR},'yyyy-MM-dd hh24:mi:ss'),
+			#{ADD_OPT_CODE,jdbcType=VARCHAR}, 
+			#{DEL_OPT_CODE,jdbcType=VARCHAR}, 
+			#{ACTION_TYPE,jdbcType=VARCHAR}, 
+			#{ACTION_TYPE_NAME,jdbcType=VARCHAR}, 
+			#{IN_NET_TYPE_NAME,jdbcType=VARCHAR}, 
+			#{POST_NAME,jdbcType=VARCHAR}, 
+			#{PARTY_NAME,jdbcType=VARCHAR}, 
+			#{IS_CHANGE_FLOW,jdbcType=VARCHAR}, 
+			#{FLOW_ID,jdbcType=VARCHAR}, 
+			#{RO_ID,jdbcType=NUMERIC}
+			)
+	</update>
+    
+    <update id="truncateOSSGxl">
+        delete from tb_cablecheck_ossgxl
+    </update>
+    
+     <update id="backupOSSGxl">
+        create table tb_ossgxl_tmp as select * from tb_cablecheck_ossgxl
+    </update>
+    
+     <update id="deleteBackup">
+        drop table tb_ossgxl_tmp
+    </update>
+    
+    
+    
+     <select id="queryNoRes" parameterType="util.page.Query" resultType="map">
+   
+select fgs_name,
+       fgs_id,
+       area_name,
+       id,
+       order_code,
+       order_type,
+       flow_id,
+       TO_CHAR(accept_date,'yyyy-MM-dd hh24:mi:ss')accept_date,
+    TO_CHAR(finish_date,'yyyy-MM-dd hh24:mi:ss')finish_date,
+
+       pso_id,
+           TO_CHAR(complete_date,'yyyy-MM-dd hh24:mi:ss')complete_date,
+
+       opt_code,
+       xuqiu,
+       name,
+       RO_ID
+  from reportdev.rpt_oss_iom_nores
+
+    </select>
+    <update id="insertNoResList"  parameterType="map">
+	insert into tb_cablecheck_nores( 
+			fgs_name,
+       fgs_id,
+       area_name,
+       id,
+       order_code,
+       order_type,
+       flow_id,
+       accept_date,
+       finish_date,
+       pso_id,
+       complete_date,
+       opt_code,
+       xuqiu,
+       name,
+       RO_ID
+			)
+			values(
+			#{FGS_NAME,jdbcType=VARCHAR}, 
+			#{FGS_ID,jdbcType=VARCHAR}, 
+			
+			#{AREA_NAME,jdbcType=VARCHAR}, 
+			#{ID,jdbcType=NUMERIC},
+			#{ORDER_CODE,jdbcType=VARCHAR}, 
+			#{ORDER_TYPE,jdbcType=VARCHAR}, 
+			#{FLOW_ID,jdbcType=VARCHAR}, 
+			to_date(#{ACCEPT_DATE,jdbcType=VARCHAR},'yyyy-MM-dd hh24:mi:ss'),
+			to_date(#{FINISH_DATE,jdbcType=VARCHAR},'yyyy-MM-dd hh24:mi:ss'),
+			#{PSO_ID,jdbcType=NUMERIC},
+			to_date(#{COMPLETE_DATE,jdbcType=VARCHAR},'yyyy-MM-dd hh24:mi:ss'),
+			#{OPT_CODE,jdbcType=VARCHAR}, 
+			#{XUQIU,jdbcType=VARCHAR}, 
+			#{NAME,jdbcType=VARCHAR},
+			#{RO_ID,jdbcType=NUMERIC}
+			)
+	</update>
+    
+    <update id="truncateNoRes">
+        delete from tb_cablecheck_nores
+    </update>
+    
+     <update id="backupNoRes">
+        create table tb_nores_tmp as select * from tb_cablecheck_nores
+    </update>
+    
+     <update id="deleteResBackup">
+        drop table tb_nores_tmp
+    </update>
+    
+    
+    
+    <select id="createQJST" >
+	   <![CDATA[ 
+			call SYNC_QJST() 
+		]]>
+	 
+	</select>
+	<select id="createMONTH" >
+	   <![CDATA[ 
+			call SYNC_MONTH() 
+		]]>
+	 
+	</select>
+	
+	<select id="createWANGGE" >
+	   <![CDATA[ 
+			call SYNC_WANGGE() 
+		]]>
+	 
+	</select>
+	
+	<select id="createQJODSO" >
+	   <![CDATA[ 
+			call SYNC_ODSO() 
+		]]>
+	 
+	</select>
+		<select id="createSYNC_APP_IOM_ORDER_OSS_INFO" >
+	   <![CDATA[ 
+			call SYNC_APP_IOM_ORDER_OSS_INFO() 
+		]]>
+	 
+	</select>
+		<select id="createSYNC_odso_eqp_daily" >
+	   <![CDATA[ 
+			call SYNC_odso_eqp_daily() 
+		]]>
+	 
+	</select>
+		<select id="createSYNC_APP_PROD_ACCSNO_EQP" >
+	   <![CDATA[ 
+			call SYNC_APP_PROD_ACCSNO_EQP() 
+		]]>
+	 
+	</select>
+	
+ <update id="synchronizeElectronArchives" >
+ merge into tb_cablecheck_equipment e
+using Tb_Cablecheck_Dev_Fixed t
+on (e.equipment_id = t.eqpid and e.equipment_code = t.eqpno)
+when matched then
+  update set e.deal_time = t.dealtime, e.isdeal = 1
+</update>	
+
+ <update id="synchronizeEqpContract" >
+	 merge into tb_cablecheck_equipment e
+using (select distinct te.equipment_id,te.equipment_no,te.contract_persion_name,te.identifyid from tb_base_contract_equipment te)tce
+on (e.equipment_id = tce.equipment_id and e.equipment_code=tce.equipment_no) 
+when matched then
+  update set e.contract_person_name=tce.contract_persion_name,e.identify = tce.identifyid
+</update>
+
+ <update id="synchronizeEqpWljb" >
+	 merge into tb_cablecheck_equipment e
+using ( select distinct oed.phy_eqp_id,oed.no,oed.net_layer_id from odso_eqp_daily oed)o
+on (e.equipment_id = o.phy_eqp_id and e.equipment_code=o.no) 
+when matched then
+  update set e.wljb=o.net_layer_id
+</update>
+
+
+<select id="queryOssOBD" parameterType="util.page.Query" resultType="map" >
+		select * from tmp_obds
+	</select>
+	<select id="createOssOBD" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call obd() 
+		]]>
+	 
+	</select>
+  <update id="insertBOD"  parameterType="map">
+	insert into RES_PHY_OBD_DAY( 
+			phy_eqp_id, 
+is_last_obd, 
+local_area_id, 
+dt
+
+			)
+			values(
+			#{PHY_EQP_ID,jdbcType=NUMERIC}, 
+			#{IS_LAST_OBD,jdbcType=NUMERIC}, 
+			#{LOCAL_AREA_ID,jdbcType=NUMERIC}, 
+			#{DT,jdbcType=VARCHAR}
+			)
+	</update>	
+ <update id="truncateOBD">
+        truncate table RES_PHY_OBD_DAY
+    </update>	
+	
+	<select id="syncResRat" >
+	   <![CDATA[ 
+			call SYNC_RESRAT()
+		]]>
+	</select>
+	
+	<select id="syncCvs" >
+	   <![CDATA[ 
+			call SYNC_CSV()
+		]]>
+	</select>
+	
+	<select id="syncIom" >
+	   <![CDATA[ 
+			call SYNC_IOM()
+		]]>
+	</select>
+	
+	<select id="selectExpireTask" parameterType="int" resultType="map">
+		select p.plan_start_time,p.plan_end_time,t.task_id,t.task_name,t.inspector,f.staff_name,f.tel 
+		from tb_cablecheck_task t ,Patrol_Plan p,tb_base_staff f
+		where t.task_type in (10,11,12,13)
+		and p.plan_id = t.patrol_plan_id and t.status_id in (1,2,6)
+		and p.plan_start_time &lt;= sysdate and p.plan_end_time &gt;= sysdate
+		and p.plan_end_time &lt;= sysdate+#{dayNum}
+		and f.staff_id = t.inspector
+		order by t.task_id desc
+	</select>
+	
+	<select id="calOrderNum" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call p_sync_calorder(#{stateTime,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	
+	<select id="calOrderChange" parameterType="java.util.Map">
+		 <![CDATA[ 
+			call p_sync_calorderchange(#{stateTime,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	
+	<select id="calCheckError" parameterType="java.util.Map">
+		<![CDATA[ 
+			call p_sync_calcheckerror(#{stateTime,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	
+	<select id="calTeamOrder" parameterType="java.util.Map">
+		<![CDATA[ 
+			call p_sync_calteamorder(#{stateTime,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	
+	<select id="calTeamCheck" parameterType="java.util.Map">
+		<![CDATA[ 
+			call p_sync_calTeamCheck_0125new(#{daynum,mode=IN,jdbcType=NUMERIC}) 
+		]]>
+	</select>
+	
+	<select id="calGridOrder" parameterType="java.util.Map">
+		<![CDATA[ 
+			call p_sync_calgridorder(#{stateTime,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	<select id="queryAreaPortNum" parameterType="java.util.Map" resultType="map">
+		<![CDATA[ 
+			SELECT pa.NAME ,decode(t.num ,null,0,t.num ) num FROM (
+					select a1.parent_area_id, count(distinct d.dzid) NUM from tb_cablecheck_dtsj_daily d 
+					join area a1 on a1.area_id=d.areaid
+					where d.bdsj>=SYSDATE-2
+					and d.bdsj<SYSDATE-1
+					group by a1.parent_area_id
+					) t
+					right join area pa on pa.area_id=t.parent_area_id 
+					where pa.area_level=3
+					ORDER BY pa.NAME
+		]]>
+	</select>
+	
+	<select id="getFtpDir" resultType="map">
+		select f.dir_name from tb_cablecheck_ftpdir f
+	</select>
+	
+</mapper> 

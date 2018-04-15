@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.LineJobDao">
+
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.JOB_NAME != null and queryParams.JOB_NAME != ''">  
+            <![CDATA[
+	    	AND tj.JOB_NAME like '%'||#{queryParams.JOB_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.START_DATE != null and queryParams.START_DATE != ''">  
+	    	AND tj.START_DATE &gt;=to_date(#{queryParams.START_DATE},'yyyy-mm-dd') 
+		</if>
+		<if test="queryParams.END_DATE != null and queryParams.END_DATE != ''">  
+	    	AND tj.END_DATE &lt;=to_date(#{queryParams.END_DATE},'yyyy-mm-dd') 
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	    	AND tj.AREA_ID=#{queryParams.AREA_ID}
+		</if>
+
+	</sql>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+	    SELECT tj.JOB_ID,tj.JOB_NAME,
+	    case when tj.CIRCLE_ID = 1  then '天' when tj.CIRCLE_ID = 2 then '两天' end as CIRCLE_ID,
+	    a.NAME AREA_NAME,tj.CREATOR,to_char(tj.CREATE_DATE,'yyyy-mm-dd') CREATE_DATE,
+	    tj.STATUS,to_char(tj.START_DATE,'yyyy-mm-dd') START_DATE,to_char(tj.END_DATE,'yyyy-mm-dd') END_DATE,
+	    case when tj.FIBER_GRADE = '1'  then '一干' when tj.FIBER_GRADE = '2' then '二干' end as FIBER_GRADE
+		 FROM AXX_T_JOB tj inner join area a on tj.area_id=a.area_id and tj.status=0 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<select id="queryJob" parameterType="map" resultType="map">
+	    SELECT tj.JOB_ID,tj.JOB_NAME,tj.CIRCLE_ID,
+	    tj.AREA_ID,tj.CREATOR,to_char(tj.CREATE_DATE,'yyyy-mm-dd') CREATE_DATE,
+	    tj.STATUS,to_char(tj.START_DATE,'yyyy-mm-dd') START_DATE,to_char(tj.END_DATE,'yyyy-mm-dd') END_DATE,tj.FIBER_GRADE
+		 FROM AXX_T_JOB tj where tj.JOB_ID=#{JOB_ID}
+	</select>
+	
+	<insert id="insert" parameterType="map">
+	INSERT INTO AXX_T_JOB(JOB_ID,JOB_NAME,CIRCLE_ID,AREA_ID,CREATOR,CREATE_DATE,STATUS,START_DATE,END_DATE,FIBER_GRADE)
+	VALUES (SEQ_LINE_JOB_ID.NEXTVAL,#{JOB_NAME},#{CIRCLE_ID},#{AREA_ID},#{CREATOR},TO_DATE(#{CREATE_DATE},'yyyy-mm-dd'),0,
+	TO_DATE(#{START_DATE},'yyyy-mm-dd'),TO_DATE(#{END_DATE},'yyyy-mm-dd'),#{FIBER_GRADE})
+	</insert>
+	
+	<update id="update" parameterType="map">
+		update AXX_T_JOB set JOB_NAME=#{JOB_NAME},CIRCLE_ID=#{CIRCLE_ID},START_DATE=TO_DATE(#{START_DATE},'yyyy-mm-dd'),
+		END_DATE=TO_DATE(#{END_DATE},'yyyy-mm-dd'),FIBER_GRADE=#{FIBER_GRADE} where JOB_ID=#{JOB_ID}
+	</update>
+	
+	<update id="stop" parameterType="map">
+		update AXX_T_JOB set STATUS=1 where JOB_ID in (${JOB_ID})
+	</update>
+	
+	<select id="queryJobsByCycle" parameterType="map" resultType="map">
+	 SELECT tj.JOB_ID,tj.JOB_NAME,tj.CIRCLE_ID,tj.AREA_ID,tj.FIBER_GRADE
+		FROM AXX_T_JOB tj where tj.STATUS=0
+		AND tj.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+		AND tj.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual) 
+		order by tj.AREA_ID,tj.CIRCLE_ID
+	</select>
+	
+	<select id="queryStaffsByJob" parameterType="map" resultType="map">
+	select distinct tli.inspect_id from AXX_T_LINE_INFO tli 
+	  inner join AXX_T_RELAY tr on tr.RELAY_ID=tli.RELAY_ID
+      inner join AXX_T_RELAY_AREA tra on tra.RELAY_ID=tr.RELAY_ID and tra.AREA_ID=#{AREA_ID}
+	  inner join AXX_T_CABLE tc on tc.CABLE_ID=tr.cable_id
+      inner join AXX_T_CABLE_AREA tca on tc.CABLE_ID=tca.CABLE_ID and tca.area_id=#{AREA_ID}
+	  where tli.area_id=#{AREA_ID} and tc.fiber_grade= #{FIBER_GRADE} and tli.inspect_id is not null 
+	  and not exists(select tt.INSPECT_ID from AXX_T_TASK tt 
+	  where tli.INSPECT_ID = tt.INSPECT_ID AND tt.JOB_ID=#{JOB_ID} AND tt.STATUS=0 
+	  AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual))
+	</select>
+	
+	<select id="getTaskId" resultType="int">
+		select SEQ_LINE_TASK_ID.NEXTVAL from dual
+	</select>
+	<select id="insertGuardJobs" resultType="map">
+		insert into AXX_OUT_SITE_PLAN_SUB( plan_id,plan_date,status,user_id,uname,delete_flag)
+  		select osp.plan_id,trunc(sysdate),1,osp.user_id,tbs.staff_name,1 from axx_out_site_plan osp  inner join tb_base_staff tbs on osp.user_id=tbs.staff_id
+    	inner join axx_main_out_site mos on osp.out_site_id=mos.out_site_id
+   		 where osp.start_date&lt;=(select trunc(sysdate) from dual) and osp.end_date&gt;=(select trunc(sysdate) from dual) 
+    	and mos.con_status=1 and mos.delete_flag=1
+    	and not exists(select ospp.plan_id from AXX_OUT_SITE_PLAN_SUB ospp where ospp.plan_id=osp.plan_id and ospp.plan_date=(select trunc(sysdate) from dual))
+	</select>
+	
+	<insert id="inserTaskByCycle" parameterType="map">
+		INSERT INTO AXX_T_TASK(TASK_ID,JOB_ID,TASK_NAME,START_DATE,END_DATE,INSPECT_ID,STATUS,TASK_TYPE,CREATE_DATE,AREA_ID)
+		VALUES (#{TASK_ID},#{JOB_ID},#{TASK_NAME},(select TRUNC(SYSDATE) FROM dual),(SELECT TRUNC(SYSDATE)+#{END_DAY}-1/86400 FROM dual),
+		#{INSPECT_ID},0,1,(select TRUNC(SYSDATE) FROM dual),#{AREA_ID})
+	</insert>
+	<!-- 
+	<insert id="inserTaskByDay" parameterType="map">
+	INSERT INTO AXX_T_TASK(TASK_ID,JOB_ID,TASK_NAME,START_DATE,END_DATE,INSPECT_ID,STATUS,TASK_TYPE,CREATE_DATE,AREA_ID)
+	VALUES (#{TASK_ID},#{JOB_ID},#{TASK_NAME},(select TRUNC(SYSDATE) FROM dual),(SELECT TRUNC(SYSDATE)+1-1/86400 FROM dual),
+	#{INSPECT_ID},0,1,(select TRUNC(SYSDATE) FROM dual),#{AREA_ID})
+	</insert>
+	 
+	<insert id="inserTaskByTwoDay" parameterType="map">
+	INSERT INTO AXX_T_TASK(TASK_ID,JOB_ID,TASK_NAME,START_DATE,END_DATE,INSPECT_ID,STATUS,TASK_TYPE,CREATE_DATE,AREA_ID)
+	VALUES (#{TASK_ID},#{JOB_ID},#{TASK_NAME},(select TRUNC(SYSDATE) FROM dual),(SELECT TRUNC(SYSDATE)+2-1/86400 FROM dual),
+	#{INSPECT_ID},0,#{FIBER_GRADE},(select TRUNC(SYSDATE) FROM dual),#{AREA_ID})
+	</insert>
+	-->
+	<select id="queryOutsiteTaskByUser" parameterType="map" resultType="map">
+		 select * from AXX_T_TASK_OUTSITE atto where atto.INSPECT_ID=#{INSPECT_ID} AND atto.inspect_date=trunc(sysdate)
+	</select>
+	
+	<insert id="insertTaskOutSite" parameterType="map">
+	INSERT INTO AXX_T_TASK_OUTSITE(TASK_ID,INSPECT_DATE,INSPECT_ID,OUT_SITE_ID)(select distinct #{TASK_ID},to_date(#{INSPECT_DATE},'yyyy-mm-dd'),#{INSPECT_ID}, mos.OUT_SITE_ID
+		from AXX_MAIN_OUT_SITE mos where mos.FIBER_EPONSIBLE_BY=#{INSPECT_ID} and mos.con_status=1 and mos.delete_flag=1)
+	</insert>
+	
+	<insert id="insertTaskItem" parameterType="map">
+	INSERT INTO AXX_T_TASK_LINE(TASK_ID,LINE_ID,SITE_COUNT,KEY_COUNT)(select distinct #{TASK_ID},tli.LINE_ID,
+ 	  (select count(1) from axx_t_line_site tls where tls.line_id=tli.line_id),
+ 	  (select count(1) from axx_t_line_site tls inner join axx_t_site ts on tls.site_id=ts.site_id where ts.site_type=1 and tls.line_id=tli.line_id) 
+ 	  from AXX_T_LINE_INFO tli 
+	  inner join AXX_T_RELAY tr on tr.RELAY_ID=tli.RELAY_ID
+      inner join AXX_T_RELAY_AREA tra on tra.RELAY_ID=tr.RELAY_ID and tra.AREA_ID=#{AREA_ID}
+	  inner join AXX_T_CABLE tc on tc.CABLE_ID=tr.CABLE_ID
+      inner join AXX_T_CABLE_AREA tca on tc.CABLE_ID=tca.CABLE_ID and tca.area_id=#{AREA_ID}
+	  where tli.area_id=#{AREA_ID} and tc.fiber_grade= #{FIBER_GRADE} and tli.INSPECT_ID=#{INSPECT_ID} and tli.is_tasked is null)
+	</insert>
+	<select id="queryStaffsByAutoTrack" parameterType="map" resultType="map">
+       select distinct aut.user_id,to_char(att.execute_time,'yyyy-mm-dd hh24:mi:ss') from axx_auto_user_track aut 
+          	left join axx_time_task att on aut.user_id=att.user_id
+            where trunc(aut.track_time)=to_date(#{query_date},'yyyy-mm-dd')
+	</select>
+	<select id="queryAllTrackTimeExecute" parameterType="map" resultType="map">
+		select aut.track_id,aut.track_time,aut.user_id,aut.speed,aut.area_id,aut.track_type,aut.longitude,
+		aut.latitude,aut.track_flag,aut.gps_flag,aut.gps_switch from axx_auto_user_track aut 
+               where trunc(aut.track_time)=to_date(#{query_date},'yyyy-mm-dd')
+                and aut.user_id=#{USER_ID}
+                <if test=" EXECUTE_TIME != null and EXECUTE_TIME !='' ">
+               	and aut.track_time >= to_date(#{EXECUTE_TIME},'yyyy-mm-dd hh24:mi:ss')
+               </if>
+                order by aut.track_time
+	</select>
+	<select id="getMaxMatchSite" parameterType="map" resultType="map">
+	select tms.MATCH_ID,tms.SITE_ID,tms.CON_LABEL from AXX_T_MACTH_SITE tms 
+   	where tms.site_id=#{SITE_ID} and  tms.site_type=#{SITE_TYPE} and tms.task_id=#{TASK_ID} and tms.track_id=
+   (select max(aut.track_id) from axx_auto_user_track aut 
+   		where aut.track_time &lt; to_date(#{TRACK_TIME},'yyyy-mm-dd hh24:mi:ss') 
+  	 and aut.gps_flag=0 and aut.user_id=#{USER_ID});
+	</select>
+	<update id="updateTaskTime" parameterType="map">
+		update axx_time_task att set att.execute_time=#{EXECUTE_TIME} where att.user_id=#{USER_ID}
+	</update>
+	<update id="updateTrack" parameterType="map">
+		update axx_auto_user_track aut set aut.gps_flag=#{GPS_FLAG} where aut.track_id=#{TRACK_ID}
+	</update>
+</mapper>

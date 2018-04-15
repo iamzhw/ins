@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.FixOrderDao">
+  
+  <select id="query" parameterType="util.page.Query" resultType="map">
+  	select o.fixorder_id,
+       o.fixorder_code,
+       o.creator,
+       tbs1.staff_name CREATOR_NAME,
+       TO_CHAR(o.create_time, 'YYYY-MM-DD HH24:MI:SS') create_time,
+       o.status,
+       s.state_name STATUS_NAME,
+       o.dealing_with_people,
+       tbs2.staff_name DEALING_PEOPLE_NAME,
+       o.spot_id,
+       a.site_name SITE_NAME
+	  from axx_fix_order o,
+	       axx_fix_order_state s,
+	       tb_base_staff tbs1,
+	       tb_base_staff tbs2,
+	       axx_main_out_site a
+	 where o.area_id = #{area_id}
+	  and o.creator = tbs1.staff_id(+)
+	  and o.dealing_with_people = tbs2.staff_id(+)
+	  and o.spot_id = a.out_site_id(+)
+	  and o.status = S.STATE_ID
+  	  	<if test="order_status  != null and order_status  != ''"> 
+     		 <![CDATA[ and o.status = #{order_status } ]]>
+		</if>
+	    <if test="org_id  != null and org_id  != ''"> 
+      		 <![CDATA[ and tbs2.org_id = #{org_id } ]]>
+		</if>
+	    <if test="fixordercode  != null and fixordercode  != ''"> 
+      		 <![CDATA[ and o.fixorder_code  like '%'||#{fixordercode}||'%' ]]>
+		</if>
+		<if test="start_time  != null and start_time  != ''"> 
+      		 <![CDATA[ and trunc(o.create_time) > = to_date(#{start_time},'yyyy-mm-dd') ]]>
+		</if>
+		 <if test="end_time  != null and end_time  != ''"> 
+	         <![CDATA[ and trunc(o.create_time) < = to_date(#{end_time},'yyyy-mm-dd') ]]>
+		</if>
+		<if test="dealpeople  != null and dealpeople  != ''"> 
+	         <![CDATA[ and tbs2.staff_name like '%'||#{dealpeople}||'%' ]]>
+		</if>
+  	  
+  	order by o.create_time desc
+  </select>
+  
+  <select id="getSingelNodeListNextVal" resultType="String">
+     select SEQ_AXX_SINGEL_NODE_LIST.NEXTVAL from dual
+  </select>
+ 
+ <select id="getFixOrderNextVal" resultType="String">
+    select SEQ_AXX_FIX_ORDER.NEXTVAL from dual
+ </select>
+ 
+  <insert id="intoFixOrder" parameterType="map">
+	insert into axx_fix_order(
+	fixorder_id, 
+	fixorder_code, 
+	creator, 
+	create_time, 
+	status, 
+	dealing_with_people, 
+	photo_id, 
+	spot_id, 
+	area_id)values(
+	#{fixorder_id},
+	#{questionType}||'  '||#{other_trouble},
+	#{creator},
+	sysdate,
+	#{status},
+	#{dealing_with_people},
+	#{photo_id},
+	#{spot_id},
+	#{area_id}
+	)
+  </insert>
+  
+  <insert id="intoSingelNodeList" parameterType="map">
+    insert into AXX_SINGEL_NODE_LIST(
+	node_id, 
+	fixorder_id, 
+	status, 
+	<if test="handle_person != null and handle_person != ''">
+	handel_peopel, 
+	</if>
+	handel_time, 
+	repair_remark 
+	<if test="fingings_of_audit != null and fingings_of_audit != ''">
+	,fingings_of_audit
+	</if>
+	)values(
+	#{node_id},
+	#{fixorder_id},
+	#{status},
+	<if test="handle_person != null and handle_person != ''">
+	#{handle_person},
+	</if>
+	sysdate,
+	#{repair_remark}
+	<if test="fingings_of_audit != null and fingings_of_audit != ''">
+	,#{fingings_of_audit}
+	</if>
+	)
+  </insert>
+  
+  <select id="selAreaAdmin" parameterType="String" resultType="map">
+     select s.staff_id, s.staff_name
+	  from tb_base_staff s
+	  join tb_base_staff_role r on s.staff_id = r.staff_id
+	 where s.area_id = #{area_id}
+	   and r.role_id = 106
+	   and s.isdeleted = 0
+  </select>
+  
+  <insert id="intoFixOrderStaff" parameterType="map">
+   insert into axx_fix_order_staff(
+	fixorder_id, 
+	staff_id, 
+	staff_name)values(
+	#{FIXORDER_ID},
+	#{STAFF_ID},
+	#{STAFF_NAME}
+	)
+  </insert>
+  
+  <select id="selFixOrderByPerson" parameterType="map" resultType="map">
+   select o.fixorder_id,
+   	  	  o.spot_id outsite_id,
+          s.site_name,
+	      o.photo_id,
+	      o.dealing_with_people deal_person,
+	      TO_CHAR(o.create_time, 'YYYY-MM-DD HH24:MI:SS') create_time,
+	      o.fixorder_code repairOrderName,
+          o.creator,
+          tbs.staff_name create_name,
+          p.photo_path,
+          p.micro_photo
+	 from axx_fix_order o,axx_main_out_site s,tb_base_staff tbs,axx_t_photo p
+	 where o.spot_id = s.out_site_id
+     and o.creator = tbs.staff_id
+     and o.photo_id= p.file_id
+     and o.dealing_with_people = #{dealing_with_people}
+     and o.status = 1
+     and o.is_del = 0
+     and o.area_id = #{area_id}
+  </select>
+  
+  <update id="upFixOrderStatus" parameterType="map">
+  	update axx_fix_order o set o.status = #{status} where o.fixorder_id = #{fixorder_id}
+  </update>
+  
+  <select id="selAllFixOrder" resultType="map">
+     select * from axx_fix_order where is_del = 0
+  </select>
+  
+  <select id="findDetail" resultType="map" parameterType="string">
+  	 select o.fixorder_id,
+       o.fixorder_code,
+       s.state_name,
+       l.HANDEL_PEOPEL,
+       tbs1.staff_name HANDLE_PERSON,
+       TO_CHAR(l.HANDEL_TIME, 'YYYY-MM-DD HH24:MI:SS') REPAIR_TIME,
+       l.REPAIR_REMARK
+	  from axx_fix_order o,
+	       axx_fix_order_state s,
+	       tb_base_staff tbs1,
+	       (select *
+	          from (SELECT os.*,
+	                       ROW_NUMBER() OVER(PARTITION BY os.STATUS ORDER BY os.HANDEL_TIME desc) rn
+	                  FROM AXX_SINGEL_NODE_LIST os
+	                 where os.fixorder_id = #{fixorder_id}
+	                   and os.status = 2) tt
+	         where tt.rn = 1) l
+	 where o.status = 2
+	   and o.fixorder_id = l.fixorder_id
+	   and o.status = s.state_id
+	   and tbs1.staff_id = l.HANDEL_PEOPEL
+  </select>
+  
+  <update id="upFixOrderStatusFile" parameterType="map">
+      update axx_fix_order set 
+       status      = #{status}
+       <if test="is_file != null and is_file != ''">
+       	,is_file     = #{is_file}
+       </if>
+       <if test="file_time != null and file_time != ''">
+       	,file_time   = to_date(#{file_time}, 'yyyy-mm-dd hh24:mi:ss')
+       </if>
+       <if test="file_people != null and file_people != ''">
+       	,file_people = #{file_people}
+       </if>
+ 	  where fixorder_id = #{fixorder_id}
+  </update>
+  
+  <select id="selNoAuditPhotos" parameterType="String" resultType="map">
+  	select p.* from axx_t_photo p,  
+	 (select *
+	  from (SELECT l.*,
+	               ROW_NUMBER() OVER(PARTITION BY l.STATUS ORDER BY l.HANDEL_TIME desc) rn
+	          FROM axx_singel_node_list l
+	         where l.fixorder_id = #{fixorder_id}
+	           and l.status = 2) tt
+	 where tt.rn = 1) t 
+	 where p.site_id = t.node_id and p.photo_type = 14
+  </select>
+  
+  <select id="selFixOrderByID" parameterType="String" resultType="map">
+  	 select * from axx_fix_order o where o.fixorder_id = #{fixorder_id}
+  </select>
+  
+  <update id="upPhotoStatu" parameterType="String">
+  	update axx_t_photo p set p.status = 1 where  p.file_id = #{photo_id}
+  </update>
+  
+  <select id="selFixNodesByFixId" parameterType="String" resultType="map">
+  	select l.node_id,
+       l.fixorder_id,
+       l.status,
+       s.state_name,
+       l.handel_peopel,
+       tbs.staff_name,
+       TO_CHAR(l.handel_time, 'YYYY-MM-DD HH24:MI:SS') handel_time,
+       l.repair_remark,
+       case
+         when l.fingings_of_audit = 0 then
+          '驳回'
+         when l.fingings_of_audit = 1 then
+          '通过'
+       end as fingings_of_audit
+	  from AXX_SINGEL_NODE_LIST l, axx_fix_order_state s, tb_base_staff tbs
+	 where l.fixorder_id = #{fixorder_id}
+	   and l.status = s.state_id
+	   and l.handel_peopel = tbs.staff_id(+)	
+	   order by l.handel_time
+  </select>
+  
+  <select id="getPhotos" parameterType="map" resultType="map">
+  	select p.*
+	  from axx_singel_node_list l, axx_t_photo p
+	 where l.fixorder_id = #{fixorder_id}
+	   and l.status = #{status}
+	   and l.node_id = p.site_id
+	   and p.photo_type = #{photo_type}
+  </select>
+  
+</mapper>

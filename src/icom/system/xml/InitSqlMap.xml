@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.system.dao.InitDao">
+	<select id="getAppInfo" parameterType="String" resultType="map">
+		SELECT *
+		FROM (SELECT ST.SOFTWARE_NAME APPNAME,
+		ST.PACKAGE_NAME,
+		SV.VERSION_NUM VERSIONCODE,
+		SV.IF_FORCE_UPDATE FORCEUPDATE,
+		SV.FILE_PATH DOWNLOADURL,
+		SV.FILE_NAME VERSIONNAME,
+		SV.COMMENTS DESCRIPTION,
+		'' ICON
+		FROM TB_BASE_SOFT ST
+		LEFT JOIN tb_base_soft_vers SV
+		ON ST.SOFTWARE_ID = SV.SOFTWARE_ID
+		WHERE ST.SOFTWARE_ID = #{appType}
+		 	  AND SV.STATE=1 
+		ORDER BY TO_NUMBER(SV.VERSION_NUM) DESC, SV.CREATE_DATE DESC)
+		WHERE ROWNUM = 1
+	</select>
+	<select id="validate" parameterType="map" resultType="map">
+		select f.staff_id userid,
+		f.area_id areaid,
+		f.son_area_id sonareaid,
+		a.code areacode,
+		f.id_number id_number,
+		f.tel,
+		f.real_name,
+		f.staff_name name,
+		to_char(WM_CONCAT(r.role_id)) privilege
+		from tb_base_staff f, area a, tb_base_staff_role r
+		where f.staff_no = #{user}
+		and f.password_ = #{pwd}
+		and f.area_id = a.area_id
+		and f.staff_id = r.staff_id(+)
+		and f.ISDELETED=0
+		and f.STATUS=0
+		group by f.staff_id, f.area_id, f.son_area_id, a.code, f.staff_name ,f.id_number,f.tel,f.real_name
+	</select>
+	<select id="getAllAppInfo" parameterType="String" resultType="map">
+		select DISTINCT ST.SOFTWARE_NAME APPNAME,
+		ST.SOFTWARE_ID APPTYPE,
+		ST.PACKAGE_NAME,
+		SV.VERSION_NUM VERSIONCODE,
+		SV.IF_FORCE_UPDATE FORCEUPDATE,
+		SV.FILE_PATH DOWNLOADURL,
+		SV.FILE_NAME VERSIONNAME,
+		SV.COMMENTS DESCRIPTION,
+		'' ICON
+		from tb_base_soft_vers sv,
+		tb_base_soft st,
+		(SELECT *
+		FROM (SELECT ST.software_id, max(SV.SOFTWARE_VERSION_ID) SOFTWARE_VERSION_ID
+		FROM TB_BASE_SOFT ST
+		JOIN tb_base_soft_vers SV
+		ON ST.SOFTWARE_ID = SV.SOFTWARE_ID
+		JOIN TB_BASE_STAFF_SOFT TBS
+		ON ST.SOFTWARE_ID = TBS.SOFTWARE_ID
+		join tb_base_staff f
+		on tbs.staff_id = f.staff_id
+		and f.staff_no = #{user} GROUP BY ST.software_id)) t2
+		where sv.software_version_id = t2.software_version_id
+		and sv.software_id = st.software_id
+	</select>
+
+	<select id="getUrl" parameterType="map" resultType="map">
+		select pu.url_type, pu.url
+		from GIS_PAD_URL pu
+		join tb_base_staff s
+		on s.son_area_id = pu.son_area_id
+		where pu.is_www = #{isWww}
+		and s.staff_id = #{staffId}
+
+	</select>
+
+	<select id="validateByStaffId" parameterType="map" resultType="int">
+		select count(1) from tb_base_staff f where f.staff_id = #{staffId} and
+		f.password_ = #{oldPwd}
+	</select>
+
+	<select id="getSjxjUrl" resultType="java.lang.String">
+		select tbsv.file_path
+		from tb_base_soft_vers tbsv
+		where tbsv.software_id = 9
+		and tbsv.software_version_id =
+		(select max(software_version_id) from tb_base_soft_vers where software_id=9)
+	</select>
+
+	<update id="changePwd" parameterType="map">
+		update tb_base_staff f set f.password = #{newPwd} ,f.password_ = #{newPwd_}
+		where f.staff_id = #{staffId}
+	</update>
+	<insert id="feedbackAdvice" parameterType="map">
+		insert into design_feedback(ID,STAFF_ID,CONTENT,APPTYPE)
+		values(seq_design_feedback.nextval,#{staffId},#{content},#{apptype} )
+	</insert>
+	<select id="getLoginStaff" parameterType="map" resultType="map">
+		select tbs.staff_id,tbs.staff_no,tbs.staff_name from tb_base_staff tbs inner join tb_base_staff_role tbsr on tbs.staff_id=tbsr.staff_id
+		inner join tb_base_role tbr on tbsr.role_id=tbr.role_id
+		where tbr.role_id in (126,166)  
+		<if test="staff_no != null and staff_no !=''">
+			and tbs.STAFF_NO=#{staff_no}
+		</if>
+		<if test="areaId != null and areaId !=''">
+			and tbs.AREA_ID=#{areaId}
+		</if>
+		<if test="bzz_id != null and bzz_id !=''">
+			and tbs.ORG_ID=(select tbs2.org_id from tb_base_staff tbs2 where tbs2.staff_id=#{bzz_id})
+		</if>
+	</select>
+	<select id="singleLoginValidate" parameterType="map" resultType="map">
+		select f.staff_id userid,
+		f.staff_no,
+		f.area_id areaid,
+		f.son_area_id sonareaid,
+		a.code areacode,
+		f.staff_name name,
+		to_char(WM_CONCAT(r.role_id)) privilege
+		from tb_base_staff f, area a, tb_base_staff_role r
+		where f.staff_id = #{user}
+		and f.area_id = a.area_id
+		and f.ISDELETED = 0
+		and f.STATUS =0
+		and f.staff_id = r.staff_id(+)
+		group by f.staff_id, f.staff_no, f.area_id, f.son_area_id, a.code, f.staff_name
+	</select>
+	<select id="singleLoginValidateByStaffNo" parameterType="map" resultType="map">
+		select f.staff_id userid,
+		f.staff_no,
+		f.area_id areaid,
+		f.son_area_id sonareaid,
+		a.code areacode,
+		f.staff_name name,
+		to_char(WM_CONCAT(r.role_id)) privilege
+		from tb_base_staff f, area a, tb_base_staff_role r
+		where f.staff_no = #{user}
+		and f.area_id = a.area_id
+		and f.ISDELETED = 0
+		and f.STATUS =0
+		and f.staff_id = r.staff_id(+)
+		group by f.staff_id, f.staff_no, f.area_id, f.son_area_id, a.code, f.staff_name
+	</select>
+	
+	<select id="judgeIsAdmin" parameterType="String" resultType="map">
+		
+	 select tbs.staff_id,tbs.staff_name,tbr.role_id,tbr.role_name,tbr.role_no 
+	 from tb_base_staff tbs join  tb_base_staff_role tbsr on tbs.staff_id = tbsr.staff_id
+	 join tb_base_role tbr on tbsr.role_id = tbr.role_id
+	 where tbs.staff_id = #{userid} and tbr.role_no = 'AXX_ALL_ADMIN'
+		
+	</select>
+	
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableInspection.dao.PersonalWorkDao">
+<select id="query" parameterType="util.page.Query" resultType="map">
+select a1.name name,a2.name son_name,
+listagg(d.dept_name,',') within group (order by d.dept_name) dept_name,
+s.staff_id,s.staff_no,s.staff_name,
+nvl(aa.sum1,0) sum1,
+nvl(bb.sum2,0) sum2,
+nvl(cc.sum3,0)||'小时' sum3,
+nvl(cc.sum4,0)||'公里' sum4,
+nvl(dd.sum5,0) sum5
+ from tb_base_staff s
+join tb_base_staff_role sr on s.staff_id=sr.staff_id
+join area a1 on a1.area_id=s.area_id
+join area a2 on a2.area_id=s.son_area_id
+left join tb_ins_staff_dept sd on sd.staff_id=s.staff_id
+left join tb_ins_dept d on d.dept_id=sd.dept_id
+left join 
+(select count(1) sum5,r2.inspector from tb_ins_record r2
+<![CDATA[
+where r2.create_time>to_date(#{queryParams.START_TIME},'yyyy-MM-dd') 
+and r2.create_time<=to_date(#{queryParams.END_TIME},'yyyy-MM-dd hh24:mi:ss') and r2.record_type=5
+]]>
+group by r2.inspector
+) dd on dd.inspector=s.staff_id
+left join 
+(select count(r.point_id) sum1,r.inspector from 
+tb_ins_record r
+<![CDATA[
+where r.create_time>to_date(#{queryParams.START_TIME},'yyyy-MM-dd') and r.create_time<=to_date(#{queryParams.END_TIME},'yyyy-MM-dd hh24:mi:ss') and r.task_id is not null and r.record_type=0
+]]>
+group by r.inspector
+)aa on aa.inspector=s.staff_id
+left join
+(select count(b.bill_id) sum2,b.inspector from tb_ins_bill b 
+<![CDATA[
+where b.create_time>to_date(#{queryParams.START_TIME},'yyyy-MM-dd') and b.create_time<=to_date(#{queryParams.END_TIME},'yyyy-MM-dd hh24:mi:ss')
+]]>
+group by b.inspector
+)bb on bb.inspector=s.staff_id
+left join 
+(select round(nvl(sum(rn.timecount),0)/60,2) sum3,round(nvl(sum(rn.distance),0)/1000,2) sum4,rn.staff_id 
+from tb_ins_record_normal rn
+<![CDATA[
+where rn.create_time>to_date(#{queryParams.START_TIME},'yyyy-MM-dd') and rn.create_time<=to_date(#{queryParams.END_TIME},'yyyy-MM-dd hh24:mi:ss')
+]]>
+group by rn.staff_id
+) cc  on cc.staff_id=s.staff_id
+where sr.role_id=7  and s.isdeleted=0
+<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	    	and s.area_id=#{queryParams.AREA_ID}
+</if>
+<if test="queryParams.SON_AREA_ID!= null and queryParams.SON_AREA_ID != ''">  
+	    	 and s.son_area_id=#{queryParams.SON_AREA_ID}
+</if>
+group by a1.name,a2.name,s.staff_id,s.staff_no,s.staff_name,aa.sum1,bb.sum2,cc.sum3,cc.sum4,dd.sum5
+</select>
+
+<select id="queryAreaPoints" parameterType="map" resultType="map">
+select distinct p.longitude,
+                p.latitude,
+                lp.point_seq,
+                l.line_id,
+                l.line_no,
+                l.line_name
+  from tb_ins_point p
+  join tb_ins_line_point lp
+    on lp.point_id = p.point_id
+  join tb_ins_line l
+    on l.line_id = lp.line_id
+ where l.line_type in (0, 4)
+   and l.son_area_id = #{son_area_id}
+   <!--  
+   <![CDATA[
+   and p.longitude > #{swlng}
+   and p.longitude <  #{nelng} 
+   and p.latitude > #{swlat}
+   and p.latitude <  #{nelat}
+   ]]>
+   -->
+ order by l.line_id, lp.point_seq
+
+</select>
+</mapper>

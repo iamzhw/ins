@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.relayDao">
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.relay_name  != null and queryParams.relay_name  != ''"> 
+<![CDATA[ and  t.relay_name  like '%'||#{queryParams.relay_name }||'%' ]]>
+		</if>
+		<if test="queryParams.cable_id  != null and queryParams.cable_id  != ''"> 
+<![CDATA[ and  t.cable_id=#{queryParams.cable_id} ]]>
+		</if>
+		
+	</sql>
+	
+	<select id="query" parameterType="util.page.Query" resultType="map">
+select relay_id,
+       relay_name,
+       cable_id,
+       protect_grade,
+       cable_name,
+       to_char(listagg(area_name,',') within group (order by area_name)) area_name
+  from (select t.*, ATC.CABLE_NAME, ae.name area_name
+          from AXX_T_RELAY t, AXX_T_CABLE ATC, AXX_T_RELAY_AREA ra, area ae
+         where 1 = 1
+           AND T.CABLE_ID = ATC.CABLE_ID
+           and t.relay_id = ra.relay_id
+           and ra.area_id = ae.area_id 
+           <if test="queryParams.area_id != null and queryParams.area_id != ''">  
+            <![CDATA[
+                and ra.area_id=#{queryParams.area_id}
+	    	]]>
+		  </if>
+           <include refid="dynamicWhere"/> ) t
+ group by relay_id, relay_name, cable_id, protect_grade, cable_name
+		
+		  
+	</select>
+
+	<insert id="relaySave" parameterType="map">
+		INSERT INTO AXX_T_RELAY(
+		RELAY_ID,
+		RELAY_NAME,
+		CABLE_ID,
+		PROTECT_GRADE
+		)
+		values(
+		#{relay_id},
+		#{relay_name},
+		#{cable_id},
+		#{protect_grade}
+		)
+	</insert>
+
+	<delete id="relayDelete" parameterType="String">
+		DELETE FROM AXX_T_RELAY WHERE RELAY_ID=#{relay_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_T_RELAY WHERE RELAY_ID=#{relay_id}
+	</select>
+
+	<update id="relayUpdate" parameterType="map">
+		UPDATE AXX_T_RELAY set
+		
+		RELAY_NAME=#{relay_name},
+		CABLE_ID=#{cable_id},
+		PROTECT_GRADE=#{protect_grade}
+		where RELAY_ID=#{relay_id}
+	</update>
+	
+	<select id="getRelaysByCableId" parameterType="map" resultType="map">
+	  SELECT distinct tr.*
+  FROM AXX_T_RELAY tr, AXX_T_RElaY_AREA ra
+ WHERE tr.relay_id = ra.relay_id
+   and tr.CABLE_ID = #{cableId}
+   and ra.area_id = #{areaId}
+   
+	 </select>
+	 
+	 <select id="findRelayByAreaId" parameterType="string" resultType="map">
+  		SELECT TR.* FROM AXX_T_RELAY TR inner join axx_t_relay_area tra on tr.relay_id=tra.relay_id
+ 		WHERE tra.AREA_ID =#{area_id}
+	 </select>
+	 
+	 <select id="getRelayId" resultType="string">
+	     SELECT SEQ_RELAY_ID.NEXTVAL  FROM DUAL
+	 </select>
+	 
+	 <insert id="insertRelay2Area" parameterType="map">
+	     INSERT INTO AXX_T_RELAY_AREA(RELAY_ID,AREA_ID) VALUES(#{relay_id},#{area_id})
+	 </insert>
+	 
+	 <delete id="deleteOldRelay2Area" parameterType="string">
+	     DELETE FROM AXX_T_RELAY_AREA T WHERE T.RELAY_ID=#{relay_id}
+	 </delete>
+	 
+	 <select id="getOwnArea" parameterType="string" resultType="map">
+	     SELECT AE.AREA_ID, AE.NAME AREA_NAME
+  FROM AXX_T_CABLE_AREA CA, AREA AE
+ WHERE CA.AREA_ID = AE.AREA_ID
+   AND CA.CABLE_ID = #{cable_id}
+	 
+	 </select>
+	 
+	 <select id="getRelayArea" parameterType="string" resultType="string">
+	       SELECT to_char(WMSYS.WM_CONCAT(AREA_ID))
+  FROM AXX_T_RELAY_AREA RA
+ WHERE RA.RELAY_ID = #{relay_id}
+	       
+	 </select>
+</mapper>

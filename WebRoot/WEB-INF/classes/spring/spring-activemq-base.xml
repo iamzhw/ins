@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                      http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 配置ActiveMQ连接工厂 -->
+	<bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="tcp://132.252.3.22:61616" />
+		<!-- <property name="brokerURL" value="tcp://localhost:61616" /> -->
+		<!-- 异步发送消息 -->
+		<property name="useAsyncSend" value="true" />
+		<!-- <property name="trustAllPackages" value="true"/> -->
+	</bean>
+
+	<!-- 配置Spring Caching 连接工厂 -->
+	<bean id="cachingConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+		<!-- 目标ConnectionFactory对应真实的可以产生JMS Connection的ConnectionFactory -->
+		<property name="targetConnectionFactory" ref="activeMQConnectionFactory" />
+		<!-- Session缓存数量 -->
+		<property name="sessionCacheSize" value="100" />
+	</bean>
+
+	<!-- 定义消息队列（Queue） -->
+	<!-- bean id="defaultQueue" class="org.apache.activemq.command.ActiveMQQueue"> 
+		<constructor-arg index="0" value="${activemq.queue.default}" /> </bean -->
+
+	<!-- 配置JMS模板（Queue），Spring提供的JMS工具类，它发送、接收消息。 -->
+	<bean id="defaultJms" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory" ref="cachingConnectionFactory" />
+		<property name="pubSubDomain" value="true"/>
+		<!-- property name="defaultDestination" ref="defaultQueue" / -->
+		<property name="defaultDestinationName" value="ZHXJ_QUEUE" />
+		<property name="receiveTimeout" value="2000" />
+		<property name="sessionTransacted" value="true" />
+	</bean>
+
+	<!-- 配置监听消息的线程池 -->
+	<!-- <task:executor id="jmsTaskExecutor" rejection-policy="CALLER_RUNS" 
+		pool-size="10-20" keep-alive="300" queue-capacity="0" /> -->
+</beans>

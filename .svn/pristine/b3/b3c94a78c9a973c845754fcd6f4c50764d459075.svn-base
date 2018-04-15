@@ -1,0 +1,35 @@
+### \u8bbe\u7f6eLogger\u8f93\u51fa\u7ea7\u522b\u548c\u8f93\u51fa\u76ee\u7684\u5730 ### 
+log4j.rootLogger=error,stdout,logfile 
+### \u628a\u65e5\u5fd7\u4fe1\u606f\u8f93\u51fa\u5230\u63a7\u5236\u53f0 ### 
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender 
+
+#log4j.appender.stdout.Target=System.err 
+###log4j.appender.stdout.Target = System.out
+
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout 
+log4j.appender.stdout.layout.ConversionPattern=[%d{yyyy-MM-dd HH\:mm\:ss\:SSS}][%p]%m%n 
+### \u628a\u65e5\u5fd7\u4fe1\u606f\u8f93\u51fa\u5230\u6587\u4ef6\uff1ains.log ### 
+log4j.appender.logfile=org.apache.log4j.FileAppender 
+log4j.appender.logfile.File=ins.log 
+log4j.appender.logfile.layout=org.apache.log4j.PatternLayout 
+log4j.appender.logfile.layout.ConversionPattern=%d{yyyy-MM-dd HH\:mm\:ss} %F %p %m%n 
+
+##########################################
+log4j.logger.myTest1=INFO,A  
+log4j.appender.A=org.apache.log4j.DailyRollingFileAppender  
+log4j.appender.A.File=../logs/logtestA.log
+log4j.appender.A.layout=org.apache.log4j.PatternLayout  
+log4j.appender.A.layout.ConversionPattern=%d%m%n
+
+###\u663e\u793aSQL\u8bed\u53e5\u90e8\u5206 
+log4j.logger.com.ibatis=debug  
+log4j.logger.com.ibatis.common.jdbc.SimpleDataSource=ERROR  
+log4j.logger.com.ibatis.common.jdbc.ScriptRunner=ERROR  
+log4j.logger.com.ibatis.sqlmap.engine.impl.SqlMapClientDelegate=ERROR  
+log4j.logger.java.sql.Connection=ERROR 
+log4j.logger.java.sql.Statement=ERROR  
+log4j.logger.java.sql.PreparedStatement=ERROR
+log4j.logger.java.sql.ResultSet=ERROR
+
+
+

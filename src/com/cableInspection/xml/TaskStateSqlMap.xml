@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.TaskStateDao">
+
+	<update id="updateFinish" parameterType="map">
+		<![CDATA[
+		update tb_ins_task 
+		set status_id = 3,actual_complete_time = sysdate
+		where status_id = 2 
+			and complete_time <= to_date(#{endDate}, 'yyyy-mm-dd hh24:mi:ss') 
+			and complete_time >= to_date(#{startDate}, 'yyyy-mm-dd hh24:mi:ss')
+		]]>
+	</update>
+	
+	<update id="updateRun" parameterType="map">
+		<![CDATA[
+		update tb_ins_task 
+		set status_id = 2 
+		where status_id = 1 
+			and START_TIME = to_date(#{endDate}, 'yyyy-mm-dd hh24:mi:ss')
+		]]>
+	</update>
+</mapper>

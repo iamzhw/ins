@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.DispatchRelationDao">
+	
+	<select id="queryDispatchRelation" parameterType="map" resultType="map">
+	   SELECT PARENTAREA.NAME  AS PARENT_AREA_NAME,
+		       SONAREA.NAME     AS SON_AREA_NAME,
+		       GRID.GRID_NO,
+		       GRID.GRID_NAME,
+		       STAFF.STAFF_NO,
+		       STAFF.STAFF_NAME,
+		       STAFF.TEL,
+		       STAFF.ID_NUMBER,
+		       TCDR.CHECK_TYPE,
+		       TCDR.IS_ORDER,
+               TCDR.RELATION_ID,
+               TCDR.TEAM_NAME,
+           	   COMPANY.COMPANY_NAME
+		  FROM TB_BASE_STAFF                  STAFF,
+		       TB_CABLECHECK_DIPATCH_RELATION TCDR,
+		       TB_CABLECHECK_GRID             GRID,
+		       AREA                           PARENTAREA,
+		       AREA                           SONAREA,
+		       TB_BASE_MAINTAIN_COMPANY       COMPANY
+		 WHERE STAFF.STAFF_ID = TCDR.STAFF_ID
+		   AND STAFF.SON_AREA_ID = SONAREA.AREA_ID
+		   AND STAFF.AREA_ID = PARENTAREA.AREA_ID
+		   AND TCDR.COMPANY_ID = COMPANY.COMPANY_ID(+)
+		   AND TCDR.GRID_ID = GRID.GRID_ID(+)
+           AND TCDR.IS_DELETED = 0
+		   
+		   <!-- 地市和区县的判断，如果区县有值则判断区县；如果区县没有则判断地市 -->
+		   <choose>  
+		    	<when test="queryParams.qx_area_id != null and queryParams.qx_area_id != ''">  
+	                AND SONAREA.AREA_ID = #{queryParams.qx_area_id}
+	            </when>  
+	            <when test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	                AND PARENTAREA.AREA_ID = #{queryParams.AREA_ID}
+	            </when>
+        	</choose> 
+        	
+		   <!-- 实施人类型 -->
+		   <if test="queryParams.checkType != null and queryParams.checkType != ''">
+			   <![CDATA[
+			   AND TCDR.CHECK_TYPE = #{queryParams.checkType}
+			    ]]>
+		   </if>
+		   <!-- 网格 -->
+		   <if test="queryParams.whwgId != null and queryParams.whwgId != ''">
+			   <![CDATA[
+			    AND TCDR.GRID_ID = #{queryParams.whwgId}
+			    ]]>
+		   </if>
+		   <!-- 检查人 -->
+		   <if test="queryParams.checkName != null and queryParams.checkName != ''">
+			   <![CDATA[
+			   AND STAFF.STAFF_NAME LIKE '%'||#{queryParams.checkName}||'%'
+			    ]]>
+		   </if>
+		   <!-- 代维公司 -->
+		   <if test="queryParams.companyId != null and queryParams.companyId != ''">
+			   <![CDATA[
+			   AND COMPANY.COMPANY_ID = #{queryParams.companyId}
+			    ]]>
+		   </if>
+		   <!-- 检查人班组 -->
+		   <if test="queryParams.teamId != null and queryParams.teamId != ''">
+			   <![CDATA[
+			   AND TCDR.TEAM_ID like  '%'||#{queryParams.teamId}||'%'
+			    ]]>
+		   </if>
+		   
+		 ORDER BY TCDR.CHECK_TYPE, TCDR.IS_ORDER
+	</select>
+
+	<select id="getAreaList" resultType="map">
+		select area_id,name from
+		area where parent_area_id=2
+	</select>
+	
+	<select id="querySamePortRecord" parameterType="map" resultType="map">
+		select distinct re.eqp_no,re.eqp_name,re.port_id,re.port_no,
+           case re.ischeckok
+                 when '0' then '合格'
+                 when '1' then '不合格'
+           end ischeckok,
+           
+           f.staff_name create_staff,
+           to_char(re.create_time,'yyyy-mm-dd hh24:mi')create_time
+       from tb_cablecheck_record re 
+           left join tb_base_staff f on f.staff_id = re.create_staff
+       where re.port_id is not null 
+       	   <if test="queryParams.PORT_ID != null and queryParams.PORT_ID != ''">
+			   <![CDATA[
+			   AND re.port_id = #{queryParams.PORT_ID}
+			    ]]>
+		   </if>
+		    <if test="queryParams.AREA != null and queryParams.AREA != ''">
+			   <![CDATA[
+			   AND re.area_id = #{queryParams.AREA}
+			    ]]>
+		   </if>
+		    <if test="queryParams.SON_AREA != null and queryParams.SON_AREA != ''">
+			   <![CDATA[
+			   AND re.son_area_id = #{queryParams.SON_AREA}
+			    ]]>
+		   </if>
+		   <if test="queryParams.check_start_time != null and queryParams.check_start_time != ''">
+				  <![CDATA[
+				   AND re.create_time >= to_date(#{queryParams.check_start_time},'yyyy-mm-dd')
+					]]>
+			</if>
+			<if test="queryParams.check_end_time != null and queryParams.check_end_time != ''">
+				   <![CDATA[
+				   AND re.create_time <= to_date(#{queryParams.check_end_time},'yyyy-mm-dd')
+				    ]]>
+			</if>		   
+	       order by  to_char(re.create_time,'yyyy-mm-dd hh24:mi')desc              
+	</select>
+	
+	<select id="exportPortsRecord" parameterType="map" resultType="map">
+	  select distinct m.*,sj.glbh,to_char(sj.bdsj,'yyyy-mm-dd')bdsj,g.grid_name from (
+			select distinct a.name area,b.name son_area,re.eqp_id,re.eqp_no,re.eqp_name,re.port_id,re.port_no,count(distinct re.ischeckok)check_times
+			from tb_cablecheck_record re 
+			left join area a on a.area_id = re.area_id
+			left join area b on b.area_id =re.son_area_id
+			where re.port_id is not null 
+				 and re.record_type in (0,1,3,4)
+				 <if test="check_start_time != null and check_start_time != ''">
+				  <![CDATA[
+				  	 AND re.create_time >= to_date(#{check_start_time},'yyyy-mm-dd')
+				  ]]>
+				</if>
+				<if test="check_end_time != null and check_end_time != ''">
+			     <![CDATA[
+			    	 AND re.create_time <= to_date(#{check_end_time},'yyyy-mm-dd')
+			     ]]>
+				</if>				 			    						
+			group by a.name,b.name,re.eqp_id,re.eqp_no,re.eqp_name,re.port_id,re.port_no			
+		)m
+		left join tb_cablecheck_dtsj sj on sj.sbid=m.eqp_id and sj.dzid = m.port_id 
+		left join tb_cablecheck_equipment tb on tb.equipment_id=m.eqp_id
+		 left join tb_cablecheck_grid g on g.grid_id=tb.grid_id
+		where m.check_times=2 	
+			<if test="area != null and area != ''">
+				    AND tb.parent_area_id = #{area}
+			</if>
+			<if test="son_area != null and on_area != ''">
+					AND tb.area_id = #{son_area}
+			</if>
+			<if test="whwg != null and whwg != ''">
+					AND tb.grid_id = #{queryParams.whwg}
+			</if>
+			<if test="static_month != null and static_month != ''">
+				    AND to_char(sj.bdsj,'yyyy-mm') = #{static_month}
+			</if>
+			<if test="dz_start_time != null and dz_start_time != ''">
+				<![CDATA[
+					AND  sj.bdsj  >= to_date(#{dz_start_time}, 'yyyy-mm-dd')
+				]]>
+			</if>
+			<if test="dz_end_time != null and dz_end_time != ''">
+				<![CDATA[
+					AND  sj.bdsj  <= to_date(#{dz_end_time},'yyyy-mm-dd')
+				]]>
+			</if>
+			
+			<if test="RES_TYPE_ID != null and RES_TYPE_ID != ''">
+				   <![CDATA[
+				   AND TB.RES_TYPE_ID in (${RES_TYPE_ID})
+				   ]]>
+			</if>	
+			order by m.eqp_id, m.port_id, to_char(sj.bdsj,'yyyy-mm-dd')desc 
+	</select>
+	
+	<select id="getGridListByAreaId" parameterType="String" resultType="Map">
+		select * from tb_cablecheck_grid grid where grid.area_id = #{AREA_ID} and grid.grid_name is not null order by grid.son_area_id
+	</select>
+	
+	<select id="getSonAreaListByAreaId" parameterType="String" resultType="Map">
+		 SELECT * FROM area WHERE area.parent_area_id = #{AREA_ID} ORDER BY area.area_id
+	</select>
+	
+	<select id="queryStaff" parameterType="util.page.Query" resultType="map">
+		SELECT s.STAFF_ID, s.STAFF_NO, s.STAFF_NAME ,0 as STAFF_type,'个人' as STAFF_TYPE_NAME
+		FROM TB_BASE_STAFF s, TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr 
+		WHERE s.ISDELETED = 0 
+			and s.STATUS = 0 
+			and s.STAFF_ID = sr.STAFF_ID
+			and r.ROLE_ID = sr.ROLE_ID
+			and r.ROLE_NO = 'CABLE_XJY'
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		union
+		select dept.dept_id,dept.dept_no,dept.dept_name,1 as dept_type,'班组' as STAFF_TYPE_NAME from tb_ins_dept dept
+		where 1=1
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND dept.dept_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND dept.dept_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</select>
+	
+	<!--   RELATION_ID NUMBER not null,
+  STAFF_ID    NUMBER,
+  CHECK_TYPE  NUMBER,
+  IS_ORDER    NUMBER,
+  GRID_ID     NUMBER,
+  AREA_ID     NUMBER -->
+	
+	<!-- 添加派单关系 -->
+	<insert id="saveDispatchRelation" parameterType="map">
+		INSERT INTO TB_CABLECHECK_DIPATCH_RELATION
+		(RELATION_ID, 
+		 STAFF_ID, 
+		 CHECK_TYPE, 
+		 IS_ORDER, 
+		 GRID_ID, 
+		 AREA_ID,
+     	 COMPANY_ID,
+     	 TEAM_ID,
+     	 TEAM_NAME)
+		VALUES
+		(SEQ_TB_DIPATCH_RELATION.NEXTVAL,
+		#{STAFF_ID},
+		#{CHECK_TYPE},
+		#{IS_ORDER},
+		#{GRID_ID},
+		#{AREA_ID},
+		#{companyId},
+    	#{teamId,jdbcType=VARCHAR},
+    	#{teamName,jdbcType=VARCHAR})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="RELATION_ID">
+			SELECT SEQ_TB_DIPATCH_RELATION.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+	
+	<delete id="deleteRelation" parameterType="map" statementType="STATEMENT">
+		 UPDATE TB_CABLECHECK_DIPATCH_RELATION TCDR
+		   SET TCDR.IS_DELETED = 1
+		 WHERE TCDR.RELATION_ID IN (${RELATION_ID})
+	</delete>
+	
+	<select id="validateRelation" parameterType="Map" resultType="Map">
+		 SELECT *
+		  FROM TB_CABLECHECK_DIPATCH_RELATION TCDR
+		 WHERE TCDR.IS_ORDER = 1 AND IS_DELETED = 0
+		   <if test="CHECK_TYPE != null and CHECK_TYPE != '' and CHECK_TYPE == '2'">  
+            <![CDATA[
+	    	 AND TCDR.GRID_ID = #{GRID_ID}
+	    	]]>
+		   </if>
+		   
+		   <if test="CHECK_TYPE != null and CHECK_TYPE != '' and CHECK_TYPE == '3'">  
+            <![CDATA[
+	    	 AND TCDR.AREA_ID = #{AREA_ID}
+	    	]]>
+		   </if>
+		   
+		   <if test="CHECK_TYPE != null and CHECK_TYPE != '' and CHECK_TYPE == '4'">  
+            <![CDATA[
+	    	 AND TCDR.AREA_ID = #{AREA_ID}
+	    	]]>
+		   </if>
+
+	</select>
+	
+	
+	<select id="getTeamName" parameterType="Map" resultType="String">
+		select wm_concat(team_name) name from  tb_base_staff_zw_banzu where team_id in 
+		<foreach collection="list" item="teamId" index="index" open="("
+			close=")" separator=",">
+			#{teamId}
+		</foreach>
+	</select>
+	
+	
+	
+</mapper>

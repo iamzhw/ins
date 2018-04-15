@@ -1,0 +1,2109 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="icom.cableCheck.dao.CheckTaskDao">
+
+<select id="getArea" parameterType="map" resultType="int">
+select AREA_ID from  osspad.DESIGN_ORDER_STAFF WHERE STAFF_ID = #{staffId}
+</select>
+
+
+<select id="getTaskList" parameterType="map" resultType="map">
+	SELECT distinct tce.equipment_id eqpId,
+	                tce.equipment_code eqpNo,
+	                tce.equipment_name eqpName,
+	                tce.address address, 
+	                tce.area_id son_areaId, 
+	                tce.manage_area_id as manageCode,
+	                tce.manage_area manageName,
+	                tce.res_type_id eqp_type_id,
+	                tce.res_type eqp_type,
+	                ts.status_id taskState,
+	                ts.task_type taskType,
+	                ts.task_type data_source,
+	                tce.longitude longitude,
+	                tce.latitude latitude,
+	                tce.longitude_inspect longitude_inspect,
+	                tce.latitude_inspect latitude_inspect,
+	                '' last_check_time,
+	                ts.task_id taskId,
+	                '' rwmxId,
+	                ts.task_name taskName,
+	                ts.start_time,
+	                ts.complete_time end_time,
+	                ts.NO_EQPNO_FLAG NO_EQPNO_FLAG,
+	                ts.last_update_time,
+                   case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+                   tce.check_port_num,
+                   tce.rigth_port_num
+	  FROM tb_cablecheck_task ts
+	  left join tb_cablecheck_taskdetail td
+	    on ts.task_id = td.task_id
+	  left join TB_CABLECHECK_EQUIPMENT tce
+	    on tce.equipment_id = ts.sbid
+	    left join odso_eqp_daily oed on oed.phy_eqp_id = tce.equipment_id
+             and oed.local_area_id =tce.parent_area_id
+         WHERE ts.status_id in (2,6)
+           and ts.task_type in(0,4,5,10,11,12,13)
+           and tce.res_type_id&lt;&gt;2530
+           <if test="gridId != null and gridId != ''">  
+		    <![CDATA[
+		   		and tce.grid_id = #{gridId}
+		   	]]>
+		   </if>
+           AND (ts.inspector  = #{staffId})
+           
+           union
+           
+           SELECT r.eqp_id eqpId,
+                  r.eqp_no eqpNo,
+                  tb.equipment_name  eqpName,
+                  tb.address  address,
+                  ts.son_area_id son_areaId,
+                  '' as manageCode,
+                  '' manageName,
+                  tb.res_type_id eqp_type_id,
+                  '' eqp_type,
+                  ts.status_id taskState,
+                  ts.task_type taskType, 
+                  ts.task_type data_source,	
+                  r.longitude longitude,
+                  r.latitude latitude,
+                  tb.longitude_inspect longitude_inspect,
+	              tb.latitude_inspect latitude_inspect,
+                  '' last_check_time,
+                  ts.task_id taskId,
+                  '' rwmxId,
+                  ts.task_name taskName,
+                  ts.start_time,
+                  ts.complete_time  end_time,
+                  ts.NO_EQPNO_FLAG NO_EQPNO_FLAG ,
+                  ts.last_update_time,
+                       case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+                       tb.check_port_num,
+                       tb.rigth_port_num
+          FROM tb_cablecheck_task   ts,
+          	   tb_cablecheck_equipment tb,
+               tb_cablecheck_taskdetail td,
+               tb_cablecheck_record r,
+                odso_eqp_daily oed
+         WHERE ts.task_id = td.task_id
+           and  ts.status_id in (0,2,6)
+           and r.ischeckok=1
+           and td.inspect_object_id=r.record_id
+           and tb.equipment_id=ts.sbid
+           and td.inspect_object_type=0
+            and  oed.phy_eqp_id = tb.equipment_id
+             and oed.local_area_id =tb.parent_area_id
+           and ts.task_type in (1,2,3,6)
+           <if test="gridId != null and gridId != ''">  
+		    <![CDATA[
+		   		and tb.grid_id = #{gridId}
+		   	]]>
+		   </if>
+           AND (ts.MAINTOR = #{staffId})
+<!-- SELECT DISTINCT T.TASK_ID,
+                T.TASK_NAME,
+                T.TASK_NO,
+                T.AUDITOR,
+                T.MAINTOR,
+                T.TASK_TYPE,
+                T.COMPLETE_TIME,
+                T.STAFF_NAME,
+                T.JCY_NAME,
+                T.DETAIL_ID,
+                T.LAST_UPDATE_TIME,
+                 case T.STATUS_ID
+                when 4 then '隐患上报'
+           when 5 then '待派单'
+           when 6 then '待回单'
+           when 7 then '待审核'
+           when 8 then '归档'
+           end STATUS_ID
+  FROM (SELECT ts.TASK_ID,
+               ts.TASK_NAME,
+               ts.TASK_NO,
+               ts.AUDITOR,
+               ts.MAINTOR,
+               td.detail_id,
+               ts.TASK_TYPE,
+               ts.COMPLETE_TIME,
+               ts.LAST_UPDATE_TIME,
+               F1.STAFF_NAME,
+               F2.STAFF_NAME JCY_NAME,
+               ts.STATUS_ID
+          FROM tb_cablecheck_task   ts,
+               tb_cablecheck_taskdetail td,
+               tb_base_staff F1,
+               tb_base_staff F2
+         WHERE ts.task_id = td.task_id
+         and  ts.inspector  = F2.STAFF_ID
+           AND ts.MAINTOR = F1.STAFF_ID
+           and  ts.status_id in (0,2,6)
+           AND (ts.MAINTOR = #{staffId} OR ts.inspector  = #{staffId})) T
+ WHERE 1 = 1   --> 
+ <!-- SELECT tce.equipment_id eqpId,
+               tce.equipment_code eqpNo,
+               tce.equipment_name eqpName,
+               tce.address  address,
+               tce.manage_area_id as manageCode,
+               tce.manage_area manageName,
+               tce.res_type_id eqp_type_id,
+               tce.res_type eqp_type,
+                  ts.status_id taskState,
+                  ts.task_type taskType,
+                  ts.task_type data_source,		
+                be.longitude longitude,
+                be.latitude latitude,
+                  '' last_check_time,
+                  ts.task_id taskId,
+                  '' rwmxId,
+                  ts.task_name taskName,
+                  ts.complete_time  end_time,
+                  ts.NO_EQPNO_FLAG NO_EQPNO_FLAG ,
+                  ts.last_update_time last_update_time
+          FROM tb_cablecheck_task   ts,
+               tb_cablecheck_taskdetail td,
+               TB_CABLECHECK_DTSJ dtsj,
+               TB_CABLECHECK_EQUIPMENT tce
+               left join tb_base_equipment be on be.phy_eqp_id=tce.equipment_id
+         WHERE ts.task_id = td.task_id
+           and  ts.status_id in (0,2,6)
+           and dtsj.id=td.inspect_object_id
+           and tce.equipment_id=dtsj.sbid
+           and ts.task_type=0
+           and tce.res_type_id&lt;&gt;2530
+           AND (ts.MAINTOR = #{staffId} OR ts.inspector  = #{staffId})
+           
+           union
+           
+           SELECT r.eqp_id eqpId,
+                  r.eqp_no eqpNo,
+                  r.eqp_name eqpName,
+                  r.eqpaddress  address,
+                  '' as manageCode,
+                  '' manageName,
+                  '' eqp_type_id,
+                  '' eqp_type,
+                  ts.status_id taskState,
+                  ts.task_type taskType,
+                  ts.task_type data_source,		
+                  r.longitude longitude,
+                  r.latitude latitude,
+                  '' last_check_time,
+                  ts.task_id taskId,
+                  '' rwmxId,
+                  ts.task_name taskName,
+                  ts.complete_time  end_time,
+                  ts.NO_EQPNO_FLAG NO_EQPNO_FLAG ,
+                  ts.last_update_time last_update_time
+          FROM tb_cablecheck_task   ts,
+               tb_cablecheck_taskdetail td,
+               tb_cablecheck_record r
+         WHERE ts.task_id = td.task_id
+           and  ts.status_id in (0,2,6)
+           and td.inspect_object_id=r.record_id
+           and td.inspect_object_type=0
+           and ts.task_type in (1,2,3)
+           AND (ts.MAINTOR = #{staffId} OR ts.inspector  = #{staffId}) -->
+</select>
+
+<!--根据任务id,任务详情id查询设备列表-->
+	<select id="getDtsjList" parameterType="map" resultType="map">
+		SELECT DISTINCT sj.sbid SBID,
+		                nvl(sj.sbbm, ' ') SBBM,
+		                nvl(EQP.res_type, ' ') RES_TYPE,
+		                sj.sblx SBLX,
+		                nvl(sj.sbmc, ' ') SBMC,
+		                TO_CHAR(td.DETAIL_ID) RWMXID,
+		                TO_CHAR(td.TASK_ID) RWID,
+		                nvl(ts.TASK_NAME, ' ') RWMC,
+		                ts.TASK_TYPE,
+		                nvl(case ts.STATUS_ID
+		                      when 4 then '隐患上报'
+		                      when 5 then '待派单'
+		                      when 6 then '待回单'
+		                      when 7 then '待审核'
+		                      when 8 then '归档'
+		                    end,' ') STATUS_ID,
+		                nvl(TO_CHAR(ts.LAST_UPDATE_TIME, 'yyyy/mm/dd'), ' ') LAST_UPDATE_TIME,
+		                nvl(TO_CHAR(ts.COMPLETE_TIME, 'yyyy/mm/dd'), ' ') COMPLETE_TIME,
+		                nvl(eqp.LONGITUDE, ' ') LONGITUDE,
+		                nvl(eqp.LATITUDE, ' ') LATITUDE,
+		                nvl(eqp.ADDRESS, ' ') ADDRESS
+		  FROM TB_CABLECHECK_DTSJ sj
+		  left join tb_cablecheck_record rec
+		    on sj.sbid = rec.eqp_id
+		  left join tb_cablecheck_taskdetail td
+		    on rec.record_id = td.inspect_object_id
+		  left join tb_cablecheck_task ts
+		    on ts.TASK_ID = td.TASK_ID
+		  left join TB_CABLECHECK_EQUIPMENT eqp
+		    on sj.sbid = eqp.equipment_id
+		 WHERE ts.TASK_ID = #{RWID}
+		   and td.detail_id = #{RWMXID}
+		   and td.inspect_object_type = 0
+		   and ts.status_id in (0, 2, 6)
+	</select>
+
+
+<!--oss中设备模糊匹配-->
+	<!-- <select id="getClList" parameterType="map" resultType="map">
+		SELECT DISTINCT T.*
+		FROM (SELECT '' ID,
+		PE.NO SBBM,
+		PE.RES_SPEC_ID SBLX,
+		PE.NAME SBMC,
+		'' BDSJ,
+		CASE
+		WHEN (SELECT TO_CHAR(LB.NO)
+		FROM ressz.LNK_PHY_LINK_COMPONENT LP,
+		ressz.LNK_BUSI_LINK_2_LINK LBL,
+		ressz.LNK_BUSINESS_LINK LB
+		WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+		AND LP.LINK_ID = LBL.LINK_ID(+)
+		AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+		AND ROWNUM = 1) IS NOT NULL THEN
+		(SELECT TO_CHAR(LB.NO)
+		FROM ressz.LNK_PHY_LINK_COMPONENT LP,
+		ressz.LNK_BUSI_LINK_2_LINK LBL,
+		ressz.LNK_BUSINESS_LINK LB
+		WHERE PTP.PHY_PORT_ID = LP.A_PHY_PORT_ID
+		AND LP.LINK_ID = LBL.LINK_ID(+)
+		AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+		AND ROWNUM = 1)
+		ELSE
+		(SELECT TO_CHAR(LB.NO)
+		FROM ressz.LNK_PHY_LINK_COMPONENT LP,
+		ressz.LNK_BUSI_LINK_2_LINK LBL,
+		ressz.LNK_BUSINESS_LINK LB
+		WHERE PTP.PHY_PORT_ID = LP.Z_PHY_PORT_ID
+		AND LP.LINK_ID = LBL.LINK_ID(+)
+		AND LBL.BUSI_LINK_ID = LB.BUSI_LINK_ID(+)
+		AND ROWNUM = 1)
+		END  GLBH,
+		'' GDJGSJ,
+		'' JCSJ,
+		'' GXSJ,
+		'1' JCLX,
+		#RWMXID# RWMXID,
+		'' PZGH,
+		'' SGGH,
+		'' GQGH,
+		'' XZ,
+		PU.NO KH
+		FROM ressz.PHY_EQUIPMENT PE,
+		ressz.PHY_TERM_PORT PTP,
+		ressz.PHY_EQP_UNIT PU
+		WHERE PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+		AND PE.PHY_EQP_ID  #SBID#
+		AND PTP.UNIT_ID = PU.UNIT_ID(+)) T
+		ORDER BY T.KH
+</select> -->
+
+	<select id="getEquipList" parameterType="map" resultType="map">
+	
+	select distinct(eqp.longitude),eqp.latitude,SBID,sj.SBBM,sj.SBLX,sj.SBMC,
+	eqp.RES_TYPE,eqp.ADDRESS
+		from TB_CABLECHECK_DTSJ sj,
+		TB_CABLECHECK_EQUIPMENT eqp
+		where sj.sbid=eqp.equipment_id
+		and sj. sbid = #{sbid}
+		and sj.BDSJ &gt;=trunc(add_months(sysdate,-1),'mm')
+    and sj.BDSJ &lt;=trunc(last_day(add_months(sysdate,-1)))
+	</select>
+
+
+	<!--//检查类型为1时，设备列表-->
+	<select id="getEqpList" parameterType="map" resultType="map">
+		SELECT *
+		FROM (SELECT MX.*,
+		CASE
+		WHEN MX.GZL>=MX.GZZL THEN
+		'1'
+		ELSE
+		'0'
+		END SFWC,
+		CASE
+		WHEN MX.GZL = 0 OR MX.GZL IS NULL THEN
+		'0.00%'
+		WHEN MX.GZZL = 0 OR MX.GZZL IS NULL THEN
+		''
+		ELSE
+		TO_CHAR(ROUND(MX.GZL * 100 / MX.GZZL, 2), 'FM99999990.00') || '%'
+		END WCBL,
+		'1' JCLX
+		FROM osspad.TB_CABLECHECK_RWMX MX, osspad.TB_CABLECHECK_RW RW
+		WHERE MX.RWID = RW.RWID
+		AND RW.JCLX = '1'
+		AND RW.RWID = #RWID#) T
+		ORDER BY T.SBMC, T.SFWC, T.SBID, T.SBBM
+		</select>
+
+	<select id="getDistance" parameterType="map" resultType="map"><!--
+		select distinct nvl(eqp.longitude, ' ') longitude,
+		                nvl(eqp.latitude, ' ') latitude,
+		                eqp.equipment_id SBID,
+		                nvl(eqp.equipment_code, ' ') SBBM,
+		                nvl(eqp.res_type_id, ' ') SBLX,
+		                nvl(eqp.equipment_name, ' ') SBMC,
+		                nvl(eqp.RES_TYPE, ' ') RES_TYPE,
+		                nvl(eqp.address, ' ') address
+		  from TB_CABLECHECK_EQUIPMENT eqp
+		 where abs(#{latitude} - eqp.latitude) &lt;= #{degree} 
+		 and abs(#{longitude} - eqp.longitude) &lt;= #{degree}
+	-->
+	 select mm.*,
+        (select count(distinct r.port_id)
+           from TB_CABLECHECK_RECORD r
+          where r.task_id = mm.task_id
+            and r.record_type != 2
+            and r.port_id is not null) NUM,
+        (select count(distinct r.port_id)
+           from TB_CABLECHECK_RECORD r
+          where r.task_id = mm.task_id
+            and r.ischeckok = 0
+            and r.record_type != 2
+            and r.port_id is not null) NUM2
+   from (select nvl(eqp.longitude, ' ') longitude,
+                nvl(eqp.latitude, ' ') latitude,
+                nvl(eqp.longitude_inspect, ' ') longitude_inspect,
+	            nvl(eqp.latitude_inspect, ' ') latitude_inspect,
+                eqp.equipment_id SBID,
+                nvl(eqp.equipment_code, ' ') SBBM,
+                nvl(eqp.res_type_id, ' ') SBLX,
+                nvl(eqp.equipment_name, ' ') SBMC,
+                nvl(eqp.RES_TYPE, ' ') RES_TYPE,
+                nvl(eqp.address, ' ') address,
+                to_char(eqp.check_complete_time,'yyyy-mm-dd hh24:mi:ss') check_complete_time,           
+                ROW_NUMBER() OVER(PARTITION BY task.sbid ORDER BY task.start_time DESC) rn,
+                task.task_id,
+                 e.contract_persion_no ,
+                 case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+                 e.contract_persion_name,
+                 e.IDENTIFYID,
+                 eqp.isdeal,
+                  to_char(eqp.deal_time,'yyyy-mm-dd hh24:mi:ss') deal_time   
+           from TB_CABLECHECK_EQUIPMENT eqp
+           left join tb_cablecheck_task task
+             on task.sbid = eqp.equipment_id
+         left join tb_base_contract_equipment e on e.equipment_id = eqp.equipment_id and e.area_id = eqp.parent_area_id
+          left join odso_eqp_daily oed on oed.phy_eqp_id = eqp.equipment_id
+             and oed.local_area_id =eqp.parent_area_id
+          where 
+        
+		 ((task.task_type in (0, 4,5) and task.status_id = 8) or
+                (task.task_type in (1, 2)))
+         <!--  AND abs(#{latitude} - eqp.latitude) &lt;= #{degree} 
+		 and abs(#{longitude} - eqp.longitude) &lt;= #{degree} -->
+		 AND abs(#{latitude} - nvl(eqp.latitude_inspect,eqp.latitude)) &lt;= #{degree}  
+         and abs(#{longitude} - nvl(eqp.longitude_inspect, eqp.longitude)) &lt;= #{degree} 
+         
+         ) mm
+  where rn = 1
+                
+	</select>
+
+	<!-- 获取设备的全部端子 -->
+	<select id="getAllPort" parameterType="map" resultType="int">
+		SELECT COUNT(DZID) DZ FROM TB_CABLECHECK_DTSJ WHERE SBID=#{sbid}
+	</select>
+ 	<!-- 获取设备变动的端子 -->
+	<select id="getChangePort" parameterType="map" resultType="int">
+		SELECT COUNT(distinct(DZID)) CDZ FROM TB_CABLECHECK_DTSJ sj,area a
+		WHERE 
+		sj.AREAID=a.area_id
+		and sj.BDSJ &gt;=trunc(add_months(sysdate,-1),'mm')
+		   and sj.BDSJ &lt;=trunc(last_day(add_months(sysdate,-1)))
+		and (sj.install_sbid=#{sbid} 
+		
+		)
+		and a.parent_area_id=#{areaId}
+	</select>
+	
+	<select id="getDelPort" parameterType="map" resultType="int">
+		SELECT COUNT(distinct(DZID)) CDZ FROM TB_CABLECHECK_DTSJ sj,area a
+		WHERE 
+		sj.AREAID=a.area_id
+		and sj.BDSJ &gt;=trunc(add_months(sysdate,-1),'mm')
+		   and sj.BDSJ &lt;=trunc(last_day(add_months(sysdate,-1)))
+		and (sj.install_sbid=#{sbid} 
+		and sj.xz=17
+		)
+		and a.parent_area_id=#{areaId}
+	</select>
+ 
+ 
+ <select id="getEqpByEup" parameterType="map" resultType="map">
+	select distinct nvl(eqp.longitude, ' ') longitude,
+	                nvl(eqp.latitude, ' ') latitude,
+	                nvl(eqp.longitude_inspect, ' ') longitude_inspect,
+	                nvl(eqp.latitude_inspect, ' ') latitude_inspect,
+	                eqp.equipment_id AS SBID,
+	                nvl(eqp.equipment_code, ' ') SBBM,
+	                nvl(eqp.equipment_name, ' ') SBMC,
+	                eqp.RES_TYPE,
+	                eqp.res_type_id SBLX,
+	               to_char(eqp.check_complete_time,'yyyy-mm-dd hh24:mi:ss') check_complete_time,
+	                eqp.address ,
+	                 e.contract_persion_no ,
+	                 e.IDENTIFYID,
+	                  eqp.isdeal,
+	                   e.contract_persion_name,
+	                    case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+                  to_char(eqp.deal_time,'yyyy-mm-dd hh24:mi:ss') deal_time      
+	  from TB_CABLECHECK_EQUIPMENT eqp 
+	  left join area a
+	    on eqp.area_id = a.area_id
+	     left join tb_base_contract_equipment e on e.equipment_id = eqp.equipment_id and e.area_id = eqp.parent_area_id
+	       left join odso_eqp_daily oed on oed.phy_eqp_id = eqp.equipment_id
+             and oed.local_area_id =eqp.parent_area_id
+	 where eqp.parent_area_id = #{areaId}
+    <if test="eqpType != null and eqpType != ''">  
+		    <![CDATA[
+		   		AND eqp.RES_TYPE_ID = #{eqpType}
+		   	]]>
+	</if>
+	<if test="eqpName != null and eqpName != ''">  
+		    <![CDATA[ 
+		   		AND instr(eqp.equipment_name,#{eqpName})>0
+		   	]]>
+	</if>
+	
+	<if test="eqpNo != null and eqpNo != ''">  
+		    <![CDATA[
+		   		AND instr(eqp.equipment_code,#{eqpNo})>0
+		   	]]>
+	</if>
+ </select>
+ 
+ <select id="getEqpByDZLight" parameterType="map" resultType="map">
+	select distinct nvl(eqp.longitude, ' ') longitude,
+	                nvl(eqp.latitude, ' ') latitude,
+	                nvl(eqp.longitude_inspect, ' ') longitude_inspect,
+	                nvl(eqp.latitude_inspect, ' ') latitude_inspect,
+	                eqp.equipment_id AS SBID,
+	                nvl(eqp.equipment_code, ' ') SBBM,
+	                nvl(eqp.equipment_name, ' ') SBMC,
+	                eqp.RES_TYPE,
+	                eqp.res_type_id SBLX,
+	                to_char(eqp.check_complete_time,'yyyy-mm-dd hh24:mi:ss') check_complete_time,
+	                eqp.address,
+	                e.contract_persion_no ,
+	                 case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+	                 eqp.isdeal,
+	                 e.contract_persion_name,
+	                 e.IDENTIFYID,
+                  to_char(eqp.deal_time,'yyyy-mm-dd hh24:mi:ss') deal_time       
+	  from TB_CABLECHECK_EQUIPMENT eqp 
+	  left join TB_CABLECHECK_DTSJ s  on s.install_sbid=eqp.equipment_id 
+	   left join tb_base_contract_equipment e on e.equipment_id = eqp.equipment_id and e.area_id = eqp.parent_area_id
+	   left join odso_eqp_daily oed on oed.phy_eqp_id = eqp.equipment_id
+             and oed.local_area_id =eqp.parent_area_id
+	 where 1=1 
+	 <if test="areaId != null and areaId != ''">  
+	    <![CDATA[
+	   		AND eqp.parent_area_id = #{areaId}
+	   	]]>
+	</if>
+	<if test="glbh != null and glbh != ''">  
+	    <![CDATA[
+	    	and s.glbh=#{glbh}
+	   	]]>
+	</if>
+	<if test="eqpType != null and eqpType != ''">  
+	    <![CDATA[
+	   		AND eqp.RES_TYPE_ID = #{eqpType}
+	   	]]>
+	</if>
+ </select>
+ 
+  <select id="getEqpByLight" parameterType="map" resultType="map">
+	select distinct
+	      ' ' longitude,
+	      ' ' latitude,
+	      ' ' longitude_inspect,
+	      ' ' latitude_inspect,
+	      ' ' contract_persion_no,
+	      ' ' contract_persion_name, 
+	      ' ' IDENTIFYID,
+	      ' ' WLJB,
+	      ' ' isdeal,
+	      ' ' deal_time,
+          pe.phy_eqp_id sbid,
+          pe.no sbbm,
+          pe.name sbmc,
+          pe.address,
+          pe.res_spec_id SBLX, 
+          ' ' check_complete_time,
+          spec.name RES_TYPE    
+ 	from  ${jndi}.LNK_BUSINESS_LINK LB
+          left join ${jndi}.LNK_BUSI_LINK_2_LINK LBL on lb.busi_link_id=lbl.busi_link_id 
+          left join ${jndi}.LNK_PHY_LINK_COMPONENT lp on lp.link_id = lbl.link_id 
+          left join ${jndi}.PHY_TERM_PORT PTP on ptp.phy_port_id=LP.Z_PHY_PORT_ID
+          left join ${jndi}.PHY_EQUIPMENT PE on pe.phy_eqp_id=ptp.phy_eqp_id
+           left join ${jndi}.pub_resource_spec spec on spec.res_spec_id = pe.res_spec_id
+	 where pe.res_spec_id in (411,703,704,414,2530)  and  lb.no = #{glbh}
+
+	<if test="eqpType != null and eqpType != ''">  
+	    <![CDATA[
+	   		AND pe.res_spec_id = #{eqpType}
+	   	]]>
+	</if>
+ </select>
+ 
+  <select id="getAccurateEup" parameterType="map" resultType="map">
+	select distinct nvl(eqp.longitude, ' ') longitude,
+	                nvl(eqp.latitude, ' ') latitude,
+	                nvl(eqp.longitude_inspect, ' ') longitude_inspect,
+	                nvl(eqp.latitude_inspect, ' ') latitude_inspect,
+	                eqp.equipment_id AS SBID,
+	                nvl(eqp.equipment_code, ' ') SBBM,
+	                nvl(eqp.equipment_name, ' ') SBMC,
+	                eqp.RES_TYPE,
+	                eqp.res_type_id SBLX,
+	                to_char(eqp.check_complete_time,'yyyy-mm-dd hh24:mi:ss')check_complete_time,
+	                eqp.address,
+	                eqp.contract_person_name,
+	                eqp.identify IDENTIFYID,
+	                '' contract_persion_no ,
+	                eqp.isdeal,
+	               <!--  e.contract_persion_name,
+	                e.IDENTIFYID, -->
+	                <!--  case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,-->
+	                case eqp.wljb when '80000302' then '接入层' when '81538172' then '网络层' else '其他' end WLJB,
+                    to_char(eqp.deal_time,'yyyy-mm-dd hh24:mi:ss') deal_time ,
+                     (select count(distinct sj.dzid) from tb_cablecheck_dtsj sj where sj.install_sbid=eqp.equipment_id and sj.bdsj &gt;=trunc(add_months(sysdate,-1),'mm')
+                        and sj.BDSJ &lt;=trunc(last_day(add_months(sysdate,-1))))changeportnum
+	  from TB_CABLECHECK_EQUIPMENT eqp 
+	  <if test="glbh != null and glbh != ''">  
+	    	<![CDATA[
+	   		 left join tb_cablecheck_dtsj sj on sj.sbid=eqp.equipment_id
+	   		]]>
+		</if>
+	 
+	 <!-- left join tb_base_contract_equipment e on e.equipment_id = eqp.equipment_id and e.area_id = eqp.parent_area_id
+	   left join odso_eqp_daily oed on oed.phy_eqp_id = eqp.equipment_id and oed.local_area_id =eqp.parent_area_id -->
+	 where 1=1
+	   <!-- and eqp.equipment_code = #{eqpNo} -->
+      <if test="areaId != null and areaId != ''">  
+            <![CDATA[
+	    	AND eqp.parent_area_id =#{areaId}
+	    	]]>
+	  </if>
+	  <if test="eqpName != null and eqpName != ''">  
+	        <![CDATA[ 
+	   		AND eqp.equipment_name = #{eqpName}
+   			]]>
+	</if>
+	<if test="eqpNo != null and eqpNo != ''">  
+	    	<![CDATA[
+	   		AND eqp.equipment_code = #{eqpNo} 
+	   		]]>
+	</if>
+	<if test="glbh != null and glbh != ''">  
+	    	<![CDATA[
+	   		AND sj.glbh = #{glbh} 
+	   		]]>
+	</if>
+ </select>
+ <select id="getBDSJByEqpId" parameterType="String" resultType="String">
+	 select bdsj
+	  from (SELECT sj.*
+	          FROM TB_CABLECHECK_DTSJ sj
+	         WHERE sj.BDSJ &gt;= trunc(add_months(sysdate, -1), 'mm')
+	           and sj.BDSJ &lt;= trunc(last_day(add_months(sysdate, -1)))
+	           and sj.sbid = #{eqpId}
+	         order by sj.bdsj desc)
+	 where rownum = 1
+ </select>
+ <select id="getIsH" parameterType="String" resultType="String">
+	select count(t.h) from TB_CABLECHECK_DTSJ t where t.sbid=#{eqpId} and t.h=0
+ </select>
+ 
+ <select id="getStaffByRoleAndArea" parameterType="map" resultType="map">
+ 	   SELECT S.AREA_ID AREAID,
+			A.NAME AREANAME,
+			S.SON_AREA_ID SONAREAID,
+			AR.NAME SONAREANAME,
+			SD.DEPT_ID GRIDID,
+			D.DEPT_NAME GRIDNAME,
+			S.STAFF_ID STAFFID,
+			S.STAFF_NO STAFFNO,
+			S.STAFF_NAME STAFFNAME,
+			0 STAFFTYPE
+	 FROM TB_BASE_STAFF S
+	left JOIN TB_BASE_STAFF_ROLE SR ON SR.STAFF_ID=S.STAFF_ID
+    left join tb_base_role r on r.role_id = sr.role_id
+	LEFT JOIN AREA A ON A.AREA_ID=S.AREA_ID
+	LEFT JOIN AREA AR ON AR.AREA_ID=S.SON_AREA_ID
+	LEFT JOIN TB_INS_STAFF_DEPT SD ON SD.STAFF_ID=S.STAFF_ID
+	LEFT JOIN TB_INS_DEPT D ON D.DEPT_ID=SD.DEPT_ID
+	WHERE s.isdeleted=0
+	and r.ROLE_ID=#{role_id}
+	<if test="areaId != null and areaId != ''">  
+	AND S.AREA_ID=#{areaId}
+	</if>
+	<if test="sonAreaId != null and sonAreaId != ''">  
+	AND S.SON_AREA_ID=#{sonAreaId}
+	</if>
+ </select>
+ 
+ <select id="getCheckPort" parameterType="map" resultType="map">
+		
+   select m.*,
+        decode(m.num, 0, 0, round((m.num2 / m.num), 3) * 100) || '%' checkrate
+   from (
+         
+         select count(1) num,
+                 count(case
+                         when tcr.ischeckok = 0 then
+                          1
+                       end) num2
+           from tb_cablecheck_record tcr
+          where tcr.task_id = (select *
+                                 from (select r.task_id
+                                         from tb_cablecheck_record r
+                                         left join tb_cablecheck_task t
+                                           on r.task_id = t.task_id
+                                        where r.eqp_id = #{sbid}
+                                          and r.record_type != 2
+                                          and t.task_type != 3
+                                          and r.port_no is not null
+                                          and r.area_id = #{areaId}
+                                        order by r.create_time desc) a
+                                where rownum = 1)
+            and tcr.record_type != 2
+            and tcr.port_no is not null) m
+   
+
+	</select>
+	
+	<select id="getRateOfAllGl" parameterType="map" resultType="map">
+		select
+    	 count(distinct t1.dzid) allnum,
+   		 count(distinct t1.glbh) glbhnum
+	    from (
+		  select T.*, 
+		           to_char(nvl(lbl.no,'')) glbh,
+		           to_char(nvl(lbl.name,' ')) glmc,
+		           ps.state_id xz_id,
+		           ps.name xz_name
+		      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+		                   CASE
+		                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+		                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+		                   END DZBM,
+		                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+		                   PE.NO SBBM,
+		                   PE.RES_SPEC_ID SBLX,
+		                   PE.NAME SBMC,
+		                   PE.ADDRESS,
+		                   SPEC.NAME,
+		                   PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+		                   case when  alplc.z_phy_port_id is null
+		                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+		                   else
+		                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+		                    end z_phy_port_id,
+		                    case when  alplc.z_phy_port_id is null
+		                   then min(zlplc.link_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+		                   else
+		                    min(alplc.link_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+		                    end link_id,
+		                    case when  alplc.WO_ID is null
+		                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+		                   else
+		                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+		                    end WO_ID            
+		              FROM ${jndi}.PHY_EQUIPMENT PE
+		              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+		              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+		              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+		              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+		              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id    
+		             WHERE PE.PHY_EQP_ID = #{sbId}
+		           ) T
+		      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+		      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+		      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+		      left join ${jndi}.Srv_Work_Order swo on T.wo_id =  swo.wo_id
+		      left join ${jndi}.PUB_STATUS ps on swo.state_id=ps.state_id
+		  ) t1
+		  ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+      
+	</select>
+ 
+ 
+   <select id="getRoleId" parameterType="string" resultType="map">
+		select r.role_id,r.role_name,r.role_no from tb_base_staff f 
+		left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+		left join tb_base_role r on r.role_id=sr.role_id
+		where f.staff_id=#{staffId}
+   </select>
+   
+   <select id="selectGrid" parameterType="map" resultType="map">
+   select tg.grid_id,tg.grid_no,tg.grid_name from tb_cablecheck_grid tg where tg.area_id=(
+   select ts.area_id from tb_base_staff ts where ts.staff_id=#{staffId}) and tg.grid_name is not null
+
+   <!--
+	select tcb.longitude,tcb.latitude,tcb.longitude_inspect,tcb.latitude_inspect,tcb.equipment_id,tcb.equipment_code,tcb.equipment_name from tb_cablecheck_grid tcg right join tb_cablecheck_equipment tcb on tcg.grid_id=tcb.grid_id
+	
+	--></select>
+   
+ <select id="getDistanceEmp" parameterType="map" resultType="map">
+ 	select * from ( select count(1) n,grid_id,grid_name,grid_no from ( select tcb.grid_id,tcg.grid_name,tcg.grid_no from  tb_cablecheck_equipment tcb 
+ left join tb_cablecheck_grid tcg on tcb.grid_id=tcg.grid_id
+  where 1=1
+     and abs(#{latitude} - nvl(tcb.latitude_inspect,tcb.latitude)) &lt;= #{degree}  
+         and abs(#{longitude} - nvl(tcb.longitude_inspect, tcb.longitude))  &lt;= #{degree} ) group by grid_id,grid_name,grid_no order by n desc ) where rownum &lt; 2
+ 
+ 
+ 
+  <!--  select tcb.grid_id,tcg.grid_name from  tb_cablecheck_equipment tcb 
+ left join tb_cablecheck_grid tcg on tcb.grid_id=tcg.grid_id
+	where 1=1
+		 and abs(#{latitude} - nvl(tcb.latitude_inspect,tcb.latitude)) &lt;= #{degree}  
+         and abs(#{longitude} - nvl(tcb.longitude_inspect, tcb.longitude)) &lt;= #{degree}
+	--></select>
+ 
+ 	<select id="getGridQumCount" parameterType="map" resultType="map">
+		select count(tce.equipment_id)num, tce.res_type,tce.res_type_id from tb_cablecheck_equipment tce
+		 where tce.grid_id=#{gard_id}  
+		<if test="eqpType != null and eqpType != ''">  
+		    <![CDATA[
+		   		AND TCE.RES_TYPE_ID = #{eqpType}
+		   	]]>
+		</if>
+		<if test="eqpCode != null and eqpCode != ''">  
+		    <![CDATA[
+		   		AND TCE.EQUIPMENT_CODE = #{eqpCode}
+		   	]]>
+		</if>
+		<if test="eqpAddress != null and eqpAddress != ''">  
+		    <![CDATA[
+		   		AND TCE.ADDRESS = #{eqpAddress}
+		   	]]>
+		</if>
+   		 group by tce.res_type_id, tce.res_type
+	</select>
+ 
+ 	<select id="getGridQum" parameterType="map" resultType="map">
+ 	
+ 		<!-- 2017年10月23日 19:44:12   若凡优化 -->
+ 		<!-- select * from (
+		select distinct tce.equipment_id,
+		       tce.equipment_code,
+		       tce.equipment_name,
+		       tce.area_id,
+		       tce.parent_area_id,
+		       tce.res_type,
+		       tce.address,
+		       to_char(tce.check_complete_time, 'yyyy-mm-dd hh24:mi:ss') check_complete_time,
+		       count(distinct tco.order_id) OVER(PARTITION BY tce.equipment_id) ordernum
+		   from 
+		   tb_cablecheck_dtsj sj
+		   join tb_cablecheck_equipment tce on sj.install_sbid=tce.equipment_id
+		   join tb_cablecheck_order tco on tco.btsj_id = sj.id
+              where sj.bdsj &gt;= to_date(#{port_start_time},'yyyy-mm-dd') 
+              and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd')
+              and sj.install_sbid=tce.equipment_id
+	          and tce.grid_id = to_number(10124)
+	          and tco.mark = 1
+	          and tco.area_id=3
+		  )
+		 order by ordernum desc -->
+ 		
+ 	
+ 	
+ 		select tce.equipment_id,tce.equipment_code,tce.equipment_name,tce.area_id,tce.parent_area_id, tce.res_type,tce.address,to_char(tce.check_complete_time,'yyyy-mm-dd hh24:mi:ss')check_complete_time,tt.ordernum from tb_cablecheck_equipment tce 
+		inner join 		
+		  (select  tb.EQUIPMENT_ID,tb.EQUIPMENT_CODE,count( distinct tco.order_no) ordernum from tb_cablecheck_dtsj sj 
+		         join tb_cablecheck_order tco on tco.btsj_id=sj.id
+		         inner join tb_cablecheck_equipment tb on tb.equipment_id=sj.install_sbid
+		         inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+		         left join tb_base_staff f on f.id_number=tb.identify
+		         where  sj.bdsj &gt;= to_date(#{port_start_time},'yyyy-mm-dd') and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd')
+		          and tco.mark=1 
+		         and aod.arch_tp='REVERT'
+		         and tco.area_id=#{areaId}
+		         	<if test="gard_id != null and gard_id != ''">  
+					    <![CDATA[
+					   		and tb.grid_id=to_number(#{gard_id})
+					   	]]>
+					</if>
+			        <if test="eqpType != null and eqpType != ''">  
+					    <![CDATA[
+					   		AND tb.RES_TYPE_ID = to_number(#{eqpType})
+					   	]]>
+					</if>
+				 	<if test="eqpCode != null and eqpCode != ''">  
+					    <![CDATA[
+					   		AND instr(tb.EQUIPMENT_CODE,#{eqpCode})>0
+					   	]]>
+					</if>
+					<if test="eqpAddress != null and eqpAddress != ''">  
+					    <![CDATA[
+					    	AND instr(tb.ADDRESS,#{eqpAddress})>0
+					   	]]>
+					</if> 
+					<if test="staffId != null and staffId != ''">  
+					    <![CDATA[
+					    	and f.isdeleted=0 and f.status=0 and f.staff_id=#{staffId}
+					   	]]>
+					</if> 	
+		         group by tb.EQUIPMENT_ID,tb.EQUIPMENT_CODE)tt
+		         on tt.EQUIPMENT_ID=tce.equipment_id and tt.EQUIPMENT_CODE=tce.equipment_code  
+		         order by ordernum desc 
+ 	
+	<!--  select t.EQUIPMENT_ID,t.EQUIPMENT_CODE,t.EQUIPMENT_NAME from (  
+	     select  tb.EQUIPMENT_ID,tb.EQUIPMENT_CODE,tb.EQUIPMENT_NAME,count( distinct tco.order_no) ordernum from tb_cablecheck_dtsj sj 
+	     join tb_cablecheck_order tco on tco.btsj_id=sj.id
+	     inner join tb_cablecheck_equipment tb on tb.equipment_id=sj.install_sbid
+	     where  sj.bdsj &gt;= trunc(add_months(sysdate,-1),'mm') and sj.bdsj &lt;trunc(sysdate,'mm') 
+	     and tb.grid_id=to_number(#{gard_id}) and tco.mark=1
+	     		<if test="eqpType != null and eqpType != ''">  
+				    <![CDATA[
+				   		AND tb.RES_TYPE_ID = to_number(#{eqpType})
+				   	]]>
+				</if>
+			 	<if test="eqpCode != null and eqpCode != ''">  
+				    <![CDATA[
+				   		AND instr(tb.EQUIPMENT_CODE,#{eqpCode})>0
+				   	]]>
+				</if>
+				<if test="eqpAddress != null and eqpAddress != ''">  
+				    <![CDATA[
+				    	AND instr(tb.ADDRESS,#{eqpAddress})>0
+				   	]]>
+				</if> 		     	     
+	     group by tb.EQUIPMENT_ID,tb.EQUIPMENT_CODE,tb.EQUIPMENT_NAME     
+     ) t order by ordernum desc -->
+					 
+	</select>
+	
+	<select id="getGridQumAll" parameterType="map" resultType="map">
+	select * from (
+ 		select tce.equipment_id,tce.equipment_code,tce.equipment_name,tce.area_id,tce.parent_area_id, tce.res_type,tce.address,
+ 		to_char(tce.check_complete_time,'yyyy-mm-dd hh24:mi:ss')check_complete_time,'0' ordernum 
+ 		,rownum rn from tb_cablecheck_equipment tce 
+			 left join  tb_base_staff f on f.id_number=tce.identify
+		     where   1=1
+		     	<if test="areaId != null and areaId != ''">  
+				    <![CDATA[
+				   		and tce.parent_area_id=to_number(#{areaId})
+				   	]]>
+				</if>
+		     	<if test="gard_id != null and gard_id != ''">  
+				    <![CDATA[
+				   		and tce.grid_id=to_number(#{gard_id})
+				   	]]>
+				</if>
+		        <if test="eqpType != null and eqpType != ''">  
+				    <![CDATA[
+				   		AND tce.RES_TYPE_ID = to_number(#{eqpType})
+				   	]]>
+				</if>
+			 	<if test="eqpCode != null and eqpCode != ''">  
+				    <![CDATA[
+				   		AND instr(tce.EQUIPMENT_CODE,#{eqpCode})>0
+				   	]]>
+				</if>
+				<if test="eqpAddress != null and eqpAddress != ''">  
+				    <![CDATA[
+				    	AND instr(tce.ADDRESS,#{eqpAddress})>0
+				   	]]>
+				</if> 
+				<if test="staffId != null and staffId != ''">  
+				    <![CDATA[
+				    	and f.isdeleted=0 and f.status=0 and f.staff_id=#{staffId}
+				   	]]>
+				</if> 		
+				) a where a.rn &gt;= #{startLine} and a.rn &lt;= #{endLine} 
+	</select>
+	
+	
+	<select id="getGridQumAllTask" parameterType="map" resultType="map">
+	select * from (
+ 		select tce.equipment_id eqpId,
+ 		tce.equipment_code eqpNo,
+ 		tce.equipment_name eqpName,
+ 		tce.area_id son_areaId,
+ 		tce.parent_area_id, 
+ 		tce.res_type eqp_type,
+ 		tce.address address,
+ 		to_char(tce.check_complete_time,'yyyy-mm-dd hh24:mi:ss')check_complete_time,'0' ordernum 
+ 		,rownum rn from tb_cablecheck_equipment tce 
+			 left join  tb_base_staff f on f.id_number=tce.identify
+		     where   1=1
+		     	<if test="gard_id != null and gard_id != ''">  
+				    <![CDATA[
+				   		and tce.grid_id=to_number(#{gard_id})
+				   	]]>
+				</if>
+		        <if test="eqpType != null and eqpType != ''">  
+				    <![CDATA[
+				   		AND tce.RES_TYPE_ID = to_number(#{eqpType})
+				   	]]>
+				</if>
+			 	<if test="eqpCode != null and eqpCode != ''">  
+				    <![CDATA[
+				   		AND instr(tce.EQUIPMENT_CODE,#{eqpCode})>0
+				   	]]>
+				</if>
+				<if test="eqpAddress != null and eqpAddress != ''">  
+				    <![CDATA[
+				    	AND instr(tce.ADDRESS,#{eqpAddress})>0
+				   	]]>
+				</if> 
+				<if test="staffId != null and staffId != ''">  
+				    <![CDATA[
+				    	and f.isdeleted=0 and f.status=0 and f.staff_id=#{staffId}
+				   	]]>
+				</if> 		
+				) a where a.rn &gt;= #{startLine} and a.rn &lt;= #{endLine} 
+	</select>
+	
+	
+	
+	<select id="getAllEqpNum" parameterType="map" resultType="string">
+	
+ 		select count(distinct tce.equipment_id) num from tb_cablecheck_equipment tce 
+		     where   1=1
+		     	<if test="gard_id != null and gard_id != ''">  
+				    <![CDATA[
+				   		and tce.grid_id=to_number(#{gard_id})
+				   	]]>
+				</if>
+		        <if test="eqpType != null and eqpType != ''">  
+				    <![CDATA[
+				   		AND tce.RES_TYPE_ID = to_number(#{eqpType})
+				   	]]>
+				</if>
+			 	<if test="eqpCode != null and eqpCode != ''">  
+				    <![CDATA[
+				   		AND instr(tce.EQUIPMENT_CODE,#{eqpCode})>0
+				   	]]>
+				</if>
+				<if test="eqpAddress != null and eqpAddress != ''">  
+				    <![CDATA[
+				    	AND instr(tce.ADDRESS,#{eqpAddress})>0
+				   	]]>
+				</if> 		
+				
+	</select>
+
+	
+	<select id="getGridQumByOBD" parameterType="map" resultType="map">
+ 		select tce.equipment_id,tce.equipment_code,tce.equipment_name,tce.area_id,tce.parent_area_id, tce.res_type,tce.address,to_char(tce.check_complete_time,'yyyy-mm-dd hh24:mi:ss')check_complete_time,tt.ordernum from tb_cablecheck_equipment tce 
+		inner join 		
+		  (select  tb.EQUIPMENT_ID,tb.EQUIPMENT_CODE,count( distinct tco.order_no) ordernum from tb_cablecheck_dtsj sj 
+		         join tb_cablecheck_order tco on tco.btsj_id=sj.id
+		         inner join tb_cablecheck_equipment tb on tb.equipment_id=sj.sbid
+		        <!--  inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id -->
+		         left join tb_base_staff f on f.id_number=tb.identify
+		         where  sj.bdsj &gt;= to_date(#{port_start_time},'yyyy-mm-dd') and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd')
+		         and tco.mark=1 and tco.area_id = #{areaId}
+		        <!--  and aod.arch_tp='REVERT' -->
+		         	<if test="gard_id != null and gard_id != ''">  
+					    <![CDATA[
+					   		 and tb.grid_id=to_number(#{gard_id})
+					   	]]>
+					</if>
+		         	
+			        <if test="eqpType != null and eqpType != ''">  
+					    <![CDATA[
+					   		AND tb.RES_TYPE_ID = to_number(#{eqpType})
+					   	]]>
+					</if>
+				 	<if test="eqpCode != null and eqpCode != ''">  
+					    <![CDATA[
+					   		AND instr(tb.EQUIPMENT_CODE,#{eqpCode})>0
+					   	]]>
+					</if>
+					<if test="eqpAddress != null and eqpAddress != ''">  
+					    <![CDATA[
+					    	AND instr(tb.ADDRESS,#{eqpAddress})>0
+					   	]]>
+					</if> 
+					<if test="staffId != null and staffId != ''">  
+					    <![CDATA[
+					    	and f.isdeleted=0 and f.status=0 and f.staff_id=#{staffId}
+					   	]]>
+					</if> 	
+		         group by tb.EQUIPMENT_ID,tb.EQUIPMENT_CODE)tt
+		         on tt.EQUIPMENT_ID=tce.equipment_id and tt.EQUIPMENT_CODE=tce.equipment_code  
+		         order by ordernum desc
+					 
+	</select>
+	
+	<select id="saveError" parameterType="map" >
+	
+	</select>
+	
+	<select id="getEquWorkOrder" parameterType="map" resultType="map">
+		  select distinct acd.work_order_no ORDER_NO,
+                acd.action_type,acd.work_order_type,
+                to_char(tco.order_check_time, 'yyyy-mm-dd hh24:mi:ss') order_check_time,
+                sj.sbbm equipment_code,sj.sbid EQUIPMENT_ID, tco.opt_code,
+                to_char(tco.archive_time, 'yyyy-mm-dd hh24:mi:ss') archive_time,
+                f.staff_name
+		  from tb_cablecheck_order tco
+		 	inner join APP_CSV_OPT_DAILY acd on acd.work_order_id = tco.order_id
+		 	inner join tb_cablecheck_dtsj sj on sj.id=tco.btsj_id
+		 	left join tb_base_staff f on f.staff_id=tco.order_check_staff
+		  where sj.install_sbid =#{equId}
+		    and acd.ARCH_TP = 'REVERT'
+		    and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy-mm-dd') and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd') 
+		    and tco.area_id=#{areaId}
+		     order by sj.sbbm
+		  <!-- select distinct acd.work_order_no ORDER_NO,acd.action_type,to_char(tco.order_check_time,'yyyy-mm-dd hh24:mi:ss')order_check_time,tb.equipment_code,TB.EQUIPMENT_ID from tb_cablecheck_order tco
+		    inner join APP_CSV_OPT_DAILY acd on acd.work_order_id=tco.order_id 
+        	inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		  where tb.install_sbid=#{equId} and acd.ARCH_TP='REVERT' 
+		  union all
+		  select distinct acd.work_order_no ORDER_NO,acd.action_type,to_char(tco.order_check_time,'yyyy-mm-dd hh24:mi:ss')order_check_time,tb.equipment_code,TB.EQUIPMENT_ID from tb_cablecheck_order tco
+		    inner join APP_CSV_OPT_DAILY acd on acd.work_order_id=tco.order_id 
+        	inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		  where tb.equipment_id=#{equId} and acd.ARCH_TP='REVERT'  -->
+		  <!--  select distinct acd.work_order_no ORDER_NO,acd.action_type,acd.opt_oper_name,acd.opt_oper_state,acd.change_fiber_oper,tb.equipment_code,TB.EQUIPMENT_ID from tb_cablecheck_order tco
+		    inner join APP_CSV_OPT_DAILY acd on acd.work_order_id=tco.order_id 
+        	inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		  where tb.install_sbid=#{equId} and acd.ARCH_TP='REVERT' 
+		  union all
+		  select distinct acd.work_order_no ORDER_NO,acd.action_type,acd.opt_oper_name,acd.opt_oper_state,acd.change_fiber_oper,tb.equipment_code,TB.EQUIPMENT_ID from tb_cablecheck_order tco
+		    inner join APP_CSV_OPT_DAILY acd on acd.work_order_id=tco.order_id 
+        	inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		  where tb.equipment_id=#{equId} and acd.ARCH_TP='REVERT'  -->
+	</select>
+	
+	<select id="getEquWorkOrderByObd" parameterType="map" resultType="map">
+		  select distinct acd.work_order_no ORDER_NO,
+                acd.action_type,acd.work_order_type,
+                to_char(tco.order_check_time, 'yyyy-mm-dd hh24:mi:ss') order_check_time,
+                sj.sbbm equipment_code,sj.sbid EQUIPMENT_ID, tco.opt_code,
+                to_char(tco.archive_time, 'yyyy-mm-dd hh24:mi:ss') archive_time,
+                f.staff_name
+		  from tb_cablecheck_order tco
+		 	inner join APP_CSV_OPT_DAILY acd on acd.work_order_id = tco.order_id
+		 	inner join tb_cablecheck_dtsj sj on sj.id=tco.btsj_id
+		 	left join tb_base_staff f on f.staff_id=tco.order_check_staff
+		  where sj.sbid =#{equId}
+		    and acd.ARCH_TP = 'REVERT'
+		    and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy-mm-dd') and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd')  
+		    and tco.area_id=#{areaId}
+		    order by sj.sbbm
+	</select>
+	
+	<select id="getEquType" parameterType="map" resultType="map">
+	    select tb.equipment_id,tb.equipment_code,tb.equipment_name,tb.res_type_id,tb.res_type,tb.install_sbid,tb.install_sbbm from tb_cablecheck_equipment tb 
+	    where tb.equipment_id=#{equId} and tb.equipment_code=#{equCode} and rownum=1
+	</select>
+	
+	<!-- 查询出设备下的所有分光器 -->
+	<select id="getObd" parameterType="map" resultType="map">
+			select distinct tb.equipment_id,tb.equipment_code,tb.equipment_name,tb.res_type_id,tb.res_type
+		    from tb_cablecheck_equipment tb where tb.install_sbid=#{equId}
+				and tb.install_sbbm=#{equCode} and tb.res_type_id=2530
+			union
+			select tb.equipment_id,tb.equipment_code,tb.equipment_name,tb.res_type_id,tb.res_type
+  			from tb_cablecheck_equipment tb where tb.equipment_id =#{equId}
+		  	    and tb.equipment_code = #{equCode} and tb.res_type_id !=2530
+	</select>
+	
+	<select id="getPortList" parameterType="map" resultType="map">
+		  <!-- 查询出订单编号下的工单端子信息 -->
+		     select distinct tco.order_id,tco.order_no,tco.opt_code,tco.phy_eqp_id, tco.phy_eqp_spec_id,
+                    tco.phy_port_id,tco.phy_port_spec_no, aod.work_order_type,aod.action_type, tb.equipment_id,
+                    tb.equipment_code,tb.equipment_name,tb.parent_area_id,
+                    (select count(distinct tt.phy_port_id ) from tb_cablecheck_order tt where tt.order_id=tco.order_id and tt.phy_eqp_id=tb.equipment_id) portnum
+		     from tb_cablecheck_order tco
+		     inner join app_csv_opt_daily aod
+		        on aod.work_order_id = tco.order_id
+		     inner join tb_cablecheck_dtsj sj 
+		        on sj.id=tco.btsj_id
+		     inner join tb_cablecheck_equipment tb
+		        on tb.equipment_id =sj.sbid and tb.equipment_code=sj.sbbm
+			 where tco.order_no=#{orderNo}	and aod.ARCH_TP='REVERT' 
+		  <!-- 查询出网格设备下的所有工单端子信息 -->
+			<!--  select distinct tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,aod.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+				inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+				inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+			 where  tb.install_sbid=#{equId}     
+	         union all      
+		     select distinct tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,aod.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+				inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+				inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		     where tb.equipment_id=#{equId} -->
+	</select>
+	<select id="getEqpOrderList" parameterType="map" resultType="map">
+		  <!-- 查询出网格设备下的所有工单端子信息 -->
+		  SELECT DISTINCT TCO.ORDER_ID,TCO.ORDER_NO,TCO.OPT_CODE,TCO.PHY_EQP_ID,sj.sbbm equipment_code,sj.sbmc equipment_name,TCO.PHY_EQP_SPEC_ID,
+		  		TCO.PHY_PORT_ID,TCO.PHY_PORT_SPEC_NO,
+       			AOD.WORK_ORDER_TYPE,AOD.ACTION_TYPE
+			FROM TB_CABLECHECK_ORDER TCO
+			INNER JOIN TB_CABLECHECK_DTSJ SJ ON SJ.ID=TCO.BTSJ_ID
+			INNER JOIN APP_CSV_OPT_DAILY AOD ON AOD.WORK_ORDER_NO=TCO.ORDER_NO
+			INNER JOIN TB_CABLECHECK_EQUIPMENT TB ON TB.EQUIPMENT_ID=SJ.INSTALL_SBID
+			WHERE  AOD.ARCH_TP='REVERT' and tco.area_id=#{areaId}
+		    and TB.EQUIPMENT_ID=#{equId} and tb.parent_area_id=#{areaId}
+			and sj.bdsj &gt;=to_date(#{port_start_time},'yyyy-mm-dd')
+ 			and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd')
+			ORDER BY SJ.SBBM
+			 <!-- select distinct tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,aod.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+				inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+				inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+			 where  tb.install_sbid=#{equId}     
+	         union all      
+		     select distinct tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,aod.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+				inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+				inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		     where tb.equipment_id=#{equId} -->
+	</select>
+	
+	<select id="getOuterEqp" parameterType="map" resultType="map">
+		  select to_char(t.install_sbid) install_sbid,t.install_sbbm,tbc.equipment_name from tb_cablecheck_equipment tbc 
+			inner join 
+			(select tb.install_sbid,tb.install_sbbm from tb_cablecheck_equipment tb where  tb.res_type_id=2530 and tb.equipment_id=#{PHY_EQP_ID} and tb.equipment_code=#{EQUIPMENT_CODE}) t
+			on t.install_sbid=tbc.equipment_id and t.install_sbbm=tbc.equipment_code	  
+	</select>
+	
+	<select id="getPortsByAreaEqu" parameterType="map" resultType="map">
+		  select t.DZID, t.DZBM from (   
+           SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS           
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID 
+             WHERE PE.PHY_EQP_ID =#{eqpId}
+             
+           ) t order by  to_number(regexp_substr(t.DZBM, '[0-9]*[0-9]', 1)),
+             to_number(regexp_substr(t.DZBM, '[0-9]*[0-9]', 3))
+	</select>
+	
+	<select id="getOrderOfBanZu" parameterType="map" resultType="map">
+		select zw.id_number,zw.staff_no,zw.staff_name,zw.team_id,zw.team_name,f.staff_id from tb_cablecheck_order tco 
+			inner join tb_base_staff_zw zw on zw.id=tco.other_system_staff_id
+			inner join tb_base_staff f on f.id_number=zw.id_number
+			left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+		where tco.order_no=#{order_no} and f.status=0 and f.isdeleted=0 and sr.role_id =287 and rownum=1
+	</select>
+	<!-- 通过工单查询出工单所在班组 -->
+	<select id="getBanZuByOrderNo" parameterType="map" resultType="map">
+		select tco.team_id from tb_cablecheck_order tco where tco.order_no=#{order_no} and rownum=1
+	</select>
+	<select id="getOrderReceiverOfBanZu" parameterType="map" resultType="map">
+		select zw.id_number,zw.staff_no,zw.staff_name,f.staff_id from tb_base_staff_zw zw 
+		inner join tb_base_staff f on f.id_number=zw.id_number
+		<!-- left join tb_base_staff_role sr on sr.staff_id=f.staff_id -->
+		where zw.team_id=#{team_id} and zw.is_leader=1 and zw.is_auditor=1 and f.status=0 and f.isdeleted=0 <!-- and sr.role_id =287  --> and rownum=1
+	</select>
+	
+	<select id="selectWorkOrderList" parameterType="map" resultType="map">
+		select acd.work_order_no ORDER_NO,acd.term_sn sn,acd.opt_code,
+		acd.reply_pty_nm,acd.action_type,acd.oss_oper_name,acd.opt_oper_state,
+		acd.user_name,acd.install_addr,acd.opt_route,acd.opt_name,acd.change_fiber_oper
+		from app_csv_opt_daily  acd where acd.work_order_no=#{task_no}
+		union all
+		select aid.order_no,aid.term_sn sn,aid.opt_code,aid.reply_pty_nm,
+		aid.action_type,aid.oss_oper_name,aid.opt_oper_state,aid.user_name,aid.install_addr,aid.opt_route,
+		aid.opt_name,aid.change_fiber_oper
+		from APP_IOM_OPT_DAILY aid where aid.order_no=#{task_no}
+	</select>
+	
+	<update id="updateEqpCheckCompleteTime" parameterType="map">
+		 update tb_cablecheck_equipment tb set tb.check_complete_time=sysdate 
+		 where tb.equipment_id=#{eqpId} and tb.equipment_code=#{eqpNo}
+	</update>
+	<update id="updateOrderCheckTime" parameterType="map">
+		 update tb_cablecheck_order tco set tco.order_check_time=sysdate,tco.order_check_staff=#{staffId} where tco.order_no=#{order_no}
+	</update>
+	
+	
+	<select id="selectResourcesCheck" parameterType="map" resultType="map">
+	select   m.equipment_id,m.equipment_code,m.equipment_name,m.res_type,
+		m.cityname,m.countryname,m.grid_name,m.countnum,m.usenum,(m.countnum - m.usenum) as freenum from
+		(
+		select  count(distinct tcd.dzid) as countnum,count(distinct tcd.glbh) as usenum, tce.equipment_id,tce.equipment_code,tce.equipment_name,tce.res_type,
+		a.name as cityname,b.name as countryname,tcg.grid_name from tb_cablecheck_equipment tce 
+		left join area a on tce.parent_area_id= a.area_id 
+		left join area b on tce.area_id= b.area_id 
+		left join tb_cablecheck_grid tcg on tce.grid_id=tcg.grid_id
+		left join tb_cablecheck_dtsj tcd on tce.equipment_id=tcd.install_sbid
+		where tce.grid_id=#{grid_id} and tce.res_type_id='703'
+		group by tce.equipment_id,tce.equipment_code,tce.equipment_name,tce.res_type,
+		a.name,b.name,tcg.grid_name )m
+	</select>
+	
+	
+		<select id="getGrid" parameterType="map" resultType="map">
+	 select COUNT(1) NUM,M.GRID_NM
+      from tb_base_staff tbs
+      left join (
+                 
+                 select tce.*, tbe.area_id area 
+                   from tb_cablecheck_eqp_odso tce
+                   left join Tb_Cablecheck_Equipment tbe
+                     on tbe.equipment_id = tce.phy_eqp_id
+                     )m
+                     on m.area = tbs.son_area_id
+                     
+                     
+     where tbs.staff_id = #{staff_id}
+     group by m.GRID_NM 
+     ORDER BY NUM DESC
+	</select>
+	
+	<select id="selectWPWorkOrderList" parameterType="map" resultType="map">
+		select * from APP_CSV_OPT_DAILY ad where ad.WORK_ORDER_NO=#{workOrder_no}
+	</select>
+	
+	<select id="intensificationworkoder" parameterType="map" resultType="map">
+	select * from (
+		select a.*,
+		ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{longitude},#{latitude},0),NULL,NULL),
+  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(a.longitude,#{longitude}),
+  nvl(a.latitude,#{latitude}),0),NULL,NULL),1),1)  DISTANCE
+		from (
+	
+		<if test="staffType == 2 or staffType == 3">  
+            <![CDATA[
+	    		select distinct * from v_jyh_order o where 
+				p_view_jyh_order.set_param('网格管理员')=0 
+				and p_view_jyh_order.set_param2('代维公司管理员')=0 union 
+	    	]]>
+	    </if>
+		<if test="staffType == 3">  
+            <![CDATA[
+	    		select distinct * from v_jyh_order o where 
+				p_view_jyh_order.set_param('主业管理员')=0 
+				and p_view_jyh_order.set_param2('主业管理员视')=0 union
+	    	]]>
+	    </if>
+		
+		(select distinct tctw.workOrder_no,tctw.workorder_name,tctw.longitude,tctw.latitude,tctw.epq_name,tctw.barrierAddr,tct.task_enddate,tct.task_id,
+				tctw.workorder_type,tctw.equipment_type,tctw.score,nvl2(tctw.score,1,0) status
+				from tb_check_task_workOrder tctw left join tb_check_task tct on tctw.task_id=tct.task_id
+		where 1=1 AND  tct.check_task_staff like '%'|| 
+			    		(select distinct staff_no from tb_base_staff f  where f.staff_id = #{check_task_staff}) ||'%')) a where 1=1
+		          
+		<!-- select tctw.workOrder_no,tctw.workorder_name,tctw.longitude,tctw.latitude,tctw.epq_name,tctw.barrierAddr,tct.task_enddate,tct.task_id,
+		tctw.workorder_type,tctw.equipment_type,   
+		tctw.score,nvl2(tctw.score,1,0) status
+		from tb_check_task_workOrder tctw left join tb_check_task tct on tctw.task_id=tct.task_id
+			where 1=1
+			<if test="check_task_staff != null and  check_task_staff != ''">  
+            <![CDATA[
+	    		AND  tct.check_task_staff like '%'|| 
+	    		(select distinct staff_no from tb_base_staff f  where f.staff_id = #{check_task_staff}) ||'%'
+	    	]]>
+		</if> -->
+		
+		and a.workorder_type like '%综调%'
+		
+		<!-- 一级检查人员只检查未打分的工单 -->
+		<if test="staffType == 1">  
+            <![CDATA[
+	    		 and a.status =0 
+	    	]]>
+	    </if>
+		
+		<if test="orderName != null and  orderName != ''">  
+            <![CDATA[
+	    		AND  a.workorder_name like '%'|| #{orderName} ||'%'
+	    	]]>
+	    </if>
+	    	
+    	<if test="orderCode != null and  orderCode != ''">  
+           <![CDATA[
+    		AND  a.workOrder_no like '%'|| #{orderCode} ||'%'
+    		]]>	
+    	</if>
+    	) order  by DISTANCE asc
+	</select>
+	
+	<select id="workoderdetail" parameterType="map" resultType="map">
+		select distinct tctw.*   from tb_check_task_workOrder tctw 
+			where tctw.workOrder_no=#{workOrder_no}
+			and tctw.task_id = #{task_id}
+	</select>
+	
+	<select id="workoderScoredetail" parameterType="map" resultType="map">
+		select * from (
+		select d.*,rownum rn from tb_check_task_score_detail d where d.workOrder_no = #{workOrder_no} 
+		order by d.update_date desc) where rn =1
+	</select>
+	
+	
+	<update id="workOderResult" parameterType="map">
+	UPDATE 
+		tb_check_task_workOrder 
+		SET score=#{score}
+		WHERE workOrder_no = #{workOrder_no}
+	</update>
+	
+	<insert id="workOderResultDetail" parameterType="map">
+		insert into tb_check_task_score_detail
+  		(workorder_no, task_id, score_detail, id, create_staff, create_date, update_staff, update_date)
+		values
+		(#{workOrder_no}, #{taskId}, #{scoreDetail}, SEQ_TASK_score_detail_id.Nextval, #{staffId}, sysdate, #{staffId}, sysdate)
+	</insert>
+	
+	
+	<select id="getEqpByCheckName" parameterType="map" resultType="map">
+ 	<!-- select r.longitude,r.latitude,r.longitude_inspect,r.latitude_inspect,r.SBID,r.SBBM,r.SBMC,r.RES_TYPE,r.SBLX,
+	       r.check_complete_time,r.address,r.contract_persion_no,r.IDENTIFYID,r.isdeal,r.contract_persion_name,r.WLJB,r.deal_time
+	 from ( --> 
+	  select distinct
+	         nvl(eqp.longitude, ' ') longitude,
+	          nvl(eqp.latitude, ' ') latitude,
+	          nvl(eqp.longitude_inspect, ' ') longitude_inspect,
+	          nvl(eqp.latitude_inspect, ' ') latitude_inspect,
+	          eqp.equipment_id AS SBID,
+	          nvl(eqp.equipment_code, ' ') SBBM,
+	          nvl(eqp.equipment_name, ' ') SBMC,
+	          eqp.RES_TYPE,
+	          eqp.res_type_id SBLX,
+	         to_char(eqp.check_complete_time,'yyyy-mm-dd hh24:mi:ss') check_complete_time,
+	         eqp.address ,
+	         e.contract_persion_no ,
+	         e.IDENTIFYID,
+	         eqp.isdeal,
+	         e.contract_persion_name,
+	         case oed.net_layer_id when 80000302 then '接入层' when 81538172 then '网络层' else '其他' end WLJB,
+	         to_char(eqp.deal_time,'yyyy-mm-dd hh24:mi:ss') deal_time 
+	        <!--  ROW_NUMBER() OVER(PARTITION BY ts.inspector ORDER BY eqp.check_complete_time DESC) rn -->
+	  from tb_cablecheck_task ts 
+	  inner join tb_cablecheck_equipment eqp on eqp.equipment_id=ts.sbid 
+	  left join area a on eqp.area_id = a.area_id
+	  left join tb_base_contract_equipment e on e.equipment_id = eqp.equipment_id and e.area_id = eqp.parent_area_id
+	  left join odso_eqp_daily oed on oed.phy_eqp_id = eqp.equipment_id and oed.local_area_id =eqp.parent_area_id
+	  left join tb_base_staff f on f.staff_id=ts.inspector
+	  where f.staff_name like '%'||#{checkName}||'%' 
+	  and to_char(eqp.check_complete_time,'yyyy-mm')=to_char(add_months(trunc(sysdate),-1),'yyyy-mm')  
+	  and ts.sbid is not null and eqp.check_complete_time is not null
+	<!--  ) r where r.rn &lt;=20 -->
+ </select>
+ 
+ 	<select id="getLightPath" parameterType="map" resultType="String">
+ 		select distinct LB.no  from  ${jndi}.LNK_BUSINESS_LINK LB
+          left join ${jndi}.LNK_BUSI_LINK_2_LINK LBL on lb.busi_link_id=lbl.busi_link_id 
+          left join ${jndi}.LNK_PHY_LINK_COMPONENT lp on lp.link_id = lbl.link_id 
+          left join ${jndi}.PHY_TERM_PORT PTP on ptp.phy_port_id=LP.Z_PHY_PORT_ID
+          left join ${jndi}.PHY_EQUIPMENT PE on pe.phy_eqp_id=ptp.phy_eqp_id
+ 		where PE.no=#{equCode}
+	</select>
+	
+	<select id="getWPWorkOrder" parameterType="map" resultType="map">
+		
+	</select>
+	
+	
+		<insert id="saveTroubleTask" parameterType="map">
+		insert into
+		tb_cablecheck_task(
+		TASK_ID,
+		TASK_NO,
+		TASK_NAME,
+		TASK_TYPE,
+		STATUS_ID,
+		INSPECTOR,
+		MAINTOR,
+		auditor,
+		CREATE_STAFF,
+		CREATE_TIME,
+		START_TIME,
+		LAST_UPDATE_TIME,
+		actual_complete_time,
+		paifa_time,
+		SON_AREA_ID,
+		AREA_ID,
+		ENABLE,
+		REMARK,
+		IS_NEED_ZG,
+		OLD_TASK_ID,
+		SBID,check_way)
+		values
+		(SQP_TB_CABLECHECK_TASK.nextVAL,
+		#{TASK_NO},
+		#{TASK_NAME},
+		#{TASK_TYPE},
+		#{STATUS_ID},
+		#{INSPECTOR},
+		#{MAINTOR},
+		#{AUDITOR},
+		#{CREATE_STAFF},
+		sysdate,
+		sysdate,
+		sysdate,
+		sysdate,
+		sysdate,
+		#{SON_AREA_ID},
+		#{AREA_ID},
+		#{ENABLE},
+		#{REMARK},
+		#{IS_NEED_ZG},
+		#{OLD_TASK_ID},
+		#{SBID},
+		#{checkWay}
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="TASK_ID">
+			SELECT SQP_TB_CABLECHECK_TASK.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<insert id="saveTroubleTaskDetail" parameterType="map">
+		insert into
+		tb_cablecheck_taskdetail(
+		DETAIL_ID,
+		TASK_ID,
+		INSPECT_OBJECT_ID,
+		INSPECT_OBJECT_TYPE,
+		INSPECT_OBJECT_NO,
+		CHECK_FLAG,
+		PORT_ID,
+		GLBM)
+		values
+		(SQP_TB_CABLECHECK_TASK_DETAIL.nextVAL,
+		#{TASK_ID},
+		#{INSPECT_OBJECT_ID},
+		#{INSPECT_OBJECT_TYPE},
+		#{INSPECT_OBJECT_NO},
+		#{CHECK_FLAG},
+		#{PORT_ID},
+		#{GLBM}
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="DETAIL_ID">
+			SELECT SQP_TB_CABLECHECK_TASK_DETAIL.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+
+	<insert id="insertEqpRecord" parameterType="map">
+		insert into
+		tb_cablecheck_record
+		(RECORD_ID,
+		EQP_ID,
+		EQP_NO,
+		EQP_NAME,
+		REMARK,
+		port_id,
+		CREATE_TIME,
+		CREATE_STAFF,
+		port_no,
+		port_name,
+		descript,
+		record_type,
+		area_id,
+		son_area_id,
+		isCheckOK,
+		TASK_ID,
+		DETAIL_ID, 
+		order_id,
+		order_no,
+		is_from,
+		portrightposition,portidrightposition,action_type,eqpid_new,eqpno_new,
+		changeportid,changeportno,changeeqpid,changeeqpno
+		)
+		values
+		(#{recordId},
+		#{eqpId,jdbcType=VARCHAR},
+		#{eqpNo,jdbcType=VARCHAR},
+		#{eqpName,jdbcType=VARCHAR},
+		#{remarks,jdbcType=VARCHAR},
+		#{port_id,jdbcType=VARCHAR},
+		sysdate,
+		#{staffId},
+		#{port_no,jdbcType=VARCHAR},
+		#{port_name,jdbcType=VARCHAR},
+		#{descript,jdbcType=VARCHAR},
+		#{record_type,jdbcType=VARCHAR},
+		#{area_id},
+		#{son_area_id},
+		#{isCheckOK,jdbcType=VARCHAR},
+		#{task_id,jdbcType=VARCHAR},
+		#{detail_id,jdbcType=VARCHAR},
+		#{order_id,jdbcType=VARCHAR},
+		#{order_no,jdbcType=VARCHAR},
+		#{is_from,jdbcType=VARCHAR},
+		#{portRightPosition,jdbcType=VARCHAR},
+		#{portIdRightPosition,jdbcType=VARCHAR},
+		#{action_type,jdbcType=VARCHAR},
+		#{eqpId_rightPortNo,jdbcType=VARCHAR},
+		#{eqpNo_rightPortNo,jdbcType=VARCHAR},
+		#{changedPortId,jdbcType=VARCHAR},
+		#{changedPortNo,jdbcType=VARCHAR},
+		#{changedEqpId,jdbcType=VARCHAR},
+		#{changedEqpNo,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<select id="getportRightPosition" parameterType="map" resultType="string">
+		<!-- select re.portidrightposition from tb_cablecheck_record re where re.is_from is not null
+		and re.portrightposition is not null 
+ 		and re.task_id=#{taskId} and re.port_id=#{portId} -->			    
+		select portidrightposition from(
+		    select re.portidrightposition from tb_cablecheck_record re where  re.portrightposition is not null 
+		        and re.portidrightposition is not null 
+		 		and re.task_id=#{taskId} and re.port_id=#{portId} order by re.create_time desc
+		) t where rownum=1
+		
+	</select>
+	<select id="getOssPort" parameterType="map" resultType="map">
+		select lplc.a_phy_eqp_id,to_char(lplc.a_phy_port_id) port_id,
+		 	CASE
+               WHEN PE.Res_Spec_Id IN ('2530', '414') THEN
+                 PTP.NO
+               ELSE
+              PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+		    END  DZBM 
+		 from ${jndi}.lnk_phy_link_component lplc 
+		 join ${jndi}.PHY_EQUIPMENT PE on pe.phy_eqp_id =lplc.a_phy_eqp_id
+		       join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID and lplc.a_phy_port_id=ptp.phy_port_id
+		       left join ${jndi}.PHY_EQP_UNIT PU on PTP.UNIT_ID = PU.UNIT_ID
+		       where lplc.link_id in (SELECT distinct lbl2l.link_id FROM  ${jndi}.lnk_business_link lbl
+	              INNER JOIN ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.busi_link_id=lbl.busi_link_id
+	              where lbl.no=#{glbh}) and pe.phy_eqp_id=#{eqpId}
+		union
+		select lplc.z_phy_eqp_id,to_char(lplc.z_phy_port_id) port_id,
+			 CASE
+	               WHEN PE.Res_Spec_Id IN ('2530', '414') THEN
+	                 PTP.NO
+	               ELSE
+	              PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+	         END  DZBM 
+		 from ${jndi}.lnk_phy_link_component lplc 
+		 join ${jndi}.PHY_EQUIPMENT PE on pe.phy_eqp_id =lplc.z_phy_eqp_id
+		       join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID and lplc.z_phy_port_id=ptp.phy_port_id
+		       left join ${jndi}.PHY_EQP_UNIT PU on PTP.UNIT_ID = PU.UNIT_ID
+		        	where lplc.link_id in(SELECT distinct lbl2l.link_id FROM  ${jndi}.lnk_business_link lbl
+		            INNER JOIN ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.busi_link_id=lbl.busi_link_id
+            where lbl.no=#{glbh}) and pe.phy_eqp_id=#{eqpId}
+	</select>
+	
+	<select id="getEquCSVIOMOrder" parameterType="map" resultType="map">
+	
+	    select * from (  
+           select distinct acd.work_order_no ORDER_NO,
+                acd.action_type,
+                acd.opt_oper_name,
+                acd.opt_oper_state,
+                acd.change_fiber_oper,
+                to_char(tco.order_check_time, 'yyyy-mm-dd hh24:mi:ss') order_check_time,
+               <!--  acd.archive_time, acd.modify_time,-->
+                to_char(acd.modify_time, 'yyyy-mm-dd hh24:mi:ss') modify_time,
+                to_char(acd.archive_time, 'yyyy-mm-dd hh24:mi:ss') archive_time,
+                sj.sbbm equipment_code,sj.sbid EQUIPMENT_ID, tco.opt_code
+      from tb_cablecheck_order tco
+      inner join APP_CSV_OPT_DAILY acd on acd.work_order_id = tco.order_id
+      inner join tb_cablecheck_dtsj sj on sj.id=tco.btsj_id
+      where sj.install_sbid = #{equId}
+        and acd.ARCH_TP = 'REVERT'
+        and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+        and tco.area_id = #{areaId}
+        
+        union   
+           select distinct iom.order_no ORDER_NO,
+                iom.action_type,
+                iom.opt_oper_name,iom.opt_oper_state,iom.change_fiber_oper,
+                to_char(tco.order_check_time, 'yyyy-mm-dd hh24:mi:ss') order_check_time,
+                <!-- iom.archive_time, iom.modify_time,-->
+                to_char(iom.modify_time, 'yyyy-mm-dd hh24:mi:ss') modify_time,
+                to_char(iom.archive_time, 'yyyy-mm-dd hh24:mi:ss') archive_time,
+                sj.sbbm equipment_code,sj.sbid EQUIPMENT_ID, tco.opt_code
+      from tb_cablecheck_order tco
+      inner join app_iom_opt_daily iom on iom.order_id = tco.order_id
+      inner join tb_cablecheck_dtsj sj on sj.id=tco.btsj_id
+      where sj.install_sbid = #{equId}
+        and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+         and tco.area_id = #{areaId}
+           ) a order by a.equipment_code
+           
+           
+           
+	
+	
+	<!-- select * from (
+	      select distinct acd.work_order_no ORDER_NO,acd.action_type,acd.opt_oper_name,acd.opt_oper_state,acd.change_fiber_oper,tb.equipment_code 
+	      ,acd.archive_time,acd.modify_time
+	  	  from tb_cablecheck_order tco
+	      inner join APP_CSV_OPT_DAILY acd on acd.work_order_id=tco.order_id 
+	      inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+	      where tb.install_sbid=#{equId} and acd.ARCH_TP='REVERT' 
+      union all
+	      select distinct acd.work_order_no ORDER_NO,acd.action_type,acd.opt_oper_name,acd.opt_oper_state,acd.change_fiber_oper,tb.equipment_code 
+	      ,acd.archive_time,acd.modify_time
+	      from tb_cablecheck_order tco
+	      inner join APP_CSV_OPT_DAILY acd on acd.work_order_id=tco.order_id 
+	      inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+	      where tb.equipment_id=#{equId} and acd.ARCH_TP='REVERT' 
+      union all
+	      select distinct iom.order_no ORDER_NO,iom.action_type,iom.opt_oper_name,iom.opt_oper_state,iom.change_fiber_oper,tb.equipment_code 
+	      ,iom.archive_time,iom.modify_time
+	      from tb_cablecheck_order tco
+	      inner join app_iom_opt_daily iom on iom.order_id=tco.order_id 
+	      inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+	      where tb.install_sbid=#{equId}
+      union all 
+	      select distinct iom.order_no ORDER_NO,iom.action_type,iom.opt_oper_name,iom.opt_oper_state,iom.change_fiber_oper,tb.equipment_code 
+	      ,iom.archive_time,iom.modify_time
+	      from tb_cablecheck_order tco
+	      inner join app_iom_opt_daily iom on iom.order_id=tco.order_id 
+	      inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+	      where tb.equipment_id=#{equId}
+      ) a order by a.order_no,a.archive_time desc -->
+	</select>
+	
+	<select id="getPortsByEqu" parameterType="map" resultType="map">
+	
+	 <!-- select distinct tco.order_id, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,aod.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+		inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		where tco.order_no=	#{orderNo}	and aod.ARCH_TP='REVERT' 
+	 union 
+     select distinct tco.order_id, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,iom.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+		inner join app_iom_opt_daily iom on iom.order_id=tco.order_id
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		where tco.order_no = #{orderNo}   -->
+	 <!-- select * from (
+			select distinct tco.order_id, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,
+		   tco.phy_port_id,tco.phy_port_spec_no,aod.work_order_type,aod.action_type,tb.equipment_id,
+		   tb.equipment_code,tb.equipment_name,tb.parent_area_id,
+		   (select count(distinct tt.phy_port_id ) from tb_cablecheck_order tt where tt.order_id=tco.order_id 
+		   and tt.phy_eqp_id=tb.equipment_id) portnum
+		    from tb_cablecheck_order tco
+		    inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+		    inner join tb_cablecheck_dtsj sj  on sj.id=tco.btsj_id
+		    inner join tb_cablecheck_equipment tb on tb.equipment_id =sj.sbid and tb.equipment_code=sj.sbbm
+		    where tco.order_no= #{orderNo}  and aod.ARCH_TP='REVERT' 
+		    
+		    union
+		    
+		   select distinct tco.order_id, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,
+		   tco.phy_port_id,tco.phy_port_spec_no,iom.order_type work_order_type,iom.action_type,tb.equipment_id,
+		   tb.equipment_code,tb.equipment_name,tb.parent_area_id,
+		   (select count(distinct tt.phy_port_id ) from tb_cablecheck_order tt where tt.order_id=tco.order_id 
+		   and tt.phy_eqp_id=tb.equipment_id) portnum
+		    from tb_cablecheck_order tco
+		    inner join app_iom_opt_daily iom on iom.order_id=tco.order_id
+		    inner join tb_cablecheck_dtsj sj  on sj.id=tco.btsj_id
+		    inner join tb_cablecheck_equipment tb on tb.equipment_id =sj.sbid and tb.equipment_code=sj.sbbm
+		    where tco.order_no= #{orderNo}
+		     ) port 
+	     order by  to_number(regexp_substr(port.phy_port_id, '[0-9]*[0-9]', 1)), to_number(regexp_substr(port.phy_port_id, '[0-9]*[0-9]', 3)) -->
+      	
+	 <!-- 查询出网格设备下的所有工单端子信息 -->
+		  SELECT DISTINCT TCO.ORDER_ID,TCO.ORDER_NO,TCO.OPT_CODE,TCO.PHY_EQP_ID,sj.sbbm equipment_code,sj.sbmc equipment_name,TCO.PHY_EQP_SPEC_ID,
+		  		TCO.PHY_PORT_ID,TCO.PHY_PORT_SPEC_NO,
+       			AOD.WORK_ORDER_TYPE,AOD.ACTION_TYPE
+			FROM TB_CABLECHECK_ORDER TCO
+			INNER JOIN TB_CABLECHECK_DTSJ SJ ON SJ.ID=TCO.BTSJ_ID
+			INNER JOIN APP_CSV_OPT_DAILY AOD ON AOD.WORK_ORDER_NO=TCO.ORDER_NO
+			INNER JOIN TB_CABLECHECK_EQUIPMENT TB ON TB.EQUIPMENT_ID=SJ.INSTALL_SBID
+			WHERE  AOD.ARCH_TP='REVERT' and tco.area_id=#{areaId}
+		    and TB.EQUIPMENT_ID=#{equId} and tb.parent_area_id=#{areaId}
+			and sj.bdsj &gt;=to_date(#{port_start_time},'yyyy-mm-dd')
+ 			and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd')
+			  
+	      union all
+	      
+	       SELECT DISTINCT TCO.ORDER_ID,TCO.ORDER_NO,TCO.OPT_CODE,TCO.PHY_EQP_ID,sj.sbbm equipment_code,sj.sbmc equipment_name,TCO.PHY_EQP_SPEC_ID,
+	          TCO.PHY_PORT_ID,TCO.PHY_PORT_SPEC_NO, iod.order_type WORK_ORDER_TYPE,iod.action_type
+	      FROM TB_CABLECHECK_ORDER TCO
+	      INNER JOIN TB_CABLECHECK_DTSJ SJ ON SJ.ID=TCO.BTSJ_ID
+	      INNER JOIN app_iom_opt_daily iod ON iod.order_no=tco.order_no
+	      INNER JOIN TB_CABLECHECK_EQUIPMENT TB ON TB.EQUIPMENT_ID=SJ.INSTALL_SBID
+	      WHERE iod.iom_order_state='10F' and tco.area_id=#{areaId}
+	        and TB.EQUIPMENT_ID=#{equId} and tb.parent_area_id=#{areaId}
+	        and sj.bdsj &gt;=to_date(#{port_start_time},'yyyy-mm-dd')
+ 		    and sj.bdsj &lt;=to_date(#{port_end_time},'yyyy-mm-dd')
+	<!-- select * from (
+		select distinct tco.ORDER_ID, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,aod.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+		inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		where  tb.install_sbid=#{equId}   
+   	union all      
+ 		select distinct tco.ORDER_ID, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,aod.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+		inner join app_csv_opt_daily aod on aod.work_order_id=tco.order_id
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		where tb.equipment_id=#{equId}
+   	union all 
+		select distinct tco.ORDER_ID, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,iom.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+		inner join app_iom_opt_daily iom on iom.order_id=tco.order_id
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		where  tb.install_sbid=#{equId}   
+   	union all      
+		select distinct tco.ORDER_ID, tco.order_no, tco.opt_code,tco.phy_eqp_id,tco.phy_eqp_spec_id,tco.phy_port_id,tco.phy_port_spec_no,iom.action_type,tb.equipment_id,tb.equipment_code,tb.equipment_name from tb_cablecheck_order tco
+		inner join app_iom_opt_daily iom on iom.order_id=tco.order_id
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=tco.phy_eqp_id
+		where tb.equipment_id=#{equId}	
+	) m	order by  to_number(regexp_substr(m.phy_port_id, '[0-9]*[0-9]', 1)), to_number(regexp_substr(m.phy_port_id, '[0-9]*[0-9]', 3))
+		 -->
+	</select>
+	
+	
+	<select id="getEqpBySG" parameterType="map" resultType="map">
+		select * from (
+		SELECT distinct tce.equipment_id eqpId,
+	                tce.equipment_code eqpNo,
+	                tce.equipment_name eqpName,
+	                tce.address address, 
+	                tce.area_id son_areaId, 
+	                tce.manage_area_id as manageCode,
+	                tce.manage_area manageName,
+	                tce.res_type_id eqp_type_id,
+	                tce.res_type eqp_type,
+	                ts.status_id taskState,
+	                ts.task_type taskType,
+	                ts.task_type data_source,
+	                tce.longitude longitude,
+	                tce.latitude latitude,
+	                tce.longitude_inspect longitude_inspect,
+	                tce.latitude_inspect latitude_inspect,
+	                ts.task_id taskId,
+	                ts.task_name taskName,
+	                to_char(ts.start_time,'yyyy-mm-dd HH24:mi:ss') start_time,
+	                to_char(ts.complete_time,'yyyy-mm-dd HH24:mi:ss') end_time,
+	                ts.NO_EQPNO_FLAG NO_EQPNO_FLAG,
+	                to_char(ts.last_update_time,'yyyy-mm-dd HH24:mi:ss') last_update_time,
+  ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{longitude},#{latitude},0),NULL,NULL),
+  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(tce.longitude_inspect, nvl(tce.longitude,#{longitude})),
+  nvl(tce.latitude_inspect,nvl(tce.latitude,#{latitude})),0),NULL,NULL),1),1)  DISTANCE,
+  <!--  nvl(tt.order_num,0) ordernum,  -->
+    ( select  count(distinct tco.order_no)order_num from   
+                   tb_cablecheck_dtsj sj 
+              join tb_cablecheck_equipment tb on tb.equipment_id=sj.install_sbid
+              join  tb_cablecheck_order tco on tco.btsj_id=sj.id 
+             where sj.install_sbid=ts.sbid
+             and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') 
+             and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+             ) ordernum,
+   to_char(tce.check_complete_time,'yyyy-mm-dd hh24:mi:ss')check_complete_time,
+      p.plan_end_time,p.plan_circle
+	  FROM tb_cablecheck_task ts
+	  left join Patrol_Plan p on ts.patrol_plan_id = p.plan_id
+	  left join TB_CABLECHECK_EQUIPMENT tce
+	  on tce.equipment_id = ts.sbid
+	  left join tb_cablecheck_dtsj sj 
+	  on tce.equipment_id = sj.install_sbid 
+	  <if test="contract_person != null and contract_person != '' and contract_person == 0 ">  
+		    <![CDATA[
+		    	left join tb_base_staff sf on sf.id_number=tce.identify
+		   	]]>
+	  </if> 
+	  
+	 <!--  left join (
+	        select  tb.equipment_id,tb.equipment_code,count(distinct tco.order_no)order_num from   tb_cablecheck_task ts 
+             inner join tb_cablecheck_dtsj sj on sj.install_sbid=ts.sbid
+             inner join tb_cablecheck_equipment tb on tb.equipment_id=sj.install_sbid
+             inner join  tb_cablecheck_order tco on tco.btsj_id=sj.id
+             where ts.inspector=#{staffId} and ts.status_id in (2,6)
+             AND  TS.TASK_TYPE in (0,4,5,10,11,12,13)
+             and tb.res_type_id&lt;&gt;2530
+             and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+             group by  tb.equipment_id,tb.equipment_code
+	  ) tt on tt.equipment_id = tce.equipment_id -->
+	  
+         WHERE ts.status_id in (2,6)
+         	AND  TS.TASK_TYPE in (0,4,5,10,11,12,13)
+           and tce.res_type_id&lt;&gt;2530
+           and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') 
+           and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+           <if test="gridId != null and gridId != ''">  
+		    <![CDATA[
+		   		and tce.grid_id = #{gridId}
+		   	]]>
+		   </if>
+		    <if test="eqpType != null and eqpType != ''">  
+			    <![CDATA[
+			   		AND tce.RES_TYPE_ID = to_number(#{eqpType})
+			   	]]>
+			</if>
+				<if test="eqpCode != null and eqpCode != ''">  
+			    <![CDATA[
+			   		AND instr(tce.EQUIPMENT_CODE,#{eqpCode})>0
+			   	]]>
+			</if>
+			<if test="eqpAddress != null and eqpAddress != ''">  
+			    <![CDATA[
+			    	AND instr(tce.ADDRESS,#{eqpAddress})>0
+			   	]]>
+			</if> 
+			<if test="contract_person != null and contract_person != '' and contract_person == 0 ">  
+			    <![CDATA[
+			    	and sf.isdeleted=0 and sf.status=0 and sf.staff_id=#{staffId}
+			   	]]>
+			</if> 	
+           and (ts.inspector  = #{staffId})
+           
+           union
+           
+           SELECT distinct tce.equipment_id eqpId,
+                  tce.equipment_code eqpNo,
+                  tce.equipment_name eqpName,
+                  tce.address address, 
+                  tce.area_id son_areaId, 
+                  tce.manage_area_id as manageCode,
+                  tce.manage_area manageName,
+                  tce.res_type_id eqp_type_id,
+                  tce.res_type eqp_type,
+                  ts.status_id taskState,
+                  ts.task_type taskType,
+                  ts.task_type data_source,
+                  tce.longitude longitude,
+                  tce.latitude latitude,
+                  tce.longitude_inspect longitude_inspect,
+                  tce.latitude_inspect latitude_inspect,
+                  ts.task_id taskId,
+                  ts.task_name taskName,
+                  to_char(ts.start_time,'yyyy-mm-dd HH24:mi:ss') start_time,
+                  to_char(ts.complete_time,'yyyy-mm-dd HH24:mi:ss') end_time,
+                  ts.NO_EQPNO_FLAG NO_EQPNO_FLAG,
+                  to_char(ts.last_update_time,'yyyy-mm-dd HH24:mi:ss') last_update_time,          
+  ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{longitude},#{latitude},0),NULL,NULL),
+  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(tce.longitude_inspect, nvl(tce.longitude,#{longitude})),
+  nvl(tce.latitude_inspect,nvl(tce.latitude,#{latitude})),0),NULL,NULL),1),1)  DISTANCE,              
+     <!--  nvl(tt.order_num,0) ordernum,  -->
+     ( select  count(distinct tco.order_no)order_num from   
+                   tb_cablecheck_dtsj sj 
+              join tb_cablecheck_equipment tb on tb.equipment_id=sj.install_sbid
+              join  tb_cablecheck_order tco on tco.btsj_id=sj.id 
+             where sj.install_sbid=ts.sbid
+             and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') 
+             and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+             ) ordernum,
+         to_char(tce.check_complete_time,'yyyy-mm-dd hh24:mi:ss') check_complete_time,
+         p.plan_end_time,p.plan_circle
+          FROM tb_cablecheck_task   ts,
+               tb_cablecheck_equipment tce,
+               tb_cablecheck_taskdetail td,
+               tb_cablecheck_record r,
+               tb_cablecheck_dtsj sj,
+               Patrol_Plan p 
+               <if test="contract_person != null and contract_person != '' and contract_person == 0 ">  
+			    <![CDATA[
+			    	,tb_base_staff sf
+			   	]]>
+			  </if>
+               
+         <!-- ,(
+	        select  tb.equipment_id,tb.equipment_code,count(distinct tco.order_no)order_num 
+	         from tb_cablecheck_task ts 
+             inner join tb_cablecheck_dtsj sj on sj.install_sbid=ts.sbid
+             inner join tb_cablecheck_equipment tb on tb.equipment_id=sj.install_sbid
+             inner join tb_cablecheck_order tco on tco.btsj_id=sj.id
+             inner join tb_cablecheck_taskdetail td on td.task_id = ts.task_id
+             inner join tb_cablecheck_record r on td.inspect_object_id=r.record_id
+             where ts.MAINTOR=#{staffId} 
+             and ts.status_id in (0,2,6)
+             and r.ischeckok=1
+             and td.inspect_object_type=0
+             AND  TS.TASK_TYPE in (1,2,3,6)
+             and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+             group by  tb.equipment_id,tb.equipment_code
+	  	) tt  --> 
+	  	
+         WHERE ts.task_id = td.task_id
+           and ts.patrol_plan_id = p.plan_id(+)
+           <!-- and tt.equipment_id(+) = tce.equipment_id -->
+           <if test="contract_person != null and contract_person != '' and contract_person == 0 ">  
+			    <![CDATA[
+			    and tce.identify=sf.id_number(+)
+			   	]]>
+		   </if>
+           and ts.status_id in (0,2,6)
+           and r.ischeckok=1
+           and td.inspect_object_id=r.record_id
+           and tce.equipment_id=ts.sbid
+           and td.inspect_object_type=0
+           and ts.task_type in (1,2,3,6)
+           AND (ts.MAINTOR = #{staffId})
+           and tce.equipment_id = sj.install_sbid(+)
+           and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') 
+           and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+           <if test="gridId != null and gridId != ''">  
+		    <![CDATA[
+		   		and tce.grid_id = #{gridId}
+		   	]]>
+		   </if>
+		    <if test="eqpType != null and eqpType != ''">  
+			    <![CDATA[
+			   		AND tce.RES_TYPE_ID = to_number(#{eqpType})
+			   	]]>
+			</if>
+				<if test="eqpCode != null and eqpCode != ''">  
+			    <![CDATA[
+			   		AND instr(tce.EQUIPMENT_CODE,#{eqpCode})>0
+			   	]]>
+			</if>
+			<if test="eqpAddress != null and eqpAddress != ''">  
+			    <![CDATA[
+			    	AND instr(tce.ADDRESS,#{eqpAddress})>0
+			   	]]>
+			</if> 
+			<if test="contract_person != null and contract_person != '' and contract_person == 0 ">  
+			    <![CDATA[
+			    	and sf.isdeleted=0 and sf.status=0 and sf.staff_id=#{staffId}
+			   	]]>
+			</if> 	
+           
+           )  order  by DISTANCE asc
+	</select>
+	<select id="getCountByEquId" parameterType="map" resultType="java.lang.Integer">
+		select count(*) count from (
+	      select distinct acd.work_order_no ORDER_NO
+	      from tb_cablecheck_order tco
+	      inner join APP_CSV_OPT_DAILY acd on acd.work_order_id = tco.order_id
+	      inner join tb_cablecheck_dtsj sj on sj.id=tco.btsj_id
+	      where sj.install_sbid = #{equId}
+	      and acd.ARCH_TP = 'REVERT'
+	      and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+	        union   
+	      select distinct iom.order_no ORDER_NO
+	      from tb_cablecheck_order tco
+	      inner join app_iom_opt_daily iom on iom.order_id = tco.order_id
+	      inner join tb_cablecheck_dtsj sj on sj.id=tco.btsj_id
+	      where sj.install_sbid = #{equId}
+	      and sj.bdsj &gt;= to_date(#{port_start_time},'yyyy/mm/dd') and sj.bdsj &lt; to_date(#{port_end_time},'yyyy/mm/dd')
+	     )
+	</select>
+	
+	
+	<select id="getOrderRecords" parameterType="map"  resultType="map" >
+		select f.staff_name,to_char(pro.oper_time,'yyyy-mm-dd hh24:mi:ss')oper_time,pro.remark from tb_cablecheck_process pro 
+		left join tb_base_staff f on f.staff_id=pro.oper_staff
+		where pro.task_id=
+		 ( select t.task_id from (
+		         select  re.task_id from tb_cablecheck_record re where  <!-- re.eqp_id=#{eqpId} and --> re.order_no=#{orderNo} order by re.create_time desc
+		  )t where rownum=1) order by pro.oper_time
+	</select>
+	
+	<insert id="saveTrace" parameterType="map"  >
+		insert into tb_base_trace_record(
+				taskid,taskno,taskname,orderid,orderno,glbh,areaid, 
+				eqpid, eqpno, portid, portno, eqpid_new, eqpno_new, portid_new, 
+				portno_new, modify_time, modify_staff, modify_content, 
+				port_error, tasktype
+			)
+			values
+			(   #{task_id},#{TASK_NO},#{TASK_NAME},#{order_id},#{order_no},#{glbm},#{area_id},
+				#{eqpId},#{eqpNo},#{port_id},#{port_no},#{changedEqpId},#{changedEqpNo},#{changedPortId},
+				#{changedPortNo},sysdate,#{staffId},#{content,jdbcType=VARCHAR},#{reason},#{task_type}	
+			)
+	</insert>
+	
+	<insert id="saveEqpTrace" parameterType="map"  >
+		insert into tb_base_trace_record(
+				taskid,taskno,taskname,areaid, 
+				eqpid, eqpno,modify_time, modify_staff,modify_content,tasktype
+			)
+			values
+			(   #{task_id},#{TASK_NO},#{TASK_NAME},#{area_id},
+				#{eqpId},#{eqpNo},sysdate,#{staffId},#{content,jdbcType=VARCHAR},#{task_type,jdbcType=VARCHAR}	
+			)
+	</insert>
+	
+	<insert id="addProcess" parameterType="map">
+		insert into tb_cablecheck_process (
+			process_id,
+			task_id,
+			oper_time,
+			oper_staff,
+			status,
+			remark,
+			orderid,
+			orderno
+		)
+		values
+		(
+			SQP_TB_CABLECHECK_PROCESS.NEXTVAL,
+			#{task_id},
+			sysdate,
+			#{staffId},
+			#{status},
+			#{remark},
+			#{order_id},
+			#{order_no}
+		)
+	</insert>
+	<insert id="addProcessNew" parameterType="map">
+		insert into tb_cablecheck_process (
+			process_id,
+			task_id,
+			oper_time,
+			oper_staff,
+			status,
+			remark,
+			orderid,
+			orderno,
+			receiver,
+			content
+		)
+		values
+		(
+			SQP_TB_CABLECHECK_PROCESS.NEXTVAL,
+			#{task_id},
+			sysdate,
+			#{staffId},
+			#{status},
+			#{remark},
+			#{order_id},
+			#{order_no},
+			#{receiver,jdbcType=VARCHAR},
+			#{content,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<select id="getEqpDetail" parameterType="map" resultType="map">
+		select cpy.phy_all_cpy,cpy.phy_free_cpy,cpy.phy_used_cpy from tb_cablecheck_equipment_cpy cpy 
+		where cpy.phy_eqp_id=#{eqpId} and cpy.local_area_id=#{areaId} and rownum=1
+		
+	</select>
+	
+	<select id="getEqpOut" parameterType="map" resultType="map">
+		select tb.install_sbid,tb.install_sbbm from tb_cablecheck_equipment tb 
+		where tb.equipment_id=#{eqpId} and tb.parent_area_id=#{areaId}
+		
+	</select>
+	
+		
+	<insert id="updateTaskDetail">
+		insert into tb_check_task_detail 
+		(workorder_no,task_id,id,name,score,photo,description,is_ok)
+		values 
+		(#{orderNo},#{taskId},SEQ_task_detail_id.Nextval,#{name},#{score},#{photo},#{description},#{is_ok})
+	</insert>
+	
+	<select id="isOneStaff" parameterType="string" resultType="int">
+		select count(distinct t.id) cou
+  		from outsource_orguser_2_xjsys t
+ 		where t.post in ('网格管理员', '代维公司管理员')
+   		and t.major_id like '%16%'
+    	and t.jyh_account = (select f.staff_no from tb_base_staff f where f.staff_id = #{staffId})
+	</select>
+	<select id="isTwoStaff" parameterType="string" resultType="int">
+		select count(distinct t.id) cou
+  		from outsource_orguser_2_xjsys t
+ 		where t.post in ('主业管理员', '主业管理员视')
+   		and t.major_id like '%16%'
+    	and t.jyh_account = (select f.staff_no from tb_base_staff f where f.staff_id = #{staffId})
+	</select>
+	
+	<update id="updateOrder" parameterType="map">
+		update tb_check_task_workOrder o set o.check_right_rate=#{PROCESS_CONSTRUCTION} ,o.process_construction=#{CHECK_RIGHT_RATE}
+		where o.workorder_no = #{orderNo}
+	</update>
+	
+	<select id="getOssInfoByGlbm" parameterType="map" resultType="string">
+		 SELECT lbl.no FROM ${jndi}.lnk_business_link lbl where lbl.no=#{glbm}
+	</select>
+	
+</mapper>

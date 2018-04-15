@@ -1,0 +1,17 @@
+.bx_container {
+	float: left;
+}
+
+.bx_wrap {
+	width: 100%;
+	height: 100%;
+	float: left;
+}
+
+.bx_wrap a.prev {
+	float: left:
+}
+
+.bx_wrap a.next {
+	float: right:
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans default-lazy-init="true">
+   <description>QuartzLocal Cron JobConfiguration</description>   
+   	<bean id="autoLineScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" lazy-init="false">
+      <property name="triggers">
+         <list>   
+         <ref bean="pushCronTrigger"/>
+         <ref bean="matchSiteCronTrigger"/>
+         <ref bean="matchSiteTwoCronTrigger"/>
+         </list>
+      </property>
+      <property name="quartzProperties">
+         <props>
+            <prop key="org.quartz.threadPool.threadCount">5</prop>
+         </props>
+      </property>
+   </bean>  
+   <bean id="pushCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="pushJobDetail" />
+      <property name="cronExpression" value="0 0/1 * * * ?" />
+   </bean>   
+   
+   <bean id="pushJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="quoteLineInspectHelperJob" />
+      <property name="targetMethod" value="pushMessage" />
+      <property name="concurrent" value="false" />
+   </bean>  
+   
+   <bean id="matchSiteCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="matchSiteJobDetail" />
+      <property name="cronExpression" value="0 0/1 6-22 * * ?" />
+   </bean>   
+   
+   <bean id="matchSiteJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="quoteLineInspectHelperJob" />
+      <property name="targetMethod" value="calMatchSites" />
+      <property name="concurrent" value="false" />
+   </bean>
+   
+   <bean id="matchSiteTwoCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="matchSiteTwoJobDetail" />
+      <property name="cronExpression" value="0 0/1 6-22 * * ?" />
+   </bean>   
+   
+   <bean id="matchSiteTwoJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="quoteLineInspectHelperJob" />
+      <property name="targetMethod" value="calMatchSitesTwo" />
+      <property name="concurrent" value="false" />
+   </bean>
+   
+   <bean id="quoteLineInspectHelperJob" class="com.linePatrol.service.impl.InspectHelperJob">  
+   </bean>
+</beans>

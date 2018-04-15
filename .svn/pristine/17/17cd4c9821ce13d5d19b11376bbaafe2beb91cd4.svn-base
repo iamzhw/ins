@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.system.dao.LoginDao">
+<select id="login" parameterType="map" resultType="map">
+SELECT STAFF_ID,STAFF_NO,STAFF_NAME,AREA_ID,SON_AREA_ID,STATUS,ID_NUMBER,TEL,REAL_NAME
+  FROM TB_BASE_STAFF F
+ WHERE F.STAFF_NO = #{STAFF_NO}
+   AND F.PASSWORD_ = #{PASSWORD} 
+</select>
+<select id="getGns" parameterType="map" resultType="map">
+SELECT DISTINCT G.*
+  FROM TB_BASE_STAFF      F,
+       TB_BASE_STAFF_ROLE SR,
+       TB_BASE_ROLE_GNS   RG,
+       TB_BASE_GNS        G
+ WHERE F.STAFF_NO = #{STAFF_NO}
+ 	 and sr.staff_id = f.staff_id
+   AND SR.ROLE_ID = RG.ROLE_ID
+   AND RG.ID = G.ID
+   AND G.PARENTID = #{ID}
+ ORDER BY G.ID
+	</select>
+	<select id="getAllGns" parameterType="map" resultType="map">
+SELECT DISTINCT G.*
+  FROM TB_BASE_GNS G
+ WHERE G.PARENTID = #{ID}
+ ORDER BY G.ID
+	</select>
+	<select id="getResources" parameterType="map" resultType="map">
+ SELECT G.*
+   FROM TB_BASE_ROLE_GNS RG, TB_BASE_GNS G
+  WHERE RG.ROLE_ID = #{ROLE_ID}
+    AND RG.ID = G.ID
+  ORDER BY G.ID
+	</select>
+	
+	<select id="singleLogin" parameterType="map" resultType="map">
+SELECT STAFF_ID,STAFF_NO,STAFF_NAME,AREA_ID,SON_AREA_ID,STATUS,ID_NUMBER
+  FROM TB_BASE_STAFF F
+ WHERE 1=1
+ 		<if test="STAFF_NO != null and STAFF_NO != ''">  
+            <![CDATA[
+	    	AND F.STAFF_NO = #{STAFF_NO}
+	    	]]>
+		</if>
+ 		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+            <![CDATA[
+	    	AND ID_NUMBER = #{ID_CARD}
+	    	]]>
+		</if>
+</select>
+</mapper>

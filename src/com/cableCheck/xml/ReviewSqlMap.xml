@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.ReviewDao">
+
+	<select id="query" parameterType="map" resultType="map">
+	        select distinct l.CITYNAME,l.name,l.staff_name,l.reviewRecords,l.sameRecords,l.check_review from(
+			       select m.CITYNAME,m.name,m.staff_name,m.reviewRecords,n.sameRecords,round((n.sameRecords/m.reviewRecords),4)*100 || '%' check_review from
+			              (select a.area_id,b.area_id son_area_id, a.name CITYNAME,b.name,v.eqpid,f.staff_name,v.checkstaff,count(distinct v.dzid) reviewRecords
+			               from tb_cablecheck_review v
+			               inner join tb_cablecheck_equipment tb on tb.equipment_id=v.eqpid
+			               left join area a on a.area_id=tb.parent_area_id
+			               left join area b on b.area_id=tb.area_id
+			               left join tb_base_staff f on f.staff_id=v.checkstaff
+			               group by a.name,b.name,f.staff_name,v.checkstaff,v.eqpid,a.area_id,b.area_id )m
+			               inner join 
+			               (select V1.EQPID,V1.CHECKSTAFF,  count(DISTINCT v1.dzid)sameRecords from tb_cablecheck_review v1 where v1.check_review_result='是'group by V1.EQPID,V1.CHECKSTAFF)n
+			               on m.eqpid=n.EQPID and m.checkstaff=n.checkstaff
+			               inner join tb_cablecheck_review v2 on v2.eqpid=m.eqpid and v2.checkstaff=m.checkstaff
+			       where 1=1
+			       <if test="queryParams.area_id != null and queryParams.area_id != ''">  
+			            <![CDATA[
+				    	and m.area_id = #{queryParams.area_id}  
+				    	]]>
+				   </if>
+				   <if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+			            <![CDATA[
+				    	and m.son_area_id = #{queryParams.son_area_id}  
+				    	]]>
+				   </if>
+				    <if test="queryParams.review_start_time != null and queryParams.review_start_time != ''">  
+			            <![CDATA[
+				    	and v2.reviewtime >= to_date(#{queryParams.review_start_time},'yyyy-mm-dd')  
+				    	]]>
+				   </if>
+				    <if test="queryParams.review_complete_time != null and queryParams.review_complete_time != ''">  
+			            <![CDATA[
+				    	and trunc(v2.reviewtime) <= to_date(#{queryParams.review_complete_time},'yyyy-mm-dd')    
+				    	]]>
+				   </if>
+				    <if test="queryParams.INSPECTOR != null and queryParams.INSPECTOR != ''">  
+			            <![CDATA[
+				    	and m.staff_name like '%'||#{queryParams.INSPECTOR}||'%' 
+				    	]]>
+				   </if>
+			)l     
+	</select>
+  
+  
+    <select id="queryDetailRecords" parameterType="map" resultType="map">
+	    select a.name cityname,b.name,v.eqpname,v.eqpno,case v.sblx when '703' then '光交接箱'
+                                                            when '411' then 'ODF'
+                                                            when '414' then '综合配线箱'
+                                                            when '704' then '光分纤箱' 
+                                                            when '2530' then '分光器'end sblx, v.check_descript,
+				v.dzno,f.staff_name checkstaff,to_char(v.checktime,'yyyy-mm-dd HH24:mi:ss')checktime,case v.check_ischeckok when '1'then '不合格' else '合格' end check_ischeckok ,
+				f1.staff_name REVIEWSTAFF ,to_char(v.reviewtime,'yyyy-mm-dd HH24:mi:ss')reviewtime,case v.review_ischeckok when '1' then '不合格' else '合格' end review_ischeckok,
+				v.check_review_result 
+		from tb_cablecheck_review v
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=v.eqpid
+		left join area a on a.area_id=tb.parent_area_id
+		left join area b on b.area_id=tb.area_id
+		left join tb_base_staff f on f.staff_id=v.checkstaff
+		left join tb_base_staff f1 on f1.staff_id=v.reviewstaff
+		where 1=1
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+            <![CDATA[
+	    	and tb.parent_area_id = #{queryParams.area_id}  
+	    	]]>
+	   </if>
+	   <if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+            <![CDATA[
+	    	and tb.area_id = #{queryParams.son_area_id}  
+	    	]]>
+	   </if>
+	    <if test="queryParams.review_start_time != null and queryParams.review_start_time != ''">  
+            <![CDATA[
+	    	and v.reviewtime >= to_date(#{queryParams.review_start_time},'yyyy-mm-dd')  
+	    	]]>
+	   </if>
+	    <if test="queryParams.review_complete_time != null and queryParams.review_complete_time != ''">  
+            <![CDATA[
+	    	and trunc(v.reviewtime) <= to_date(#{queryParams.review_complete_time},'yyyy-mm-dd')    
+	    	]]>
+	   </if> 
+	    <if test="queryParams.INSPECTOR != null and queryParams.INSPECTOR != ''">  
+            <![CDATA[
+	    	and f.staff_name like '%'||#{queryParams.INSPECTOR}||'%' 
+	    	]]>
+	   </if> 
+	</select>
+	
+	<!-- 导出 -->
+	
+	<select id="exportExcel" parameterType="map" resultType="map">
+	        select distinct l.CITYNAME,l.name,l.staff_name,l.reviewRecords,l.sameRecords,l.check_review from(
+			       select m.CITYNAME,m.name,m.staff_name,m.reviewRecords,n.sameRecords,round((n.sameRecords/m.reviewRecords),4)*100 || '%' check_review from
+			              (select a.area_id,b.area_id son_area_id, a.name CITYNAME,b.name,v.eqpid,f.staff_name,v.checkstaff,count(distinct v.dzid) reviewRecords
+			               from tb_cablecheck_review v
+			               inner join tb_cablecheck_equipment tb on tb.equipment_id=v.eqpid
+			               left join area a on a.area_id=tb.parent_area_id
+			               left join area b on b.area_id=tb.area_id
+			               left join tb_base_staff f on f.staff_id=v.checkstaff
+			               group by a.name,b.name,f.staff_name,v.checkstaff,v.eqpid,a.area_id,b.area_id )m
+			               inner join 
+			               (select V1.EQPID,V1.CHECKSTAFF,  count(DISTINCT v1.dzid)sameRecords from tb_cablecheck_review v1 where v1.check_review_result='是'group by V1.EQPID,V1.CHECKSTAFF)n
+			               on m.eqpid=n.EQPID and m.checkstaff=n.checkstaff
+			               inner join tb_cablecheck_review v2 on v2.eqpid=m.eqpid and v2.checkstaff=m.checkstaff
+			       where 1=1
+			       <if test="area_id != null and area_id != ''">  
+			            <![CDATA[
+				    	and m.area_id = #{area_id}  
+				    	]]>
+				   </if>
+				   <if test="son_area_id != null and son_area_id != ''">  
+			            <![CDATA[
+				    	and m.son_area_id = #{son_area_id}  
+				    	]]>
+				   </if>
+				    <if test="review_start_time != null and review_start_time != ''">  
+			            <![CDATA[
+				    	and v2.reviewtime >= to_date(#{review_start_time},'yyyy-mm-dd')  
+				    	]]>
+				   </if>
+				    <if test="review_complete_time != null and review_complete_time != ''">  
+			            <![CDATA[
+				    	and trunc(v2.reviewtime) <= to_date(#{review_complete_time},'yyyy-mm-dd')    
+				    	]]>
+				   </if>
+				    <if test="INSPECTOR != null and INSPECTOR != ''">  
+			            <![CDATA[
+				    	and m.staff_name like '%'||#{INSPECTOR}||'%' 
+				    	]]>
+				   </if>
+				   
+			)l     
+	</select>
+     
+     
+     <select id="exportDetailExcel" parameterType="map" resultType="map">
+	    select a.name cityname,b.name,v.eqpname,v.eqpno,case v.sblx when '703' then '光交接箱'
+                                                            when '411' then 'ODF'
+                                                            when '414' then '综合配线箱'
+                                                            when '704' then '光分纤箱' end sblx,
+				v.dzno,f.staff_name checkstaff,to_char(v.checktime,'yyyy-mm-dd HH24:mi:ss')checktime,case v.check_ischeckok when '1'then '不合格' else '合格' end check_ischeckok ,
+				f1.staff_name REVIEWSTAFF ,to_char(v.reviewtime,'yyyy-mm-dd HH24:mi:ss')reviewtime,case v.review_ischeckok when '1' then '不合格' else '合格' end review_ischeckok,
+				v.check_review_result 
+		from tb_cablecheck_review v
+		inner join tb_cablecheck_equipment tb on tb.equipment_id=v.eqpid
+		left join area a on a.area_id=tb.parent_area_id
+		left join area b on b.area_id=tb.area_id
+		left join tb_base_staff f on f.staff_id=v.checkstaff
+		left join tb_base_staff f1 on f1.staff_id=v.reviewstaff
+		where 1=1
+		<if test="area_id != null and area_id != ''">  
+            <![CDATA[
+	    	and tb.parent_area_id = #{area_id}  
+	    	]]>
+	   </if>
+	   <if test="son_area_id != null and son_area_id != ''">  
+            <![CDATA[
+	    	and tb.area_id = #{son_area_id}  
+	    	]]>
+	   </if>
+	    <if test="review_start_time != null and review_start_time != ''">  
+            <![CDATA[
+	    	and v.reviewtime >= to_date(#{review_start_time},'yyyy-mm-dd')  
+	    	]]>
+	   </if>
+	    <if test="review_complete_time != null and review_complete_time != ''">  
+            <![CDATA[
+	    	and trunc(v.reviewtime) <= to_date(#{review_complete_time},'yyyy-mm-dd')    
+	    	]]>
+	   </if>  
+	   <if test="INSPECTOR != null and INSPECTOR != ''">  
+            <![CDATA[
+	    	and f.staff_name like '%'||#{INSPECTOR}||'%' 
+	    	]]>
+	   </if> 
+	</select>
+</mapper>

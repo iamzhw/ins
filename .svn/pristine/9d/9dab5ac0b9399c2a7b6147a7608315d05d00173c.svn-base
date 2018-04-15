@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.CheckProcessDao">
+	<update id="addProcess" parameterType="map">
+		insert into tb_cablecheck_process (
+			process_id,
+			task_id,
+			oper_time,
+			oper_staff,
+			status,
+			remark
+		)
+		values
+		(
+			SQP_TB_CABLECHECK_PROCESS.NEXTVAL,
+			#{task_id},
+			sysdate,
+			#{oper_staff},
+			#{status},
+			#{remark}
+		)
+	</update>
+	 <update id="changeProcessStatus" parameterType="map">
+	 
+	</update>
+	<select id="queryProcessByTaskId" parameterType="map">
+		select * from tb_cablecheck_process where task_id=#{TASK_ID}
+	</select>
+	
+	<select id="queryProcess_oper_staff_ByTaskId" parameterType="string"  resultType="map">
+		select  p.oper_staff,p.oper_time,p.status from tb_cablecheck_process p 
+		where p.task_id=#{id}  order by p.oper_time desc  
+	</select>
+	
+	<update id="updateTask" parameterType="map">
+	 update tb_cablecheck_task set status_id=8,auditor=#{oper_staff} where task_id=#{task_id}
+	</update>
+	
+	<update id="addProcessNew" parameterType="map">
+		insert into tb_cablecheck_process (
+			process_id,
+			task_id,
+			oper_time,
+			oper_staff,
+			status,
+			remark,
+			receiver,
+			content
+		)
+		values
+		(
+			SQP_TB_CABLECHECK_PROCESS.NEXTVAL,
+			#{task_id,jdbcType=VARCHAR},
+			sysdate,
+			#{oper_staff,jdbcType=VARCHAR},
+			#{status,jdbcType=VARCHAR},
+			#{remark,jdbcType=VARCHAR},
+			#{receiver,jdbcType=VARCHAR},
+			#{content,jdbcType=VARCHAR}
+		)
+	</update>
+	
+	<insert id="addProcessNew_orderNo" parameterType="map">
+		insert into tb_cablecheck_process (
+			process_id,
+			task_id,
+			oper_time,
+			oper_staff,
+			status,
+			remark,
+			orderid,
+			orderno,
+			receiver,
+			content
+		)
+		values
+		(
+			SQP_TB_CABLECHECK_PROCESS.NEXTVAL,
+			#{TASK_ID,jdbcType=VARCHAR},
+			to_date(#{OPER_TIME},'yyyy-mm-dd hh24:mi:ss'),
+			#{OPER_STAFF,jdbcType=VARCHAR},
+			#{STATUS,jdbcType=VARCHAR},
+			#{REMARK,jdbcType=VARCHAR},
+			#{ORDERID,jdbcType=VARCHAR},
+			#{ORDERNO,jdbcType=VARCHAR},
+			#{RECEIVER,jdbcType=VARCHAR},
+			#{CONTENT,jdbcType=VARCHAR}
+		)
+	</insert>
+</mapper>

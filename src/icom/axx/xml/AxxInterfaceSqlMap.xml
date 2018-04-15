@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.axx.dao.AxxInterfaceDao">
+
+	<select id="findSiteByLine" resultType="map">
+		SELECT ts.SITE_ID,
+		  ts.SITE_NAME,
+		  ts.LONGITUDE,
+		  ts.LATITUDE,
+		  ts.ADDRESS,
+		  ts.RELAY_ID,
+		  TS.SITE_MATCH,
+		  to_char(ts.UPDATE_TIME, 'yyyy-mm-dd HH:MI:ss') UPDATE_TIME,
+		  ts.SITE_TYPE,
+		  ls.line_id
+		  FROM AXX_T_SITE TS,axx_t_line_site ls
+		  WHERE 1=1
+		and ts.site_id=ls.site_id and ls.line_id =#{line_id} order by ls.site_order asc	
+	</select>
+	<select id="getTaskByUserId" parameterType="map" resultType="map">
+		SELECT T.INSPECT_ID,
+		       T.TASK_ID,
+		       T.TASK_NAME,
+		       T.TASK_TYPE,
+		       L.LINE_ID,
+		       I.LINE_NAME,
+		       LS.SITE_ID,
+		       S.SITE_NAME,
+		       S.SITE_TYPE,
+		       S.SITE_NO
+		  FROM AXX_T_TASK      T,
+		       AXX_T_TASK_LINE L,
+		       AXX_T_LINE_INFO I,
+		       AXX_T_LINE_SITE LS,
+		       AXX_T_SITE      S
+		 WHERE T.TASK_ID = L.TASK_ID
+		   AND L.LINE_ID = I.LINE_ID
+		   AND I.LINE_ID = LS.LINE_ID
+		   AND LS.SITE_ID = S.SITE_ID
+		   AND T.INSPECT_ID = #{user_id}
+		   AND T.STATUS=0
+		   AND T.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM DUAL) 
+		   AND T.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM DUAL)
+	</select>
+
+  <select id="getRelayByArea" parameterType="string" resultType="map">
+   SELECT distinct TR.Relay_Id repeaterId,tr.relay_name repeaterName
+     FROM AXX_T_RELAY TR inner join axx_t_relay_area tra on tr.relay_id=tra.relay_id
+     WHERE Tra.AREA_ID = #{areaId}
+  </select>
+  	
+  	<insert id="insertMobileWarnMsg" parameterType="map">
+		insert into axx_mobile_warn
+		  (user_id,
+		   site_id,
+		   site_longitude,
+		   site_latitude,
+		   warn_time,
+		   msg_detail,
+		   person_longitude,
+		   person_latitude)
+		values
+		  (#{user_id},
+		   #{site_id},
+		   #{site_longitude},
+		   #{site_latitude},
+		   to_date(#{warn_time}, 'yyyy-MM-dd hh24:mi:ss'),
+		   #{msg_detail},
+		   #{person_longitude},
+		   #{person_latitude})
+  	</insert>
+	
+	<insert id="saveInspInfo" parameterType="map">
+	   INSERT INTO AXX_T_SITE(
+		SITE_ID,
+		<if test=" site_name  != null and site_name  != ''"> 
+ <![CDATA[ 
+	SITE_NAME,
+ ]]>
+		</if>
+	
+		LONGITUDE,
+		LATITUDE,
+		<if test=" longitudegps  != null and longitudegps  != ''"> 
+ <![CDATA[ 
+		LONGITUDEGPS,
+		 ]]>
+		 </if>
+		 
+		 <if test=" latitudegps  != null and latitudegps  != ''"> 
+ <![CDATA[ 
+		LATITUDEGPS,
+		 ]]>
+		 </if>
+		<if test=" address  != null and address  != ''"> 
+ <![CDATA[ 
+ADDRESS,
+ ]]>
+		</if>
+		
+		RELAY_ID,
+		
+		
+		<if test=" site_type  != null and site_type  != ''"> 
+ <![CDATA[ 
+SITE_TYPE,
+ ]]>
+		</if>
+		
+		<if test=" maintain_rank  != null and maintain_rank  != ''"> 
+ <![CDATA[ 
+	MAINTAIN_RANK,
+ ]]>
+		</if>
+		UPDATE_TIME,
+		AREA_ID
+		)
+		values(
+		#{site_id},
+		
+		<if test=" site_name  != null and site_name  != ''"> 
+ <![CDATA[ 
+#{site_name},
+ ]]>
+		</if>
+		#{longitude},
+		#{latitude},
+		<if test=" longitudegps  != null and longitudegps  != ''"> 
+ <![CDATA[ 
+		#{longitudegps},
+		 ]]>
+		 </if>
+		
+		<if test=" latitudegps  != null and latitudegps  != ''"> 
+ <![CDATA[ 
+		#{latitudegps},
+		 ]]>
+		 </if>
+		
+		<if test=" address  != null and address  != ''"> 
+ <![CDATA[ 
+#{address},
+ ]]>
+		</if>
+		#{relay_id},
+		
+	
+		<if test=" site_type  != null and site_type  != ''"> 
+ <![CDATA[ 
+	#{site_type},
+ ]]>
+		</if>
+		<if test=" maintain_rank  != null and maintain_rank  != ''"> 
+ <![CDATA[ 
+	#{maintain_rank},
+ ]]>
+		</if>
+		to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+		#{area_id}
+		)
+		
+	
+	</insert>
+	
+	<select id="getSiteId" resultType="string">
+	      SELECT SEQ_AXX_T_SITE.NEXTVAL FROM DUAL
+	</select>
+	
+	
+	<insert id="insertPic" parameterType="map">
+	     
+INSERT INTO AXX_T_PHOTO
+  (FILE_ID,
+   STAFF_ID,
+   PHOTO_PATH,
+   MICRO_PHOTO,
+   SITE_ID,
+   PHOTO_TYPE,
+  
+    <if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+	    STATUS,
+ ]]>
+		</if>
+  
+    <if test=" comments  != null and comments  != ''"> 
+ <![CDATA[ 
+	 COMMENTS,
+ ]]>
+		</if>
+   UPLOAD_TIME
+   )
+values
+  (
+    #{pic_id},
+    #{staff_id},
+    #{pic_path},
+    #{micro_pic_path},
+    #{site_id},
+    #{photo_type},
+    
+   <if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+	  #{status},
+ ]]>
+		</if>
+    <if test=" comments  != null and comments  != ''"> 
+ <![CDATA[ 
+	 #{comments},
+ ]]>
+		</if>
+    
+     to_date(#{upload_time},'yyyy-mm-dd hh24:mi:ss')
+   )
+	     
+	
+	</insert>
+	
+	
+	<select id="getTodayTask" parameterType="map" resultType="map">
+	  <!-- 根据时间段查询
+	       select *
+  from (SELECT T.TASK_ID,
+               T.TASK_NAME,
+               TO_CHAR(T.START_DATE, 'YYYY-MM-DD') START_DATE,
+               TO_CHAR(T.END_DATE, 'YYYY-MM-DD') END_DATE
+          FROM AXX_T_TASK T
+         where T.INSPECT_ID =#{userId}) t1
+where  not exists
+<![CDATA[
+(select 1 from (SELECT t.task_id
+                  FROM AXX_T_TASK T
+                 where (TRUNC(T.START_DATE) > to_date(#{end_time},'YYYY-MM-DD')
+                       or TRUNC(t.end_date) < to_date(#{start_time},'YYYY-MM-DD')) 
+                   and T.INSPECT_ID = #{userId}) t2
+         where t1.TASK_ID = t2.TASK_ID)
+]]>
+	  
+	    -->
+	<!-- 指定日期查询任务 -->
+	SELECT T.TASK_ID,
+               T.TASK_NAME,
+               TO_CHAR(T.START_DATE, 'YYYY-MM-DD') START_DATE,
+               TO_CHAR(T.END_DATE, 'YYYY-MM-DD') END_DATE
+          FROM AXX_T_TASK T
+         where  
+         <![CDATA[
+             trunc(t.start_date)<=trunc(to_date(#{query_time},'yyyy-mm-dd')) and  trunc(t.end_date)>=trunc(to_date(#{query_time},'yyyy-mm-dd'))
+         ]]>
+         and T.INSPECT_ID =#{userId} 
+		 and t.STATUS=0 
+	</select>
+	
+	
+	<select id="getArrivalRate" parameterType="string" resultType="map">
+	   
+          SELECT *
+      FROM (SELECT COUNT(*) TOTAL_COUNT
+              FROM AXX_T_LINE_SITE LS
+             WHERE LS.LINE_ID IN (SELECT TL.LINE_ID
+                                    FROM AXX_T_TASK_LINE TL
+                                   WHERE TL.TASK_ID = #{task_id})) T1,
+           (SELECT COUNT(DISTINCT MS.SITE_ID) ACTUAL_COUNT
+              FROM AXX_T_MACTH_SITE MS
+             WHERE MS.SITE_TYPE != 3
+               AND MS.TASK_ID = #{task_id}) T2
+	</select>
+	
+	<select id="getStaffInfos" parameterType="map" resultType="map">
+	      SELECT BS.STAFF_ID, BS.STAFF_NAME
+   FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+  WHERE BS.STAFF_ID = BSR.STAFF_ID
+    AND BR.ROLE_ID = BSR.ROLE_ID
+    AND BR.ROLE_NO LIKE 'AXX%'
+    AND BS.AREA_ID = #{area_id}
+    <if test=" role_id  != null and role_id  != ''"> 
+ <![CDATA[ 
+	 AND BR.ROLE_ID IN (${role_id})
+ ]]>
+		</if>
+	
+	</select>
+
+<!-- 巡线时长 -->
+<select id="getLineTimes" parameterType="map" resultType="map">
+	     select t.user_id, 
+	     TO_CHAR(t.line_date, 'YYYY-MM-DD HH24:MI:SS')line_date,
+	     TO_CHAR(t.start_time, 'YYYY-MM-DD HH24:MI:SS')start_time,
+	     TO_CHAR(t.end_time, 'YYYY-MM-DD HH24:MI:SS')end_time,
+	      t.remark,t.invalid_type
+  			from AXX_T_INVALID_TIME t
+			where t.user_id=to_number(#{user_id}) 
+			and t.line_date = TO_DATE(#{query_time},'yyyy-mm-dd')
+	
+	</select>
+	
+	<select id="getKeyArrivalRate" parameterType="string" resultType="map">
+    	select nvl(t1.TOTAL_COUNT,0) TOTAL_COUNT, nvl(t2.ACTUAL_COUNT,0) ACTUAL_COUNT
+  from (select nvl(count(atls.site_id), 0) TOTAL_COUNT ,attl.task_id
+          from AXX_T_TASK_LINE attl
+         inner join AXX_T_LINE_SITE atls
+            on attl.line_id = atls.line_id
+         inner join AXX_T_SITE ats
+            on atls.site_id = ats.site_id
+         where attl.task_id = #{task_id}
+           and ats.site_type = 1
+         group by attl.task_id) t1 left join 
+    (SELECT nvl(count(distinct ms.site_id), 0) ACTUAL_COUNT ,ms.task_id
+               FROM AXX_T_MACTH_SITE MS
+              WHERE ms.site_type = 1
+              and ms.sign_id is not null 
+              and MS.TASK_ID = #{task_id}
+              group by ms.task_id) t2
+              on t1.task_id=t2.task_id
+	</select>
+	
+	<select id="getNextval"  resultType="string">
+	  
+         SELECT SEQ_AXX_T_HOLEOPENCHECK.nextval FROM DUAL 
+	
+	</select>
+	
+	
+	<insert id="saveHoleopencheck" parameterType="map">
+	     
+insert into AXX_T_HOLEOPENCHECK
+  (CHECK_ID,
+   USER_ID,
+   CHECK_DATE,
+   LOAD_NAME,
+   CABLE_ID,
+   HOLE_NO,
+   MEMO1,
+   MEMO2,
+   MEMO3,
+   MEMO4,
+   MEMO5,
+   MEMO6,
+   MEMO7,
+   MEMO8,
+   PHOTO_PATCH)
+values
+  (SEQ_AXX_T_HOLEOPENCHECK.NEXTVAL,
+   #{user_id,
+   jdbcType=NUMERIC},
+   to_date(#{check_time, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+   #{load_name,
+   jdbcType=VARCHAR},
+   #{cable_id,
+   jdbcType=NUMERIC},
+   #{hole_no,
+   jdbcType=VARCHAR},
+   #{memo1,
+   jdbcType=VARCHAR},
+   #{memo2,
+   jdbcType=VARCHAR},
+   #{memo3,
+   jdbcType=VARCHAR},
+   #{memo4,
+   jdbcType=VARCHAR},
+   #{memo5,
+   jdbcType=VARCHAR},
+   #{memo6,
+   jdbcType=VARCHAR},
+   #{memo7,
+   jdbcType=VARCHAR},
+   #{memo8,
+   jdbcType=VARCHAR},
+   #{photo_patch,
+   jdbcType=VARCHAR})
+	     
+	</insert>
+	
+	
+	<select id="getLineByTaskId" parameterType="string" resultType="map">
+			    select li.line_Id,li.line_name
+		  from AXX_T_LINE_INFO li, AXX_T_TASK_LINE tl
+		 where li.line_id = tl.line_id and tl.task_id=#{task_id}
+	</select>
+	
+	<select id="getOutSiteByTaskId" parameterType="string" resultType="map">
+		   select amos.out_site_id, amos.site_name
+     from AXX_T_TASK_OUTSITE atto
+    inner join AXX_MAIN_OUT_SITE amos
+       on atto.out_site_id = amos.out_site_id
+    where amos.delete_flag = 1
+      and amos.con_status = 1
+      and atto.task_id = #{task_id}
+		
+	</select>
+	
+	<select id="getStepTaskByInspectId" parameterType="string" resultType="map">
+		select t.task_id,t.task_name,
+		TO_CHAR(t.start_time, 'YYYY-MM-DD') START_DATE,
+        TO_CHAR(t.end_time, 'YYYY-MM-DD') END_DATE,
+        t.area_id,t.inspect_id,t.circle_id
+		 from axx_step_task t where t.inspect_id = #{userId}
+		  <![CDATA[ 
+		  	and t.end_time > = trunc(sysdate) and t.is_del=0
+ 		 ]]>
+	
+	</select>
+	
+	<select id="getStepEquipAllotByTaskId" parameterType="string" resultType="map">
+		  select t.task_id,a.allot_id,a.steppart_name
+  			from axx_step_equip_allot a
+  		join (select distinct e.task_id, e.allot_id from axx_step_task_equip e
+         where e.task_id = #{task_id} ) t on a.allot_id = t.allot_id
+ 		where a.DELETE_FLAG = 0
+	</select>
+	
+	<select id="getStepAllotArrivalRate" parameterType="string" resultType="map">
+	   select t1.ACTUAL_COUNT,t2.TOTAL_COUNT from 
+        (select  nvl(count(e.equip_id), 0) ACTUAL_COUNT
+           from axx_step_task_equip e join axx_step_tour_equip aste
+                on e.equip_id = aste.equip_id
+               where e.status=1 and e.task_id = #{task_id} and aste.is_del = 0)t1,      
+        (select nvl(count(e.status), 0) TOTAL_COUNT from  axx_step_task_equip e
+                join axx_step_tour_equip aste on e.equip_id = aste.equip_id
+             where e.task_id = #{task_id} and aste.is_del = 0) t2
+	</select>
+	
+	<select id="getOutSiteCount" parameterType="map" resultType="string">
+		 	select count(1) from AXX_MAIN_OUT_SITE s where 
+		 	s.relay_part = #{relay_id} and s.area_id = #{area_id} 
+		 	 and s.con_status=1 and s.delete_flag=1
+	</select>
+	
+ <!-- 	查询所有在xy1000平方米正方形之内的路由设施点 -->
+	<select id="selEquipPartByXY" parameterType="map" resultType="map">
+		select 
+		aste.EQUIP_TYPE,
+		aste.OWNER_TEL,
+		aste.UPDATOR,
+		aste.DESCRIPTION,
+		aste.EQUIP_CODE,
+		aste.CREATOR,
+		to_char(aste.CREATE_DATE,'yyyy-mm-dd hh24:mi:ss') CREATE_DATE, 
+		aste.EQUIP_ADDRESS,
+		aste.EQUIP_ID,
+		aste.LATITUDE,
+		aste.PROTECTER,
+		aste.OWNER_NAME,
+		aste.PROTECT_TEL,
+		aste.LONGITUDE,
+		aste.IS_LOSE,
+		aste.cable_id, aste.relay_id  ,atc.cable_name,atr.relay_name
+  from AXX_STEP_TOUR_EQUIP aste
+ inner join AXX_LINE_EQUIP ale
+    on aste.equip_id = ale.equip_id
+ inner join axx_t_cable atc
+ 	on aste.cable_id=atc.cable_id
+ inner join axx_t_relay atr
+ 	on aste.relay_id=atr.relay_id
+ where aste.is_equip = 1 
+ 	and aste.area_id=#{area_id} 
+ 	and aste.cable_id=#{cable_id} 
+ 	and aste.relay_id=#{relay_id} 
+  <if test="maxlonB !=null and maxlonB !='' and minlonB !=null and minlonB !=''" >
+ 	and to_number(aste.LONGITUDE) BETWEEN #{minlonB}  AND #{maxlonB}  
+ </if>
+ <if test="maxlatB !=null and maxlatB !='' and minlatB !=null and minlatB !=''" >
+ 	and to_number(aste.LATITUDE) BETWEEN #{minlatB}  AND #{maxlatB}  
+ </if>
+    order by ale."ORDER"
+	</select>
+	
+</mapper>

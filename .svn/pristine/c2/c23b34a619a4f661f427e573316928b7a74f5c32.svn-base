@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.cableCheck.dao.CheckBanzuDao">
+	<select id="getBanzuByAreaId"  parameterType="map" resultType="map">
+		select team_id,team_name from tb_base_staff_zw_banzu 
+		where son_area_id = #{son_area_id} and team_spec_id = 10
+	</select>
+	
+	
+	<select id="getStaffByTeamId"  parameterType="map" resultType="map">
+		select f.staff_id,f.staff_name from tb_base_staff f,tb_base_staff_zw fz 
+  		where fz.team_id = #{teamId} and f.staff_no=fz.staff_no
+	</select>
+	
+	<select id="getStaffTeamId"  parameterType="map" resultType="map">
+		select bz.team_id,bz.team_name from tb_base_staff_zw_banzu bz,
+        tb_base_staff_zw zw,tb_base_staff f 
+        where f.staff_id = #{staffId} 
+        and zw.staff_no = f.staff_no
+        and bz.team_id=zw.team_id
+	</select>
+	
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.smartcover.dao.OperateDataDao">
+
+	<insert id="insertDevice" parameterType="map">
+		insert into tb_smartcover_device(
+		   id,
+		   device_id,
+		   device_name,
+		   device_type,
+		   device_entity_type,
+		   tenant_id,
+		   tenant_entity_type,
+		   customer_id,
+		   customer_entity_type,
+		   create_time,
+		   additional_info)
+		values(
+		   seq_smartcover_device.nextval,
+		   #{id},
+		   #{name},
+		   #{type},
+		   #{idEntityType},
+		   #{tenantId},
+		   #{tenantIdEntityType},
+		   #{customerId},
+		   #{customerIdEntityType},
+		   #{createdTime},
+		   #{additionalInfo})
+	</insert>
+
+</mapper>

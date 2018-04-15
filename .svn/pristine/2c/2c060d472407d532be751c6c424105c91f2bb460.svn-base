@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.cableCheck.dao.CheckPhotoDao">
+	<!-- 插入图片 -->
+	<insert id="insertPic" parameterType="map">
+		insert into tb_cablecheck_photo
+		  (PHOTO_ID, CREATE_STAFF, CREATE_TIME, PHOTO_PATH, MICRO_PHOTO_PATH)
+		values
+		  (#{PHOTO_ID}, #{staff_id}, SYSDATE, #{PHOTO_PATH}, #{MICRO_PHOTO_PATH})
+	</insert>
+	
+	<select id="getPicId" resultType="int">
+		select SEQ_PHOTO_ID.NEXTVAL from DUAL
+	</select>
+	
+	<insert id="insertPicTask" parameterType="map">
+		insert into tb_cablecheck_photo_rel
+		  (ID, OBJECT_ID, PHOTO_ID, OBJECT_TYPE, CREATE_TIME)
+		values
+		  (PHOTO_REL_ID.nextval, #{taskId}, #{PHOTO_ID}, #{1}, #{sysdate})
+	</insert>
+	
+	<insert id="insertPicEqp" parameterType="map">
+		insert into tb_cablecheck_photo_rel
+		  (ID, OBJECT_ID, PHOTO_ID, OBJECT_TYPE, CREATE_TIME)
+		values
+		  (PHOTO_REL_ID.nextval, #{eqpId}, #{PHOTO_ID}, #{1}, #{sysdate})
+	</insert>
+	
+	<insert id="insertPicPort" parameterType="map">
+		insert into tb_cablecheck_photo_rel
+		  (ID, OBJECT_ID, PHOTO_ID, OBJECT_TYPE, CREATE_TIME)
+		values
+		  (PHOTO_REL_ID.nextval, #{portId}, #{PHOTO_ID}, #{1}, #{sysdate})
+	</insert>
+</mapper>

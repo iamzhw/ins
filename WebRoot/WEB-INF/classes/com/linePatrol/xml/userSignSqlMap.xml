@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.UserSignDao">
+	<sql id="dynamicWhere">
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select t.* from AXX_T_USER_SIGN t
+		<include refid="dynamicWhere" />
+	</select>
+
+	<insert id="userSignSave" parameterType="map">
+		INSERT INTO AXX_T_USER_SIGN(
+		SIGN_ID,
+		SIGN_TIME,
+		USER_ID,
+		X,
+		Y,
+		REMARK,
+		SITE_TYPE,
+		OUT_SITE_ID,
+		OUT_SITE_NAME,
+		OUT_SITE_DISTANCE,
+		SITE_ID,
+		SITE_NAME,
+		SITE_DISTANCE
+		)
+		values(
+		SEQ_AXX_T_USER_SIGN.NEXTVAL,
+		to_date(#{sign_time},'yyyy-mm-dd hh24:mi:ss'),
+		#{user_id},
+		#{x},
+		#{y},
+		#{remark},
+		#{site_type},
+		#{out_site_id},
+		#{out_site_name},
+		#{out_site_distance},
+		#{site_id},
+		#{site_name},
+		#{site_distance}
+		)
+	</insert>
+
+	<delete id="userSignDelete" parameterType="String">
+		DELETE FROM AXX_T_USER_SIGN WHERE SIGN_ID=#{sign_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_T_USER_SIGN WHERE SIGN_ID=#{sign_id}
+	</select>
+
+	<update id="userSignUpdate" parameterType="map">
+		UPDATE AXX_T_USER_SIGN set
+		<if test=" sign_time  != null and sign_time  != ''"> 
+ <![CDATA[ 
+SIGN_TIME=#{sign_time},
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+USER_ID=#{user_id},
+ ]]>
+		</if>
+		<if test=" x  != null and x  != ''"> 
+ <![CDATA[ 
+X=#{x},
+ ]]>
+		</if>
+		<if test=" y  != null and y  != ''"> 
+ <![CDATA[ 
+Y=#{y},
+ ]]>
+		</if>
+		<if test=" remark  != null and remark  != ''"> 
+ <![CDATA[ 
+REMARK=#{remark},
+ ]]>
+		</if>
+		<if test=" site_type  != null and site_type  != ''"> 
+ <![CDATA[ 
+SITE_TYPE=#{site_type},
+ ]]>
+		</if>
+		<if test=" out_site_id  != null and out_site_id  != ''"> 
+ <![CDATA[ 
+OUT_SITE_ID=#{out_site_id},
+ ]]>
+		</if>
+		<if test=" out_site_name  != null and out_site_name  != ''"> 
+ <![CDATA[ 
+OUT_SITE_NAME=#{out_site_name},
+ ]]>
+		</if>
+		<if test=" out_site_distance  != null and out_site_distance  != ''"> 
+ <![CDATA[ 
+OUT_SITE_DISTANCE=#{out_site_distance},
+ ]]>
+		</if>
+		<if test=" site_id  != null and site_id  != ''"> 
+ <![CDATA[ 
+SITE_ID=#{site_id},
+ ]]>
+		</if>
+		<if test=" site_name  != null and site_name  != ''"> 
+ <![CDATA[ 
+SITE_NAME=#{site_name},
+ ]]>
+		</if>
+		<if test=" site_distance  != null and site_distance  != ''"> 
+ <![CDATA[ 
+SITE_DISTANCE=#{site_distance},
+ ]]>
+		</if>
+		SIGN_ID=#{sign_id}
+		where SIGN_ID=#{sign_id}
+	</update>
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_T_USER_SIGN
+	</select>
+	
+	<select id="getUserSignByUserid" resultType="map" parameterType="map">
+		SELECT to_char(SIGN_TIME, 'yyyy-mm-dd hh24:mi:ss') SIGN_TIME,
+       longitude,
+       latitude,
+       bs.staff_name,
+       ms.site_distance,
+       t.sign_id
+  FROM AXX_T_USER_SIGN T, tb_base_staff bs, AXX_T_MACTH_SITE ms
+ WHERE t.user_id = bs.staff_id
+   and trunc(T.SIGN_TIME) BETWEEN TO_DATE(#{start_time}, 'YYYY-MM-DD') AND
+       TO_DATE(#{end_time}, 'YYYY-MM-DD')
+   and ms.sign_id=t.sign_id
+   <if test=" inspact_id  != null and inspact_id  != ''"> 
+ <![CDATA[ 
+     AND bs.staff_id =#{inspact_id}
+ ]]>
+		</if>
+		 <if test=" area_id  != null and area_id  != ''"> 
+ <![CDATA[ 
+     AND  t.area_id =#{area_id}
+ ]]>
+		</if>
+		ORDER BY T.USER_ID
+		
+	</select>
+	
+	
+	
+</mapper>

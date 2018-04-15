@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inspecthelper.dao.EquipDao">
+	<sql id="dynamicWhere">
+		<if test="queryParams.equId != null and queryParams.equId != ''">  
+            <![CDATA[
+	    	AND ie.equipment_id = #{queryParams.equId}
+	    	]]>
+		</if>
+		<if test="queryParams.equCode != null and queryParams.equCode != ''">  
+            <![CDATA[
+	    	AND ie.equipment_code like '%'||#{queryParams.equCode}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.equName != null and queryParams.equName != ''">  
+            <![CDATA[
+	    	AND ie.equipment_name like '%'||#{queryParams.equName}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.resType != null and queryParams.resType != ''">  
+            <![CDATA[
+	    	AND ie.res_type = #{queryParams.resType}
+	    	]]>
+		</if>
+		<if test="queryParams.resTypeId != null and queryParams.resTypeId != ''">  
+            <![CDATA[
+	    	AND ie.res_type_id = #{queryParams.resTypeId}
+	    	]]>
+		</if>
+		<if test="queryParams.manaArea != null and queryParams.manaArea != ''">  
+            <![CDATA[
+	    	AND ie.manage_area like '%'||#{queryParams.manaArea}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.areaName != null and queryParams.areaName != ''">  
+            <![CDATA[
+	    	AND ie.area =#{queryParams.areaName}
+	    	]]>
+		</if>
+		<if test="queryParams.sonAreaName != null and queryParams.sonAreaName != ''">  
+            <![CDATA[
+	    	AND ie.son_area = #{queryParams.sonAreaName}
+	    	]]>
+		</if>
+		<if test="queryParams.areaId != null and queryParams.areaId != ''">  
+            <![CDATA[
+	    	AND a.area_id = #{queryParams.areaId}
+	    	]]>
+		</if>
+		<if test="queryParams.parentAreaId != null and queryParams.parentAreaId != ''">  
+            <![CDATA[
+	    	AND a.parent_area_id = #{queryParams.parentAreaId}
+	    	]]>
+		</if>
+		<if test="queryParams.equpAreaId != null and queryParams.equpAreaId != ''">  
+            <![CDATA[
+	    	AND ie.area_id = #{queryParams.equpAreaId}
+	    	]]>
+		</if>
+		<if test="queryParams.staffName != null and queryParams.staffName != ''">  
+            <![CDATA[
+	    	AND s.staff_name like '%'||#{queryParams.staffName}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.manaType != null and queryParams.manaType != ''">  
+            <![CDATA[
+	    	AND ie.manage_type = #{queryParams.manaType}
+	    	]]>
+		</if>
+		<if test="queryParams.state != null and queryParams.state != ''">  
+            <![CDATA[
+	    	AND ie.state = #{queryParams.state}
+	    	]]>
+		</if>
+		<if test="queryParams.staff != null and queryParams.staff != ''">  
+            <![CDATA[
+	    	AND ie.staff_id is ${queryParams.staff}
+	    	]]>
+		</if>
+		<if test="queryParams.ownCompany != null and queryParams.ownCompany != ''">  
+            <![CDATA[
+	    	AND s.own_company = #{queryParams.ownCompany}
+	    	]]>
+		</if>
+		<if test="queryParams.equpAddress != null and queryParams.equpAddress != ''">  
+            <![CDATA[
+	    	AND ie.equp_Address = #{queryParams.equpAddress}
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere1">
+			<if test="equpCode != null and equpCode != ''">  
+	            <![CDATA[
+		    	AND ie.equipment_code like '%'||#{equpCode}||'%'
+		    	]]>
+			</if>
+			<if test="state != null and state != ''">  
+	            <![CDATA[
+		    	AND ie.state = #{state}
+		    	]]>
+			</if>
+			<if test="ownCompany != null and ownCompany != ''">  
+	            <![CDATA[
+		    	AND s.own_company = #{ownCompany}
+		    	]]>
+			</if>
+			<if test="equpAddress != null and equpAddress != ''">  
+	            <![CDATA[
+		    	AND ie.equp_address = #{equpAddress}
+		    	]]>
+			</if>
+			<if test="manaArea != null and manaArea != ''">  
+	            <![CDATA[
+		    	AND ie.manage_area like '%'||#{manaArea}||'%'
+		    	]]>
+			</if>
+			<if test="staffName != null and staffName != ''">  
+	            <![CDATA[
+		    	AND s.staff_name like '%'||#{staffName}||'%'
+		    	]]>
+			</if>
+			<if test="manaType != null and manaType != ''">  
+	            <![CDATA[
+		    	AND ie.manage_type = #{manaType}
+		    	]]>
+			</if>
+			<if test="areaName != null and areaName != ''">  
+	            <![CDATA[
+		    	AND ie.area = #{areaName}
+		    	]]>
+			</if>
+			<if test="resTypeId != null and resTypeId != ''">  
+	            <![CDATA[
+		    	AND ie.res_type_id = #{resTypeId}
+		    	]]>
+			</if>
+			<if test="area != null and area != ''">  
+	            <![CDATA[
+		    	AND a1.area_id = #{area}
+		    	]]>
+			</if>
+	</sql>
+	<sql id="dynamicWhere2">
+		<if test="queryParams.equipmentCode != null and queryParams.equipmentCode != ''">  
+           		 <![CDATA[
+				and ie.equipment_code like '%'||trim(${queryParams.equipmentCode})||'%'
+		    	]]>
+			</if>	
+			<if test="queryParams.area != null and queryParams.area != ''">  
+           		 <![CDATA[
+					and ie.area = #{queryParams.area}
+		    	]]>
+			</if>	
+			<if test="queryParams.equpAddress != null and queryParams.equpAddress != ''">  
+           		 <![CDATA[
+					and ie.equp_address = #{queryParams.equpAddress}
+		    	]]>
+			</if>	
+			<if test="queryParams.areaId != null and queryParams.areaId != ''">  
+           		 <![CDATA[
+					and a.area_id = #{queryParams.areaId}
+		    	]]>
+			</if>	
+			<if test="queryParams.state != null and queryParams.state != ''">  
+           		 <![CDATA[
+					and ie.state = #{queryParams.state}
+		    	]]>
+			</if>	
+			<if test="queryParams.resType != null and queryParams.resType != ''">  
+           		 <![CDATA[
+					and ie.res_type = #{queryParams.resType}
+		    	]]>
+			</if>	
+			<if test="queryParams.resType != null and queryParams.resType != ''">  
+           		 <![CDATA[
+					and ie.res_type = #{queryParams.resType}
+		    	]]>
+			</if>
+			<if test="queryParams.areaName != null and queryParams.areaName != ''">  
+           		 <![CDATA[
+					and  ie.area = #{queryParams.areaName}
+		    	]]>
+			</if>
+			<if test="queryParams.sonAreaName != null and queryParams.sonAreaName != ''">  
+           		 <![CDATA[
+					and  ie.son_area = #{queryParams.sonAreaName}
+		    	]]>
+			</if>
+			<if test="queryParams.sn != null and queryParams.sn != ''">  
+           		 <![CDATA[
+					and t.sn = #{queryParams.sn}
+		    	]]>
+			</if>
+			<if test="queryParams.startDate1 != null and queryParams.startDate1 != ''">  
+           		 <![CDATA[
+					and trunc(ie.state_change_date) &gt;= to_Date(#{queryParams.startDate1},'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.endDate1 != null and queryParams.endDate1 != ''">  
+           		 <![CDATA[
+					and trunc(ie.state_change_date) &lt;= to_date(#{queryParams.endDate1},'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.startDate != null and queryParams.startDate != ''">  
+           		 <![CDATA[
+					and trunc(t.check_date) &gt;= to_Date(#{queryParams.startDate},'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.endDate != null and queryParams.endDate != ''">  
+           		 <![CDATA[
+					and trunc(t.check_date) &lt;= to_date(#{queryParams.endDate},'yyyy-mm-dd')
+		    	]]>
+			</if>
+			<if test="queryParams.type != null and queryParams.type != ''">  
+           		 <![CDATA[
+					and t.type=#{queryParams.type}
+		    	]]>
+			</if>
+			<if test="queryParams.staffName != null and queryParams.staffName != ''">  
+           		 <![CDATA[
+					and s1.staff_name like '%'||trim(#{queryParams.staffName})||'%'
+		    	]]>
+			</if>
+			<if test="queryParams.ownCompany != null and queryParams.ownCompany != ''">  
+           		 <![CDATA[
+					and s.own_company = #{queryParams.ownCompany}
+		    	]]>
+			</if>
+			<if test="queryParams.staffOwnCompany != null and queryParams.staffOwnCompany != ''">  
+           		 <![CDATA[
+					and s1.own_company like '%'||trim(#{queryParams.staffOwnCompany})||'%'
+		    	]]>
+			</if>			
+			<choose>
+				<when test="queryParams.odfCheck==null">
+					and t.is_odf_check is null
+				</when>
+				<when test="queryParams.odfCheck=='1'.toString()">
+					and t.is_odf_check=1
+				</when>
+			</choose>
+	</sql>
+	<sql id="dynamicWhere3">
+			<if test="equId != null and equId != ''">  
+	            <![CDATA[
+		    	AND ie.equipment_id = trim(#{equId})
+		    	]]>
+			</if>
+			<if test="equCode != null and equCode != ''">  
+	            <![CDATA[
+		    	AND ie.equipment_code like '%'||#{equCode}||'%'
+		    	]]>
+			</if>
+			<if test="equName != null and equName != ''">  
+	            <![CDATA[
+		    	AND ie.equipment_name like '%'||#{equName}||'%'
+		    	]]>
+			</if>
+			<if test="resType != null and resType != ''">  
+	            <![CDATA[
+		    	AND ie.res_type = #{resType}
+		    	]]>
+			</if>
+			<if test="resTypeId != null and resTypeId != ''">  
+	            <![CDATA[
+		    	AND ie.res_type_id = #{resTypeId}
+		    	]]>
+			</if>
+			<if test="manaArea != null and manaArea != ''">  
+	            <![CDATA[
+		    	AND ie.manage_area like '%'||#{manaArea}||'%'
+		    	]]>
+			</if>
+			<if test="areaName != null and areaName != ''">  
+	            <![CDATA[
+		    	AND ie.area = #{areaName}
+		    	]]>
+			</if>
+			<if test="manaType != null and manaType != ''">  
+	            <![CDATA[
+		    	AND ie.manage_type = #{manaType}
+		    	]]>
+			</if>
+			<if test="state != null and state != ''">  
+	            <![CDATA[
+		    	AND ie.state = #{state}
+		    	]]>
+			</if>
+			<if test="equpAddress != null and equpAddress != ''">  
+	            <![CDATA[
+		    	AND ie.equp_address = #{equpAddress}
+		    	]]>
+			</if>
+	</sql>
+	<select id="getEquipList" resultType="map" parameterType="util.page.Query">
+		select distinct ie.equipment_id,
+		       ie.equipment_code,
+		       ie.equipment_name,
+		       ie.res_type,
+		       ie.res_type_id,
+		       ie.address,
+		       ie.area,
+		       ie.son_area,
+		       ie.manage_area,
+		       case when ie.state = 1  then '是'
+		       		when ie.state = 0 then '否'
+		       end as state,
+		       manage_type,
+		       s.staff_name,
+		       s.own_company,
+		       s.tel,
+		       s.staff_id,
+		       ie.equp_address,
+		       TO_CHAR(ie.create_date,'yyyy-mm-dd') create_date,
+		       s1.staff_name checkStaffName,
+		       s1.own_company checkCompany
+		  from ins_equipment ie
+		  left join tb_base_staff s on ie.staff_id = s.staff_id
+		  left join tb_base_staff s1 on ie.check_staff_id = s1.staff_id
+		  left join area a on ie.area_id = a.parent_area_id
+		  where ie.state_ = 1
+		<include refid="dynamicWhere" /> 
+	</select>
+	<select id="getEquip" parameterType="java.lang.String" resultType="map">
+		select * from ins_equipment t where t.equipment_id=#{equipIds}
+	</select>
+	<select id="getCompanyList" resultType="map" parameterType="map">
+	    select company_id,company_name from ins_company ic where type='0' 
+		<if test="areaId != null and areaId != ''">
+			and ic.area_id=#{areaId}
+		</if>
+	</select>
+	
+	<!-- 根据资源id获取所有巡检人员 -->
+	<select id="getDisStaffList"  parameterType="map" resultType="map">
+		select distinct ie.staff_id 
+			from ins_equipment ie 
+			join tb_base_staff s on ie.staff_id = s.staff_id
+		<if test="area != null and area != ''">  
+            <![CDATA[
+	    	join area a1 on a1.name=ie.area
+	    	]]>
+		</if>
+		<include refid="dynamicWhere1" />
+	</select>
+	
+	<!-- 根据资源id获取所有管控人员 -->
+	<select id="getControlStaffList"  parameterType="map" resultType="map">
+		select distinct ie.check_staff_id 
+			from ins_equipment ie 
+			join tb_base_staff s on ie.check_staff_id = s.staff_id
+			join area a1 on a1.name=ie.area   
+		<include refid="dynamicWhere1" />
+	</select>
+	<!-- 根据巡检人员id获取所有资源ID -->
+	<select id="getAllResList"  parameterType="map" resultType="map">
+		select to_char(equipment_id) equipment_id from ins_equipment ie where ie.state_ =1 and ie.staff_id = #{staffId}
+		<include refid="dynamicWhere3" />
+	</select>
+	
+	<select id="getResInsHistory" parameterType="map" resultType="map">
+		select aa.equipment_code,aa.equipment_name,aa.area,aa.state,
+		aa.son_area,aa.equp_address,nvl(bb.count,0)
+		count,aa.staff_name staff_name,
+		aa.own_company,aa.type,aa.odf_check,aa.state_change_date,
+		aa.check_date,aa.res_type ,aa.resource_code
+		,aa.order_id,aa.equipment_id,aa.sn,aa.staff_own_company,aa.port,aa.port_zy
+		from
+		( select distinct ie.equipment_code,ie.equipment_name,ie.area,ie.port,ie.port_zy,
+		ie.son_area,ie.equp_address, s1.staff_name,s.own_company,s1.own_company staff_own_company,
+		case
+		when ie.state=1 then '健康'
+		when ie.state=0 then '损坏'
+		end as state,
+		case
+		when t.type=1 then '任务'
+		when t.type=0 then '临时'
+		end as type,
+		case
+		when t.is_odf_check=1 then '动态'
+		when t.is_odf_check is null then '非动态'
+		end as odf_check,		
+		ie.state_change_date,t.check_date,ie.res_type ,ito.order_id||','||ie.equipment_id||',' resource_code
+		,t.order_id,ie.equipment_id,t.sn from ins_task_equipment_check t
+		left join ins_equipment ie on ie.equipment_id=t.equipment_id
+		left join ins_task_order ito on t.order_id=ito.order_id
+		left join ins_task it on it.task_id=ito.task_id
+		left join tb_base_staff s on s.staff_id=ie.staff_id
+		left join area a on ie.area_id = a.area_id
+		left join tb_base_staff s1 on s1.staff_no=t.actual_check_staff_no
+		WHERE t.check_date is not null
+		<include refid="dynamicWhere2" />
+		order by t.check_date desc) aa
+		left join (select count(1)
+		count,equipment_id,order_id,s2.staff_name,s2.own_company
+		from ins_equ_target_trouble_list ietl
+		left join tb_base_staff s2 on s2.staff_no=ietl.upload_staff		
+		group by equipment_id,order_id ,s2.staff_name,s2.own_company ) bb
+		on bb.equipment_id=aa.equipment_id and bb.order_id=aa.order_id
+		order by aa.check_date desc
+	</select>
+	
+	<select id="getFtthCount"  parameterType="map" resultType="map">
+		select nvl((select sum(a.count) ftth from (select t.ftth, count(t.trouble_id) count from INS_EQU_TARGET_TROUBLE_LIST t
+		where t.equipment_id=#{equipmentId}
+		and t.order_id=#{orderId} 
+		group by t.ftth) a where a.ftth like '%FTTH%'),0)　FTTH,
+		nvl((select sum(a.count) ftth from (select t.ftth, count(t.trouble_id) count from INS_EQU_TARGET_TROUBLE_LIST t
+		where t.equipment_id=#{equipmentId}
+		and t.order_id=#{orderId}
+		group by t.ftth) a where a.ftth like '%BBU%'),0) BBU,
+		nvl((select sum(a.count) ftth from (select t.ftth, count(t.trouble_id) count from INS_EQU_TARGET_TROUBLE_LIST t
+		where t.equipment_id=#{equipmentId}
+		and t.order_id=#{orderId}
+		group by t.ftth) a where a.ftth like '%设备%'),0)　设备,
+		nvl((select sum(a.count) ftth from (select t.ftth, count(t.trouble_id) count from INS_EQU_TARGET_TROUBLE_LIST t
+		where t.equipment_id=#{equipmentId}
+		and t.order_id=#{orderId}
+		group by t.ftth) a where　a.ftth is null or a.ftth not like '%FTTH%' and a.ftth not like '%BBU%' and a.ftth not like '%设备%'),0) 其它,
+		parse_num_to_percent(1-(nvl((select count(1) from INS_EQU_TARGET_TROUBLE_LIST t
+		where t.equipment_id=#{equipmentId}
+		and t.order_id=#{orderId}),0)/#{count})) RIGHT_RATE,
+		nvl((select count(1) from INS_EQU_TARGET_TROUBLE_LIST t
+		where t.equipment_id=#{equipmentId}
+		and t.order_id=#{orderId}),0) WRONG_COUNT
+		from dual
+	</select>
+
+	<update id="modifyEquip" parameterType="map">
+		update ins_equipment ie set ie.equipment_id = ie.equipment_id
+		<if test="state_ != null and state_ != ''">  
+            <![CDATA[
+	    	 ,ie.state_ =#{state_}
+	    	]]>
+		</if>
+		<if test="manaType != null and manaType != ''">  
+            <![CDATA[
+	    	 ,ie.manage_type =#{manaType}
+	    	]]>
+		</if>
+		<if test="areaName != null and areaName != ''">  
+            <![CDATA[
+	    	 ,ie.area =#{areaName}
+	    	]]>
+		</if>
+		<if test="sonAreaName != null and sonAreaName != ''">  
+            <![CDATA[
+	    	 ,ie.son_area =#{sonAreaName}
+	    	]]>
+		</if>
+		<if test="equpAddress != null and equpAddress != ''">  
+            <![CDATA[
+	    	 ,ie.equp_address =#{equpAddress}
+	    	]]>
+		</if>
+		<if test="state != null and state != ''">  
+            <![CDATA[
+	    	 ,ie.state =#{state},ie.state_change_date = sysdate
+	    	]]>
+		</if>
+		<if test="checkStaffId != null and checkStaffId != ''">  
+            <![CDATA[
+	    	 ,ie.Staff_Id = null 
+	    	]]>
+		</if>
+		<if test="gkrId != null and gkrId != ''">  
+            <![CDATA[
+	    	 ,ie.Check_Staff_Id = null 
+	    	]]>
+		</if>
+		where ie.equipment_id in (${equipIds})
+	</update>
+	
+	<update id="allotEquip" parameterType="map">
+		update ins_equipment ie set 
+		<choose>
+			<when test="type == 'ODF'">
+			ie.check_staff_id = #{staffId}
+			</when>
+			<otherwise>
+			ie.staff_id = #{staffId}
+			</otherwise>
+		</choose>
+		where ie.equipment_id in (${equipIds})
+	</update>
+	
+	<update id="btnclearallot" parameterType="map">
+		update ins_equipment ie set 
+		<choose>
+			<when test="type == 'ODF'">
+			ie.check_staff_id = null
+			</when>
+			<otherwise>
+			ie.staff_id = null
+			</otherwise>
+		</choose>
+		where ie.equipment_id in (${equipIds})
+	</update>
+</mapper>
+
+
+
+

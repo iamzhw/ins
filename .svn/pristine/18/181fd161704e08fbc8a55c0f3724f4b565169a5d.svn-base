@@ -1,0 +1,19 @@
+#slider ul,#slider li {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#slider,#slider li {
+	width: 500px;
+	height: 200px;
+	overflow: hidden;
+}
+
+span#prevBtn {
+	
+}
+
+span#nextBtn {
+	
+}

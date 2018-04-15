@@ -1,0 +1,3550 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.ArrivalDao">
+
+	<sql id="dynamicWhere_plan">
+		<if test="queryParams.staff_name != null and queryParams.staff_name != ''">  
+            <![CDATA[
+	    	and tbs.staff_name like '%'||#{queryParams.staff_name}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.task_name != null and queryParams.task_name != ''">  
+            <![CDATA[
+	    	AND tit.task_name like '%'||#{queryParams.task_name}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.start_time != null and queryParams.start_time != ''">  
+            <![CDATA[
+	    	AND tit.start_time >=to_date(#{queryParams.start_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="queryParams.end_time != null and queryParams.end_time != ''">  
+            <![CDATA[
+	    		AND to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <=to_date(#{queryParams.end_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+
+	    <!--  <if test="queryParams.PLAN_TYPE != null and queryParams.PLAN_TYPE != ''">  
+            <![CDATA[
+	    	AND tip.PLAN_TYPE = #{queryParams.PLAN_TYPE}
+	    	]]>
+		</if> -->
+	</sql>
+	
+	
+	<sql id="dynamicWhere_dept">
+		<if test="queryParams.staff_name != null and queryParams.staff_name != ''">  
+            <![CDATA[
+	    	and dp.dept_name like '%'||#{queryParams.staff_name}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.task_name != null and queryParams.task_name != ''">  
+            <![CDATA[
+	    	AND tit.task_name like '%'||#{queryParams.task_name}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.start_time != null and queryParams.start_time != ''">  
+            <![CDATA[
+	    	AND tit.start_time >=to_date(#{queryParams.start_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="queryParams.end_time != null and queryParams.end_time != ''">  
+            <![CDATA[
+	    		AND to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <=to_date(#{queryParams.end_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+
+		<!-- <if test="queryParams.PLAN_TYPE != null and queryParams.PLAN_TYPE != ''">  
+            <![CDATA[
+	    	AND tip.PLAN_TYPE = #{queryParams.PLAN_TYPE}
+	    	]]>
+		</if> -->
+	</sql>
+	
+	
+	<sql id="dynamicWhere_planexl">
+		<if test="staff_name != null and staff_name != ''">  
+            <![CDATA[
+	    	and tbs.staff_name like '%'||#{staff_name}||'%'
+	    	]]>
+		</if>
+		<if test="task_name != null and task_name != ''">  
+            <![CDATA[
+	    	AND tit.task_name like '%'||#{task_name}||'%' 
+	    	]]>
+		</if>
+		<if test="start_time != null and start_time != ''">  
+            <![CDATA[
+	    	AND tit.start_time >=to_date(#{start_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="end_time != null and end_time != ''">  
+            <![CDATA[
+	    		AND to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <=to_date(#{end_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+
+	</sql>
+	
+	
+	<sql id="dynamicWhere_deptexl">
+		<if test="staff_name != null and staff_name != ''">  
+            <![CDATA[
+	    	and dp.dept_name like '%'||#{staff_name}||'%'
+	    	]]>
+		</if>
+		<if test="task_name != null and task_name != ''">  
+            <![CDATA[
+	    	AND tit.task_name like '%'||#{task_name}||'%' 
+	    	]]>
+		</if>
+		<if test="start_time != null and start_time != ''">  
+            <![CDATA[
+	    	AND tit.start_time >=to_date(#{start_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="end_time != null and end_time != ''">  
+            <![CDATA[
+	    		AND to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <=to_date(#{end_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+
+	</sql>
+
+	<sql id="dynamicWhere">
+		<if test="staff_name != null and staff_name != ''">  
+            <![CDATA[
+	    	AND tbs.staff_name like '%'||#{staff_name}||'%' 
+	    	]]>
+		</if>
+		<if test="task_name != null and task_name != ''">  
+            <![CDATA[
+	    	AND tit.task_name like '%'||#{task_name}||'%' 
+	    	]]>
+		</if>
+			<if test="start_time != null and start_time != ''">  
+            <![CDATA[
+	    	AND tit.start_time >=to_date(#{start_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="end_time != null and end_time != ''">  
+            <![CDATA[
+	    		AND to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <=to_date(#{end_time}, 'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+	</sql>
+	
+	<sql id="WhereDate">
+	<![CDATA[		
+		and p.UPLOAD_TIME  >trunc(add_months(last_day(sysdate),-1)+1)
+		and p.UPLOAD_TIME  <=last_day(sysdate)
+	]]>
+	</sql>
+	
+	<select id="query" parameterType="util.page.Query" resultType="map">
+<!-- 	select * from (
+		SELECT tit.task_id,
+		tit.task_id as taskId,
+		tit.task_name as taskName,
+		tit.inspector,
+		tit.plan_id as planId,
+		tip.plan_name,
+		to_char(tit.start_time,'yyyy-mm-dd') as plan_start_time,
+    	to_char(tit.complete_time,'yyyy-mm-dd') as plan_end_time,
+    	to_char(tit.start_time,'yyyy.mm.dd')||'-'||to_char(tit.complete_time,'yyyy.mm.dd')
+		as times,
+		tip.son_area_id,
+		a.name as areaName,
+		tbs.staff_name as
+		staffName,
+		tbs.staff_id,
+		count(distinct(tilp.point_id)) as planPoints
+		FROM
+		tb_ins_task tit,
+		tb_ins_plan tip,
+		area a,
+		tb_ins_plan_detail tipd,
+		tb_ins_line til,
+		tb_ins_line_point tilp,
+		tb_base_staff tbs
+		where
+		tit.plan_id =
+		tip.plan_id(+)
+		and tip.son_area_id = a.area_id(+)
+		and
+		tipd.plan_id(+) =
+		tip.plan_id
+		and tilp.line_id(+) =
+		tipd.inspect_object_id
+		and
+		til.line_id= tipd.inspect_object_id
+		and
+		tit.inspector=tbs.staff_id
+		<include refid="dynamicWhere_plan" />
+		group by tit.task_id,
+		tit.task_name,
+		tit.inspector,
+		tit.plan_id,
+		tip.plan_name,
+		tip.son_area_id,
+		a.name,
+		tbs.staff_name,
+		to_char(tit.start_time,'yyyy.mm.dd')||'-'||to_char(tit.complete_time,'yyyy.mm.dd'),
+		tit.start_time,
+		tit.complete_time,
+		tbs.staff_id
+		) order by plan_start_time desc -->
+		 
+ <!--  select *
+    from (
+ select t.task_id,
+                 
+                 t.task_name as taskName,
+                 t.inspector,
+                 t.plan_id as planId,
+                 t.plan_name,
+                 to_char(t.start_time, 'yyyy-mm-dd') as plan_start_time,
+                 to_char(t.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                 to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                 to_char(t.complete_time, 'yyyy.mm.dd') as times,
+                 t.son_area_id,
+                 t.name as areaName,
+                 t.staff_name as staffName,
+                 t.staff_id,
+                  count(distinct(t.point_id)) as planPoints
+    from (SELECT 
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 tbs.staff_name ,
+                 tbs.staff_id,
+                 tilp.point_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_plan_detail tipd,
+                 tb_ins_line        til,
+                 tb_ins_line_point  tilp,
+                 tb_base_staff      tbs
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tipd.plan_id(+) = tip.plan_id
+             and tilp.line_id(+) = tipd.inspect_object_id
+             and tip.inspector_type=0
+             and til.line_id = tipd.inspect_object_id
+             and tit.inspector = tbs.staff_id
+             <include refid="dynamicWhere_plan" />
+             union
+             SELECT  distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 dp.dept_name ,
+                 dp.dept_id,
+                 tilp.point_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_plan_detail tipd,
+                 tb_ins_line        til,
+                 tb_ins_line_point  tilp,
+                 tb_base_staff      tbs,
+                 tb_ins_staff_dept   sd,
+                 tb_ins_dept         dp
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tipd.plan_id(+) = tip.plan_id
+             and tilp.line_id(+) = tipd.inspect_object_id
+             and tip.inspector_type=1
+             and til.line_id = tipd.inspect_object_id
+             and tit.inspector = dp.dept_id
+             and sd.staff_id=tbs.staff_id
+             <include refid="dynamicWhere_dept" />
+             )t
+           group by t.task_id,
+                    t.task_name,
+                    t.inspector,
+                    t.plan_id,
+                    t.plan_name,
+                    t.son_area_id,
+                    t.name,
+                    t.staff_name,
+                    to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                    to_char(t.complete_time, 'yyyy.mm.dd'),
+                    t.start_time,
+                    t.complete_time,
+                    t.staff_id)
+   order by plan_start_time desc
+   -->
+   select *
+    from (
+ select t.task_id,
+                 t.task_name as taskName,
+                 t.inspector,
+                 t.plan_id as planId,
+                 t.plan_name,
+                 to_char(t.start_time, 'yyyy-mm-dd') as plan_start_time,
+                 to_char(t.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                 to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                 to_char(t.complete_time, 'yyyy.mm.dd') as times,
+                 t.son_area_id,
+                 t.name as areaName,
+                 t.staff_name as staffName,
+                 t.staff_id,
+                 t.plan_type,
+                 t.type
+    from (SELECT distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tip.plan_type,
+                 tip.type,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 tbs.staff_name ,
+                 tbs.staff_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_base_staff      tbs
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tip.inspector_type=0
+             and tip.isdeleted=0
+             and tit.inspector = tbs.staff_id
+             <include refid="dynamicWhere_plan" />
+              union
+             SELECT  distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tip.plan_type,
+                 tip.type,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 dp.dept_name ,
+                 dp.dept_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_dept         dp
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tip.inspector_type=1
+             and tip.isdeleted=0
+             and tit.inspector = dp.dept_id
+             <include refid="dynamicWhere_dept" />
+             )t
+             
+             <if test="queryParams.TYPE != null and queryParams.TYPE != ''">  
+	            <![CDATA[
+		    	where t.TYPE = #{queryParams.TYPE}
+		    	]]>
+			</if>
+           group by t.task_id,
+                    t.task_name,
+                    t.inspector,
+                    t.plan_id,
+                    t.plan_name,
+                    t.plan_type,
+                    t.type,
+                    t.son_area_id,
+                    t.name,
+                    t.staff_name,
+                    to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                    to_char(t.complete_time, 'yyyy.mm.dd'),
+                    t.start_time,
+                    t.complete_time,
+                    t.staff_id)
+   order by plan_start_time desc
+	</select>
+
+	<select id="queryExl" parameterType="map" resultType="map">
+	<!--select *
+    from (
+ select t.task_id,
+                 t.task_id as taskId,
+                 t.task_name as taskName,
+                 t.inspector,
+                 t.plan_id as planId,
+                 t.plan_name,
+                 to_char(t.start_time, 'yyyy-mm-dd') as plan_start_time,
+                 to_char(t.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                 to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                 to_char(t.complete_time, 'yyyy.mm.dd') as times,
+                 t.son_area_id,
+                 t.name as areaName,
+                 t.staff_name as staffName,
+                 t.staff_id
+    from (SELECT 
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 tbs.staff_name ,
+                 tbs.staff_id,
+                 tilp.point_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_plan_detail tipd,
+                 tb_ins_line        til,
+                 tb_ins_line_point  tilp,
+                 tb_base_staff      tbs
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tipd.plan_id(+) = tip.plan_id
+             and tilp.line_id(+) = tipd.inspect_object_id
+             and tip.inspector_type=0
+             and til.line_id = tipd.inspect_object_id
+             and tit.inspector = tbs.staff_id
+             <include refid="dynamicWhere_planexl" />
+             union
+             SELECT  distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 dp.dept_name ,
+                 dp.dept_id,
+                 tilp.point_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_plan_detail tipd,
+                 tb_ins_line        til,
+                 tb_ins_line_point  tilp,
+                 tb_base_staff      tbs,
+                 tb_ins_staff_dept   sd,
+                 tb_ins_dept         dp
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tipd.plan_id(+) = tip.plan_id
+             and tilp.line_id(+) = tipd.inspect_object_id
+             and tip.inspector_type=1
+             and til.line_id = tipd.inspect_object_id
+             and tit.inspector = dp.dept_id
+             and sd.staff_id=tbs.staff_id
+             <include refid="dynamicWhere_deptexl" />
+             )t
+           group by t.task_id,
+                    t.task_name,
+                    t.inspector,
+                    t.plan_id,
+                    t.plan_name,
+                    t.son_area_id,
+                    t.name,
+                    t.staff_name,
+                    to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                    to_char(t.complete_time, 'yyyy.mm.dd'),
+                    t.start_time,
+                    t.complete_time,
+                    t.staff_id)
+   order by plan_start_time desc
+   -->
+     select *
+    from (
+ select t.task_id,
+                 t.task_name as taskName,
+                 t.inspector,
+                 t.plan_id as planId,
+                 t.plan_name,
+                 to_char(t.start_time, 'yyyy-mm-dd') as plan_start_time,
+                 to_char(t.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                 to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                 to_char(t.complete_time, 'yyyy.mm.dd') as times,
+                 t.son_area_id,
+                 t.name as areaName,
+                 t.staff_name as staffName,
+                 t.staff_id,
+                 t.plan_type,
+                 t.type
+    from (SELECT distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tip.plan_type,
+                 tip.type,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 tbs.staff_name ,
+                 tbs.staff_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_base_staff      tbs
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tip.inspector_type=0
+             and tip.isdeleted=0
+             and tit.inspector = tbs.staff_id
+             <include refid="dynamicWhere_planexl" />
+              union
+             SELECT  distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tip.plan_type,
+                 tip.type,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 dp.dept_name ,
+                 dp.dept_id
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_dept         dp
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tip.inspector_type=1
+             and tip.isdeleted=0
+             and tit.inspector = dp.dept_id
+             <include refid="dynamicWhere_deptexl" />
+             )t
+             
+             <if test="TYPE != null and TYPE != ''">  
+	            <![CDATA[
+		    	where t.TYPE = #{TYPE}
+		    	]]>
+			</if>
+           group by t.task_id,
+                    t.task_name,
+                    t.inspector,
+                    t.plan_id,
+                    t.plan_name,
+                    t.plan_type,
+                    t.type,
+                    t.son_area_id,
+                    t.name,
+                    t.staff_name,
+                    to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                    to_char(t.complete_time, 'yyyy.mm.dd'),
+                    t.start_time,
+                    t.complete_time,
+                    t.staff_id)
+   order by plan_start_time desc
+	</select>
+
+	<select id="queryPoint" parameterType="map"
+		resultType="com.cableInspection.model.PointModel">
+		SELECT distinct tip.longitude as longitude, tip.latitude as latitude,tilp.line_id as line,tip.point_id as point_id
+		FROM tb_ins_plan_detail tipd, tb_ins_line_point tilp, tb_ins_point tip
+		where tipd.plan_id = #{PLAN_ID}
+		and tipd.inspect_object_id =
+		tilp.line_id
+		and tip.point_id = tilp.point_id
+		and tip.point_type=-1
+		<!-- and tip.point_id not in (SELECT tir.point_id FROM tb_ins_record tir where
+		tir.record_type=0 and tir.TASK_ID=#{TASK_ID}) -->
+	</select>
+	
+	<select id="queryPlanPoints" parameterType="map"
+		resultType="com.cableInspection.model.PointModel">
+		SELECT tilp.line_id line, tip.longitude as longitude, tip.latitude as latitude
+		FROM tb_ins_plan_detail tipd, tb_ins_line_point tilp, tb_ins_point tip
+		where tipd.plan_id = #{PLAN_ID}
+		and tipd.inspect_object_id =
+		tilp.line_id
+		and tip.point_id = tilp.point_id
+		order by tilp.line_id asc,tilp.point_seq asc
+	</select>
+	
+	<select id="queryGjPointCount" parameterType="map"
+		resultType="string">
+		SELECT count(1)
+		FROM tb_ins_plan_detail tipd, tb_ins_line_point tilp, tb_ins_point tip
+		where tipd.plan_id = #{PLAN_ID}
+		and tipd.inspect_object_id = tilp.line_id
+		and tip.point_id = tilp.point_id
+		and tip.point_type > -1
+	</select>
+	
+	<select id="queryPoint11" parameterType="map"
+		resultType="com.cableInspection.model.PointModel">
+		SELECT distinct tip.longitude as longitude, tip.latitude as latitude,tilp.line_id as line
+		FROM tb_ins_plan_detail tipd, tb_ins_line_point tilp, tb_ins_point tip
+		where tipd.plan_id = #{PLAN_ID}
+			and tipd.inspect_object_id = tilp.line_id
+			and tip.point_id = tilp.point_id
+			and tip.point_type > -1	
+			<!-- and tip.point_id not in (SELECT tir.point_id FROM tb_ins_record tir where
+				tir.record_type=0 and tir.plan_id=#{PLAN_ID}) -->
+	</select>
+	<!-- 查询关键点签到 -->
+	<select id="queryPoint2" parameterType="map"
+		resultType="com.cableInspection.model.PointModel">
+		select longitude, latitude from(
+			SELECT distinct tir.TASK_DETAIL_ID, tir.point_id,td.inspect_object_id line_id,
+			p.longitude as longitude, p.latitude as latitude
+			FROM
+			tb_ins_record tir 
+			 join tb_ins_task_detail td on td.task_detail_id = tir.TASK_DETAIL_ID
+			 join tb_ins_point p on p.point_id = tir.point_id
+			where tir.record_type=0 and tir.TASK_ID=#{TASK_ID}
+		)t
+	</select>
+	
+	<select id="queryPoint22" parameterType="map"
+		resultType="com.cableInspection.model.PointModel">
+		SELECT distinct tir.longitude as longitude, tir.latitude as latitude FROM
+		tb_ins_record tir, tb_ins_point p 
+		where tir.point_id = p.point_id 
+			and p.point_type > -1 
+			and tir.record_type=0 
+			and tir.task_id=#{TASK_ID}
+	</select>
+
+	<select id="queryPoint1" parameterType="map"
+		resultType="com.cableInspection.model.PointModel">
+		
+		SELECT p.latitude as latitude, p.longitude as
+		longitude
+		FROM
+		tb_ins_upload_point p
+		where p.upload_staff =
+		#{staff_id}
+		<![CDATA[
+			and p.UPLOAD_TIME  >trunc(add_months(last_day(sysdate),-1)+1)
+		and p.UPLOAD_TIME  <=last_day(sysdate)
+		]]>
+		order by upload_time ASC
+	</select>
+	
+	<select id="queryDeptUpLoadPoint" parameterType="map"
+		resultType="com.cableInspection.model.PointModel">
+		  select p.LONGITUDE as longitude,p.LATITUDE as latitude from TB_INS_UPLOAD_POINT p
+    where  p.upload_staff in (
+		SELECT staff_ID FROM TB_INS_STAFF_DEPT WHERE DEPT_ID=#{staff_id}
+		)
+		<![CDATA[
+			and p.UPLOAD_TIME  >=trunc(add_months(last_day(to_date(#{plan_start_time},'yyyy-mm-dd')),-1)+1)
+		and p.UPLOAD_TIME  <last_day(to_date(#{plan_start_time},'yyyy-mm-dd'))+1
+		]]>
+		order by upload_time ASC
+	</select>
+	
+	<select id="getCountStaffIdByDept" parameterType="map" resultType="int">
+		SELECT COUNT(DEPT_ID) ISDEPT FROM TB_INS_STAFF_DEPT WHERE DEPT_ID=#{staff_id}
+	</select>
+
+	<select id="getArea" resultType="map">
+		select a.AREA_ID, a.NAME from
+		AREA a where a.AREA_LEVEL = 3
+	</select>
+	
+	<select id="getAreaById" resultType="map" parameterType="map">
+		select a.AREA_ID, a.NAME from
+		AREA a where a.AREA_LEVEL = 3
+		<if test="area_id != null and area_id != ''">
+		and a.area_id=#{area_id}
+		</if>
+	</select>
+	
+	<select id="getSonAreaById" resultType="map" parameterType="map">
+		select a.AREA_ID, a.NAME from
+		AREA a where a.parent_area_id=#{area_id}
+		<if test="son_area_id != null and son_area_id != ''">
+		and a.area_id=#{son_area_id} 
+		</if>
+	</select>
+
+	<select id="queryTrouble" parameterType="util.page.Query"
+		resultType="map">
+	<![CDATA[
+select distinct s.STAFF_ID, s.STAFF_NAME, a.NAME as SON_AREA
+  from TB_BASE_STAFF      s,
+       TB_BASE_STAFF_ROLE sr,
+       TB_BASE_ROLE       r,
+       TB_INS_TASK        t,
+       AREA               a,
+       TB_INS_PLAN        p
+ where s.STAFF_ID = sr.STAFF_ID
+   and sr.ROLE_ID = r.ROLE_ID
+   and r.ROLE_NO = 'LXXJ_INSPECTOR'
+   and s.AREA_ID = #{queryParams.AREA_ID}
+   and s.SON_AREA_ID = a.AREA_ID
+   and p.PLAN_KIND = 2
+   and p.PLAN_ID = t.PLAN_ID
+   and s.STAFF_ID = t.INSPECTOR
+   and t.START_TIME >=
+       to_date(#{queryParams.BEGIN_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and t.COMPLETE_TIME <=
+       to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</select>
+
+	<select id="queryTroubleArrival" resultType="map" parameterType="map">
+	<![CDATA[
+select t.INSPECTOR,
+       count(td.TASK_DETAIL_ID) as TOTAL,
+       sum(td.COMPLETED) as COMPLETED
+  from TB_INS_TASK t, TB_INS_TASK_DETAIL td, TB_INS_PLAN p
+ where t.TASK_ID = td.TASK_ID
+   and p.PLAN_ID = t.PLAN_ID
+   and p.PLAN_KIND = 2
+   and t.INSPECTOR = #{STAFF_ID}
+   and t.START_TIME >=
+       to_date(#{BEGIN_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and t.COMPLETE_TIME <=
+       to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+ group by t.INSPECTOR
+	]]>
+	</select>
+
+	<select id="queryTroubleForExcel" parameterType="map"
+		resultType="map">
+		<![CDATA[
+select distinct s.STAFF_ID, s.STAFF_NAME, a.NAME as SON_AREA
+  from TB_BASE_STAFF      s,
+       TB_BASE_STAFF_ROLE sr,
+       TB_BASE_ROLE       r,
+       TB_INS_TASK        t,
+       AREA               a,
+       TB_INS_PLAN        p
+ where s.STAFF_ID = sr.STAFF_ID
+   and sr.ROLE_ID = r.ROLE_ID
+   and r.ROLE_NO = 'LXXJ_INSPECTOR'
+   and s.AREA_ID = #{AREA_ID}
+   and s.SON_AREA_ID = a.AREA_ID
+   and p.PLAN_KIND = 2
+   and p.PLAN_ID = t.PLAN_ID
+   and s.STAFF_ID = t.INSPECTOR
+   and t.START_TIME >=
+       to_date(#{BEGIN_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and t.COMPLETE_TIME <=
+       to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</select>
+
+	<select id="queryKeep" parameterType="util.page.Query"
+		resultType="map">
+	<![CDATA[
+select distinct s.STAFF_ID,
+                s.STAFF_NAME as KEEP_STAFF,
+                p.PLAN_ID,
+                (select a.name from area a where a.area_id=s.area_id) areaName,
+                (select a.name from area a where a.area_id=s.son_area_id) sonAreaName,
+                p.inaccuracy,
+              	to_char(min(t.START_TIME) over ( partition by  p.PLAN_ID, s.STAFF_ID), 'yyyy-mm-dd')START_TIME,
+                to_char(max(t.COMPLETE_TIME) over ( partition by  p.PLAN_ID, s.STAFF_ID),'yyyy-mm-dd') COMPLETE_TIME
+  from TB_BASE_STAFF      s,
+       TB_BASE_STAFF_ROLE sr,
+       TB_BASE_ROLE       r,
+       TB_INS_TASK        t,
+       TB_INS_PLAN        p
+ where r.ROLE_NO = 'LXXJ_KHY'
+       and p.isdeleted=0
+   and s.AREA_ID = #{queryParams.AREA_ID}
+   ]]>
+    <if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''"> 
+    	and s.son_area_id = #{queryParams.SON_AREA_ID}
+   </if>
+   <if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''"> 
+    	and s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+    	 
+   </if>
+   <![CDATA[
+   and p.PLAN_KIND = 3
+   and t.START_TIME >=
+       to_date(#{queryParams.BEGIN_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and t.COMPLETE_TIME <=
+       to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and s.STAFF_ID = sr.STAFF_ID
+   and sr.ROLE_ID = r.ROLE_ID
+   and p.PLAN_ID = t.PLAN_ID
+   and s.STAFF_ID = t.INSPECTOR
+ order by s.STAFF_ID
+	]]>
+	</select>
+
+	<select id="getTimePeriod" parameterType="string" resultType="map">
+		select START_TIME, END_TIME from TB_INS_PLAN_KEEP where PLAN_ID =
+		#{PLAN_ID} order by KEEP_ID
+	</select>
+
+	<select id="queryForKeep" parameterType="map" resultType="com.cableInspection.model.PointModel"
+		statementType="STATEMENT">
+	<![CDATA[
+select longitude,
+       latitude
+       from(
+		select up.*,lag(up.upload_time,1) over  (order by up.upload_time asc) as last,
+		       lead(up.upload_time,1) over  (order by up.upload_time asc) as next,
+		       lead(up.upload_time,2) over  (order by up.upload_time asc) as next_next
+		  from TB_INS_UPLOAD_POINT up
+		 where up.UPLOAD_STAFF = ${STAFF_ID}
+		 and ${SQL}
+		  order by up.upload_time asc) t 
+		 where t.upload_time+3/1440<=t.next
+		 or( t.upload_time+4/1440 <=t.next_next
+		  and
+		   t.upload_time+2.5/1440<=t.next
+		 )
+   ]]>
+	</select>
+
+	<select id="queryKeepForExcel" parameterType="map" resultType="map">
+	<![CDATA[
+select distinct s.STAFF_ID,
+                s.STAFF_NAME as KEEP_STAFF,
+                (select a.name from area a where a.area_id=s.area_id) areaName,
+                (select a.name from area a where a.area_id=s.son_area_id) sonAreaName,
+                p1.POINT_NAME,
+                p.PLAN_ID,
+                p.inaccuracy,
+                p1.longitude,
+                p1.latitude,
+                to_char(min(t.START_TIME) over ( partition by  p.PLAN_ID, s.STAFF_ID), 'yyyy-mm-dd')START_TIME,
+                to_char(max(t.COMPLETE_TIME) over ( partition by  p.PLAN_ID, s.STAFF_ID),'yyyy-mm-dd') COMPLETE_TIME
+  from TB_BASE_STAFF      s,
+       TB_BASE_STAFF_ROLE sr,
+       TB_BASE_ROLE       r,
+       TB_INS_TASK        t,
+       TB_INS_TASK_DETAIL td,
+       TB_INS_PLAN        p,
+       TB_INS_POINT       p1
+ where r.ROLE_NO = 'LXXJ_KHY'
+   and s.AREA_ID = #{AREA_ID}
+   and p.PLAN_KIND = 3
+   and t.START_TIME >=
+       to_date(#{BEGIN_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and t.COMPLETE_TIME <=
+       to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and s.STAFF_ID = sr.STAFF_ID
+   and sr.ROLE_ID = r.ROLE_ID
+   and p.PLAN_ID = t.PLAN_ID
+   and s.STAFF_ID = t.INSPECTOR
+   and t.TASK_ID = td.TASK_ID
+   and td.inspect_object_id = p1.POINT_ID
+   ]]>
+   <if test="STAFF_NAME != null and STAFF_NAME != ''"> 
+    	and s.STAFF_NAME like '%'||#{STAFF_NAME}||'%' 
+    	 
+   </if>
+     <if test="SON_AREA_ID != null and SON_AREA_ID != ''"> 
+    	and s.son_area_id = #{SON_AREA_ID}
+   </if>
+   <![CDATA[
+ order by s.STAFF_ID	
+ 	]]>
+	</select>
+
+	<select id="getPlanList" parameterType="map" resultType="map">
+	<![CDATA[
+select distinct p.PLAN_ID, t.INSPECTOR, p1.LONGITUDE, p1.LATITUDE, p.INACCURACY
+  from TB_INS_TASK        t,
+       TB_INS_TASK_DETAIL td,
+       TB_INS_PLAN        p,
+       TB_INS_POINT       p1
+ where p.PLAN_KIND = 3
+   and t.START_TIME >=
+       to_date(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and t.COMPLETE_TIME <=
+       to_date(#{END_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+   and p.PLAN_ID = t.PLAN_ID
+   and t.TASK_ID = td.TASK_ID
+   and td.INSPECT_OBJECT_ID = p1.POINT_ID
+   	]]>
+	</select>
+
+	<select id="getUploadPointList" parameterType="map" resultType="map"
+		statementType="STATEMENT">
+	<![CDATA[
+select up.POINT_ID,
+       up.LONGITUDE,
+       up.LATITUDE
+  from TB_INS_UPLOAD_POINT up
+ where up.UPLOAD_STAFF = ${INSPECTOR}
+   and ${SQL}
+   order by up.POINT_ID
+   ]]>
+	</select>
+
+	<update id="updatePointArrivaled" parameterType="map">
+		update
+		TB_INS_UPLOAD_POINT set KEEP_ARRIVALED = 1 where point_id =
+		#{POINT_ID}
+	</update>
+	
+	<!--获取任务所有关键点签到情况-->
+	<select id="queryKeyPointsArrivaledByTaskId" parameterType="map" resultType="map">
+		select t.task_name,
+           t.task_id,
+           t.plan_start_time,
+           t.plan_end_time,
+           t.times,
+           t.areaName,
+           t.cityname,
+           t.line_name,
+           t.point_name,
+           t.isArrivaled,
+           to_char(t.create_date,'yyyy-MM-dd HH24:mi:ss') create_time,
+           t.staff_name,
+           t.staff_no,
+           t.tel,
+           t.dept_name,
+           t.dept_no,
+           t.descrp
+       from ( select distinct tit.task_id,
+                tit.task_name,
+                to_char(tit.start_time, 'yyyy-mm-dd') as plan_start_time,
+                to_char(tit.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                to_char(tit.start_time, 'yyyy.mm.dd') || '-' ||
+                to_char(tit.complete_time, 'yyyy.mm.dd') as times,
+                a.name as cityname,
+                b.name as areaname,
+                til.line_name,
+                p.point_id,
+                p.point_name,
+                tbs.staff_name,
+                tbs.tel,
+                tbs.staff_no,
+                tir.create_time create_date,
+                decode(sign((nvl(tir.record_id, 0))),
+                       1,
+                       '已签到',
+                       0,
+                       '未签到') isArrivaled,
+                dept.dept_name,
+                dept.dept_no,
+                tir.descrp
+  FROM tb_ins_task tit
+  join Tb_Ins_Plan_Detail TD
+    on td.plan_id = tit.plan_id
+  join area a
+    on tit.area_id = a.area_id
+  join area b
+    on tit.son_area_id = b.area_id
+  join tb_ins_line til
+    on til.LINE_ID = TD.INSPECT_OBJECT_ID
+  join tb_ins_line_point tilp
+    on til.LINE_ID = tilp.LINE_ID
+  join tb_ins_point p
+    on p.point_id = tilp.point_id
+   and p.point_type > -1
+  left join tb_ins_dept dept
+    on tit.inspector = dept.dept_id
+  left join tb_ins_record tir
+    on tir.point_id = p.point_id
+   and tir.task_id = tit.task_id
+   and tir.record_type = 0
+  left join tb_base_staff tbs
+    on tir.inspector = tbs.staff_id
+ where 1 = 1
+		   	
+		           <if test="AREA_ID != null and AREA_ID != ''">  
+           			 <![CDATA[
+	    				and tit.area_id = #{AREA_ID}
+	    			 ]]>
+				   </if>
+		           <if test="SON_AREA_ID != null and SON_AREA_ID != ''"> 
+		           	 <![CDATA[
+    					and tit.son_area_id = #{SON_AREA_ID}
+    				 ]]>
+   				   </if>
+   				   <if test="START_TIME != null and START_TIME != ''"> 
+   				     <![CDATA[
+    					and tit.start_time >= to_date(#{START_TIME}, 'yyyy-MM-dd hh24:mi:ss')
+   				   	 ]]>
+   				   </if>
+   				   <if test="COMPLETE_TIME != null and COMPLETE_TIME != ''"> 
+    				 <![CDATA[
+    					and to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{COMPLETE_TIME}, 'yyyy-MM-dd')
+   				     ]]>
+   				   </if>
+   				   <if test="TASK_NAME != null and TASK_NAME != ''"> 
+    				 <![CDATA[
+    					and tit.task_name like '%'||#{TASK_NAME}||'%'
+   				     ]]>
+   				   </if>
+   				   <if test="TASK_ID != null and TASK_ID != ''"> 
+    				 <![CDATA[
+    					and tit.task_id like '%'||#{TASK_ID}||'%'	
+   				     ]]>
+   				   </if>
+   				   <if test="STAFF_NAME != null and STAFF_NAME != ''"> 
+    				 <![CDATA[
+    					and tbs.staff_name like '%'||#{STAFF_NAME}||'%'
+   				   	 ]]>
+   				   </if>
+		 <![CDATA[
+		         ) t
+		  order by t.task_id , t.isArrivaled
+   		]]>
+	</select>
+	
+	<insert id="addArrivalSingle" parameterType="map">
+	insert into TB_INS_ARRIVAL
+	values(seq_arrival.nextval,#{TASK_ID},
+			 		#{STAFFNAME},
+			 		#{AREANAME},
+			 		#{TASKNAME},
+			 		#{TIMES},
+					#{PLANPOINTS},
+					#{REALPOINTS},
+					#{ARRIVALRATE},
+					#{PLANPOINTS2},
+					#{REALPOINTS2},
+					#{ARRIVALRATE2},
+					#{KILOMETRE},
+					sysdate,
+					#{SON_AREA_ID},
+					#{TEL},
+					#{STAFF_NO})
+	</insert>
+	<insert id="addArrival" parameterType="list">
+		insert into TB_INS_ARRIVAL
+		select seq_arrival.nextval,a.* from (
+		<foreach collection="list" item="ITEM" separator="union">
+			 select #{ITEM.TASK_ID},
+			 		#{ITEM.STAFFNAME},
+			 		#{ITEM.AREANAME},
+			 		#{ITEM.TASKNAME},
+			 		#{ITEM.TIMES},
+					#{ITEM.PLANPOINTS},
+					#{ITEM.REALPOINTS},
+					#{ITEM.ARRIVALRATE},
+					#{ITEM.PLANPOINTS2},
+					#{ITEM.REALPOINTS2},
+					#{ITEM.ARRIVALRATE2},
+					#{ITEM.KILOMETRE},
+					sysdate,
+					#{ITEM.SON_AREA_ID},
+					#{ITEM.TEL},
+					#{ITEM.STAFF_NO}
+					 from dual 
+		</foreach>
+		) a
+	</insert>
+	
+	<delete id="deleteArrival" parameterType="map">
+	<![CDATA[
+		delete from TB_INS_ARRIVAL a where to_date(to_char(a.createtime,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{end_time},'yyyy-mm-dd')
+		and to_date(to_char(a.createtime,'yyyy-mm-dd'),'yyyy-mm-dd') >= to_date(#{start_time},'yyyy-mm-dd')		
+	]]>
+	</delete>
+	
+	<!--  <select id="checkArrival" parameterType="map" resultType="int">
+	select count(1) from TB_INS_ARRIVAL a 
+	<![CDATA[
+	where to_date(a.createtime,'yyyy-mm-dd') <= to_date(?,'yyyy-mm-dd')   and to_date(a.createtime,'yyyy-mm-dd') >= to_date(?,'yyyy-mm-dd')
+	]]>
+	</select>
+	-->
+	
+	<select id="queryArrival" parameterType="map" resultType="map">
+		 select A.ARRIVAL_ID,
+			    A.TASK_ID,
+			    A.STAFFNAME,
+				A.AREANAME,
+				A.TASKNAME,
+				A.TIMES,
+				A.PLANPOINTS,
+				A.REALPOINTS,
+				A.ARRIVALRATE,
+				A.PLANPOINTS2,
+				A.REALPOINTS2,
+				A.ARRIVALRATE2,
+				A.KILOMETRE,
+				A.SONAREAID
+		from TB_INS_ARRIVAL A
+		where 1=1
+		<if test="son_area_id!=null and son_area_id!=''">
+			and SONAREAID = #{son_area_id}
+		</if>
+	</select>
+	
+	<select id="queryArrivalNOC" resultType="map" parameterType="map">
+		<!--select *
+    from (
+ select t.task_id,
+                 t.task_id as taskId,
+                 t.task_name as taskName,
+                 t.inspector,
+                 t.tel,
+                 t.plan_id as planId,
+                 t.plan_name,
+                 to_char(t.start_time, 'yyyy-mm-dd') as plan_start_time,
+                 to_char(t.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                 to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                 to_char(t.complete_time, 'yyyy.mm.dd') as times,
+                 t.son_area_id,
+                 t.name as areaName,
+                 t.staff_name as staffName,
+                 t.staff_id,
+                 t.staff_no,
+                  count(distinct(t.point_id)) as planPoints
+    from (SELECT 
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 decode(tbs.tel,null,'null',tbs.tel) tel,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 tbs.staff_name ,
+                 tbs.staff_id,
+                 tilp.point_id,
+                 tbs.staff_no
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_plan_detail tipd,
+                 tb_ins_line        til,
+                 tb_ins_line_point  tilp,
+                 tb_base_staff      tbs
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tipd.plan_id(+) = tip.plan_id
+             and tilp.line_id(+) = tipd.inspect_object_id
+             and tip.inspector_type=0
+             and til.line_id = tipd.inspect_object_id
+             and tit.inspector = tbs.staff_id
+             <![CDATA[
+             and tit.start_time >= to_date(#{start_time},'yyyy-mm-dd HH24:MI:SS')
+             and to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{end_time},'yyyy-mm-dd')
+  			 ]]>
+             union
+             SELECT  distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 decode(tbs.tel,null,'null',tbs.tel) tel,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 dp.dept_name ,
+                 dp.dept_id,
+                 tilp.point_id,
+                 dp.dept_no as staff_no
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_plan_detail tipd,
+                 tb_ins_line        til,
+                 tb_ins_line_point  tilp,
+                 tb_base_staff      tbs,
+                 tb_ins_staff_dept   sd,
+                 tb_ins_dept         dp
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tipd.plan_id(+) = tip.plan_id
+             and tilp.line_id(+) = tipd.inspect_object_id
+             and tip.inspector_type=1
+             and til.line_id = tipd.inspect_object_id
+             and tit.inspector = dp.dept_id
+             and sd.staff_id=tbs.staff_id
+            <![CDATA[
+             and tit.start_time >= to_date(#{start_time},'yyyy-mm-dd HH24:MI:SS')
+             and to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{end_time},'yyyy-mm-dd')
+   			]]>
+             )t
+           group by t.task_id,
+                    t.task_name,
+                    t.inspector,
+                    t.plan_id,
+                    t.tel,
+                    t.plan_name,
+                    t.son_area_id,
+                    t.name,
+                    t.staff_name,
+                    to_char(t.start_time, 'yyyy.mm.dd') || '-' ||
+                    to_char(t.complete_time, 'yyyy.mm.dd'),
+                    t.start_time,
+                    t.complete_time,
+                    t.staff_id,
+                    t.staff_no)
+   			order by plan_start_time desc -->
+   			<![CDATA[
+   			select *
+    from (
+ select t.task_id,
+                 t.task_id as taskId,
+                 t.task_name as taskName,
+                 t.inspector,
+                 t.tel,
+                 t.plan_id as planId,
+                 t.plan_name,
+                 to_char(t.start_time, 'yyyy-mm-dd') as plan_start_time,
+                 to_char(t.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                 to_char(t.start_time, 'yyyy.mm.dd') || '-' ||to_char(t.complete_time, 'yyyy.mm.dd') as times,
+                 t.son_area_id,
+                 t.name as areaName,
+                 t.staff_name as staffName,
+                 t.staff_id,
+                 t.staff_no
+    from (SELECT 
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 nvl(tbs.tel,'0') tel,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 tbs.staff_name ,
+                 tbs.staff_id,
+                 tbs.staff_no
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_base_staff      tbs
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tit.inspector = tbs.staff_id
+             and tit.start_time >= to_date(#{start_time},'yyyy-mm-dd HH24:MI:SS')
+             and to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{end_time},'yyyy-mm-dd')
+             union
+             SELECT  distinct
+                 tit.task_id,
+                 tit.task_name ,
+                 tit.inspector,
+                 '0' tel,
+                 tit.plan_id ,
+                 tip.plan_name,
+                 tit.start_time,
+                 tit.complete_time,
+                 tip.son_area_id,
+                 a.name ,
+                 dp.dept_name ,
+                 dp.dept_id,
+                 dp.dept_no as staff_no
+            FROM tb_ins_task        tit,
+                 tb_ins_plan        tip,
+                 area               a,
+                 tb_ins_dept         dp
+           where tit.plan_id = tip.plan_id(+)
+             and tip.son_area_id = a.area_id(+)
+             and tit.inspector = dp.dept_id
+             and tit.start_time >= to_date(#{start_time},'yyyy-mm-dd HH24:MI:SS')
+             and to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{end_time},'yyyy-mm-dd')
+             )t
+           group by t.task_id,
+                    t.task_name,
+                    t.inspector,
+                    t.plan_id,
+                    t.tel,
+                    t.plan_name,
+                    t.son_area_id,
+                    t.name,
+                    t.staff_name,
+                    to_char(t.start_time, 'yyyy.mm.dd') || '-' || to_char(t.complete_time, 'yyyy.mm.dd'),
+                    t.start_time,
+                    t.complete_time,
+                    t.staff_id,
+                    t.staff_no)
+   			order by plan_start_time desc
+   			]]>
+	</select>
+	
+	<select id="getCountPoint" parameterType="string" resultType="string">
+		select count(1) planPoints 
+    from tb_ins_plan        tip,
+                 tb_ins_plan_detail tipd,
+                 tb_ins_line        til,
+                 tb_ins_line_point  tilp
+        where  tipd.plan_id(+) = tip.plan_id
+             and tilp.line_id(+) = tipd.inspect_object_id
+             and tip.inspector_type=1
+             and til.line_id = tipd.inspect_object_id
+             and tip.plan_id=#{planId}
+	</select>
+	
+	<select id="queryKeyPointsArrivaled" parameterType="map" resultType="map">
+	<!--  
+	select distinct t.task_id,
+			t.task_name,
+		       t.plan_start_time,
+		       t.plan_end_time,
+		       t.times,
+		       t.areaName,
+		       t.line_name,
+		       t.point_name,
+		       t.isArrivaled,
+		       to_char(tir.create_time, 'yyyy-MM-dd') create_time,
+					 t.staff_name,
+           t.staff_no,
+           t.tel,
+           t.dept_name,
+           t.dept_no
+		 	from (select distinct tit.task_id,
+		                        tit.task_name,
+		                        to_char(tit.start_time, 'yyyy-mm-dd') as plan_start_time,
+		                        to_char(tit.complete_time, 'yyyy-mm-dd') as plan_end_time,
+		                        to_char(tit.start_time, 'yyyy.mm.dd') || '-' ||
+		                        to_char(tit.complete_time, 'yyyy.mm.dd') as times,
+		                        a.name as areaName,
+		                        til.line_name,
+		                        tip1.point_id,
+		                        tip1.point_name,
+		                        tbs.staff_name,
+                            tbs.tel,
+                            tbs.staff_no,
+                            dept.dept_name,
+                            dept.dept_no,
+		                        case
+		                          when exists (select 0
+		                                  from tb_ins_record tir
+		                                 where tir.point_id = tip1.point_id
+		                                   and tir.task_id = tit.task_id
+		                                   and tir.record_type = 0) then
+		                           '已签到'
+		                          else
+		                           '未签到'
+		                        end isArrivaled
+		          FROM tb_ins_task        tit,
+		               tb_ins_plan        tip,
+		               area               a,
+		               tb_ins_plan_detail tipd,
+		               tb_ins_line        til,
+		               tb_ins_line_point  tilp,
+		               tb_ins_point       tip1,
+		               tb_base_staff      tbs,
+		               tb_ins_dept        dept,
+                       tb_ins_staff_dept  sd
+		         where tit.plan_id = tip.plan_id(+)
+		           and tip.son_area_id = a.area_id(+)
+		           and tipd.plan_id(+) = tip.plan_id
+		           and tilp.line_id(+) = tipd.inspect_object_id
+		           and tip1.point_id = tilp.point_id
+		           and til.line_id = tipd.inspect_object_id
+		           and tit.inspector = tbs.staff_id
+		           and tip1.point_type > -1
+		           and sd.staff_id = tbs.staff_id
+                 and dept.dept_id = sd.dept_id
+		           and tit.start_time >= to_date(#{start_time},'yyyy-mm-dd HH24:MI:SS')
+             and to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{end_time},'yyyy-mm-dd')
+		                ) t
+		  left join tb_ins_record tir on t.point_id = tir.point_id
+		                             and tir.task_id = t.task_id
+		  left join tb_base_staff tbs on tir.inspector = tbs.staff_id
+		  order by t.task_id , t.isArrivaled
+		  
+		  -->
+		  select t.task_name,
+		       t.task_id,
+		       t.plan_start_time,
+		       t.plan_end_time,
+		       t.times,
+		       t.areaName,
+		       t.cityname,
+		       t.line_name,
+		       t.point_name,
+		       t.isArrivaled,
+		       to_char(t.create_time, 'yyyy-MM-dd HH:MM:SS') create_time,
+					 t.staff_name,
+					 t.staff_no,
+           t.tel,
+           t.dept_name,
+           t.dept_no
+		 	from ( select distinct tit.task_id,
+                            tit.task_name,
+                            to_char(tit.start_time, 'yyyy-mm-dd') as plan_start_time,
+                            to_char(tit.complete_time, 'yyyy-mm-dd') as plan_end_time,
+                            to_char(tit.start_time, 'yyyy.mm.dd') || '-' ||
+                            to_char(tit.complete_time, 'yyyy.mm.dd') as times,
+                            a.name as cityname,
+                            b.name as areaname,
+                            til.line_name,
+                            p.point_id,
+                            p.point_name,
+                             tbs.staff_name,
+                            tbs.tel,
+                            tbs.staff_no,
+                            tir.create_time,
+                            decode(sign((nvl(tir.record_id,0)
+                                      )),1,'已签到',0,'未签到')
+                             isArrivaled,
+                            dept.dept_name,
+                            dept.dept_no
+              FROM tb_ins_task        tit
+                   join TB_INS_TASK_DETAIL TD on td.task_id=tit.task_id
+                   join area a on tit.area_id= a.area_id
+                   join area b on tit.son_area_id= b.area_id
+                   join tb_ins_line til on til.LINE_ID = TD.INSPECT_OBJECT_ID
+                   join tb_ins_line_point tilp on til.LINE_ID=tilp.LINE_ID
+                   join tb_ins_point p on p.point_id=tilp.point_id and  p.point_type > -1
+                   left join tb_ins_dept dept on tit.inspector = dept.dept_id
+                   left join tb_ins_record tir on  tir.point_id = p.point_id
+                   and tir.task_id = tit.task_id and tir.record_type = 0
+                   left join  tb_base_staff      tbs on tir.inspector=tbs.staff_id
+		         <![CDATA[
+		         where  tit.start_time >= to_date(#{start_time},'yyyy-mm-dd HH24:MI:SS')
+             and to_date(to_char(tit.complete_time,'yyyy-mm-dd'),'yyyy-mm-dd') <= to_date(#{end_time},'yyyy-mm-dd')
+                 ) t
+		  order by t.task_id , t.isArrivaled
+		  ]]>
+	</select>
+	
+	<insert id="addKeyPointsdByTaskId" parameterType="map" >
+		insert into TB_INS_KEYPOINTS (TASK_NAME,PLAN_START_TIME,PLAN_END_TIME,
+		TIMES,AREANAME,LINE_NAME,POINT_NAME,ISARRIVALED,CREATE_TIME,STAFF_NAME,TASK_ID,ID,
+		STAFF_NO,STAFF_TEL,DEPT_NO,DEPT_NAME,CITYNAME,UPDATETIME)
+		values (#{TASK_NAME,jdbcType=VARCHAR},#{PLAN_START_TIME,jdbcType=VARCHAR},
+		#{PLAN_END_TIME,jdbcType=VARCHAR},
+		#{TIMES,jdbcType=VARCHAR},#{AREANAME,jdbcType=VARCHAR},#{LINE_NAME,jdbcType=VARCHAR},
+		#{POINT_NAME,jdbcType=VARCHAR},#{ISARRIVALED,jdbcType=VARCHAR},
+		#{CREATE_TIME,jdbcType=VARCHAR},#{STAFF_NAME,jdbcType=VARCHAR},#{TASK_ID,jdbcType=INTEGER},seq_keypoint.nextval,
+		#{STAFF_NO,jdbcType=VARCHAR},#{TEL,jdbcType=VARCHAR},#{DEPT_NO,jdbcType=VARCHAR},#{DEPT_NAME,jdbcType=VARCHAR},
+		#{CITYNAME,jdbcType=VARCHAR},sysdate)
+	</insert>
+	
+	<delete id="deleteKeyPoints" parameterType="map">
+	<![CDATA[
+		delete from TB_INS_KEYPOINTS a where a.updatetime<trunc(sysdate)
+	]]>
+	</delete>
+	
+		<select id="queryArrivalRateByDate" parameterType="util.page.Query" resultType="map">
+  select
+  a.name area,
+  nvl(aa.sum1,0) sum1,
+  nvl(bb.sum2,0) sum2,
+  nvl(cc.sum3,0) sum3,
+  nvl(dd.sum4,0) sum4,
+  nvl(ee.sum5,0) sum5,
+  nvl(ff.sum6,0) sum6,
+  nvl(gg.sum7,0) sum7,
+  nvl(hh.sum8,0) sum8,
+  nvl(ii.sum9,0) sum9,
+  to_char(decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)),'fm9990.09')||'%' sum10,
+  nvl(kk.sum11,0) sum11,
+  nvl(ll.sum12,0) sum12,
+  nvl(mm.sum13,0) sum13,
+  nvl(nn.sum14,0) sum14,
+  nvl(oo.sum15,0) sum15,
+  nvl(pp.sum16,0) sum16,
+  nvl(qq.sum17,0) sum17,
+  nvl(rr.sum18,0) sum18,
+  nvl(ss.sum19,0) sum19,
+  decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)) sum20,
+  nvl(uu.sum21,0) sum21,
+  nvl(vv.sum22,0) sum22,
+  to_char(decode(sign(round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)),'fm9990.09')||'%' sum23,
+  to_char(decode(sign(round(nvl((nvl2(rr.sum18,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(rr.sum18,1))*100,0),2)-100),1,100,round(nvl((nvl2(rr.sum18,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(rr.sum18,1))*100,0),2)),'fm9990.09')||'%' sum24,
+  nvl(ww.sum23,0) sum25,
+  nvl(xx.sum24,0) sum26
+  from area a
+  <![CDATA[
+  left join (
+  select count(*) sum1,t.area_id from tb_base_staff t where 
+  t.create_date >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) aa on aa.area_id=a.area_id
+  left join ( 
+  select count(*) sum2,t.area_id from tb_ins_line t where 
+  t.create_TIME >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) bb on bb.area_id=a.area_id
+  left join (
+  select count(distinct(task.task_id)) sum3,t.area_id from tb_ins_plan t,tb_ins_task task where  
+  t.plan_kind = 1 and t.plan_id=task.plan_id
+  and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) cc on cc.area_id=a.area_id
+  left join(
+  select count(distinct(task.task_id)) sum4,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) dd on dd.area_id=a.area_id
+  left join(
+  select count(*) sum5,t.area_id from tb_ins_point t where t.point_type in (1,4)
+  group by t.area_id
+  ) ee on ee.area_id=a.area_id
+  left join(
+   select count(distinct(point_id)) sum6,area_id from (
+ select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type =4
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by area_id
+  ) ff on ff.area_id=a.area_id
+  left join(
+  select count(distinct(point_id)) sum7,area_id
+  from (select distinct(t.point_id),plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and   t.point_type in (1,4)
+   union all
+   select t.point_id,t.area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+   and t.point_level not in (6,9,0) and t.create_time<to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   ) g group by area_id
+  ) gg on gg.area_id=a.area_id
+  left join(
+  select count(*) sum8,t.area_id from tb_ins_point t 
+  where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+  group by t.area_id
+  ) hh on hh.area_id=a.area_id
+  left join(
+  select count(distinct(t.point_id)) sum9,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+   and   t.point_type in (1,4)
+   group by plan.area_id
+  ) ii on ii.area_id=a.area_id
+  left join(
+  select count(*) sum11,t.area_id from tb_ins_point t where  t.point_type = 2
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) kk on kk.area_id=a.area_id
+  left join(
+  select count(*) sum12,t.area_id from tb_ins_point t where t.point_type = 2
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) ll on ll.area_id=a.area_id
+  left join(
+  select count(*) sum13,t.area_id from tb_ins_point t where  t.point_type = 3
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) mm on mm.area_id=a.area_id
+  left join(
+  select count(*) sum14,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) nn on nn.area_id=a.area_id
+  left join(
+  select count(*) sum15,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+          and  task.start_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) oo on oo.area_id=a.area_id
+  left join(
+  select count(*) sum16,t.area_id from tb_ins_record t where   t.record_type = 5
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) pp on pp.area_id=a.area_id
+  left join(
+  select area_id,count(point_id) sum17  from (
+  select  t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+  ) qq on qq.area_id=a.area_id
+  left join(
+  select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+  ( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+    left join (
+   select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.area_id from tb_ins_point o where  o.point_type =4 and o.point_level  is not null
+    and o.create_time<=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and not exists (
+   select 1 from (
+  select t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+   ) b1 where b1.point_id=o.point_id
+   )
+   ) c1 on a.area_id=c1.area_id 
+   group by a.area_id order by a.area_id) b3
+   left join (
+   select area_id,count(point_id) sum22 from (
+  select distinct t.point_id,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+   ) b2 on b2.area_id=b3.area_id
+  ) rr on rr.area_id=a.area_id
+  left join(
+  select sum(sumti) sum19,area_id from (
+  select count(distinct ti.point_id) sumti,ti.area_id from (
+  select t.point_id,s.area_id,to_char(t.create_time,'yyyy-mm') create_time from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+  ) ti group by create_time,ti.area_id) group by area_id
+  ) ss on ss.area_id=a.area_id
+  left join(
+		select count(*) sum20,task.area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.area_id
+  ) tt on tt.area_id=a.area_id
+  left join(
+  select count(0) sum21,s.area_id from tb_base_staff_role sr ,tb_base_staff s 
+  where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+  group by s.area_id
+  ) uu on uu.area_id=a.area_id
+  left join(
+  select count(0) sum22,s.area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+  and sr.role_id=7 and s.isdeleted=0
+  group by s.area_id
+  ) vv on vv.area_id=a.area_id
+  left join (
+  select count(distinct t.inspector) sum23,s.area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by s.area_id
+  ) ww on ww.area_id=a.area_id
+  left join 
+      (select nvl(bill.sum24,0) sum24,a.area_id from area a
+      left join (select count(1) sum24,b.area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.area_id) bill
+      ]]>
+       on bill.area_id=a.area_id
+    ) xx on xx.area_id=a.area_id
+  where a.parent_area_id=2 
+  union all
+    select '全省',sum(allavg.sum1),sum(allavg.sum2),sum(allavg.sum3),sum(allavg.sum4),sum(allavg.sum5),sum(allavg.sum6),sum(allavg.sum7)
+    ,sum(allavg.sum8),sum(allavg.sum9),to_char(round(nvl(sum(allavg.sum6),0)/decode(sign(nvl(sum(allavg.sum7),1)-nvl(sum(allavg.sum6),0)),-1,nvl(sum(allavg.sum6),0),nvl(sum(allavg.sum7),1))*100,2),'fm9990.09')||'%' sum10
+    ,sum(allavg.sum11),sum(allavg.sum12),sum(allavg.sum13),sum(allavg.sum14)
+    ,sum(allavg.sum15),sum(allavg.sum16),sum(allavg.sum17),sum(allavg.sum18),sum(allavg.sum19),sum(allavg.sum20),sum(allavg.sum21)
+    ,sum(allavg.sum22)
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(allavg.sum17),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(allavg.sum17),1))*100,0),2)),'fm9990.09')||'%' sum23
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(allavg.sum18),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(allavg.sum18),1))*100,0),2)),'fm9990.09')||'%' sum24
+    ,sum(allavg.sum25),sum(allavg.sum26) from (
+      select
+  nvl(aa.sum1,0) sum1,
+  nvl(bb.sum2,0) sum2,
+  nvl(cc.sum3,0) sum3,
+  nvl(dd.sum4,0) sum4,
+  nvl(ee.sum5,0) sum5,
+  nvl(ff.sum6,0) sum6,
+  nvl(gg.sum7,0) sum7,
+  nvl(hh.sum8,0) sum8,
+  nvl(ii.sum9,0) sum9,
+  nvl(kk.sum11,0) sum11,
+  nvl(ll.sum12,0) sum12,
+  nvl(mm.sum13,0) sum13,
+  nvl(nn.sum14,0) sum14,
+  nvl(oo.sum15,0) sum15,
+  nvl(pp.sum16,0) sum16,
+  nvl(qq.sum17,0) sum17,
+  nvl(rr.sum18,0) sum18,
+  nvl(ss.sum19,0) sum19,
+  decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)) sum20,
+  nvl(uu.sum21,0) sum21,
+  nvl(vv.sum22,0) sum22,
+  nvl(ww.sum23,0) sum25,
+  nvl(xx.sum24,0) sum26
+  from area a
+  <![CDATA[
+  left join (
+  select count(*) sum1,t.area_id from tb_base_staff t where 
+  t.create_date >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) aa on aa.area_id=a.area_id
+  left join ( 
+  select count(*) sum2,t.area_id from tb_ins_line t where 
+  t.create_TIME >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) bb on bb.area_id=a.area_id
+  left join (
+  select count(distinct(task.task_id)) sum3,t.area_id from tb_ins_plan t,tb_ins_task task where  
+  t.plan_kind = 1 and t.plan_id=task.plan_id
+  and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) cc on cc.area_id=a.area_id
+  left join(
+  select count(distinct(task.task_id)) sum4,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) dd on dd.area_id=a.area_id
+  left join(
+  select count(*) sum5,t.area_id from tb_ins_point t where t.point_type in (1,4)
+  group by t.area_id
+  ) ee on ee.area_id=a.area_id
+  left join(
+  select count(distinct(point_id)) sum6,area_id from (
+ select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by area_id
+  ) ff on ff.area_id=a.area_id
+  left join(
+  select count(distinct(point_id)) sum7,area_id
+  from (select distinct(t.point_id),plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and   t.point_type in (1,4)
+   union all
+   select t.point_id,t.area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+   and t.point_level not in (6,9,0) and t.create_time<to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   ) g group by area_id
+  ) gg on gg.area_id=a.area_id
+  left join(
+  select count(*) sum8,t.area_id from tb_ins_point t 
+  where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+  group by t.area_id
+  ) hh on hh.area_id=a.area_id
+  left join(
+  select count(distinct(t.point_id)) sum9,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+   and   t.point_type in (1,4)
+   group by plan.area_id
+  ) ii on ii.area_id=a.area_id
+  left join(
+  select count(*) sum11,t.area_id from tb_ins_point t where  t.point_type = 2
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) kk on kk.area_id=a.area_id
+  left join(
+  select count(*) sum12,t.area_id from tb_ins_point t where t.point_type = 2
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) ll on ll.area_id=a.area_id
+  left join(
+  select count(*) sum13,t.area_id from tb_ins_point t where  t.point_type = 3
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) mm on mm.area_id=a.area_id
+  left join(
+  select count(*) sum14,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) nn on nn.area_id=a.area_id
+  left join(
+  select count(*) sum15,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+          and  task.start_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) oo on oo.area_id=a.area_id
+  left join(
+  select count(*) sum16,t.area_id from tb_ins_record t where   t.record_type = 5
+          and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) pp on pp.area_id=a.area_id
+  left join(
+  select area_id,count(point_id) sum17  from (
+  select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+  ) qq on qq.area_id=a.area_id
+  left join(
+  select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+  ( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+    left join (
+   select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.area_id from tb_ins_point o where  o.point_type=4 and o.point_level  is not null
+    and o.create_time<=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and not exists (
+   select 1 from (
+  select t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+   ) b1 where b1.point_id=o.point_id
+   )
+   ) c1 on a.area_id=c1.area_id 
+   group by a.area_id order by a.area_id) b3
+   left join (
+   select area_id,count(point_id) sum22 from (
+  select distinct t.point_id,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+   ) b2 on b2.area_id=b3.area_id
+  ) rr on rr.area_id=a.area_id
+  left join(
+  select sum(sumti) sum19,area_id from (
+  select count(distinct ti.point_id) sumti,ti.area_id from (
+  select t.point_id,s.area_id,to_char(t.create_time,'yyyy-mm') create_time from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+  ) ti group by create_time,ti.area_id) group by area_id
+  ) ss on ss.area_id=a.area_id
+  left join(
+		select count(*) sum20,task.area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.area_id
+  ) tt on tt.area_id=a.area_id
+  left join(
+  select count(0) sum21,s.area_id from tb_base_staff_role sr ,tb_base_staff s 
+  where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+  group by s.area_id
+  ) uu on uu.area_id=a.area_id
+  left join(
+  select count(0) sum22,s.area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+  and sr.role_id=7 and s.isdeleted=0
+  group by s.area_id
+  ) vv on vv.area_id=a.area_id
+  left join (
+  select count(distinct t.inspector) sum23,s.area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by s.area_id
+  ) ww on ww.area_id=a.area_id
+    left join (
+    select nvl(bill.sum24,0) sum24,a.area_id from area a
+      left join (select count(1) sum24,b.area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.area_id) bill
+      ]]>
+       on bill.area_id=a.area_id
+    ) xx on xx.area_id=a.area_id
+  where a.parent_area_id=2 
+  order by a.area_id
+    ) allavg
+
+	</select>
+	<select id="queryArrivalRateBySonArea" parameterType="util.page.Query" resultType="map">
+		select 
+		a.name area,
+		nvl(aa.sum1,0) sum1,
+		nvl(bb.sum2,0) sum2,
+		nvl(cc.sum3,0) sum3,
+		nvl(dd.sum4,0) sum4,
+		nvl(ee.sum5,0) sum5,
+		nvl(ff.sum6,0) sum6,
+		nvl(gg.sum7,0) sum7,
+		nvl(hh.sum8,0) sum8,
+		nvl(ii.sum9,0) sum9,
+    to_char(decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/decode(gg.sum7,0,1,null,1,gg.sum7))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/decode(gg.sum7,0,1,null,1,gg.sum7))*100,0),2)),'fm9990.09') sum10,
+  nvl(kk.sum11,0) sum11,
+  nvl(ll.sum12,0) sum12,
+  nvl(mm.sum13,0) sum13,
+  nvl(nn.sum14,0) sum14,
+  nvl(oo.sum15,0) sum15,
+  nvl(pp.sum16,0) sum16,
+  nvl(qq.sum17,0) sum17,
+  nvl(rr.sum18,0) sum18,
+  nvl(ss.sum19,0) sum19,
+  nvl(tt.sum20,0) sum20,
+  nvl(uu.sum21,0) sum21,
+  nvl(vv.sum22,0) sum22,
+ to_char(decode(sign(round(nvl((nvl2(qq.sum17,tt.sum20,0)/decode(qq.sum17,0,1,null,1,qq.sum17))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,tt.sum20,0)/decode(qq.sum17,0,1,null,1,qq.sum17))*100,0),2)),'fm9990.09') sum23,
+  to_char(decode(sign(round(nvl((nvl2(rr.sum18,tt.sum20,0)/decode(rr.sum18,0,1,null,1,rr.sum18))*100,0),2)-100),1,100,round(nvl((nvl2(rr.sum18,tt.sum20,0)/decode(rr.sum18,0,1,null,1,rr.sum18))*100,0),2)),'fm9990.09') sum24,
+		nvl(ww.sum23,0) sum25,
+		nvl(xx.sum24,0) sum26
+		from area a
+		<![CDATA[
+		left join (
+		select count(*) sum1,t.son_area_id area_id from tb_base_staff t where 
+		t.create_date >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) aa on aa.area_id=a.area_id
+		left join ( 
+		select count(*) sum2,t.son_area_id area_id from tb_ins_line t where 
+		t.create_TIME >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) bb on bb.area_id=a.area_id
+		left join (
+		select count(distinct(task.task_id)) sum3,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where  
+		t.plan_kind = 1 and t.plan_id=task.plan_id
+		and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) cc on cc.area_id=a.area_id
+		left join(
+		select count(distinct(task.task_id)) sum4,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) dd on dd.area_id=a.area_id
+		left join(
+		select count(*) sum5,t.son_area_id area_id from tb_ins_point t where t.point_type in (1,4)
+		group by t.son_area_id
+		) ee on ee.area_id=a.area_id
+		left join(
+		 select count(distinct(point_id)) sum6,son_area_id from (
+ select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by son_area_id
+		) ff on ff.son_area_id=a.area_id
+		left join(
+		select count(distinct(point_id)) sum7,area_id
+		from (select distinct(t.point_id),plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		  and   t.point_type in (1,4)
+		 union all
+		 select t.point_id,t.son_area_id area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+		 and t.point_level not in (6,9,0) and t.create_time<to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 ) g group by area_id
+		) gg on gg.area_id=a.area_id
+		left join(
+		select count(*) sum8,t.son_area_id area_id from tb_ins_point t 
+		where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+		group by t.son_area_id
+		) hh on hh.area_id=a.area_id
+		left join(
+		select count(distinct(t.point_id)) sum9,plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		 and   t.point_type in (1,4)
+		 group by plan.son_area_id
+		) ii on ii.area_id=a.area_id
+		left join(
+		select count(*) sum11,t.son_area_id area_id from tb_ins_point t where  t.point_type = 2
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) kk on kk.area_id=a.area_id
+		left join(
+		select count(*) sum12,t.son_area_id area_id from tb_ins_point t where t.point_type = 2
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) ll on ll.area_id=a.area_id
+		left join(
+		select count(*) sum13,t.son_area_id area_id from tb_ins_point t where  t.point_type = 3
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) mm on mm.area_id=a.area_id
+		left join(
+		select count(*) sum14,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) nn on nn.area_id=a.area_id
+		left join(
+		select count(*) sum15,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+		        and  task.start_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) oo on oo.area_id=a.area_id
+		left join(
+		select count(*) sum16,t.son_area_id area_id from tb_ins_record t where   t.record_type = 5
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) pp on pp.area_id=a.area_id
+		left join(
+		select area_id,count(point_id) sum17  from (
+		select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		  ) group by area_id order by area_id
+		) qq on qq.area_id=a.area_id
+		left join(
+		select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+		( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+			left join (
+		 select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.son_area_id area_id from tb_ins_point o where  o.point_type =4 and o.point_level  is not null
+		 and o.create_time<=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and not exists (
+		 select 1 from (
+		select distinct t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		 ) b1 where b1.point_id=o.point_id
+		 )
+		 ) c1 on a.area_id=c1.area_id 
+		 group by a.area_id order by a.area_id) b3
+		 left join (
+		 select area_id,count(point_id) sum22 from (
+		select distinct t.point_id,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		  ) group by area_id order by area_id
+		 ) b2 on b2.area_id=b3.area_id
+		) rr on rr.area_id=a.area_id
+		left join(
+		select count(distinct t.point_id) sum19,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		group by s.son_area_id
+		) ss on ss.area_id=a.area_id
+		left join(
+		select count(*) sum20,task.son_area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.son_area_id
+		) tt on tt.area_id=a.area_id
+		left join(
+		select count(0) sum21,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s 
+		where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+		group by s.son_area_id
+		) uu on uu.area_id=a.area_id
+		left join(
+		select count(0) sum22,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+		and sr.role_id=7 and s.isdeleted=0
+		group by s.son_area_id
+		) vv on vv.area_id=a.area_id
+		left join (
+		select count(distinct t.inspector) sum23,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by s.son_area_id
+		) ww on ww.area_id=a.area_id
+			left join (
+	  select nvl(bill.sum24,0) sum24,a.area_id from area a
+      left join 
+      (select count(1) sum24,b.son_area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.son_area_id) bill
+       on bill.son_area_id=a.area_id
+		) xx on xx.area_id=a.area_id
+		]]>
+		where a.parent_area_id=#{queryParams.area_id}
+		union all
+    select '全市',sum(allavg.sum1),sum(allavg.sum2),sum(allavg.sum3),sum(allavg.sum4),sum(allavg.sum5),sum(allavg.sum6),sum(allavg.sum7)
+    ,sum(allavg.sum8),sum(allavg.sum9),to_char(round(nvl(sum(allavg.sum6),0)/decode(sign(nvl(sum(allavg.sum7),1)-nvl(sum(allavg.sum6),0)),-1,nvl(sum(decode(allavg.sum6,0,1,allavg.sum6)),0),nvl(sum(decode(allavg.sum7,0,1,allavg.sum7)),1))*100,2),'fm9990.09')||'%' sum10
+    ,sum(allavg.sum11),sum(allavg.sum12),sum(allavg.sum13),sum(allavg.sum14)
+    ,sum(allavg.sum15),sum(allavg.sum16),sum(allavg.sum17),sum(allavg.sum18),sum(allavg.sum19),sum(allavg.sum20),sum(allavg.sum21)
+    ,sum(allavg.sum22)
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(decode(allavg.sum17,0,1,allavg.sum17)),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(decode(allavg.sum17,0,1,allavg.sum17)),1))*100,0),2)),'fm9990.09')||'%' sum23
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(decode(allavg.sum18,0,1,allavg.sum18)),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(decode(allavg.sum18,0,1,allavg.sum18)),1))*100,0),2)),'fm9990.09')||'%' sum24
+    ,sum(allavg.sum25),sum(allavg.sum26) from (
+		select 
+		nvl(aa.sum1,0) sum1,
+		nvl(bb.sum2,0) sum2,
+		nvl(cc.sum3,0) sum3,
+		nvl(dd.sum4,0) sum4,
+		nvl(ee.sum5,0) sum5,
+		nvl(ff.sum6,0) sum6,
+		nvl(gg.sum7,0) sum7,
+		nvl(hh.sum8,0) sum8,
+		nvl(ii.sum9,0) sum9,
+		nvl(kk.sum11,0) sum11,
+		nvl(ll.sum12,0) sum12,
+		nvl(mm.sum13,0) sum13,
+		nvl(nn.sum14,0) sum14,
+		nvl(oo.sum15,0) sum15,
+		nvl(pp.sum16,0) sum16,
+		nvl(qq.sum17,0) sum17,
+		nvl(rr.sum18,0) sum18,
+		nvl(ss.sum19,0) sum19,
+		decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)) sum20,
+		nvl(uu.sum21,0) sum21,
+		nvl(vv.sum22,0) sum22,
+		nvl(ww.sum23,0) sum25,
+		nvl(xx.sum24,0) sum26
+		from area a
+		<![CDATA[
+		left join (
+		select count(*) sum1,t.son_area_id area_id from tb_base_staff t where 
+		t.create_date >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) aa on aa.area_id=a.area_id
+		left join ( 
+		select count(*) sum2,t.son_area_id area_id from tb_ins_line t where 
+		t.create_TIME >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) bb on bb.area_id=a.area_id
+		left join (
+		select count(distinct(task.task_id)) sum3,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where  
+		t.plan_kind = 1 and t.plan_id=task.plan_id
+		and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) cc on cc.area_id=a.area_id
+		left join(
+		select count(distinct(task.task_id)) sum4,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) dd on dd.area_id=a.area_id
+		left join(
+		select count(*) sum5,t.son_area_id area_id from tb_ins_point t where t.point_type in (1,4)
+		group by t.son_area_id
+		) ee on ee.area_id=a.area_id
+		left join(
+		 select count(distinct(point_id)) sum6,son_area_id from (
+ select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by son_area_id
+		) ff on ff.son_area_id=a.area_id
+		left join(
+		select count(distinct(point_id)) sum7,area_id
+		from (select distinct(t.point_id),plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		  and   t.point_type in (1,4)
+		 union all
+		 select t.point_id,t.son_area_id area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+		 and t.point_level not in (6,9,0) and t.create_time<to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 ) g group by area_id
+		) gg on gg.area_id=a.area_id
+		left join(
+		select count(*) sum8,t.son_area_id area_id from tb_ins_point t 
+		where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+		group by t.son_area_id
+		) hh on hh.area_id=a.area_id
+		left join(
+		select count(distinct(t.point_id)) sum9,plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		 and   t.point_type in (1,4)
+		 group by plan.son_area_id
+		) ii on ii.area_id=a.area_id
+		left join(
+		select count(*) sum11,t.son_area_id area_id from tb_ins_point t where  t.point_type = 2
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) kk on kk.area_id=a.area_id
+		left join(
+		select count(*) sum12,t.son_area_id area_id from tb_ins_point t where t.point_type = 2
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) ll on ll.area_id=a.area_id
+		left join(
+		select count(*) sum13,t.son_area_id area_id from tb_ins_point t where  t.point_type = 3
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) mm on mm.area_id=a.area_id
+		left join(
+		select count(*) sum14,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) nn on nn.area_id=a.area_id
+		left join(
+		select count(*) sum15,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+		        and  task.start_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) oo on oo.area_id=a.area_id
+		left join(
+		select count(*) sum16,t.son_area_id area_id from tb_ins_record t where   t.record_type = 5
+		        and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) pp on pp.area_id=a.area_id
+		left join(
+		select area_id,count(point_id) sum17  from (
+		select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type=4
+		  ) group by area_id order by area_id
+		) qq on qq.area_id=a.area_id
+		left join(
+		select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+		( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+			left join (
+		 select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.son_area_id area_id from tb_ins_point o where  o.point_type =4 and o.point_level  is not null
+		  and o.create_time<=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and not exists (
+		 select 1 from (
+		select distinct t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		 ) b1 where b1.point_id=o.point_id
+		 )
+		 ) c1 on a.area_id=c1.area_id 
+		 group by a.area_id order by a.area_id) b3
+		 left join (
+		 select area_id,count(point_id) sum22 from (
+		select distinct t.point_id,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{queryParams.begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		  ) group by area_id order by area_id
+		 ) b2 on b2.area_id=b3.area_id
+		) rr on rr.area_id=a.area_id
+		left join(
+		select count(distinct t.point_id) sum19,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		group by s.son_area_id
+		) ss on ss.area_id=a.area_id
+		left join(
+		select count(*) sum20,task.son_area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.son_area_id
+		) tt on tt.area_id=a.area_id
+		left join(
+		select count(0) sum21,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s 
+		where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+		group by s.son_area_id
+		) uu on uu.area_id=a.area_id
+		left join(
+		select count(0) sum22,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+		and sr.role_id=7 and s.isdeleted=0
+		group by s.son_area_id
+		) vv on vv.area_id=a.area_id
+		left join (
+		select count(distinct t.inspector) sum23,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by s.son_area_id
+		) ww on ww.area_id=a.area_id
+			left join (
+	  select nvl(bill.sum24,0) sum24,a.area_id from area a
+      left join 
+      (select count(1) sum24,b.son_area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{queryParams.begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{queryParams.end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.son_area_id) bill
+       on bill.son_area_id=a.area_id
+		) xx on xx.area_id=a.area_id
+		]]>
+		where a.parent_area_id=#{queryParams.area_id}
+		order by a.area_id
+		) allavg
+	</select>
+	
+	<select id="exportArrivalRateByDate" parameterType="map" resultType="map">
+	select
+  a.name area,
+  nvl(aa.sum1,0) sum1,
+  nvl(bb.sum2,0) sum2,
+  nvl(cc.sum3,0) sum3,
+  nvl(dd.sum4,0) sum4,
+  nvl(ee.sum5,0) sum5,
+  nvl(ff.sum6,0) sum6,
+  nvl(gg.sum7,0) sum7,
+  nvl(hh.sum8,0) sum8,
+  nvl(ii.sum9,0) sum9,
+  to_char(decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)),'fm9990.09')||'%' sum10,
+  nvl(kk.sum11,0) sum11,
+  nvl(ll.sum12,0) sum12,
+  nvl(mm.sum13,0) sum13,
+  nvl(nn.sum14,0) sum14,
+  nvl(oo.sum15,0) sum15,
+  nvl(pp.sum16,0) sum16,
+  nvl(qq.sum17,0) sum17,
+  nvl(rr.sum18,0) sum18,
+  nvl(ss.sum19,0) sum19,
+  decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)) sum20,
+  nvl(uu.sum21,0) sum21,
+  nvl(vv.sum22,0) sum22,
+  to_char(decode(sign(round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)),'fm9990.09')||'%' sum23,
+  to_char(decode(sign(round(nvl((nvl2(rr.sum18,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(rr.sum18,1))*100,0),2)-100),1,100,round(nvl((nvl2(rr.sum18,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(rr.sum18,1))*100,0),2)),'fm9990.09')||'%' sum24,
+  nvl(ww.sum23,0) sum25,
+  nvl(xx.sum24,0) sum26
+  from area a
+  <![CDATA[
+  left join (
+  select count(*) sum1,t.area_id from tb_base_staff t where 
+  t.create_date >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) aa on aa.area_id=a.area_id
+  left join ( 
+  select count(*) sum2,t.area_id from tb_ins_line t where 
+  t.create_TIME >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) bb on bb.area_id=a.area_id
+  left join (
+  select count(distinct(task.task_id)) sum3,t.area_id from tb_ins_plan t,tb_ins_task task where  
+  t.plan_kind = 1 and t.plan_id=task.plan_id
+  and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) cc on cc.area_id=a.area_id
+  left join(
+  select count(distinct(task.task_id)) sum4,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) dd on dd.area_id=a.area_id
+  left join(
+  select count(*) sum5,t.area_id from tb_ins_point t where t.point_type in (1,4)
+  group by t.area_id
+  ) ee on ee.area_id=a.area_id
+  left join(
+ select count(distinct(point_id)) sum6,area_id from (
+ select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by area_id
+  ) ff on ff.area_id=a.area_id
+  left join(
+  select count(distinct(point_id)) sum7,area_id
+  from (select distinct(t.point_id),plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and   t.point_type in (1,4)
+   union all
+   select t.point_id,t.area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+   and t.point_level not in (6,9,0) and t.create_time<to_date(#{begin_time}, 'yyyy-mm-dd')
+   ) g group by area_id
+  ) gg on gg.area_id=a.area_id
+  left join(
+  select count(*) sum8,t.area_id from tb_ins_point t 
+  where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+  group by t.area_id
+  ) hh on hh.area_id=a.area_id
+  left join(
+  select count(distinct(t.point_id)) sum9,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+   and   t.point_type in (1,4)
+   group by plan.area_id
+  ) ii on ii.area_id=a.area_id
+  left join(
+  select count(*) sum11,t.area_id from tb_ins_point t where  t.point_type = 2
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) kk on kk.area_id=a.area_id
+  left join(
+  select count(*) sum12,t.area_id from tb_ins_point t where t.point_type = 2
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) ll on ll.area_id=a.area_id
+  left join(
+  select count(*) sum13,t.area_id from tb_ins_point t where  t.point_type = 3
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) mm on mm.area_id=a.area_id
+  left join(
+  select count(*) sum14,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) nn on nn.area_id=a.area_id
+  left join(
+  select count(*) sum15,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+          and  task.start_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) oo on oo.area_id=a.area_id
+  left join(
+  select count(*) sum16,t.area_id from tb_ins_record t where   t.record_type = 5
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) pp on pp.area_id=a.area_id
+  left join(
+  select area_id,count(point_id) sum17  from (
+  select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+  ) qq on qq.area_id=a.area_id
+  left join(
+  select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+  ( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+    left join (
+   select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.area_id from tb_ins_point o where  o.point_type =4 and o.point_level  is not null
+    and o.create_time<=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and not exists (
+   select 1 from (
+  select t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+   ) b1 where b1.point_id=o.point_id
+   )
+   ) c1 on a.area_id=c1.area_id 
+   group by a.area_id order by a.area_id) b3
+   left join (
+   select area_id,count(point_id) sum22 from (
+  select distinct t.point_id,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+   ) b2 on b2.area_id=b3.area_id
+  ) rr on rr.area_id=a.area_id
+  left join(
+  select sum(sumti) sum19,area_id from (
+  select count(distinct ti.point_id) sumti,ti.area_id from (
+  select t.point_id,s.area_id,to_char(t.create_time,'yyyy-mm') create_time from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+  ) ti group by create_time,ti.area_id) group by area_id
+  ) ss on ss.area_id=a.area_id
+  left join(
+		select count(*) sum20,task.area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.area_id
+  ) tt on tt.area_id=a.area_id
+  left join(
+  select count(0) sum21,s.area_id from tb_base_staff_role sr ,tb_base_staff s 
+  where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+  group by s.area_id
+  ) uu on uu.area_id=a.area_id
+  left join(
+  select count(0) sum22,s.area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+  and sr.role_id=7 and s.isdeleted=0
+  group by s.area_id
+  ) vv on vv.area_id=a.area_id
+  left join (
+  select count(distinct t.inspector) sum23,s.area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by s.area_id
+  ) ww on ww.area_id=a.area_id
+  left join 
+      (select nvl(bill.sum24,0) sum24,a.area_id from area a
+      left join (select count(1) sum24,b.area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.area_id) bill
+       on bill.area_id=a.area_id
+    ) xx on xx.area_id=a.area_id
+  where a.parent_area_id=2 
+  union all
+    select '全省',sum(allavg.sum1),sum(allavg.sum2),sum(allavg.sum3),sum(allavg.sum4),sum(allavg.sum5),sum(allavg.sum6),sum(allavg.sum7)
+    ,sum(allavg.sum8),sum(allavg.sum9),to_char(round(nvl(sum(allavg.sum6),0)/decode(sign(nvl(sum(allavg.sum7),1)-nvl(sum(allavg.sum6),0)),-1,nvl(sum(allavg.sum6),0),nvl(sum(allavg.sum7),1))*100,2),'fm9990.09')||'%' sum10
+    ,sum(allavg.sum11),sum(allavg.sum12),sum(allavg.sum13),sum(allavg.sum14)
+    ,sum(allavg.sum15),sum(allavg.sum16),sum(allavg.sum17),sum(allavg.sum18),sum(allavg.sum19),sum(allavg.sum20),sum(allavg.sum21)
+    ,sum(allavg.sum22)
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(allavg.sum17),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(allavg.sum17),1))*100,0),2)),'fm9990.09')||'%' sum23
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(allavg.sum18),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(allavg.sum18),1))*100,0),2)),'fm9990.09')||'%' sum24
+    ,sum(allavg.sum25),sum(allavg.sum26) from (
+      select
+  nvl(aa.sum1,0) sum1,
+  nvl(bb.sum2,0) sum2,
+  nvl(cc.sum3,0) sum3,
+  nvl(dd.sum4,0) sum4,
+  nvl(ee.sum5,0) sum5,
+  nvl(ff.sum6,0) sum6,
+  nvl(gg.sum7,0) sum7,
+  nvl(hh.sum8,0) sum8,
+  nvl(ii.sum9,0) sum9,
+  nvl(kk.sum11,0) sum11,
+  nvl(ll.sum12,0) sum12,
+  nvl(mm.sum13,0) sum13,
+  nvl(nn.sum14,0) sum14,
+  nvl(oo.sum15,0) sum15,
+  nvl(pp.sum16,0) sum16,
+  nvl(qq.sum17,0) sum17,
+  nvl(rr.sum18,0) sum18,
+  nvl(ss.sum19,0) sum19,
+  decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)) sum20,
+  nvl(uu.sum21,0) sum21,
+  nvl(vv.sum22,0) sum22,
+  nvl(ww.sum23,0) sum25,
+  nvl(xx.sum24,0) sum26
+  from area a
+  left join (
+  select count(*) sum1,t.area_id from tb_base_staff t where 
+  t.create_date >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) aa on aa.area_id=a.area_id
+  left join ( 
+  select count(*) sum2,t.area_id from tb_ins_line t where 
+  t.create_TIME >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) bb on bb.area_id=a.area_id
+  left join (
+  select count(distinct(task.task_id)) sum3,t.area_id from tb_ins_plan t,tb_ins_task task where  
+  t.plan_kind = 1 and t.plan_id=task.plan_id
+  and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by t.area_id
+  ) cc on cc.area_id=a.area_id
+  left join(
+  select count(distinct(task.task_id)) sum4,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) dd on dd.area_id=a.area_id
+  left join(
+  select count(*) sum5,t.area_id from tb_ins_point t where t.point_type in (1,4)
+  group by t.area_id
+  ) ee on ee.area_id=a.area_id
+  left join(
+  select count(distinct(point_id)) sum6,area_id from (
+ select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by area_id
+  ) ff on ff.area_id=a.area_id
+  left join(
+  select count(distinct(point_id)) sum7,area_id
+  from (select distinct(t.point_id),plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and   t.point_type in (1,4)
+   union all
+   select t.point_id,t.area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+   and t.point_level not in (6,9,0) and t.create_time<to_date(#{begin_time}, 'yyyy-mm-dd')
+   ) g group by area_id
+  ) gg on gg.area_id=a.area_id
+  left join(
+  select count(*) sum8,t.area_id from tb_ins_point t 
+  where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+  group by t.area_id
+  ) hh on hh.area_id=a.area_id
+  left join(
+  select count(distinct(t.point_id)) sum9,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+   and   t.point_type in (1,4)
+   group by plan.area_id
+  ) ii on ii.area_id=a.area_id
+  left join(
+  select count(*) sum11,t.area_id from tb_ins_point t where  t.point_type = 2
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) kk on kk.area_id=a.area_id
+  left join(
+  select count(*) sum12,t.area_id from tb_ins_point t where t.point_type = 2
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) ll on ll.area_id=a.area_id
+  left join(
+  select count(*) sum13,t.area_id from tb_ins_point t where  t.point_type = 3
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) mm on mm.area_id=a.area_id
+  left join(
+  select count(*) sum14,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+          and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) nn on nn.area_id=a.area_id
+  left join(
+  select count(*) sum15,t.area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+          and  task.start_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) oo on oo.area_id=a.area_id
+  left join(
+  select count(*) sum16,t.area_id from tb_ins_record t where   t.record_type = 5
+          and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+          group by t.area_id
+  ) pp on pp.area_id=a.area_id
+  left join(
+  select area_id,count(point_id) sum17  from (
+  select  t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+  ) qq on qq.area_id=a.area_id
+  left join(
+  select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+  ( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+    left join (
+   select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.area_id from tb_ins_point o where  o.point_type =4 and o.point_level  is not null
+    and o.create_time<=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and not exists (
+   select 1 from (
+  select t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+   ) b1 where b1.point_id=o.point_id
+   )
+   ) c1 on a.area_id=c1.area_id 
+   group by a.area_id order by a.area_id) b3
+   left join (
+   select area_id,count(point_id) sum22 from (
+  select distinct t.point_id,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+   and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+   ) b2 on b2.area_id=b3.area_id
+  ) rr on rr.area_id=a.area_id
+  left join(
+  select sum(sumti) sum19,area_id from (
+  select count(distinct ti.point_id) sumti,ti.area_id from (
+  select t.point_id,s.area_id,to_char(t.create_time,'yyyy-mm') create_time from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+  ) ti group by create_time,ti.area_id) group by area_id
+  ) ss on ss.area_id=a.area_id
+  left join(
+		select count(*) sum20,task.area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.area_id
+  ) tt on tt.area_id=a.area_id
+  left join(
+  select count(0) sum21,s.area_id from tb_base_staff_role sr ,tb_base_staff s 
+  where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+  group by s.area_id
+  ) uu on uu.area_id=a.area_id
+  left join(
+  select count(0) sum22,s.area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+  and sr.role_id=7 and s.isdeleted=0
+  group by s.area_id
+  ) vv on vv.area_id=a.area_id
+  left join (
+  select count(distinct t.inspector) sum23,s.area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+  and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  group by s.area_id
+  ) ww on ww.area_id=a.area_id
+    left join (
+    select nvl(bill.sum24,0) sum24,a.area_id from area a
+      left join (select count(1) sum24,b.area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.area_id) bill
+      ]]>
+       on bill.area_id=a.area_id
+    ) xx on xx.area_id=a.area_id
+  where a.parent_area_id=2 
+  order by a.area_id
+    ) allavg
+	</select>
+	
+	<select id="exportArrivalRateBySonArea" parameterType="map" resultType="map">
+	select 
+		a.name area,
+		nvl(aa.sum1,0) sum1,
+		nvl(bb.sum2,0) sum2,
+		nvl(cc.sum3,0) sum3,
+		nvl(dd.sum4,0) sum4,
+		nvl(ee.sum5,0) sum5,
+		nvl(ff.sum6,0) sum6,
+		nvl(gg.sum7,0) sum7,
+		nvl(hh.sum8,0) sum8,
+		nvl(ii.sum9,0) sum9,
+    to_char(decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/decode(gg.sum7,0,1,null,1,gg.sum7))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/decode(gg.sum7,0,1,null,1,gg.sum7))*100,0),2)),'fm9990.09') sum10,
+  nvl(kk.sum11,0) sum11,
+  nvl(ll.sum12,0) sum12,
+  nvl(mm.sum13,0) sum13,
+  nvl(nn.sum14,0) sum14,
+  nvl(oo.sum15,0) sum15,
+  nvl(pp.sum16,0) sum16,
+  nvl(qq.sum17,0) sum17,
+  nvl(rr.sum18,0) sum18,
+  nvl(ss.sum19,0) sum19,
+  nvl(tt.sum20,0) sum20,
+  nvl(uu.sum21,0) sum21,
+  nvl(vv.sum22,0) sum22,
+ to_char(decode(sign(round(nvl((nvl2(qq.sum17,tt.sum20,0)/decode(qq.sum17,0,1,null,1,qq.sum17))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,tt.sum20,0)/decode(qq.sum17,0,1,null,1,qq.sum17))*100,0),2)),'fm9990.09') sum23,
+  to_char(decode(sign(round(nvl((nvl2(rr.sum18,tt.sum20,0)/decode(rr.sum18,0,1,null,1,rr.sum18))*100,0),2)-100),1,100,round(nvl((nvl2(rr.sum18,tt.sum20,0)/decode(rr.sum18,0,1,null,1,rr.sum18))*100,0),2)),'fm9990.09') sum24,
+		nvl(ww.sum23,0) sum25,
+		nvl(xx.sum24,0) sum26
+		from area a
+		<![CDATA[
+		left join (
+		select count(*) sum1,t.son_area_id area_id from tb_base_staff t where 
+		t.create_date >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) aa on aa.area_id=a.area_id
+		left join ( 
+		select count(*) sum2,t.son_area_id area_id from tb_ins_line t where 
+		t.create_TIME >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) bb on bb.area_id=a.area_id
+		left join (
+		select count(distinct(task.task_id)) sum3,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where  
+		t.plan_kind = 1 and t.plan_id=task.plan_id
+		and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) cc on cc.area_id=a.area_id
+		left join(
+		select count(distinct(task.task_id)) sum4,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) dd on dd.area_id=a.area_id
+		left join(
+		select count(*) sum5,t.son_area_id area_id from tb_ins_point t where t.point_type in (1,4)
+		group by t.son_area_id
+		) ee on ee.area_id=a.area_id
+		left join(
+ select count(distinct(point_id)) sum6,son_area_id from (
+ select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by son_area_id
+		) ff on ff.son_area_id=a.area_id
+		left join(
+		select count(distinct(point_id)) sum7,area_id
+		from (select distinct(t.point_id),plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		  and   t.point_type in (1,4)
+		 union all
+		 select t.point_id,t.son_area_id area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+		 and t.point_level not in (6,9,0) and t.create_time<to_date(#{begin_time}, 'yyyy-mm-dd')
+		 ) g group by area_id
+		) gg on gg.area_id=a.area_id
+		left join(
+		select count(*) sum8,t.son_area_id area_id from tb_ins_point t 
+		where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+		group by t.son_area_id
+		) hh on hh.area_id=a.area_id
+		left join(
+		select count(distinct(t.point_id)) sum9,plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		 and   t.point_type in (1,4)
+		 group by plan.son_area_id
+		) ii on ii.area_id=a.area_id
+		left join(
+		select count(*) sum11,t.son_area_id area_id from tb_ins_point t where  t.point_type = 2
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) kk on kk.area_id=a.area_id
+		left join(
+		select count(*) sum12,t.son_area_id area_id from tb_ins_point t where t.point_type = 2
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) ll on ll.area_id=a.area_id
+		left join(
+		select count(*) sum13,t.son_area_id area_id from tb_ins_point t where  t.point_type = 3
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) mm on mm.area_id=a.area_id
+		left join(
+		select count(*) sum14,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) nn on nn.area_id=a.area_id
+		left join(
+		select count(*) sum15,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+		        and  task.start_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) oo on oo.area_id=a.area_id
+		left join(
+		select count(*) sum16,t.son_area_id area_id from tb_ins_record t where   t.record_type = 5
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) pp on pp.area_id=a.area_id
+		left join(
+		select area_id,count(point_id) sum17  from (
+		select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		  ) group by area_id order by area_id
+		) qq on qq.area_id=a.area_id
+		left join(
+		select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+    ( select a.area_id,nvl(sum(c1.times),0) sum33 from area a
+      left join (
+     select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.son_area_id area_id from tb_ins_point o where  o.point_type =4 and o.point_level  is not null
+      and o.create_time<=to_date(#{begin_time}, 'yyyy-mm-dd')
+     and not exists (
+     select 1 from (
+    select distinct t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+     where
+     llp.point_id=t.point_id
+     and llp.line_id=pd.inspect_object_id
+     and pd.plan_id=plan.plan_id
+     and task.plan_id=plan.plan_id
+     and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+      and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+      and plan.isdeleted=0
+      and   t.point_type =4
+     ) b1 where b1.point_id=o.point_id
+     )
+     ) c1 on a.area_id=c1.area_id 
+     group by a.area_id order by a.area_id) b3
+     left join (
+     select area_id,count(point_id) sum22 from (
+    select distinct t.point_id,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+     where
+     llp.point_id=t.point_id
+     and llp.line_id=pd.inspect_object_id
+     and pd.plan_id=plan.plan_id
+     and task.plan_id=plan.plan_id
+     and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+      and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+      and plan.isdeleted=0
+      and   t.point_type =4
+      ) group by area_id order by area_id
+     ) b2 on b2.area_id=b3.area_id
+		) rr on rr.area_id=a.area_id
+		left join(
+		select count(distinct t.point_id) sum19,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		group by s.son_area_id
+		) ss on ss.area_id=a.area_id
+		left join(
+		select count(*) sum20,task.son_area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.son_area_id
+		) tt on tt.area_id=a.area_id
+		left join(
+		select count(0) sum21,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s 
+		where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+		group by s.son_area_id
+		) uu on uu.area_id=a.area_id
+		left join(
+		select count(0) sum22,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+		and sr.role_id=7 and s.isdeleted=0
+		group by s.son_area_id
+		) vv on vv.area_id=a.area_id
+		left join (
+		select count(distinct t.inspector) sum23,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by s.son_area_id
+		) ww on ww.area_id=a.area_id
+		 left join 
+      (select nvl(bill.sum24,0) sum24,a.area_id from area a
+       left join 
+      (select count(1) sum24,b.son_area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.son_area_id) bill
+       on bill.son_area_id=a.area_id
+    ) xx on xx.area_id=a.area_id
+		]]>
+		where a.parent_area_id=#{area_id}
+		union all
+    select '全市',sum(allavg.sum1),sum(allavg.sum2),sum(allavg.sum3),sum(allavg.sum4),sum(allavg.sum5),sum(allavg.sum6),sum(allavg.sum7)
+    ,sum(allavg.sum8),sum(allavg.sum9),to_char(round(nvl(sum(allavg.sum6),0)/decode(sign(nvl(sum(allavg.sum7),1)-nvl(sum(allavg.sum6),0)),-1,nvl(sum(allavg.sum6),0),nvl(sum(allavg.sum7),1))*100,2),'fm9990.09')||'%' sum10
+    ,sum(allavg.sum11),sum(allavg.sum12),sum(allavg.sum13),sum(allavg.sum14)
+    ,sum(allavg.sum15),sum(allavg.sum16),sum(allavg.sum17),sum(allavg.sum18),sum(allavg.sum19),sum(allavg.sum20),sum(allavg.sum21)
+    ,sum(allavg.sum22)
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(allavg.sum17),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum17),sum(allavg.sum20),0)/nvl(sum(allavg.sum17),1))*100,0),2)),'fm9990.09')||'%' sum23
+  ,to_char(decode(sign(round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(allavg.sum18),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(allavg.sum18),sum(allavg.sum20),0)/nvl(sum(allavg.sum18),1))*100,0),2)),'fm9990.09')||'%' sum24
+    ,sum(allavg.sum25),sum(allavg.sum26) from (
+			select 
+		nvl(aa.sum1,0) sum1,
+		nvl(bb.sum2,0) sum2,
+		nvl(cc.sum3,0) sum3,
+		nvl(dd.sum4,0) sum4,
+		nvl(ee.sum5,0) sum5,
+		nvl(ff.sum6,0) sum6,
+		nvl(gg.sum7,0) sum7,
+		nvl(hh.sum8,0) sum8,
+		nvl(ii.sum9,0) sum9,
+  nvl(kk.sum11,0) sum11,
+  nvl(ll.sum12,0) sum12,
+  nvl(mm.sum13,0) sum13,
+  nvl(nn.sum14,0) sum14,
+  nvl(oo.sum15,0) sum15,
+  nvl(pp.sum16,0) sum16,
+  decode(sign(nvl(qq.sum17,0)-nvl(tt.sum20,0)),-1,nvl(tt.sum20,0),nvl(qq.sum17,0)) sum17,
+  decode(sign(nvl(rr.sum18,0)-nvl(tt.sum20,0)),-1,nvl(tt.sum20,0),nvl(rr.sum18,0)) sum18,
+  nvl(ss.sum19,0) sum19,
+  nvl(tt.sum20,0) sum20,
+  nvl(uu.sum21,0) sum21,
+  nvl(vv.sum22,0) sum22,
+		nvl(ww.sum23,0) sum25,
+		nvl(xx.sum24,0) sum26
+		from area a
+		<![CDATA[
+		left join (
+		select count(*) sum1,t.son_area_id area_id from tb_base_staff t where 
+		t.create_date >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_date<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) aa on aa.area_id=a.area_id
+		left join ( 
+		select count(*) sum2,t.son_area_id area_id from tb_ins_line t where 
+		t.create_TIME >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) bb on bb.area_id=a.area_id
+		left join (
+		select count(distinct(task.task_id)) sum3,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where  
+		t.plan_kind = 1 and t.plan_id=task.plan_id
+		and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by t.son_area_id
+		) cc on cc.area_id=a.area_id
+		left join(
+		select count(distinct(task.task_id)) sum4,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 1 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) dd on dd.area_id=a.area_id
+		left join(
+		select count(*) sum5,t.son_area_id area_id from tb_ins_point t where t.point_type in (1,4)
+		group by t.son_area_id
+		) ee on ee.area_id=a.area_id
+		left join(
+		 select count(distinct(point_id)) sum6,son_area_id from (
+ select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+    and task.create_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+   and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+    and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by son_area_id
+		) ff on ff.son_area_id=a.area_id
+		left join(
+		select count(distinct(point_id)) sum7,area_id
+		from (select distinct(t.point_id),plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		  and   t.point_type in (1,4)
+		 union all
+		 select t.point_id,t.son_area_id area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+		 and t.point_level not in (6,9,0) and t.create_time<to_date(#{begin_time}, 'yyyy-mm-dd')
+		 ) g group by area_id
+		) gg on gg.area_id=a.area_id
+		left join(
+		select count(*) sum8,t.son_area_id area_id from tb_ins_point t 
+		where   t.point_type in (4) and t.point_level  is not null and t.point_level not in (6,9,0)
+		group by t.son_area_id
+		) hh on hh.area_id=a.area_id
+		left join(
+		select count(distinct(t.point_id)) sum9,plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where 
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		  and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		   and task.plan_id=plan.plan_id
+		  and plan.isdeleted=0
+		 and   t.point_type in (1,4)
+		 group by plan.son_area_id
+		) ii on ii.area_id=a.area_id
+		left join(
+		select count(*) sum11,t.son_area_id area_id from tb_ins_point t where  t.point_type = 2
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) kk on kk.area_id=a.area_id
+		left join(
+		select count(*) sum12,t.son_area_id area_id from tb_ins_point t where t.point_type = 2
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) ll on ll.area_id=a.area_id
+		left join(
+		select count(*) sum13,t.son_area_id area_id from tb_ins_point t where  t.point_type = 3
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) mm on mm.area_id=a.area_id
+		left join(
+		select count(*) sum14,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 2 and t.plan_id=task.plan_id
+		        and  task.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) nn on nn.area_id=a.area_id
+		left join(
+		select count(*) sum15,t.son_area_id area_id from tb_ins_plan t,tb_ins_task task where t.plan_kind = 3 and t.plan_id=task.plan_id
+		        and  task.start_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and task.start_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) oo on oo.area_id=a.area_id
+		left join(
+		select count(*) sum16,t.son_area_id area_id from tb_ins_record t where   t.record_type = 5
+		        and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		        group by t.son_area_id
+		) pp on pp.area_id=a.area_id
+		left join(
+		select area_id,count(point_id) sum17  from (
+		select  t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		  ) group by area_id order by area_id
+		) qq on qq.area_id=a.area_id
+		left join(
+		select b3.area_id,(b3.sum33+nvl(b2.sum22,0)) sum18 from
+		( select area_id,sum(times) sum33 from (
+		 select o.point_id,decode(o.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,o.son_area_id area_id from tb_ins_point o where  o.point_type =4 and o.point_level  is not null
+		  and o.create_time<=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and not exists (
+		 select 1 from (
+		select distinct t.point_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		 ) b1 where b1.point_id=o.point_id
+		 )
+		 ) group by area_id order by area_id) b3
+		 left join (
+		 select area_id,count(point_id) sum22 from (
+		select distinct t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+		 where
+		 llp.point_id=t.point_id
+		 and llp.line_id=pd.inspect_object_id
+		 and pd.plan_id=plan.plan_id
+		 and task.plan_id=plan.plan_id
+		 and task.start_time>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		 and task.complete_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		  and plan.plan_end_time>to_date(#{begin_time}, 'yyyy-mm-dd')
+		  and plan.isdeleted=0
+		  and   t.point_type =4
+		  ) group by area_id order by area_id
+		 ) b2 on b2.area_id=b3.area_id
+		) rr on rr.area_id=a.area_id
+		left join(
+		select count(distinct t.point_id) sum19,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		group by s.son_area_id
+		) ss on ss.area_id=a.area_id
+		left join(
+		select count(*) sum20,task.son_area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.son_area_id
+		) tt on tt.area_id=a.area_id
+		left join(
+		select count(0) sum21,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s 
+		where s.staff_id=sr.staff_id and sr.role_id=27 and s.isdeleted=0
+		group by s.son_area_id
+		) uu on uu.area_id=a.area_id
+		left join(
+		select count(0) sum22,s.son_area_id area_id from tb_base_staff_role sr ,tb_base_staff s where s.staff_id=sr.staff_id
+		and sr.role_id=7 and s.isdeleted=0
+		group by s.son_area_id
+		) vv on vv.area_id=a.area_id
+		left join (
+		select count(distinct t.inspector) sum23,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where  t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=to_date(#{begin_time}, 'yyyy-mm-dd') and t.create_time<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		group by s.son_area_id
+		) ww on ww.area_id=a.area_id
+		left join (
+	  select nvl(bill.sum24,0) sum24,a.area_id from area a
+       left join 
+      (select count(1) sum24,b.son_area_id  from tb_ins_bill b
+      where b.status_id=4 and b.COMPLETE_TIME is not null
+      and b.COMPLETE_TIME>=to_date(#{begin_time}, 'yyyy-mm-dd') and 
+      b.COMPLETE_TIME<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss') group by b.son_area_id) bill
+       on bill.son_area_id=a.area_id
+    ) xx on xx.area_id=a.area_id
+		]]>
+		where a.parent_area_id=#{area_id}
+		order by a.area_id
+		) allavg
+	</select>
+	
+	<select id="getAreaList" resultType="map">
+		select area_id,name from area where parent_area_id=2
+	</select>
+	
+	<select id="ifArrivalPointExist" parameterType="map" resultType="map">
+	select
+	nvl(sum(up.locate_span),0) TIME_COMPLETED,nvl(count(1),0) COUNT_LEAVE
+	from tb_ins_upload_point up
+	where up.upload_staff=#{staff_id}
+  <![CDATA[
+  and up.upload_time >= to_date(#{start_time}, 'yyyy-mm-dd hh24:mi:ss')
+  and up.upload_time <= to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+  ]]>
+	and (up.keep_arrivaled =1 or up.keep_arrivaled =2)
+	</select>
+	
+	<select id="getPhotoByKeepPlanId" parameterType="string" resultType="map">
+	select 
+		po.PHOTO_PATH,
+		po.MICRO_PHOTO_PATH,
+		po.CREATE_TIME,
+		s.STAFF_NAME 
+	from tb_ins_photo po
+	join tb_ins_task t on t.task_id=po.task_id
+	join tb_ins_plan p on p.plan_id=t.plan_id
+	left join tb_base_staff s on s.staff_id=po.create_staff
+	where p.plan_kind=3
+	and p.plan_id=#{plan_id}
+	order by po.create_time
+	</select>
+	
+	<select id="getNotSignNormalByTaskId" parameterType="map" resultType="com.cableInspection.model.PointModel">
+	SELECT distinct tip.longitude as longitude, tip.latitude as
+	latitude,tilp.line_id as line,tip.point_id as point_id
+	FROM tb_ins_plan_detail tipd, tb_ins_line_point tilp, tb_ins_point tip
+	where tipd.plan_id = #{PLAN_ID}
+	and tipd.inspect_object_id =
+	tilp.line_id
+	and tip.point_id = tilp.point_id
+	and tip.point_type=-1
+	and not exists(
+	select 1 from (
+	SELECT rn.point_id FROM TB_INS_RECORD_NORMAL RN
+	JOIN TB_INS_POINT P ON RN.POINT_ID=P.POINT_ID
+	WHERE P.POINT_TYPE=-1 AND RN.TASK_ID=#{TASK_ID}
+	) aa where aa.point_id=tip.point_id
+	)
+	</select>
+	
+	<insert id="saveArrivalRateTable" parameterType="map">
+	insert into tb_ins_ArrivalRateTable
+	values(#{AREA},#{SUM1},#{SUM2},#{SUM3},#{SUM4},#{SUM5},#{SUM6},
+	#{SUM7},#{SUM8},#{SUM9},#{SUM10},#{SUM11},#{SUM12},
+	#{SUM13},#{SUM14},#{SUM15},#{SUM16},#{SUM17},#{SUM18},#{SUM19}
+	,#{SUM20},#{SUM21},#{SUM22},#{SUM23},#{SUM24},#{SUM25},#{SUM26},trunc(sysdate,'month')-1,#{PARENT_AREA_ID})
+	</insert>
+	
+	<delete id="delArrivalRateTable">
+		delete from tb_ins_ArrivalRateTable where belong_date=(trunc(sysdate,'month')-1)
+	</delete>
+	
+	<select id="queryArrivalRateTable" parameterType="map" resultType="map">
+		select a.area,a.sum1,a.sum2,a.sum3,a.sum4,a.sum5,a.sum6,a.sum7,a.sum8,a.sum9,a.sum10,a.sum11
+		,a.sum12,a.sum13,a.sum14,a.sum15,a.sum16,a.sum17,a.sum18,a.sum19,a.sum20,a.sum21,a.sum22,a.sum23,a.sum24
+		,a.sum25,a.sum26 from tb_ins_ArrivalRateTable a
+		where a.parent_area_id=#{area_id}
+		<![CDATA[
+		and a.belong_date>=to_date(#{begin_time}, 'yyyy-mm-dd')
+		and a.belong_date<=to_date(#{end_time}, 'yyyy-mm-dd hh24:mi:ss')
+		]]>
+	</select>
+</mapper>

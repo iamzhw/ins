@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inspecthelper.dao.CheckOdfDaoImpl">
+	<select id="getResInfo" parameterType="java.util.HashMap"
+		resultType="java.util.HashMap">
+		SELECT DISTINCT TO_CHAR(T.ID) ID,
+		T.光路编码_A YGLBM,
+		T.设备编码_B RESNO,
+		T.设备名称_B RESNAME,
+		T.端口_B DK,
+		T.光路编码_B DTSJ,
+		T1.NAME GLSTATE,
+		T.光路名称_B GLMCB,
+		TO_CHAR(T.修改时间_B, 'yyyy-mm-dd') XGSJB,
+		TO_CHAR(T.INSERTDATE, 'yyyy-mm-dd') INSERTDATE,
+		T.AREA_B,
+		DECODE(STATE_A, '0', '未检查', '1', '正确', '2', '错误'),
+		DECODE(STATE_B, '0', '未检查', '1', '正确', '2', '错误'),
+		DECODE(STATE_C, '0', '未检查', '1', '正确', '2', '错误'),
+		DECODE(STATE_D, '0', '未检查', '1', '正确', '2', '错误'),
+		IE.EQUIPMENT_ID RESID,
+		IE.RES_TYPE_ID RESTYPEID,
+		NVL((SELECT LBL.NO LNO
+		FROM LNK_PHY_LINK_COMPONENT LL
+		JOIN LNK_BUSI_LINK_2_LINK LBL2L
+		ON LL.LINK_ID = LBL2L.LINK_ID
+		JOIN LNK_BUSINESS_LINK LBL
+		ON LBL2L.BUSI_LINK_ID = LBL.BUSI_LINK_ID
+		WHERE (T.PHY_PORT_ID_A = LL.Z_PHY_PORT_ID)
+		AND ROWNUM = 1),
+		(SELECT LBL.NO LNO
+		FROM LNK_PHY_LINK_COMPONENT LL
+		JOIN LNK_BUSI_LINK_2_LINK LBL2L
+		ON LL.LINK_ID = LBL2L.LINK_ID
+		JOIN LNK_BUSINESS_LINK LBL
+		ON LBL2L.BUSI_LINK_ID = LBL.BUSI_LINK_ID
+		WHERE (T.PHY_PORT_ID_A = LL.A_PHY_PORT_ID AND
+		ROWNUM = 1))) SSGL,
+		T.INSERTDATE COMPAREDATE
+		FROM SH_ZYJC_ODF_CHANGE T
+		JOIN INS_EQUIPMENT IE
+		ON T.设备编码_B = IE.EQUIPMENT_CODE
+		LEFT JOIN PUB_STATUS_MY T1
+		ON T.光路状态_B = T1.STATE_ID
+		LEFT JOIN DESIGN_ORDER_STAFF S
+		ON S.STAFF_ID = T.STAFF_A
+		LEFT JOIN DESIGN_ORDER_STAFF S1
+		ON S1.STAFF_ID = T.STAFF_B
+		where ie.equipment_code like '%${key}%'
+
+		<include refid="dynamicWhere5" />
+		order by RESNO,t.insertdate desc
+	</select>
+	<sql id="dynamicWhere5">
+		<if test="state_!= null and state_!=''">  
+            <![CDATA[
+	    	AND ${state_} = '0' 
+	    	]]>
+		</if>
+		<if test="staff_a!= null and staff_a!=''">  
+            <![CDATA[
+	    	 and t.staff_a = #{staff_a}
+	    	]]>
+		</if>
+		<if test="staff_b!= null and staff_b!=''">  
+            <![CDATA[
+	    	 and t.staff_b = #{staff_b}
+	    	]]>
+		</if>
+		<if test="startDate!= null and startDate!=''">  
+            <![CDATA[
+	    	 and t.insertdate &gt;=
+				to_date(#{startDate},'yyyy-mm-dd hh24:mi:ss') 
+	    	]]>
+		</if>
+		<if test="endDate!= null and endDate!=''">  
+            <![CDATA[
+	    		and t.insertdate &lt;=
+				to_date(#{endDate},'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+	</sql>
+</mapper>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.activemq.dao.ConsumerDao">
+
+	<insert id="saveMessage" parameterType="map">
+		insert into tb_base_staff_activemq
+		  (sn,
+		   signature,
+		   event_id,
+		   city,
+		   system_code,
+		   ref_system,
+		   event_type,
+		   event_action,
+		   action_status,
+		   event_dt,
+		   event_value,
+		   create_time)
+		values
+		  (#{sn},
+		   #{signature},
+		   #{event_id},
+		   #{city},
+		   #{system_code},
+		   #{ref_system},
+		   #{event_type},
+		   #{event_action},
+		   #{action_status},
+		   to_date(#{event_dt},'yyyy-MM-dd HH24:mi:ss'),
+		   #{event_value},
+		   sysdate)
+	</insert>
+	
+	<select id="isExistByIdcard" parameterType="map" resultType="map">
+		select * from tb_base_staff s where s.id_number=#{idcard}
+	</select>
+	
+	<insert id="saveStaff" parameterType="map">
+		INSERT INTO TB_BASE_STAFF
+			(STAFF_ID,
+			STAFF_NO,
+			PASSWORD,
+			PASSWORD_,
+			STAFF_NAME,
+			<if test="telephone != null and telephone != ''">  
+			   <![CDATA[
+				TEL,
+				]]>
+			</if>
+			<if test="idcard != null and idcard != ''">  
+			   <![CDATA[
+				ID_NUMBER,
+				]]>
+			</if>
+			<if test="email != null and email != ''">  
+			   <![CDATA[
+				email,
+				]]>
+			</if>
+			STATUS,
+			AREA_ID,
+			real_name,
+			is_from
+		)
+		VALUES
+		(osspad.design_order_seq.NEXTVAL,
+			#{staff_account},
+			#{pwd},
+			#{pwd},
+			#{name},
+		<if test="telephone != null and telephone != ''">  
+		   <![CDATA[
+			#{telephone},
+			]]>
+		</if>
+		<if test="idcard != null and idcard != ''">  
+		   <![CDATA[
+			#{idcard},
+			]]>
+		</if>
+		<if test="email != null and email != ''">  
+		   <![CDATA[
+			#{email},
+			]]>
+		</if>
+		#{state},
+		#{city},
+		#{name},
+		'TYGH_INSERT'
+		)
+	</insert>
+	
+	<select id="queryAreaByCity" parameterType="String" resultType="map">
+		select * from area a where a.tygh_code=#{city}
+	</select>
+	
+	<update id="updateStaff" parameterType="map">
+		update tb_base_staff s set 
+			s.staff_no=#{staff_code},
+			s.staff_name=#{name},
+			s.password=#{pwd},
+			s.password_=#{pwd},
+			s.tel=#{telephone},
+			s.id_number=#{idcard},
+			s.status=#{state},
+			s.area_id=#{city},
+			s.real_name=#{name},
+			s.is_from='TYGH_UPDATE'
+		where s.id_number=#{idcard}
+	</update>
+	
+	
+	
+	
+	
+	
+
+</mapper>

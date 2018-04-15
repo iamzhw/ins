@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+ "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableInspection.dao.FtpResolveDao">
+	<insert id="addFtpData" parameterType="list">
+		INSERT INTO A_STAFF_DEPT(AREA_NAME,DEPT_NAME,STAFF_NAME,DEPT_NO,STAFF_NO,TEL) 
+		<foreach collection="list" item="item" index="index" separator="union" open="(" close=")">
+				select	#{item.area},
+			       #{item.dept_name},
+			       #{item.staff_name},
+			       #{item.dept_no},
+			       #{item.staff_no},
+			       #{item.tel}
+			    from dual
+		</foreach> 
+	</insert>
+	
+	<delete id="deleteAllData">
+		delete from A_STAFF_DEPT
+	</delete>
+	
+	<delete id="dereplicationData">
+		DELETE FROM A_STAFF_DEPT A 
+		WHERE EXISTS(SELECT 1 FROM TB_BASE_STAFF S WHERE S.STAFF_NO=A.STAFF_NO)
+	</delete>
+	
+	<insert id="addNewStaff">
+		<![CDATA[
+		INSERT INTO TB_BASE_STAFF(STAFF_ID,
+                          STAFF_NO,
+                          PASSWORD,
+                          PASSWORD_,
+                          STAFF_NAME,
+                          TEL,
+                          STATUS,ISDELETED,
+                          AREA_ID,
+                          SON_AREA_ID,
+                          CREATE_STAFF,
+                          CREATE_DATE,
+                          IS_HELP_PATROL,
+                          IS_LEADER) SELECT SEQ_TB_BASE_STAFF.NEXTVAL STAFF_ID,SD.* 
+                          FROM (SELECT  A.STAFF_NO,
+										'ayw_1234' PASSWORD,
+										'mnhJIc:Ah]:cV:7[h_&f9Y8$;5b3^88b' PASSWORD_,
+										A.STAFF_NAME,
+										A.TEL,
+										0 STATUS,
+										0 ISDELETED,
+										A.AREA_ID,
+										A.SON_AREA_ID,
+										3329 CREATE_STAFF,
+										SYSDATE CREATE_DATE,
+										0 IS_HELP_PATROL,
+										0 IS_LEADER 
+										FROM A_STAFF_DEPT A
+										WHERE NOT EXISTS(SELECT 1 FROM TB_BASE_STAFF S WHERE S.STAFF_NO=A.STAFF_NO) 
+										group by
+										A.STAFF_NO,
+										A.STAFF_NAME,
+										A.AREA_ID,
+										A.SON_AREA_ID,A.TEL) sd
+		]]>
+	</insert>
+	
+	<update id="updateData">
+		UPDATE A_STAFF_DEPT  A 
+		SET (A.DEPT_ID,A.AREA_ID,A.SON_AREA_ID)=(SELECT 
+		MAX(D.DEPT_ID),Max(D.AREA_ID),Max(D.SON_AREA_ID) 
+		FROM TB_INS_DEPT D WHERE A.DEPT_NAME=D.DEPT_NAME)
+	</update>
+	
+	<update id="correctSonAreaId">
+		UPDATE A_STAFF_DEPT A SET (A.SON_AREA_ID)=(SELECT MIN(S.SON_AREA_ID) FROM A_STAFF_DEPT S WHERE S.STAFF_NO=A.STAFF_NO GROUP BY S.STAFF_NO)
+	</update>
+	
+	<update id="updateStaffId">
+		UPDATE A_STAFF_DEPT  A 
+		SET (A.STAFF_ID)=(SELECT MAX(S.STAFF_ID)
+		FROM TB_BASE_STAFF S WHERE S.STAFF_NO=A.STAFF_NO)
+	</update>
+	
+	<delete id="deleteDeptRelationship">
+		DELETE FROM TB_INS_STAFF_DEPT SD WHERE SD.STAFF_ID IN (SELECT A.STAFF_ID FROM A_STAFF_DEPT  A)
+	</delete>
+	
+	<insert id="addDeptRelationship">
+		INSERT INTO TB_INS_STAFF_DEPT(ID,STAFF_ID,DEPT_ID,CREATE_STAFF,CREATE_TIME) 
+		SELECT SEQ_TB_INS_STAFF_DEPT.NEXTVAL,RS.* 
+		FROM (SELECT A.STAFF_ID,A.DEPT_ID,3329,SYSDATE FROM  A_STAFF_DEPT  A  ) RS
+	</insert>
+	
+	<delete id="deleteRoleByStaffId">
+				DELETE FROM TB_INS_STAFF_DEPT SD WHERE SD.STAFF_ID IN (SELECT A.STAFF_ID
+          FROM A_STAFF_DEPT A
+         where a.son_area_id not in (104, 105, 106, 107, 108, 109, 110,205))
+	</delete>
+	
+	<insert id="addRoles">
+		INSERT INTO TB_BASE_STAFF_ROLE SELECT A.STAFF_ID,7 FROM A_STAFF_DEPT  A 
+		where not exists(select 1 from TB_BASE_STAFF_ROLE bs where bs.staff_id=a.staff_id and bs.role_id='7') group by staff_id
+	</insert>
+	
+	<select id="ifPointExists" parameterType="map" resultType="int">
+		select count(1) from tb_ins_point p where p.point_no=#{point_no} and p.area_id=(select a.area_id from area a where a.name=#{area}) 
+	</select>
+	
+	<select id="ifPointExistsForDept" parameterType="map" resultType="int">
+		select count(1) from tb_ins_point_dept pd where  pd.point_no=#{point_no} and pd.dept_name=#{dept_name} 
+	</select>
+	
+	<delete id="deletePointForDept" parameterType="map">
+		delete from tb_ins_point_dept pd where pd.point_no=#{point_no}
+	</delete>
+	
+	<insert id="addSoftRole">
+		INSERT INTO TB_BASE_STAFF_SOFT SOFT
+		SELECT  10,S.STAFF_ID FROM TB_INS_STAFF_DEPT S 
+		WHERE NOT EXISTS (SELECT 1 FROM TB_BASE_STAFF_SOFT SOFT WHERE S.STAFF_ID=SOFT.STAFF_ID) group by staff_id
+	</insert>
+	
+	<select id="getPointIdByNo" parameterType="map" resultType="string">
+		SELECT Max(POINT_ID) POINT_ID FROM TB_INS_POINT WHERE POINT_NO=#{point_no}
+	</select>
+	
+	<select id="getDeptIdByName" parameterType="map" resultType="map">
+		 SELECT MAX(DEPT_ID) DEPT_ID FROM TB_INS_DEPT D WHERE D.DEPT_NAME=#{dept_name}
+	</select>
+	
+	<insert id="addNewPoint" parameterType="map">
+		insert into tb_ins_point(point_id,point_no,point_name,point_level,point_type,longitude,latitude,create_time,area_id,son_area_id,phy_eqp_id)
+		values(seq_tb_ins_point,#{point_no},#{point_name},'3','4',#{longitude},#{latitude},sysdate,#{area_id},#{son_area_id},#{phy_eqp_id})
+	</insert>
+	
+	<insert id="addEqpToDept">
+		INSERT INTO TB_INS_POINT_DEPT(PHY_EQP_ID,POINT_NO,DEPT_NO,DEPT_NAME,CREATE_TIME)
+	      SELECT D.PHY_EQP_ID,D.POINT_NO,D.DEPT_NO,D.DEPT_NAME,SYSDATE FROM A_POINT_DEPT D
+	      WHERE NOT EXISTS(SELECT 1 FROM TB_INS_POINT_DEPT P WHERE P.POINT_NO=D.POINT_NO AND P.DEPT_NO=D.DEPT_NO)
+	</insert>
+	
+	<insert id="addTest" parameterType="map">
+	</insert>
+	
+	<insert id="add_A_POINT_DEPT" parameterType="list">
+		insert into a_point_dept(phy_eqp_id,point_no,dept_name,dept_no,area,id,CREATE_DATE)
+		values(#{phy_eqp_id},#{point_no},#{dept_name},#{dept_no},#{area},seq_a_point_dept.nextval,sysdate)
+	</insert>
+	
+	<delete id="delete_A_POINT_DEPT">
+		delete from a_point_dept
+	</delete>
+	
+	<update id="updatePointIdAndDeptId">
+		update TB_INS_POINT_DEPT pd 
+	      set pd.point_name=(select p.point_name from tb_ins_point p where rowid=
+      						(select min(rowid) from tb_ins_point p where pd.point_no=p.point_no)),
+	      	  pd.point_id=(select max(p.point_id) from tb_ins_point p where p.point_no=pd.point_no),
+	          pd.dept_id=(select max(d.dept_id) from tb_ins_dept d where d.dept_no=pd.dept_no)
+	      where pd.point_id is null and pd.dept_id is null
+	</update>
+	
+	<select id="resetSequence" statementType="CALLABLE" parameterType="string">
+		<![CDATA[
+		{call SEQ_RESET(#{seq_name})}
+		]]>
+	</select>
+	
+	<select id="import_point_dept" statementType="CALLABLE" parameterType="string">
+		<![CDATA[
+		{call IMPORT_POINT_DEPT}
+		]]>
+	</select>
+	
+	<delete id="deleteEchoData">
+		delete from a_point_dept apd where apd.id not in(
+		select max(id) from a_point_dept group by point_no)
+	</delete>
+	
+	<delete id="deletePointDeptByPointNo">
+	delete from tb_ins_point_dept pd where pd.point_no in 
+	(select point_no from a_point_dept)
+	</delete>
+	
+	
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.TimeCountDao">
+	<select id="query" parameterType="util.page.Query" resultType="map">
+	select c.NAME,c.son_name,c.zone,c.staff_name,c.area_id,c.son_area_id,c.staff_id,listagg(d.dept_name,',') within group (order by d.dept_name) dept_name,c.TIMECOUNT,c.DISTANCE from (
+  SELECT distinct A.NAME,AA.NAME SON_NAME,'' ZONE,S.STAFF_NAME,A.AREA_ID,AA.AREA_ID SON_AREA_ID,s.STAFF_ID,
+  DECODE(SIGN(60-SUM(RN.TIMECOUNT)),1,nvl(SUM(RN.TIMECOUNT),0)||'分钟',
+  FLOOR(SUM(nvl(RN.TIMECOUNT,0))/60)||'小时'||nvl(MOD(SUM(RN.TIMECOUNT),60),0)||'分钟') TIMECOUNT,
+  SUM(RN.DISTANCE)||'米' DISTANCE
+  FROM TB_BASE_STAFF S
+  LEFT JOIN TB_INS_RECORD_NORMAL RN ON S.STAFF_ID=RN.STAFF_ID
+  LEFT JOIN TB_INS_TASK T ON T.TASK_ID=RN.TASK_ID
+  LEFT JOIN AREA A ON S.AREA_ID=A.AREA_ID
+  LEFT JOIN AREA AA ON S.SON_AREA_ID=AA.AREA_ID
+  LEFT JOIN TB_BASE_STAFF_ROLE SR ON S.STAFF_ID= SR.STAFF_ID
+  WHERE SR.ROLE_ID=7 AND S.ISDELETED=0
+  
+	<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	AND S.AREA_ID=#{queryParams.AREA_ID}
+	    	]]>
+	</if>
+	<if test="queryParams.SON_AREA_ID!= null and queryParams.SON_AREA_ID != ''">
+	AND S.SON_AREA_ID=#{queryParams.SON_AREA_ID}
+	</if>
+	<if test="queryParams.DEPT_NAME != null and queryParams.DEPT_NAME != ''"> 
+	AND D.DEPT_NAME LIKE '%'||#{queryParams.DEPT_NAME}||'%'
+	</if>
+	<if test="queryParams.START_TIME != null and queryParams.START_TIME != ''"> 
+	<![CDATA[
+	AND RN.CREATE_TIME>=to_date(#{queryParams.START_TIME},'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</if>
+	<if test="queryParams.COMPLETE_TIME != null and queryParams.COMPLETE_TIME != ''"> 
+	<![CDATA[
+	AND RN.CREATE_TIME<=to_date(#{queryParams.COMPLETE_TIME},'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</if>
+	<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''"> 
+	AND S.STAFF_NAME LIKE '%'||#{queryParams.STAFF_NAME}||'%'
+	</if>
+	 GROUP BY A.NAME,AA.NAME,S.STAFF_NAME,A.AREA_ID,AA.AREA_ID,s.STAFF_ID
+	  ORDER BY TIMECOUNT desc
+	  ) c
+  left join tb_ins_staff_dept sd on c.staff_id=sd.staff_id
+  left join tb_ins_dept d on d.dept_id=sd.dept_id
+  group by c.NAME,c.son_name,c.zone,c.staff_name,c.area_id,c.son_area_id,c.staff_id,c.TIMECOUNT,c.DISTANCE
+  ORDER BY c.TIMECOUNT desc
+	
+	</select>
+	
+	<select id="export" parameterType="map" resultType="map">
+		select c.NAME,c.son_name,c.zone,c.staff_name,c.area_id,c.son_area_id,c.staff_id,to_char(wm_concat(d.dept_name)) dept_name,c.TIMECOUNT,c.DISTANCE from (
+  SELECT distinct A.NAME,AA.NAME SON_NAME,'' ZONE,S.STAFF_NAME,A.AREA_ID,AA.AREA_ID SON_AREA_ID,s.STAFF_ID,
+  DECODE(SIGN(60-SUM(RN.TIMECOUNT)),1,nvl(SUM(RN.TIMECOUNT),0)||'分钟',
+  FLOOR(SUM(nvl(RN.TIMECOUNT,0))/60)||'小时'||nvl(MOD(SUM(RN.TIMECOUNT),60),0)||'分钟') TIMECOUNT,
+  SUM(RN.DISTANCE) DISTANCE
+  FROM TB_BASE_STAFF S
+  LEFT JOIN TB_INS_RECORD_NORMAL RN ON S.STAFF_ID=RN.STAFF_ID
+  LEFT JOIN TB_INS_TASK T ON T.TASK_ID=RN.TASK_ID
+  LEFT JOIN AREA A ON S.AREA_ID=A.AREA_ID
+  LEFT JOIN AREA AA ON S.SON_AREA_ID=AA.AREA_ID
+  LEFT JOIN TB_BASE_STAFF_ROLE SR ON S.STAFF_ID= SR.STAFF_ID
+  WHERE SR.ROLE_ID=7 AND S.ISDELETED=0
+	<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	AND S.AREA_ID=#{AREA_ID}
+	    	]]>
+	</if>
+	<if test="SON_AREA_ID!= null and SON_AREA_ID != ''">
+	AND S.SON_AREA_ID=#{SON_AREA_ID}
+	</if>
+	<if test="DEPT_NAME != null and DEPT_NAME != ''"> 
+	AND D.DEPT_NAME LIKE '%'||#{DEPT_NAME}||'%'
+	</if>
+	<if test="START_TIME != null and START_TIME != ''"> 
+	<![CDATA[
+	AND RN.CREATE_TIME>=to_date(#{START_TIME},'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</if>
+	<if test="COMPLETE_TIME != null and COMPLETE_TIME != ''"> 
+	<![CDATA[
+	AND RN.CREATE_TIME<=to_date(#{COMPLETE_TIME},'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</if>
+	<if test="STAFF_NAME != null and STAFF_NAME != ''"> 
+	AND S.STAFF_NAME LIKE '%'||#{STAFF_NAME}||'%'
+	</if>
+	 GROUP BY A.NAME,AA.NAME,S.STAFF_NAME,A.AREA_ID,AA.AREA_ID,s.STAFF_ID
+	  ORDER BY TIMECOUNT desc
+	  ) c
+  left join tb_ins_staff_dept sd on c.staff_id=sd.staff_id
+  left join tb_ins_dept d on d.dept_id=sd.dept_id
+  group by c.NAME,c.son_name,c.zone,c.staff_name,c.area_id,c.son_area_id,c.staff_id,c.TIMECOUNT,c.DISTANCE
+  ORDER BY c.TIMECOUNT desc
+	</select>
+</mapper>

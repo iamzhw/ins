@@ -1,0 +1,4020 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axxreport.dao.XxdReportDao">
+
+	<select id="getSiteXxdComplete" parameterType="util.page.Query"
+		resultType="map">
+		select t.site_name,
+		t.stay_time,
+		to_char(t.start_time, 'yyyy-mm-dd
+		hh24:mi:ss') start_time,
+		to_char(t.end_time, 'yyyy-mm-dd hh24:mi:ss')
+		end_time,
+		bs.staff_name inspact_name
+		from axx_t_stay t,tb_base_staff bs
+		,axx_t_task tt
+		where t.stay_type=0 and t.stay_time>0 and tt.status=0
+		and t.user_id=bs.staff_id
+		and t.task_id=tt.task_id
+		and
+		tt.area_id=#{queryParams.area_id}
+		<if
+			test=" queryParams.start_time  != null and queryParams.start_time  != '' and queryParams.end_time  != null and queryParams.end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) between  to_date(#{queryParams.start_time},'yyyy-mm-dd')  and to_date(#{queryParams.end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if
+			test=" queryParams.start_time  != null and queryParams.start_time  != '' and (queryParams.end_time  == null or queryParams.end_time  == '')"> 
+ <![CDATA[ 
+     and trunc(t.start_time) >= to_date(#{queryParams.start_time},'yyyy-mm-dd') 
+ ]]>
+		</if>
+		<if
+			test=" (queryParams.start_time  == null or queryParams.start_time  == '') and queryParams.end_time  != null and queryParams.end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) <= to_date(#{queryParams.end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if test=" queryParams.user_id  != null and queryParams.user_id  != ''"> 
+ <![CDATA[ 
+      and t.user_id = #{queryParams.user_id}
+ ]]>
+		</if>
+		ORDER BY T.START_TIME
+
+	</select>
+
+
+	<select id="getAllSiteXxdComplete" parameterType="map"
+		resultType="map">
+
+		select t.site_name,
+		t.stay_time,
+		to_char(t.start_time, 'yyyy-mm-dd
+		hh24:mi:ss') start_time,
+		to_char(t.end_time, 'yyyy-mm-dd hh24:mi:ss')
+		end_time,
+		bs.staff_name inspact_name
+		from axx_t_stay t,tb_base_staff bs
+		,axx_t_task tt
+		where t.stay_type=0 and t.stay_time>0 and tt.status=0
+		and t.user_id=bs.staff_id
+		and t.task_id=tt.task_id
+		and
+		tt.area_id=#{area_id}
+		<if
+			test=" start_time  != null and start_time  != '' and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) between  to_date(#{start_time},'yyyy-mm-dd')  and to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if
+			test=" start_time  != null and start_time  != '' and (end_time  == null or end_time  == '')"> 
+ <![CDATA[ 
+     and trunc(t.start_time) >= to_date(#{start_time},'yyyy-mm-dd') 
+ ]]>
+		</if>
+		<if
+			test=" (start_time  == null or start_time  == '') and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) <= to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+      and t.user_id = #{user_id}
+ ]]>
+		</if>
+		ORDER BY T.START_TIME
+	</select>
+
+	<select id="getAllSiteXxdComplete_bak" parameterType="map"
+		resultType="map">
+
+		select t.site_name,
+		t.stay_time,
+		to_char(t.start_time, 'yyyy-mm-dd
+		hh24:mi:ss') start_time,
+		to_char(t.end_time, 'yyyy-mm-dd hh24:mi:ss')
+		end_time,
+		bs.staff_name inspact_name
+		from axx_t_stay t,tb_base_staff bs
+		,axx_t_task tt
+		where t.site_type in (0,1) and tt.status=0
+		and
+		t.user_id=bs.staff_id
+		and t.task_id=tt.task_id
+		and tt.area_id=#{area_id}
+		<if
+			test=" start_time  != null and start_time  != '' and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) between  to_date(#{start_time},'yyyy-mm-dd')  and to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if
+			test=" start_time  != null and start_time  != '' and (end_time  == null or end_time  == '')"> 
+ <![CDATA[ 
+     and trunc(t.start_time) >= to_date(#{start_time},'yyyy-mm-dd') 
+ ]]>
+		</if>
+		<if
+			test=" (start_time  == null or start_time  == '') and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) <= to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+      and t.user_id = #{user_id}
+ ]]>
+		</if>
+		ORDER BY T.START_TIME
+	</select>
+	<!-- 关键点完成情况 -->
+	<select id="getKeysiteComplete" parameterType="map" resultType="map">
+
+		select t.site_name,
+		t.stay_time,
+		to_char(t.start_time, 'yyyy-mm-dd
+		hh24:mi:ss') start_time,
+		to_char(t.end_time, 'yyyy-mm-dd hh24:mi:ss')
+		end_time,
+		bs.staff_name inspact_name,
+		'是' is_arrive
+		from axx_t_stay
+		t,tb_base_staff bs ,axx_t_task tt
+		where t.site_type=1
+		and
+		t.user_id=bs.staff_id
+		and t.task_id=tt.task_id
+		and tt.area_id=#{area_id}
+		and tt.status=0
+		and exists (select 1 from axx_t_macth_site ms where
+		ms.sign_id is not
+		null and ms.site_id=t.site_id and t.site_type=1)
+		<if
+			test=" start_time  != null and start_time  != '' and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) between  to_date(#{start_time},'yyyy-mm-dd')  and to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if
+			test=" start_time  != null and start_time  != '' and (end_time  == null or end_time  == '')"> 
+ <![CDATA[ 
+     and trunc(t.start_time) >= to_date(#{start_time},'yyyy-mm-dd') 
+ ]]>
+		</if>
+		<if
+			test=" (start_time  == null or start_time  == '') and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) <= to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+      and t.user_id = #{user_id}
+ ]]>
+		</if>
+		union all
+		select t.site_name,
+		t.stay_time,
+		to_char(t.start_time,
+		'yyyy-mm-dd hh24:mi:ss') start_time,
+		to_char(t.end_time, 'yyyy-mm-dd
+		hh24:mi:ss') end_time,
+		bs.staff_name inspact_name,
+		'否' is_arrive
+		from
+		axx_t_stay t,tb_base_staff bs ,axx_t_task tt
+		where t.site_type=1
+		and
+		t.user_id=bs.staff_id
+		and t.task_id=tt.task_id
+		and tt.area_id=#{area_id}
+		and tt.status=0
+		and not exists (select 1 from axx_t_macth_site ms where
+		ms.sign_id is not
+		null and ms.site_id=t.site_id and t.site_type=1)
+		<if
+			test=" start_time  != null and start_time  != '' and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) between  to_date(#{start_time},'yyyy-mm-dd')  and to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if
+			test=" start_time  != null and start_time  != '' and (end_time  == null or end_time  == '')"> 
+ <![CDATA[ 
+     and trunc(t.start_time) >= to_date(#{start_time},'yyyy-mm-dd') 
+ ]]>
+		</if>
+		<if
+			test=" (start_time  == null or start_time  == '') and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and trunc(t.start_time) <= to_date(#{end_time},'yyyy-mm-dd')
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+      and t.user_id = #{user_id}
+ ]]>
+		</if>
+	</select>
+
+	<select id="getProvinceKeysiteComplete" parameterType="map" resultType="map">
+		select name,
+		area_id,
+		task_num_fiber1 GP1,
+		task_num_fiber2 GP2,
+		actual_num GA,
+		decode(task_num_fiber1 + task_num_fiber2,
+		0,
+		'-',
+		round(actual_num * 100 / (task_num_fiber1 + task_num_fiber2),
+		2) ||
+		'%') AVG_ARRIVAL_RATE
+		from (select nvl(sum(task_num_fiber1), 0)
+		task_num_fiber1,
+		nvl(sum(task_num_fiber2), 0) task_num_fiber2,
+		area_id,
+		name,
+		nvl(sum(actual_num), 0) actual_num
+		from (select tbs.area_id,
+		tbs.staff_id,
+		a.name,
+		decode(atj.fiber_grade, 1, sum(atia.task_key_num))
+		task_num_fiber1,
+		decode(atj.fiber_grade, 2, sum(atia.task_key_num))
+		task_num_fiber2,
+		sum(atia.actual_key_num) actual_num
+		from
+		axx_t_inspect_arrate atia
+		inner join axx_t_task att
+		on atia.task_id =
+		att.task_id
+		inner join axx_t_job atj
+		on atj.job_id = att.job_id
+		inner
+		join tb_base_staff tbs
+		on tbs.staff_id = atia.user_id
+		and
+		tbs.is_help_patrol = 0
+		and tbs.status = 0
+		and tbs.isdeleted = 0
+		inner
+		join area a
+		on a.area_id = tbs.area_id
+		where atia.inspect_date between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd')
+		<if test="area_id !='' and area_id!=null">
+			and a.area_id = #{area_id}
+								</if>
+		group by tbs.staff_id, atj.fiber_grade, tbs.area_id, a.name)
+		group by
+		area_id, name)
+		union
+		select '全省' name,
+		0 area_id,
+		task_num_fiber1 GP1,
+		task_num_fiber2 GP2,
+		actual_num GA,
+		decode(task_num_fiber1 +
+		task_num_fiber2,
+		0,
+		'-',
+		round(actual_num * 100 / (task_num_fiber1 +
+		task_num_fiber2),
+		2) || '%') AVG_ARRIVAL_RATE
+		from (select
+		nvl(sum(task_num_fiber1), 0) task_num_fiber1,
+		nvl(sum(task_num_fiber2), 0) task_num_fiber2,
+		nvl(sum(actual_num), 0)
+		actual_num
+		from (select tbs.area_id,
+		tbs.staff_id,
+		a.name,
+		decode(atj.fiber_grade, 1, sum(atia.task_key_num)) task_num_fiber1,
+		decode(atj.fiber_grade, 2, sum(atia.task_key_num)) task_num_fiber2,
+		sum(atia.actual_key_num) actual_num
+		from axx_t_inspect_arrate atia
+		inner join axx_t_task att
+		on atia.task_id = att.task_id
+		inner join
+		axx_t_job atj
+		on atj.job_id = att.job_id
+		inner join tb_base_staff tbs
+		on
+		tbs.staff_id = atia.user_id
+		and tbs.is_help_patrol = 0
+		and tbs.status =
+		0
+		and tbs.isdeleted = 0
+		inner join area a
+		on a.area_id = tbs.area_id
+		where atia.inspect_date between
+		to_date(#{start_time}, 'yyyy-mm-dd')
+		and
+		to_date(#{end_time}, 'yyyy-mm-dd')
+		group by tbs.staff_id,
+		atj.fiber_grade, tbs.area_id, a.name)
+		)
+		order by area_id desc
+
+
+	</select>
+
+	<select id="getKeysiteArrate" parameterType="map" resultType="map">
+		select modela.*,modelb.* from
+		(
+		select t.*, bs.staff_name, ae.name
+		area_name,ato.ORG_NAME
+		from (select
+		t1.inspect_id,t1.area_id,decode(t1.gp1+1,0,'-',t1.gp1)
+		gp1,decode(t1.gp2+1,0,'-',t1.gp2) gp2,
+		decode(t1.gp1+1,0,'-',nvl(t2.ga1, 0)) ga1,
+		decode(t1.gp2+1,0,'-',nvl(t2.ga2, 0)) ga2,
+		decode(t1.gp1+1,0,'-',DECODE(t1.gp1 + t1.gp2,0,0, round((nvl(t2.ga1,
+		0) + nvl(t2.ga2, 0)) * 100 / (t1.gp1 + t1.gp2),2)) || '%')
+		arrival_rate
+		from (select inspect_id,
+		area_id,
+		decode(sum(status)-count(key_count),0,-1,nvl(sum(case
+		when fiber_grade
+		= 1 and status=0 then
+		key_count
+		end),0)) gp1,
+		decode(sum(status)-count(key_count),0,-1,nvl(sum(case
+		when fiber_grade
+		= 2 and status=0 then
+		key_count
+		end),0)) gp2
+		from (select tt.inspect_id,
+		tt.area_id,
+		tc.fiber_grade ,
+		ttl.* ,
+		tt.STATUS
+		from AXX_T_TASK tt,
+		AXX_T_TASK_LINE ttl,
+		AXX_T_LINE_INFO li,
+		AXX_T_RELAY tr,
+		AXX_T_CABLE tc
+
+		where tt.task_id = ttl.task_id
+
+		and (trunc(tt.start_date) between
+		to_date(#{start_time}, 'yyyy-mm-dd') and to_date(#{end_time},
+		'yyyy-mm-dd') or
+		trunc(tt.end_date) between
+		to_date(#{start_time},
+		'yyyy-mm-dd') and to_date(#{end_time}, 'yyyy-mm-dd')
+		)
+
+		and
+		tt.area_id=#{area_id}
+		and ttl.line_id = li.line_id
+		and li.relay_id =
+		tr.relay_id
+		and tr.cable_id = tc.cable_id
+		<if test=" inspect_id  != null and inspect_id  != ''"> 
+								 <![CDATA[ 
+								      and tt.inspect_id=#{inspect_id}
+								 ]]>
+		</if>
+		)
+		group by inspect_id, area_id) t1 left join
+		(select user_id,
+		count(case
+		when fiber_grade = 1 and status=0 then
+		site_id
+		end) ga1,
+		count(case
+		when
+		fiber_grade = 2 and status=0 then
+		site_id
+		end) ga2
+		from (select distinct
+		ms.site_id,
+		us.user_id,
+		us.area_id,
+		tc.fiber_grade,
+		ms.TASK_ID,
+		att.STATUS
+		from AXX_T_USER_SIGN us,
+		AXX_T_MACTH_SITE ms,
+		axx_t_site ts,
+		AXX_T_RELAY
+		tr,
+		AXX_T_CABLE tc,
+		AXX_T_TASK att,
+		AXX_T_TASK_LINE ttl,
+		AXX_T_LINE_INFO
+		li
+		where us.sign_id = ms.sign_id
+		and ms.site_id = ts.site_id
+		and
+		ttl.line_id = li.line_id
+		and ts.relay_id = tr.relay_id
+		and tr.cable_id =
+		tc.cable_id
+		and ms.TASK_ID=att.TASK_ID
+		and att.task_id = ttl.task_id
+		and
+		li.relay_id = tr.relay_id
+		and ms.site_type = 1
+
+		and
+		(trunc(att.start_date) between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd') or
+		trunc(att.end_date) between
+		to_date(#{start_time}, 'yyyy-mm-dd') and to_date(#{end_time},
+		'yyyy-mm-dd')
+		)
+		and us.area_id = #{area_id}
+
+		group by
+		ms.task_id,ms.site_id,
+		us.user_id,
+		us.area_id,
+		tc.fiber_grade,
+		att.status
+		)
+		group by user_id, area_id) t2
+		on t1.inspect_id = t2.user_id where
+		(t1.gp1+t1.gp2) != 0) t,
+		tb_base_staff bs,
+		area ae,
+		AXX_T_ORGANIZATION
+		ato
+		where t.inspect_id = bs.staff_id
+		and t.area_id = ae.area_id
+		and
+		ato.ORG_ID=bs.ORG_ID
+		<if test="org_id !=null and org_id !=''">
+			and ato.ORG_ID=#{org_id}
+   </if>
+		) modela
+		inner join
+		(
+		select t1.area_id,t1.gp1 ,t1.gp2,
+		nvl(t2.ga1,
+		0)+nvl(t2.ga2, 0) ga,
+		DECODE(t1.gp1 + t1.gp2,0,0, round((nvl(t2.ga1, 0)
+		+ nvl(t2.ga2, 0)) * 100 / (t1.gp1
+		+ t1.gp2),2)) || '%' avg_arrival_rate
+		from (select
+		area_id,
+		nvl(sum(case
+		when fiber_grade = 1 and status=0 then
+		key_count
+		end),0) gp1,
+		nvl(sum(case
+		when fiber_grade = 2 and status=0
+		then
+		key_count
+		end),0) gp2
+		from (select tt.inspect_id,
+		tt.area_id,
+		tc.fiber_grade ,
+		ttl.* ,
+		tt.STATUS
+		from AXX_T_TASK tt,
+		AXX_T_TASK_LINE
+		ttl,
+		AXX_T_LINE_INFO li,
+		AXX_T_RELAY tr,
+		AXX_T_CABLE tc
+
+		where tt.task_id =
+		ttl.task_id
+
+		and (trunc(tt.start_date) between
+		to_date(#{start_time},
+		'yyyy-mm-dd') and to_date(#{end_time}, 'yyyy-mm-dd') or
+		trunc(tt.end_date) between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd')
+		)
+
+
+		and ttl.line_id = li.line_id
+		and
+		li.relay_id = tr.relay_id
+		and tr.cable_id = tc.cable_id
+
+		)
+		group by
+		area_id) t1 left join
+		(select area_id,
+		count(case
+		when fiber_grade = 1
+		and status=0 then
+		site_id
+		end) ga1,
+		count(case
+		when fiber_grade = 2 and
+		status=0 then
+		site_id
+		end) ga2
+		from (select distinct ms.site_id,
+		us.user_id,
+		us.area_id,
+		tc.fiber_grade,
+		ms.TASK_ID,
+		att.STATUS
+		from
+		AXX_T_USER_SIGN us,
+		AXX_T_MACTH_SITE ms,
+		axx_t_site ts,
+		AXX_T_RELAY tr,
+		AXX_T_CABLE tc,
+		AXX_T_TASK att,
+		AXX_T_TASK_LINE ttl,
+		AXX_T_LINE_INFO li
+		where us.sign_id = ms.sign_id
+		and ms.site_id = ts.site_id
+		and
+		ttl.line_id = li.line_id
+		and ts.relay_id = tr.relay_id
+		and tr.cable_id =
+		tc.cable_id
+		and ms.TASK_ID=att.TASK_ID
+		and att.task_id = ttl.task_id
+		and
+		li.relay_id = tr.relay_id
+		and ms.site_type = 1
+
+		and
+		(trunc(att.start_date) between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd') or
+		trunc(att.end_date) between
+		to_date(#{start_time}, 'yyyy-mm-dd') and to_date(#{end_time},
+		'yyyy-mm-dd')
+		)
+
+		group by ms.task_id,ms.site_id,
+		us.user_id,
+		us.area_id,
+		tc.fiber_grade,
+		att.status
+		)
+		group by area_id) t2
+		on t1.area_id =
+		t2.area_id
+		) modelb on modela.area_id=modelb.area_id
+	</select>
+
+
+	<select id="getInspectAr" parameterType="map" resultType="map">
+		select modelA.*,modelB.AVG_ACTUAL_RATE,
+		#{start_time}||'-'||#{end_time} TIME_PART from (select
+		model1.staff_name,
+		model1.org_name,
+		model1.user_id,
+		model1.area_id,
+		sum(model1.task_num) PLAN_NUM,
+		sum(model1.actual_num) ACTUAL_NUM ,
+
+		decode(sum(model1.task_num),
+		0,
+		'-',
+		round(sum(model1.actual_num) * 100 /
+		sum(model1.task_num), 2) || '%') ACTUAL_RATE,
+		sum(model1.morning_num)
+		MORNINGNUM,
+		decode(sum(model1.morning_num),
+		0,
+		'-',
+		round(sum(model1.morning_num) * 100 / sum(model1.task_num), 2) || '%')
+		MORNINGNUM_RATE,
+		sum(model1.afternoon_num) NIGHTNUM,
+		decode(
+		sum(model1.afternoon_num),
+		0,
+		'-',
+		round( sum(model1.afternoon_num) * 100
+		/ sum(model1.task_num), 2) || '%')
+		NIGHTNUM_RATE
+		from (select
+		att.task_name, tbs.staff_name, ato.org_name, atia.*
+
+		from
+		AXX_T_INSPECT_ARRATE atia
+		inner join AXX_T_TASK att
+		on att.task_id =
+		atia.task_id
+		inner join TB_BASE_STAFF tbs
+		on tbs.staff_id = atia.user_id
+		inner join AXX_T_ORGANIZATION ato
+		on ato.org_id = tbs.org_id
+		where 1 = 1
+		and att.status = 0
+		and tbs.is_help_patrol != 1
+		and atia.area_id =
+		#{area_id}
+		and atia.inspect_date between to_date(#{start_time},
+		'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd')) model1
+		<if test=" inspect_id  != null and inspect_id  != ''"> 
+										         <![CDATA[
+										              AND atia.user_id = #{inspect_id}
+										          ]]>
+		</if>
+		<if test="org_id !=null and org_id !=''">
+			and ato.org_id=#{org_id} 
+</if>
+		group by model1.staff_name, model1.org_name,
+		model1.user_id,model1.area_id )modelA
+		left join (select a.area_id,
+		round(sum(a.actual_num) * 100 / sum(a.task_num), 2) || '%'
+		AVG_ACTUAL_RATE
+		from AXX_T_INSPECT_ARRATE a
+		where a.inspect_date between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd')
+		group by a.area_id
+		) modelB on
+		modelA.area_id=modelB.area_id
+
+	</select>
+
+
+	<select id="getInspectTime" parameterType="map" resultType="map">
+		select ato.org_name ,
+		tbs.staff_name ,
+		to_char(round(atvt.valid_m_time /
+		60, 2), 'fm9999999990.00') INS_TIME_VALID_MORNING ,
+		to_char(round(atvt.valid_a_time / 60, 2), 'fm9999999990.00')
+		INS_TIME_VALID_AFTERNOON,
+		to_char(round(atvt.out_cooperation_time / 60,
+		2), 'fm9999999990.00') OS_NURSE_TIME,
+		to_char(round((atvt.valid_m_time
+		+ atvt.valid_a_time) / 60, 2) ,
+		'fm9999999990.00')
+		INS_TIME_VALID_ALLDAY,
+		to_char(atvt.inspect_date, 'yyyy-mm-dd')
+		inspect_date,
+		to_char(atvt.start_time, 'yyyy-mm-dd hh24:mi:ss')
+		start_time,
+		to_char(atvt.end_time, 'yyyy-mm-dd hh24:mi:ss') end_time
+		from axx_t_valid_time atvt
+		join tb_base_staff tbs
+		on tbs.staff_id =
+		atvt.user_id
+
+		and tbs.isdeleted = 0
+		and tbs.status = 0
+		join
+		axx_t_organization ato
+		on ato.org_id = tbs.org_id
+		where 1=1
+		and
+		atvt.inspect_date between to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date}, 'yyyy-mm-dd')
+		and atvt.area_id=#{area_id}
+		<if test=" inspect_id  != null and inspect_id  != ''"> 
+         <![CDATA[
+               AND   atvt.user_id=#{inspect_id}
+          ]]>
+		</if>
+		<if test="org_id !=null and org_id !=''">
+			and ato.org_id=#{org_id} 
+	</if>
+		order by atvt.user_id,atvt.inspect_date
+	</select>
+
+
+	<!-- 	查询多天总时长和全市平均时长 -->
+	<select id="getInspectAllTime" parameterType="map" resultType="map">
+		select
+		modela.avg_ins_time_valid_allday,modela.avg_os_nurse_time,modelb.*
+		from (
+		select area_id,
+		round(avg(ins_time_valid_allday) / 60, 2)
+		avg_ins_time_valid_allday,
+		round(avg(os_nurse_time) / 60, 2)
+		avg_os_nurse_time
+		from
+		(select atvt.user_id,
+		tbs.staff_name,
+		ato.org_name,
+		atvt.area_id,
+		atvt.inspect_date,
+		sum(atvt.valid_m_time +
+		atvt.valid_a_time) ins_time_valid_allday,
+		sum(atvt.out_cooperation_time) os_nurse_time
+		from AXX_T_VALID_TIME atvt
+		inner join tb_base_staff tbs
+		on tbs.staff_id = atvt.user_id
+		inner join
+		AXX_T_ORGANIZATION ato
+		on ato.org_id = tbs.org_id
+		where
+		atvt.inspect_date between to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date}, 'yyyy-mm-dd')
+		group by atvt.user_id, ato.org_name,
+		atvt.area_id,tbs.staff_name,
+		atvt.inspect_date
+
+
+		) model group by area_id
+		) modela inner join (
+		select modelA.*,
+		#{start_date}||'至'|| #{end_date}
+		inspect_date
+		from
+		(
+		select atvt.user_id,
+		tbs.staff_name,
+		ato.org_name,
+		atvt.area_id,
+		round(avg(atvt.valid_m_time + atvt.valid_a_time) / 60, 2)
+		ins_time_valid_allday,
+		round(avg(atvt.valid_m_time) / 60, 2)
+		ins_time_valid_morning,
+		round(avg(atvt.valid_a_time) / 60, 2)
+		ins_time_valid_afternoon,
+		round(avg(atvt.out_cooperation_time) / 60, 2)
+		os_nurse_time
+		from AXX_T_VALID_TIME atvt
+		inner join tb_base_staff tbs
+		on
+		tbs.staff_id = atvt.user_id
+		inner join AXX_T_ORGANIZATION ato
+		on
+		ato.org_id = tbs.org_id
+		where 1=1
+		and atvt.area_id=#{area_id}
+		and
+		atvt.inspect_date between to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date}, 'yyyy-mm-dd')
+		<if test=" inspect_id  != null and inspect_id  != ''"> 
+         <![CDATA[
+               AND atvt.USER_ID=#{inspect_id}
+          ]]>
+		</if>
+		<if test="org_id !=null and org_id !=''">
+			and ato.org_id = #{org_id} 
+	</if>
+
+		group by atvt.user_id, ato.org_name, tbs.staff_name, atvt.area_id
+
+		)modelA
+		) modelb on modela.area_id=modelb.area_id
+	</select>
+
+
+
+	<select id="getInvalidTime" parameterType="util.page.Query" resultType="map">
+		SELECT TBS.STAFF_NAME,
+		       TO_CHAR(TI.LINE_DATE, 'yyyy-mm-dd') LINE_DATE,
+		       TO_CHAR(TI.START_TIME, 'yyyy-mm-dd hh24:mi:ss') START_TIME,
+		       TO_CHAR(TI.END_TIME, 'yyyy-mm-dd hh24:mi:ss') END_TIME,
+		       TI.INVALID_TYPE
+		  FROM AXX_T_INVALID_TIME TI
+		 INNER JOIN TB_BASE_STAFF TBS
+		    ON TI.USER_ID = TBS.STAFF_ID
+		 WHERE TI.USER_ID = #{queryParams.user_id}
+		   AND TI.LINE_DATE &gt;= TO_DATE(#{queryParams.start_time}, 'yyyy-mm-dd') 
+		   AND TI.LINE_DATE &lt;= TO_DATE(#{queryParams.end_time}, 'yyyy-mm-dd') 
+		 ORDER BY TI.START_TIME
+	</select>
+
+
+	<select id="getNurseList" parameterType="map" resultType="string">
+		select distinct sp.plan_id
+		from AXX_OUT_SITE_PLAN_SUB pp,
+		AXX_OUT_SITE_PLAN sp,
+		axx_main_out_site os
+		where pp.plan_id = sp.plan_id
+		and sp.out_site_id = os.out_site_id
+		and pp.status =1
+		<if test="area_id !=null and area_id !=''">
+			and os.AREA_ID=#{area_id}
+  </if>
+		<if test=" site_name  != null and site_name  != ''"> 
+	         <![CDATA[
+	             and os.site_name like '%'||#{site_name}||'%'
+	          ]]>
+		</if>
+		<if test="query_time !=null and query_time !=''">
+			and trunc(pp.PLAN_DATE) = to_date(#{query_time},
+			'yyyy-mm-dd') 
+   </if>
+
+		<if
+			test="start_query_time !=null and start_query_time !='' and end_query_time !=null and end_query_time !=''">
+			and (trunc(pp.PLAN_DATE) between to_date(#{start_query_time},
+			'yyyy-mm-dd') and to_date(#{end_query_time}, 'yyyy-mm-dd') )
+   </if>
+
+		<if test=" khy_id  != null and khy_id  != ''"> 
+	         <![CDATA[
+	               and pp.user_id = #{khy_id}
+	          ]]>
+		</if>
+	</select>
+
+
+	<select id="getPlanList" parameterType="map" resultType="map">
+		select count(sp.plan_id) count_plan_id, sp.plan_id
+		from
+		AXX_OUT_SITE_PLAN_SUB pp,
+		AXX_OUT_SITE_PLAN sp,
+		axx_main_out_site os,
+		tb_base_staff tbs,
+		axx_t_organization ato
+
+		where pp.plan_id = sp.plan_id
+		and tbs.staff_id=pp.user_id
+		and tbs.org_id=ato.org_id
+		and sp.out_site_id
+		= os.out_site_id
+		and
+		pp.status =1
+		<if test="area_id !=null and area_id !=''">
+			and os.AREA_ID=#{area_id}
+  </if>
+		<if test=" site_name  != null and site_name  != ''"> 
+	         <![CDATA[
+	             and os.site_name like '%'||#{site_name}||'%'
+	          ]]>
+		</if>
+		<if test="org_id !='' and org_id !=null ">
+			and ato.org_id=#{org_id}
+		</if>
+		<if
+			test="start_query_time !=null and start_query_time !='' and end_query_time !=null and end_query_time !=''">
+			and (trunc(pp.PLAN_DATE) between to_date(#{start_query_time},
+			'yyyy-mm-dd') and to_date(#{end_query_time}, 'yyyy-mm-dd') )
+   </if>
+
+		<if test=" khy_id  != null and khy_id  != ''"> 
+	         <![CDATA[
+	               and pp.user_id = #{khy_id}
+	          ]]>
+		</if>
+		group by sp.plan_id
+	</select>
+
+
+
+	<select id="getTimeList" parameterType="string" resultType="map">
+		SELECT PT.START_TIME, PT.END_TIME
+		FROM AXX_OUT_SITE_PLAN_PART_TIME PT
+		WHERE PT.PLAN_ID = #{plan_id} and delete_flag=1
+		ORDER BY PT.START_TIME
+		DESC
+
+	</select>
+
+	<select id="getLeaveInWork" parameterType="map" resultType="map">
+
+		SELECT KHY_ID,
+		PLAN_ID,
+		ROUND(SUM(TO_NUMBER(END_TIME - START_TIME) *
+		1440)) ACCUMULATE_TIME,
+		SUM(LEAVE_COUNT) LEAVE_COUNT,
+		to_char(WMSYS.WM_CONCAT(LEAVE_TIME)) LEAVE_TIME
+		FROM (SELECT MIN(T.TRACK_TIME)
+		START_TIME,
+		MAX(T.TRACK_TIME) END_TIME,
+		TO_CHAR(MIN(T.TRACK_TIME),
+		'HH24:MI') || '~' ||
+		TO_CHAR(MAX(T.TRACK_TIME), 'HH24:MI') LEAVE_TIME,
+		T.CREATED_BY KHY_ID,
+		T.PLAN_ID,
+		COUNT(*) LEAVE_COUNT
+		FROM
+		AXX_OUT_SITE_PLAN_POLYGN T
+		WHERE ((TO_CHAR(T.TRACK_TIME, 'HH24:MI')
+		&gt;= #{start_time_m} AND
+		TO_CHAR(T.TRACK_TIME, 'HH24:MI') &lt;=
+		#{end_time_m}) OR
+		(TO_CHAR(T.TRACK_TIME, 'HH24:MI') &gt;=
+		#{start_time_a} AND
+		TO_CHAR(T.TRACK_TIME, 'HH24:MI') &lt;=
+		#{end_time_a}))
+
+		AND T.PLAN_ID=#{plan_id}
+		GROUP BY T.IS_GUARD,
+		T.GROUP_FLAG, T.PLAN_ID, T.CREATED_BY
+		HAVING T.IS_GUARD = 0) T
+		GROUP BY
+		KHY_ID, PLAN_ID
+   
+	
+	</select>
+
+	<select id="getLateLEralyTime" parameterType="map" resultType="map">
+
+		SELECT T.*, OS.SITE_NAME, BS.STAFF_NAME KHY_NAME
+		FROM AXX_OUT_SITE_PLAN
+		OSP,
+		AXX_MAIN_OUT_SITE OS,
+		TB_BASE_STAFF BS,
+		(SELECT T2.ARRIVE_TIME_M,
+		T2.LATE_TIME_M,
+		T2.LEAVE_TIME_M,
+		T2.LEAVEEARLY_TIME_M,
+		T2.KHY_ID,
+		T3.*
+		FROM (SELECT PLAN_ID,
+		T.CREATED_BY KHY_ID,
+		TO_CHAR(MIN(T.TRACK_TIME),
+		'HH24:MI') ARRIVE_TIME_M,
+		ROUND(TO_NUMBER(MIN(T.TRACK_TIME) -
+		TO_DATE(#{start_date_time_m},
+		'YYYY-MM-DD HH24:MI:SS')) * 1440)
+		LATE_TIME_M,
+
+		TO_CHAR(MAX(T.TRACK_TIME), 'HH24:MI') LEAVE_TIME_M,
+		ROUND(TO_NUMBER(TO_DATE(#{end_date_time_m},
+		'YYYY-MM-DD HH24:MI:SS') -
+		MAX(T.TRACK_TIME)) * 1440) LEAVEEARLY_TIME_M
+
+		FROM
+		AXX_OUT_SITE_PLAN_POLYGN T
+		WHERE T.PLAN_ID = #{plan_id}
+		AND
+		TO_CHAR(T.TRACK_TIME, 'HH24:MI') &gt;= #{start_time_m}
+		AND
+		TO_CHAR(T.TRACK_TIME, 'HH24:MI') &lt;= #{end_time_m}
+		GROUP BY PLAN_ID,
+		CREATED_BY
+
+		) T2,
+		(SELECT PLAN_ID,
+		TO_CHAR(MIN(T.TRACK_TIME), 'HH24:MI')
+		ARRIVE_TIME_A,
+		ROUND(TO_NUMBER(MIN(T.TRACK_TIME) -
+		TO_DATE(#{start_date_time_a},
+		'YYYY-MM-DD HH24:MI:SS')) * 1440)
+		LATE_TIME_A,
+
+		TO_CHAR(MAX(T.TRACK_TIME), 'HH24:MI') LEAVE_TIME_A,
+		ROUND(TO_NUMBER(TO_DATE(#{end_date_time_a},
+		'YYYY-MM-DD HH24:MI:SS') -
+		MAX(T.TRACK_TIME)) * 1440) LEAVEEARLY_TIME_A
+
+		FROM
+		AXX_OUT_SITE_PLAN_POLYGN T
+		WHERE T.PLAN_ID = #{plan_id}
+		AND
+		TO_CHAR(T.TRACK_TIME, 'HH24:MI') &gt;= #{start_time_a}
+		AND
+		TO_CHAR(T.TRACK_TIME, 'HH24:MI') &lt;= #{end_time_a}
+		GROUP BY PLAN_ID)
+		T3
+
+		) T
+		WHERE T.PLAN_ID = OSP.PLAN_ID
+		AND OSP.OUT_SITE_ID = OS.OUT_SITE_ID
+		AND T.KHY_ID = BS.STAFF_ID
+	    
+	</select>
+
+
+	<select id="getInspectTimeDaily" parameterType="map" resultType="map">
+		select
+		round(avg(ins_time_valid_allday) / 60, 2) ins_time_valid_allday,
+		round(avg(ins_time_valid_morning) / 60, 2) ins_time_valid_morning,
+		round(avg(ins_time_valid_afternoon) / 60, 2) ins_time_valid_afternoon,
+		area_name,(case when avg(ins_time_valid_allday) &gt;= 240 then
+		'平均每天巡线时长大于4小时'
+		else '' end) remark
+		from (select
+		nvl(td.ins_time_valid_morning, 0) +
+		nvl(te.ins_time_valid_afternoon, 0)
+		ins_time_valid_allday,
+		nvl(td.ins_time_valid_morning, 0)
+		ins_time_valid_morning,
+		nvl(te.ins_time_valid_afternoon, 0)
+		ins_time_valid_afternoon,
+		ae.name area_name
+		from (select
+		t.user_id,t.area_id,trunc(t.track_time) inspect_date,
+		min(t.track_time) start_time,max(t.track_time) end_time
+		from
+		AXX_AUTO_USER_TRACK t
+		where t.track_time between
+		to_date(#{start_date_t}, 'yyyy-mm-dd hh24:mi:ss') and
+		to_date(#{end_date_t}, 'yyyy-mm-dd hh24:mi:ss')
+		and exists (select
+		tms.match_id from axx_t_macth_site tms where
+		tms.track_id=t.track_id)
+		group by t.user_id, t.area_id, trunc(t.track_time)) tc ,-- 全天轨迹时间
+		(select t.line_date,t.user_id,to_number(#{total_min_a}) -
+		round(sum(to_number(least(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{end_date_m}||':00','yyyy-mm-dd hh24:mi:ss'),t.end_time)
+		-
+		greatest(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{start_date_m}||':00','yyyy-mm-dd hh24:mi:ss'),t.start_time)) *
+		1440)) ins_time_valid_morning
+		from AXX_T_INVALID_TIME t
+		where
+		t.line_date between to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date}, 'yyyy-mm-dd')
+		and to_char(t.start_time, 'hh24:mi')
+		&lt; #{end_date_m}
+		group by t.line_date, t.user_id) td , --上午巡线时长
+		(select t.line_date,t.user_id,to_number(#{total_min_a}) -
+		round(sum(to_number(least(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{end_date_a}||':00','yyyy-mm-dd hh24:mi:ss'),t.end_time)
+		-
+		greatest(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{start_date_a}||':00','yyyy-mm-dd hh24:mi:ss'),t.start_time)) *
+		1440)) ins_time_valid_afternoon
+		from AXX_T_INVALID_TIME t
+		where
+		to_char(t.end_time, 'hh24:mi') &gt;= #{start_date_a}
+		and t.line_date
+		between to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date},
+		'yyyy-mm-dd')
+		group by t.line_date, t.user_id) te , --下午巡线时长
+		tb_base_staff bs,area ae
+		where tc.user_id = bs.staff_id
+		and tc.area_id =
+		ae.area_id
+		and tc.user_id = td.user_id(+)
+		and tc.inspect_date =
+		td.line_date(+)
+		and tc.user_id = te.user_id(+)
+		and tc.inspect_date =
+		te.line_date(+))
+		group by area_name
+	</select>
+
+
+
+	<!-- 	巡线员巡线质量分析 -->
+
+
+	<select id="qualityReportByPeople" parameterType="map"
+		resultType="map">
+
+		select a.user_id,
+		decode(sum(a.task_num),
+		0,
+		'-',
+		case when
+		round(sum(a.actual_num) * 100 / sum(a.task_num), 2) &lt; 100 then
+		round(sum(a.actual_num) * 100 / sum(a.task_num), 2) else 100 end
+		||
+		'%') XUNJIAN_RATE,
+		decode(sum(a.task_key_num),
+		0,
+		'-',
+		case when
+		round(sum(a.actual_key_num) * 100 /sum(a.task_key_num), 2) &lt; 100
+		then
+		round(sum(a.actual_key_num) * 100 /sum(a.task_key_num), 2) else
+		100 end
+		|| '%') ARRIVAL_RATE,
+		decode(sum(a.task_out_site),
+		0,
+		'-',
+		case
+		when
+		round(sum(a.actual_out_site) * 100 /sum(a.task_out_site), 2) &lt;
+		100
+		then
+		round(sum(a.actual_out_site) * 100 /sum(a.task_out_site), 2)
+		else
+		100 end
+		|| '%') SITE_RATE,
+		tbs.org_id,
+		ato.org_name,
+		tbs.staff_name,
+		a.area_id,
+		atvt.INS_TIME_VALID_ALLDAY
+
+		from
+		AXX_T_INSPECT_ARRATE a
+		inner
+		join tb_base_staff tbs
+		on a.user_id =
+		tbs.staff_id
+		inner join AXX_T_TASK
+		att
+		on a.task_id = att.task_id
+		inner
+		join (select
+		round(avg(aa.valid_m_time + aa.valid_a_time) / 60, 2)
+		INS_TIME_VALID_ALLDAY,
+		aa.user_id
+		from AXX_T_VALID_TIME aa
+		where
+		aa.inspect_date between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd')
+		group by aa.user_id) atvt
+		on
+		atvt.user_id = a.user_id
+		inner join AXX_T_ORGANIZATION ato
+		on ato.org_id
+		= tbs.org_id
+		where a.inspect_date between to_date(#{start_time},
+		'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd')
+
+
+		and att.task_id =
+		a.task_id
+		and att.status = 0
+		<if test=" inspect_id  != null and inspect_id  != ''"> 
+         <![CDATA[
+               AND a.user_id=#{inspect_id}
+          ]]>
+		</if>
+		<if test="org_id !=null and org_id !=''">
+			and ato.org_id = #{org_id} 
+  </if>
+		<if test="area_id !=null and area_id !=''">
+			and a.area_id = #{area_id} 
+  </if>
+		group by tbs.org_id, a.user_id, ato.org_name, tbs.staff_name,
+		a.area_id , atvt.INS_TIME_VALID_ALLDAY
+	</select>
+
+	<select id="selArea" resultType="map">
+		select area_id,name from area
+		where area_level=3
+	</select>
+
+	<!-- 	地市巡线质量分析 -->
+	<select id="qualityReportByArea" parameterType="map" resultType="map">
+		select
+		decode(task_key_num,
+		0,
+		'-',
+		case when
+		round((actual_key_num /
+		task_key_num), 4) * 100 &lt;
+		100 then
+		round((actual_key_num /
+		task_key_num), 4) * 100 else 100 end
+		|| '%') AVG_ARRIVAL_RATE,
+		decode(task_out_site,
+		0,
+		'-',
+		case when
+		round((actual_out_site /
+		task_out_site), 4) * 100 &lt;
+		100 then
+		round((actual_out_site /
+		task_out_site), 4) * 100 else 100 end
+		|| '%') AVG_SITE_RATE,
+		decode(task_num, 0, '-',
+		case when
+		round((actual_num / task_num), 4) *
+		100 &lt; 100 then
+		round((actual_num / task_num), 4) * 100 else 100 end
+		|| '%')
+		AVG_XUNJIAN_RATE,
+		nvl(avg_ins_time_valid_allday,0)
+		AVG_TIME_VALID_ALLDAY ,
+		nvl(avg_ins_time_valid_afternoon,0)
+		AVG_TIME_VALID_AFTERNOON ,
+		nvl(avg_os_nurse_time,0)AVG_OS_NURSE_TIME,
+		name,
+		count_staff_id,
+		#{start_time}||'至'||#{end_time} DATE_TIME
+		from
+		(select sum(ati.TASK_KEY_NUM) task_key_num,
+		sum(ati.ACTUAL_KEY_NUM)
+		actual_key_num,
+		sum(ati.TASK_OUT_SITE) task_out_site,
+		sum(ati.ACTUAL_OUT_SITE) actual_out_site,
+		sum(ati.TASK_NUM) task_num,
+		sum(ati.actual_num) actual_num,
+		ati.area_id
+		from axx_t_inspect_arrate ati 
+		inner join axx_t_task att on att.task_id=ati.task_id
+		inner join tb_base_staff tbs on tbs.staff_id=ati.user_id
+		where 1 = 1
+		and att.status=0
+		and tbs.IS_HELP_PATROL != 1
+		AND (TRUNC(ati.inspect_date)
+		BETWEEN
+		TO_DATE(#{start_time}, 'YYYY-MM-DD') AND
+		TO_DATE(#{end_time},
+		'YYYY-MM-DD'))
+		group by ati.AREA_ID) model1
+		inner join (
+		select
+		atv.area_id,
+		round(avg(atv.VALID_M_TIME) / 60, 2) +
+		round(avg(VALID_A_TIME) / 60, 2)
+		avg_ins_time_valid_allday,
+		round(avg(atv.OUT_COOPERATION_TIME) / 60, 2) avg_os_nurse_time,
+		round(avg(atv.VALID_A_TIME) / 60, 2) avg_ins_time_valid_afternoon
+		from
+		axx_t_valid_time atv ,tb_base_staff tbs
+		where 1 = 1
+		and atv.user_id=tbs.staff_id
+		and tbs.is_help_patrol !=1
+		and
+		(trunc(atv.inspect_date) between
+		TO_DATE(#{start_time}, 'YYYY-MM-DD')
+		AND
+		TO_DATE(#{end_time}, 'YYYY-MM-DD'))
+		group by atv.AREA_ID) model2
+		on
+		model1.area_id = model2.area_id
+		right join (select a.area_id,
+		count(a.staff_id) count_staff_id, dd.NAME
+		from TB_BASE_STAFF a
+		inner join TB_BASE_STAFF_ROLE b on a.STAFF_ID = b.STAFF_ID
+		inner join TB_BASE_ROLE c on b.ROLE_ID = c.ROLE_ID
+		inner join area dd on a.AREA_ID = dd.AREA_ID
+		where c.role_id = 126
+		and a.ISDELETED = 0
+		and a.STATUS = 0
+		and c.ISDELETED = 0
+		and c.STATUS = 0
+		and a.area_id is not null
+		and a.IS_HELP_PATROL != 1
+		group by a.AREA_ID, dd.NAME) model3 on model1.area_id = model3.area_id
+		where 1=1
+		<if test="area_id !=null and area_id !=''">
+			and model3.area_id=#{area_id}
+   </if>
+	</select>
+
+
+	<select id='qualityReportByAllprovince' parameterType="map" resultType="map">
+		select
+			decode(task_key_num, 0, '-',
+				case when
+					round((actual_key_num / task_key_num), 4) * 100 &lt; 100 then round((actual_key_num / task_key_num), 4) * 100 else 100 end || '%') AVG_ARRIVAL_RATE,
+			decode(task_out_site, 0, '-',
+				case when round((actual_out_site / task_out_site), 4) * 100 &lt; 100 then round((actual_out_site / task_out_site), 4) * 100 else 100 end || '%') AVG_SITE_RATE,
+			decode(task_num, 0, '-',
+				case when
+					round((actual_num / task_num), 4) * 100 &lt; 100 then round((actual_num / task_num), 4) * 100 else 100 end || '%') AVG_XUNJIAN_RATE,
+			nvl(avg_ins_time_valid_allday,0) AVG_TIME_VALID_ALLDAY,
+			nvl(avg_ins_time_valid_afternoon,0) AVG_TIME_VALID_AFTERNOON,
+			nvl(avg_os_nurse_time,0)AVG_OS_NURSE_TIME,
+			count_staff_id,
+			#{start_time}||'至'||#{end_time} DATE_TIME
+		from (select sum(ati.TASK_KEY_NUM) task_key_num,
+				sum(ati.ACTUAL_KEY_NUM)
+				actual_key_num,
+				sum(ati.TASK_OUT_SITE) task_out_site,
+				sum(ati.ACTUAL_OUT_SITE) actual_out_site,
+				sum(ati.TASK_NUM) task_num,
+				sum(ati.actual_num) actual_num,
+				0 province
+			from axx_t_inspect_arrate ati
+			inner join axx_t_task att on att.task_id=ati.task_id
+			inner join tb_base_staff tbs on tbs.staff_id=ati.user_id
+			where 1 = 1
+			and att.status=0
+			and tbs.IS_HELP_PATROL != 1
+			AND (TRUNC(ati.inspect_date) BETWEEN TO_DATE(#{start_time}, 'YYYY-MM-DD') AND TO_DATE(#{end_time},'YYYY-MM-DD'))) model1
+		inner join (
+			select 0 province,
+				round(avg(atv.VALID_M_TIME) / 60, 2) + round(avg(VALID_A_TIME) / 60, 2) avg_ins_time_valid_allday,
+				round(avg(atv.OUT_COOPERATION_TIME) / 60, 2) avg_os_nurse_time,
+				round(avg(atv.VALID_A_TIME) / 60, 2) avg_ins_time_valid_afternoon
+			from axx_t_valid_time atv ,tb_base_staff tbs
+			where 1 = 1
+			and atv.user_id=tbs.staff_id
+			and tbs.is_help_patrol !=1
+			and (trunc(atv.inspect_date) between TO_DATE(#{start_time}, 'YYYY-MM-DD') AND TO_DATE(#{end_time}, 'YYYY-MM-DD'))
+			) model2 on model1.province = model2.province
+		inner join (
+			select 0 province,
+				count(a.staff_id) count_staff_id
+			from TB_BASE_STAFF a
+			inner join TB_BASE_STAFF_ROLE b on a.STAFF_ID = b.STAFF_ID
+			inner join TB_BASE_ROLE c on b.ROLE_ID = c.ROLE_ID
+			inner join area aa on a.AREA_ID = aa.AREA_ID
+			where c.role_id = 126
+			and a.ISDELETED = 0
+			and a.STATUS = 0
+			and c.ISDELETED = 0
+			and c.STATUS = 0
+			and a.area_id is not null
+			and a.IS_HELP_PATROL != 1
+		) model3 on model1.province = model3.province
+	</select>
+
+	<select id="invalidTime" parameterType="map" resultType="map">
+		select POLYGN_ID,PLAN_ID,to_char(TRACK_TIME,'yyyy-mm-dd HH24:mi:ss')
+		TRACK_TIME,IS_GUARD ,GPS_SWITCH,1 TAG
+		from AXX_OUT_SITE_PLAN_POLYGN
+		where PLAN_ID = #{plan_id}
+		and
+		trunc(track_time)=to_date(#{query_time},'yyyy-mm-dd')
+		<foreach collection="list" item="item" open="and (" close=")"
+			separator="or">
+			(to_char(track_time,'HH24:mi:ss') between
+			#{item.START_TIME} and #{item.END_TIME}) 
+	    </foreach>
+		and (IS_GUARD = 0 or GPS_SWITCH = 0)
+		order by TRACK_TIME,POLYGN_ID
+	</select>
+
+	<select id="validTime" parameterType="map" resultType="map">
+		select POLYGN_ID,PLAN_ID,to_char(TRACK_TIME,'yyyy-mm-dd HH24:mi:ss')
+		TRACK_TIME,IS_GUARD ,GPS_SWITCH,1 TAG
+		from AXX_OUT_SITE_PLAN_POLYGN
+		where IS_GUARD = 1
+		and PLAN_ID = #{plan_id}
+		and
+		trunc(track_time)=to_date(#{query_time},'yyyy-mm-dd')
+		and GPS_SWITCH =
+		1
+		<foreach collection="list" item="item" open="and (" close=")"
+			separator="or">
+			(to_char(TRACK_TIME,'HH24:mi:ss') between
+			#{item.START_TIME} and #{item.END_TIME}) 
+	    </foreach>
+		order by TRACK_TIME ,POLYGN_ID
+	</select>
+
+	<select id="timeByInvalid" parameterType="map" resultType="string">
+		select ROUND(TO_NUMBER(track_time -
+		to_date(#{TRACK_TIME}, 'yyyy-mm-dd
+		HH24:mi:ss')) * 24 * 60 * 60) invalidTime
+		from AXX_OUT_SITE_PLAN_POLYGN
+		where polygn_id = #{POLYGN_ID} + 1
+		<foreach collection="list" item="item" open="and (" close=")"
+			separator="or">
+			(to_char(TRACK_TIME,'HH24:mi:ss') between
+			#{item.START_TIME} and #{item.END_TIME}) 
+	    </foreach>
+	</select>
+
+	<select id="timeByValid" parameterType="map" resultType="string">
+		select ROUND(TO_NUMBER(track_time -
+		to_date(#{TRACK_TIME},
+		'yyyy-mm-dd
+		HH24:mi:ss')) * 24 * 60 * 60) validTime
+		from AXX_OUT_SITE_PLAN_POLYGN
+		where polygn_id = #{POLYGN_ID} + 1
+		<foreach collection="list" item="item" open="and (" close=")"
+			separator="or">
+			(to_char(TRACK_TIME,'HH24:mi:ss') between
+			#{item.START_TIME} and #{item.END_TIME}) 
+	    </foreach>
+		and ROUND(TO_NUMBER(track_time -
+		to_date(#{TRACK_TIME},
+		'yyyy-mm-dd
+		HH24:mi:ss')) * 24 * 60) > 10
+	</select>
+
+
+	<select id="selAllTime" parameterType="map" resultType="map">
+		select POLYGN_ID,PLAN_ID,to_char(TRACK_TIME,'yyyy-mm-dd HH24:mi:ss')
+		TRACK_TIME,IS_GUARD ,GPS_SWITCH
+		from AXX_OUT_SITE_PLAN_POLYGN where 1=1
+		<foreach collection="list" item="item" open="and (" close=")"
+			separator="or">
+			(to_char(TRACK_TIME,'HH24:mi:ss') between
+			#{item.START_TIME} and #{item.END_TIME}) 
+	    </foreach>
+		and plan_id=#{plan_id}
+		and
+		trunc(track_time)=to_date(#{query_time},'yyyy-mm-dd')
+		order by
+		TRACK_TIME,POLYGN_ID
+	</select>
+
+	<select id="selBaseInfo" parameterType="map" resultType="map">
+		select
+		aosp.user_id, tbs.staff_name, amos.site_name
+		from AXX_OUT_SITE_PLAN
+		aosp
+		inner join AXX_MAIN_OUT_SITE amos
+		on aosp.out_site_id =
+		amos.out_site_id
+		inner join tb_base_staff tbs
+		on aosp.user_id =
+		tbs.staff_id
+		where aosp.plan_id = #{plan_id}
+	</select>
+
+
+	<insert id="saveinvalidTime" parameterType="map">
+		insert into
+		AXX_OUTSITE_INVALID_TIME
+		values(#{user_id},to_date(#{start_time},'yyyy-mm-dd
+		HH24:mi:ss'),to_date(#{end_time},'yyyy-mm-dd HH24:mi:ss'),
+		to_date(#{plan_time},'yyyy-mm-dd'),#{invalid_type},#{plan_id})
+	</insert>
+
+	<select id="getOsNurseDaily" parameterType="map" resultType="map">
+		SELECT DISTINCT to_char(aoit.start_time, 'hh24:mi:ss') start_time,
+		                ATO.ORG_NAME,
+		                TBS.STAFF_ID,
+		                TBS.ORG_ID,
+		                to_char(aoit.end_time, 'hh24:mi:ss') end_time,
+		                to_char(aoit.plan_time, 'yyyy-mm-dd') plan_time,
+		                aoit.invalid_type,
+		                aoit.plan_id,
+		                TBS.STAFF_NAME,
+		                AMOS.SITE_NAME,
+		                AMOS.OUT_SITE_ID
+		  FROM AXX_OUTSITE_INVALID_TIME AOIT
+		 INNER JOIN TB_BASE_STAFF TBS ON AOIT.USER_ID = TBS.STAFF_ID
+		 INNER JOIN AXX_OUT_SITE_PLAN AOSP ON AOIT.PLAN_ID = AOSP.PLAN_ID
+		 inner join AXX_OUT_SITE_PLAN_SUB aosps on aoit.plan_id = aosps.PLAN_ID
+		 INNER JOIN AXX_MAIN_OUT_SITE AMOS ON AMOS.OUT_SITE_ID = AOSP.OUT_SITE_ID
+		 INNER JOIN AXX_T_ORGANIZATION ATO ON ATO.ORG_ID = TBS.ORG_ID
+		 WHERE AOSP.DELETE_FLAG = 1
+		   AND AMOS.DELETE_FLAG = 1
+		   and aosps.STATUS = 1
+		   and aoit.PLAN_TIME = aosps.PLAN_DATE
+		<if test="start_query_time !=null and start_query_time !='' and end_query_time !=null and end_query_time !=''">
+			and (trunc(PLAN_TIME) between to_date(#{start_query_time}, 'yyyy-mm-dd') and to_date(#{end_query_time}, 'yyyy-mm-dd') )
+   		</if>
+		<if test="khy_id !=null and khy_id !=''">
+			AND TBS.STAFF_ID=#{khy_id}
+   		</if>
+		<if test="area_id !=null and area_id !=''">
+			and TBS.AREA_ID=#{area_id}
+   		</if>
+		<if test="plan_id !=null and plan_id !=''">
+			and aoit.plan_id=#{plan_id}
+   		</if>
+		<if test="org_id !='' and org_id !=null ">
+			and ato.org_id=#{org_id}
+   		</if>
+	</select>
+
+	<select id="selPlanTime" parameterType="map" resultType="map">
+		SELECT distinct to_char(plan_time,'yyyy-mm-dd') plan_time
+		FROM
+		AXX_OUTSITE_INVALID_TIME AOIT inner join AXX_OUT_SITE_PLAN_SUB aosps
+		on aoit.plan_id = aosps.plan_id
+		WHERE 1=1
+		and aosps.STATUS=1
+		and
+		aoit.PLAN_TIME=aosps.PLAN_DATE
+		<if
+			test="start_query_time !=null and start_query_time !='' and end_query_time !=null and end_query_time !=''">
+			and (trunc(PLAN_TIME) between to_date(#{start_query_time},
+			'yyyy-mm-dd')
+			and to_date(#{end_query_time}, 'yyyy-mm-dd') )
+   </if>
+		<if test="plan_id !=null and plan_id !=''">
+			and aoit.plan_id=#{plan_id}
+   </if>
+	</select>
+
+	<!-- 	获取步巡计划信息 -->
+	<select id="selPlanInfoOfStep" parameterType="map" resultType="map">
+		select allot_id,
+		start_equip,
+		end_equip,
+		inspect_id,
+		cable_id,
+		relay_id,
+		creator,
+		updator,
+		delete_flag,
+		area_id,
+		to_char(start_time, 'yyyy-mm-dd')
+		start_time,
+		to_char(end_time, 'yyyy-mm-dd') end_time
+		from
+		AXX_STEP_EQUIP_ALLOT
+		where DELETE_FLAG != 1
+	</select>
+
+	<insert id="saveStepTask" parameterType="map">
+		insert into
+		AXX_STEP_TASK values(
+		seq_ast_taskId.nextval,
+		#{task_name},
+		to_date(#{start_time},'yyyy-mm-dd'),
+		to_date(#{end_time},'yyyy-mm-dd'),
+		#{cable_id},
+		#{relay_id},
+		#{area_id},
+		#{inspect_id},
+		#{is_del}
+		)
+	</insert>
+
+	<insert id="saveStepTaskEquip" parameterType="string">
+		insert into
+		AXX_STEP_TASK_EQUIP(
+		task_id,
+		equip_id,
+		status
+		) values(
+		seq_ast_taskId.currval,
+		#{_parameter},
+		0
+		)
+	</insert>
+
+	<select id="selEquipPart" parameterType="map" resultType="map">
+		select
+		*
+		from AXX_STEP_TOUR
+		where relay_id = #{RELAY_ID}
+		and cable_id =
+		#{CABLE_ID}
+		and "ORDER" between
+		(select "ORDER" from AXX_STEP_TOUR where
+		start_equip = #{START_EQUIP}) and
+		(select "ORDER" from AXX_STEP_TOUR
+		where end_equip = #{END_EQUIP})
+		order by "ORDER"
+	</select>
+
+	<select id="getScopeList" parameterType="map" resultType="map">
+		select
+		org_id,org_name from AXX_T_ORGANIZATION ato where
+		ato.AREA_ID=#{area_id}
+	</select>
+
+	<select id="qualityReportByScope" parameterType="map" resultType="map">
+
+		select modelA.count_staff_id,modelB.*,
+		nvl(modelC.avg_rateofkanhu,'-')
+		avg_rateofkanhu ,#{start_time}||'至'||#{end_time}
+		DATE_TIME
+		from (select
+		decode(sum(atia.task_num),
+		0,
+		'-',
+		case
+		when
+		round(sum(atia.actual_num) *
+		100 / sum(atia.task_num), 2) &lt; 100
+		then
+		round(sum(atia.actual_num) *
+		100 / sum(atia.task_num), 2)
+		else
+		100
+		end || '%')
+
+		AVG_XUNJIAN_RATE,
+		decode(sum(atia.task_key_num),
+		0,
+		'-',
+		case
+		when
+		round(sum(atia.actual_key_num) * 100 / sum(atia.task_key_num),2)
+		&lt;
+		100 then
+		round(sum(atia.actual_key_num) * 100 /
+		sum(atia.task_key_num),2)
+		else
+		100
+		end ||'%') AVG_ARRIVAL_RATE,
+		decode(sum(atia.task_out_site),
+		0,
+		'-',
+		case
+		when
+		round(sum(atia.actual_out_site) * 100 /sum(atia.task_out_site),2)
+		&lt;
+		100 then
+		round(sum(atia.actual_out_site) * 100
+		/sum(atia.task_out_site),2) else 100 end
+		||'%') AVG_SITE_RATE,
+		tbs.org_id,
+		ato.org_name ,
+		ret.INS_TIME_VALID_ALLDAY
+		AVG_TIME_VALID_ALLDAY,
+		ret.AVG_TIME_VALID_MORNING,
+		ret.AVG_TIME_VALID_AFTERNOON
+		from
+		AXX_T_INSPECT_ARRATE atia
+		inner join
+		AXX_T_VALID_TIME atvt
+		on
+		atvt.user_id = atia.user_id
+		inner join
+		tb_base_staff tbs
+		on tbs.staff_id
+		= atia.user_id
+		inner join
+		AXX_T_ORGANIZATION ato
+		on ato.org_id =
+		tbs.org_id
+		inner join axx_t_task
+		att
+		on att.task_id = atia.task_id
+		left
+		join (select
+		round(avg(aa.valid_m_time + aa.valid_a_time) / 60, 2)
+		INS_TIME_VALID_ALLDAY,
+		round(avg( aa.valid_a_time) / 60, 2)
+		AVG_TIME_VALID_AFTERNOON,
+		round(avg( aa.valid_m_time) / 60, 2)
+		AVG_TIME_VALID_MORNING ,
+		tbs.org_id
+		from AXX_T_VALID_TIME aa
+		inner join
+		tb_base_staff tbs
+		on tbs.staff_id = aa.user_id
+		where aa.inspect_date
+		between to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd') and aa.area_id=#{area_id}
+		group by
+		tbs.org_id) ret on
+		ret.org_id=ato.org_id
+		where atia.inspect_date between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd')
+		and att.status = 0
+		and atia.area_id = #{area_id}
+		<if test="org_id != null  and org_id !=  ''">
+			and ato.org_id=#{org_id}
+   </if>
+
+		group by tbs.org_id, ato.org_name, ret.INS_TIME_VALID_ALLDAY,
+		ret.AVG_TIME_VALID_AFTERNOON ,ret.AVG_TIME_VALID_MORNING
+		)modelB left
+		join(
+		select a.area_id, count(a.staff_id) count_staff_id,
+		ato.org_name,a.org_id
+		from TB_BASE_STAFF a
+		inner join TB_BASE_STAFF_ROLE
+		b
+		on a.STAFF_ID = b.STAFF_ID
+		inner join TB_BASE_ROLE c
+		on b.ROLE_ID =
+		c.ROLE_ID
+		inner join area d
+		on a.AREA_ID = d.AREA_ID
+		inner join
+		AXX_T_ORGANIZATION ato
+		on a.org_id= ato.org_id
+		where c.role_id = 126
+		and a.ISDELETED = 0
+		and a.STATUS = 0
+		and c.ISDELETED = 0
+		and c.STATUS = 0
+		and a.area_id=#{area_id}
+		and d.area_id is not null
+		and a.IS_HELP_PATROL != 1
+		group by a.AREA_ID,ato.org_name,a.org_id
+		) modelA on
+		modelA.org_id=modelB.org_id
+		left join (select
+		decode(sum(atg.rateofkanhu),
+		0,
+		'-',
+		round(avg(atg.rateofkanhu) * 100, 2)
+		|| '%') avg_rateofkanhu,
+		atg.org_id
+		from axx_t_guardrate atg
+		where
+		atg.plan_date between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd')
+		group by atg.org_id) modelC
+		on
+		modelC.org_id = modelA.org_id
+
+
+
+	</select>
+
+	<select id="checkOutSiteByLeader" parameterType="map" resultType="map">
+		select tbs.STAFF_ID,
+			nvl(test01.count_day, 0) count_day,
+			nvl(test01.count_out_site_id, '无') count_out_site_id,
+			dd.NAME,
+			tbs.STAFF_NAME,
+			c.ORG_NAME
+		from (
+			select model01.user_id,
+				count(check_day) count_day,
+				to_char(listagg(check_day || '(' || model01.count_out_site_id || ')',',') within group (order by model01.count_out_site_id)) count_out_site_id
+				from (
+					select
+						oscr.USER_ID,
+						count(oscr.OUT_SITE_ID) count_out_site_id,
+						to_char(oscr.CHECK_TIME, 'dd') check_day
+					from AXX_Out_Site_Check_Record oscr
+					where trunc(oscr.CHECK_TIME) between to_date(#{start_time}, 'yyyy-mm-dd') and to_date(#{end_time}, 'yyyy-mm-dd')
+					group by oscr.USER_ID, oscr.CHECK_TIME
+					order by oscr.USER_ID, oscr.check_time) model01
+			group by model01.user_id) test01
+		right join tb_base_staff tbs on tbs.STAFF_ID = test01.user_id
+		inner join area dd on tbs.AREA_ID = dd.AREA_ID
+		inner join AXX_T_ORGANIZATION c on c.org_id=tbs.org_id
+		inner join TB_BASE_STAFF_ROLE bsr on tbs.STAFF_ID=bsr.STAFF_ID
+		where bsr.ROLE_ID=246
+		and tbs.STATUS = 0
+		and tbs.ISDELETED = 0
+		<if test="area_id !=null and area_id !=''">
+			and dd.area_id=#{area_id}
+   		</if>
+		<if test="org_id != null  and org_id !=  ''">
+			and c.org_id = #{org_id}
+   		</if>
+	</select>
+
+	<select id="selInfoByPlanId" parameterType="map" resultType="map">
+		select tbs.STAFF_NAME, amos.SITE_NAME ,
+		ato.org_name,TBS.STAFF_ID,TBS.ORG_ID,AMOS.OUT_SITE_ID
+		from
+		AXX_OUT_SITE_PLAN aosp
+		inner
+		join AXX_OUT_SITE_PLAN_SUB aosps
+		on
+		aosp.PLAN_ID = aosps.PLAN_ID
+		inner
+		join tb_base_staff tbs
+		on aosp.USER_ID
+		= tbs.STAFF_ID
+		inner join
+		AXX_MAIN_OUT_SITE amos
+		on aosp.OUT_SITE_ID =
+		amos.OUT_SITE_ID
+		inner join
+		axx_t_organization ato
+		on
+		ato.org_id=tbs.org_id
+		where
+		aosps.DELETE_FLAG = 1
+
+		and aosps.PLAN_ID =
+		#{_parameter}
+	</select>
+
+	<select id="selAllPlanDate" parameterType="map" resultType="map">
+		select to_char(aosps.PLAN_DATE,'yyyy-mm-dd') plan_time
+		from
+		AXX_OUT_SITE_PLAN aosp
+		inner join AXX_OUT_SITE_PLAN_SUB aosps
+		on
+		aosp.PLAN_ID = aosps.PLAN_ID
+		where aosp.DELETE_FLAG = 1
+		and
+		aosps.STATUS=1
+		<if test="plan_id !=null and plan_id !=''">
+			and aosp.PLAN_ID=#{plan_id} 
+		</if>
+		<if
+			test="start_query_time !=null and start_query_time !='' and end_query_time !=null and end_query_time !=''">
+			and (trunc(aosps.PLAN_DATE) between to_date(#{start_query_time},
+			'yyyy-mm-dd') and to_date(#{end_query_time}, 'yyyy-mm-dd') )
+		</if>
+	</select>
+
+	<select id="checkOutSiteByArea" parameterType="map" resultType="map">
+		select model01.area_id,model01."NAME",
+		decode(model01.actual_site_id,'-','-',model01.actual_site_id)
+		actual_site_id,
+		decode(model01.actual_site_id,'-','-',model02.total_site_id_with_user)
+		total_site_id_with_user,
+		decode(model01.actual_site_id,'-','-',nvl(model03.count_out_site_id_one,0))
+		count_out_site_id_one,
+		decode(model01.actual_site_id,'-','-',nvl(model03.count_out_site_id_two,0))
+		count_out_site_id_two,
+		decode(model01.actual_site_id,'-','-',model01.total_outSite_grade1)
+		total_outSite_grade1,
+		decode(model01.actual_site_id,'-','-',model01.total_outSite_grade2)
+		total_outSite_grade2,
+		decode(model01.actual_site_id,'-','-',decode(model01.total_outSite_grade1,
+		'-','-',round(nvl(model03.count_out_site_id_one,0)*100/model01.total_outSite_grade1,2)))
+		|| '%' site_date_grade1,
+		decode(model01.actual_site_id,'-','-',decode(model01.total_outSite_grade2,
+		'-','-',round(nvl(model03.count_out_site_id_two,0)*100/model01.total_outSite_grade2,2)))
+		|| '%' site_date_grade2,
+		decode(model01.actual_site_id,'-','-',round((nvl(model03.count_out_site_id_one,0)+nvl(model03.count_out_site_id_two,0))*100/model01.actual_site_id,2))
+		|| '%' site_rate
+		from (
+		select
+		decode(test01.total_out_site,null,'-',test01.total_out_site)
+		actual_site_id ,
+		decode(test01.total_outSite_grade1,0,'-',test01.total_outSite_grade1)
+		total_outSite_grade1 ,
+		decode(test01.total_outSite_grade2,0,'-',test01.total_outSite_grade2)
+		total_outSite_grade2 ,
+		a.AREA_ID,a.NAME
+		from(
+		select
+		count(amos.OUT_SITE_ID) total_out_site ,
+		count(
+		case
+		when
+		atc.FIBER_GRADE='1' then amos.OUT_SITE_ID
+		end
+		) total_outSite_grade1,
+		count(
+		case
+		when atc.FIBER_GRADE='2' then amos.OUT_SITE_ID
+		end
+		)
+		total_outSite_grade2
+		,amos.area_id
+		from AXX_MAIN_OUT_SITE amos inner
+		join AXX_T_CABLE atc on
+		amos.AFFECTED_FIBER=atc.CABLE_ID
+		where
+		amos.DELETE_FLAG=1 and amos.CON_STATUS=1
+		group by amos.AREA_ID
+		) test01
+		right join area a on test01.area_id = a.AREA_ID
+		where a.AREA_LEVEL=3
+		)
+		model01 left join
+		(
+		select area_id,
+		to_char(listagg(total_site_id_by_user || '(' || STAFF_NAME || ')',',') within group (order by total_site_id_by_user)) total_site_id_with_user
+		from (
+		select
+		count(distinct aoscr.OUT_SITE_ID)
+		total_site_id_by_user,aoscr.USER_ID,tbs.STAFF_NAME,tbs.AREA_ID
+		from
+		AXX_Out_Site_Check_Record aoscr
+		inner join TB_BASE_STAFF tbs
+		on
+		aoscr.USER_ID = tbs.STAFF_ID
+		inner join TB_BASE_STAFF_ROLE tbsr
+		on
+		tbs.STAFF_ID = tbsr.STAFF_ID
+		inner join AXX_MAIN_OUT_SITE amos
+		on
+		aoscr.OUT_SITE_ID=amos.OUT_SITE_ID
+		where tbsr.ROLE_ID=246 and
+		aoscr.CHECK_TIME between
+		to_date(#{start_time},'yyyy-mm-dd') and
+		to_date(#{end_time},'yyyy-mm-dd')
+		and amos.DELETE_FLAG=1 and
+		amos.CON_STATUS=1
+		group by aoscr.USER_ID,tbs.STAFF_NAME,tbs.AREA_ID
+		)
+		test01 group by test01.area_id
+		) model02 on
+		model01.area_id=model02.area_id
+		left join
+		(
+		select sum(
+		case
+		when
+		fiber_grade ='1' then count_out_site_id
+		end
+		) count_out_site_id_one,
+		sum(
+		case
+		when fiber_grade ='2' then count_out_site_id
+		end
+		)
+		count_out_site_id_two,
+		area_id
+		from (
+		select count(distinct
+		aoscr.OUT_SITE_ID) count_out_site_id
+		,tbs.AREA_ID,atc.FIBER_GRADE
+		from
+		AXX_Out_Site_Check_Record aoscr
+		inner join TB_BASE_STAFF tbs
+		on
+		aoscr.USER_ID = tbs.STAFF_ID
+		inner join TB_BASE_STAFF_ROLE tbsr
+		on
+		tbs.STAFF_ID = tbsr.STAFF_ID
+		inner join AXX_MAIN_OUT_SITE amos
+		on
+		amos.OUT_SITE_ID=aoscr.OUT_SITE_ID
+		inner join AXX_T_CABLE atc
+		on
+		amos.AFFECTED_FIBER=atc.CABLE_ID
+		where tbsr.ROLE_ID=246 and
+		aoscr.CHECK_TIME between
+		to_date(#{start_time},'yyyy-mm-dd') and
+		to_date(#{end_time},'yyyy-mm-dd')
+		and atc.FIBER_GRADE in ('1','2') and
+		amos.DELETE_FLAG=1 and
+		amos.CON_STATUS=1
+		group by
+		tbs.AREA_ID,atc.FIBER_GRADE
+		) test01 group by test01.area_id
+		) model03
+		on model01.area_id=model03.area_id
+		where 1=1
+
+		<if test="area_id !=null and area_id !=''">
+			and model01.area_id = #{area_id}
+</if>
+	</select>
+
+	<select id="getProvinceOutSiteComplete" parameterType="map"
+		resultType="map">
+		SELECT ar.area_id,
+       ar.NAME,
+       Decode(model01.plan_time, NULL, '-', model01.plan_time) plan_time,
+       Decode(model02.valid_time, NULL, '-', model02.valid_time) valid_time,
+       Decode(model01.plan_time,
+              NULL,
+              '-',
+              Round((valid_time) * 100 / plan_time, 2)) || '%' kanhu_rate
+		from (select aosppt.AREA_ID,
+		round(sum((to_date(aosppt.END_TIME, 'hh24:mi') -
+		to_date(aosppt.START_TIME, 'hh24:mi')) * 24),
+		2) plan_time
+		from
+		AXX_OUT_SITE_PLAN_SUB aosps
+		inner join AXX_OUT_SITE_PLAN_PART_TIME
+		aosppt
+		on aosps.PLAN_ID = aosppt.PLAN_ID
+		where aosps.STATUS = 1
+		and
+		aosps.DELETE_FLAG = 1
+		and aosppt.delete_flag = 1
+		and aosps.PLAN_DATE between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd')
+		group by area_id) model01
+		inner join (select ato.AREA_ID,
+		sum(atg.worktime) valid_time
+		from axx_t_guardrate atg
+		join
+		axx_t_organization ato on ato.org_id=atg.org_id
+		where atg.plan_date
+		between
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd')
+		group by ato.AREA_ID) model02
+		on model01.area_id =
+		model02.area_id
+		right join area ar
+		on model01.area_id = ar.AREA_ID
+		where
+		ar.AREA_LEVEL = 3
+		<if test="area_id !=null and area_id !=''">
+			and ar.area_id=#{area_id} 
+		</if>
+	</select>
+
+	<select id="getProvinceCheckComplete" parameterType="map"
+		resultType="map">
+		select ar.AREA_ID,
+		ar.NAME,
+		#{end_time} end_time ,
+		decode(test02.check_rate, null, '-', test02.check_rate) check_rate,
+		decode(test02.no_check, null, '-', test02.no_check) no_check,
+		decode(test02.check_without_72, null, '-', test02.check_without_72)
+		check_without_72
+		from (select area_id,
+		round(count(case
+		when status = 1
+		then
+		status
+		end) * 100 / count(status)) || '%' check_rate,
+		count(case
+		when status = 0 then
+		status
+		end) no_check,
+		count(case
+		when status = 2 then
+		status
+		end) check_without_72
+		from (select amos.area_id,
+		amos.OUT_SITE_ID,
+		amos.SITE_NAME,
+		amos.CREATION_TIME,
+		min(atdp.UPLOAD_TIME) upload_time,
+		case
+		when min(atdp.upload_time) is
+		null then
+		0
+		when (min(upload_time) - creation_time) * 24 &lt;= 72 then
+		1
+		else
+		2
+		end status
+		from AXX_MAIN_OUT_SITE amos
+		left join AXX_T_DEPTH_PROBE
+		atdp
+		on amos.OUT_SITE_ID = atdp.OUT_SITE_ID
+		where amos.DELETE_FLAG = 1
+		and amos.CON_STATUS=1
+		and
+		amos.CREATION_TIME >=
+		to_date(#{min_date},
+		'yyyy-mm-dd') + 3 and
+		amos.CREATION_TIME &lt;
+		to_date(#{end_time},
+		'yyyy-mm-dd') + 3
+		group by amos.OUT_SITE_ID,
+		amos.SITE_NAME,
+		amos.CREATION_TIME,
+		amos.AREA_ID) test01
+		group by test01.area_id) test02
+		right join area ar
+		on ar.AREA_ID = test02.area_id
+		where ar.AREA_LEVEL =
+		3
+		<if test="area_id !=null and area_id !=''">
+			and ar.area_id=#{area_id} 
+	</if>
+	</select>
+
+
+
+	<select id="getProvinceRoutingFacility" parameterType="map"
+		resultType="map">
+		<!--select aa.CEHEK_RATE,-->
+		<!--       aa.COMPLETE_RATE,-->
+		<!--       decode(aa.cnt, '', '-', aa.cnt) CEHEK_NUM,-->
+		<!--       aa.equip_type,-->
+		<!--       aa.cnt1 Numeber,-->
+		<!--       aa.cnt3 TROUBLE_NUM-->
+		<!--  from (select decode(b.cnt2, '', '-', cnt2) cnt2,-->
+		<!--               decode(b.cnt3, '', '-', cnt3) cnt3,-->
+		<!--               a.cnt1,-->
+		<!--               a.equip_type,-->
+		<!--               b.cnt,-->
+		<!--
+			to_char(decode(cnt2, 0, 0, round(cnt * 100 / cnt1, 2)),
+		-->
+		<!--
+			'fm999999990.999999999') || '%' CEHEK_RATE,
+		-->
+		<!--
+			to_char(decode(cnt, 0, 0, round((cnt - cnt3) * 100 / cnt, 2)),
+		-->
+		<!--
+			'fm999999990.999999999') || '%' COMPLETE_RATE
+		-->
+		<!--          from (select count(a.equip_id) cnt1, a.equip_type-->
+		<!--                  from AXX_STEP_TOUR_EQUIP a-->
+		<!--                 group by a.equip_type) a-->
+		<!--          left join (select count(1) cnt,-->
+		<!--                           a.equip_type,-->
+		<!--                           count(decode(b.status, 0, 1)) cnt2,-->
+		<!--                           count(decode(b.status, 1, 1)) cnt3-->
+		<!--
+			from AXX_STEP_TOUR_EQUIP a, AXX_EQUIP_CHECK b
+		-->
+		<!--                     where b.equip_id = a.equip_id-->
+		<!--                     group by a.equip_type) b-->
+		<!--            on a.equip_type = b.equip_type) aa-->
+		<!--            inner join AXX_STEP_TASK_EQUIP bb-->
+		<!--    on aa.equip_id = bb. equip_id-->
+		<!-- inner join AXX_STEP_TASK cc-->
+		<!--    on bb.TASK_ID = cc.task_id-->
+		<!--
+			where (trunc(cc.start_time) between to_date(#{min_time},
+			'yyyy-mm-dd') and
+		-->
+		<!--       to_date(#{max_time}, 'yyyy-mm-dd') or-->
+		<!--
+			trunc(tt.end_time) between to_date(#{min_time}, 'yyyy-mm-dd') and
+		-->
+		<!--       to_date(#{max_time}, 'yyyy-mm-dd'))-->
+
+
+
+		select aa.equip_type,
+		aa.tnumber TNUMEBER,
+		aedp.equip_type_name
+		EQUIP_TYPE_NAME,
+		nvl(bb.check_num, 0) CHECK_NUM,
+		decode(bb.check_num, 0,
+		0, round(bb.check_num * 100 / aa.tnumber, 2)) || '%' CHECK_RATE,
+		nvl(bb.danger_num, 0) TROUBLE_NUM,
+		decode(bb.danger_num,
+		0,
+		0,
+		100 -
+		(round(bb.danger_num * 100 / bb.check_num, 2))) || '%'
+		COMPLETE_RATE
+		from (select count(1) Tnumber, a.equip_type
+		from (select c.equip_id,
+		c.equip_type
+		from AXX_STEP_TOUR_EQUIP c, area d
+		where 1 = 1
+
+		and c.area_id
+		= d.area_id) a
+		group by a.equip_type) aa
+		left join (select
+		count(1)
+		check_num,
+		t.equip_type,
+		count(decode(t.status, 0, 1))
+		danger_num
+		from
+		(select rank() over(partition by a.equip_id order by
+		a.check_time
+		desc)
+		rn,
+		a.*
+		from AXX_EQUIP_CHECK a
+
+		where a.equip_id in
+		(select
+		c.equip_id
+		from
+		AXX_STEP_TOUR_EQUIP c, area d
+		where 1 = 1
+		and
+		c.area_id =
+		d.area_id)
+		and
+		a.check_time between
+		to_date(#{min_time},
+		'yyyy-mm-dd')
+		and
+		to_date(#{max_time}, 'yyyy-mm-dd')) t
+		where t.rn = 1
+
+		group by
+		t.equip_type) bb
+		on aa.equip_type = bb.equip_type
+		left join
+		(select
+		distinct a.equip_type_id, a.equip_type_name
+		from
+		AXX_EQUIP_DANGER_PARAM
+		a) aedp
+		on aedp.equip_type_id = aa.equip_type
+
+	</select>
+
+	<select id="getCityRoutingFacility" parameterType="map"
+		resultType="map">
+		<!--		select aa.CEHEK_RATE,-->
+		<!--		aa.COMPLETE_RATE,-->
+		<!--		decode(aa.cnt, '',-->
+		<!--		'-', aa.cnt) CEHEK_NUM,-->
+		<!--		aa.equip_type,-->
+		<!--		aa.cnt1 Numeber,-->
+		<!--		aa.cnt3-->
+		<!--		TROUBLE_NUM-->
+		<!--		from (select decode(b.cnt2, '', '-', cnt2) cnt2,-->
+		<!--		decode(b.cnt3, '', '-', cnt3) cnt3,-->
+		<!--		a.cnt1,-->
+		<!--		a.equip_type,-->
+		<!--		b.cnt,-->
+		<!--		to_char(decode(cnt2, 0, 0, round(cnt * 100 / cnt1, 2)),-->
+		<!--		'fm999999990.999999999') || '%' CEHEK_RATE,-->
+		<!--		to_char(decode(cnt, 0, 0,-->
+		<!--		round((cnt - cnt3) * 100 / cnt, 2)),-->
+		<!--		'fm999999990.999999999') || '%'-->
+		<!--		COMPLETE_RATE-->
+		<!--		from (select count(a.equip_id) cnt1, a.equip_type-->
+		<!--		from-->
+		<!--		AXX_STEP_TOUR_EQUIP a where a.area_id=#{area_id}-->
+		<!--		group by a.equip_type)-->
+		<!--		a-->
+		<!--		left join (select count(1) cnt,-->
+		<!--		a.equip_type,-->
+		<!--		count(decode(b.status, 0,-->
+		<!--		1)) cnt2,-->
+		<!--		count(decode(b.status, 1, 1)) cnt3-->
+		<!--		from AXX_STEP_TOUR_EQUIP a,-->
+		<!--		AXX_EQUIP_CHECK b-->
+		<!--		where b.equip_id = a.equip_id and-->
+		<!--		a.area_id=#{area_id}-->
+		<!--		group by a.equip_type) b-->
+		<!--		on a.equip_type =-->
+		<!--		b.equip_type) aa-->
+		<!--		inner join AXX_STEP_TASK_EQUIP bb-->
+		<!--		on aa.equip_id = bb.-->
+		<!--		equip_id-->
+		<!--		inner join AXX_STEP_TASK cc-->
+		<!--		on bb.TASK_ID = cc.task_id-->
+		<!--		where-->
+		<!--
+			(trunc(cc.start_time) between to_date(#{min_time}, 'yyyy-mm-dd') and
+		-->
+		<!--		to_date(#{max_time}, 'yyyy-mm-dd') or-->
+		<!--		trunc(tt.end_time) between-->
+		<!--		to_date(#{min_time}, 'yyyy-mm-dd') and-->
+		<!--		to_date(#{max_time},-->
+		<!--		'yyyy-mm-dd'))-->
+
+
+
+		select aa.equip_type,
+		aa.tnumber TNUMEBER,
+		aedp.equip_type_name
+		EQUIP_TYPE_NAME,
+		nvl(bb.check_num, 0) CHECK_NUM,
+		decode(bb.check_num, 0,
+		0, round(bb.check_num * 100 / aa.tnumber, 2)) || '%' CHECK_RATE,
+		nvl(bb.danger_num, 0) TROUBLE_NUM,
+		decode(bb.danger_num,
+		0,
+		0,
+		100 -
+		(round(bb.danger_num * 100 / bb.check_num, 2))) || '%'
+		COMPLETE_RATE
+		from (select count(1) Tnumber, a.equip_type
+		from (select c.equip_id,
+		c.equip_type
+		from AXX_STEP_TOUR_EQUIP c, area d
+		where 1 = 1
+		and
+		c.area_id=#{area_id}
+		and c.is_del=0
+		and c.area_id
+		= d.area_id) a
+		group by
+		a.equip_type)
+		aa
+		left join (select count(1)
+		check_num,
+		t.equip_type,
+		count(decode(t.status, 0, 1)) danger_num
+		from
+		(select rank()
+		over(partition by a.equip_id order by a.check_time
+		desc) rn,
+		a.*
+		from
+		AXX_EQUIP_CHECK a
+
+		where a.equip_id in
+		(select
+		c.equip_id
+		from
+		AXX_STEP_TOUR_EQUIP c, area d
+		where 1 = 1
+		and c.area_id=#{area_id}
+		and
+		c.area_id =
+		d.area_id)
+		and a.check_time between
+		to_date(#{min_time},
+		'yyyy-mm-dd')
+		and
+		to_date(#{max_time}, 'yyyy-mm-dd')) t
+		where t.rn = 1
+
+		group by
+		t.equip_type) bb
+		on aa.equip_type = bb.equip_type
+		left join
+		(select
+		distinct a.equip_type_id, a.equip_type_name
+		from
+		AXX_EQUIP_DANGER_PARAM
+		a) aedp
+		on aedp.equip_type_id = aa.equip_type
+
+	</select>
+
+
+
+
+
+
+	<select id="getFrefectureRoutingFacility" parameterType="map"
+		resultType="map">
+		select tt.* ,ss.* from
+		(select
+		c.area_id,
+		count(1)
+		from
+		AXX_STEP_TOUR_EQUIP c, area d
+		where 1 = 1
+		and c.area_id = d.area_id
+		and
+		c.is_lose = 0
+		and c.is_del = 0
+		and c.create_date &lt; =
+		to_date(#{max_time}, 'yyyy-mm-dd')
+		group by c.area_id
+		)tt inner join (
+		select
+		c.area_id,
+		count(decode(c.equip_type, 1, 1)) MARKSTONE,
+		count(decode(c.equip_type, 2, 1)) WELLS,
+		count(decode(c.equip_type, 3,
+		1)) LANDMARK,
+		count(decode(c.equip_type, 4, 1)) BILLBOARD,
+		count(decode(c.equip_type, 5, 1)) BURIED,
+		count(decode(c.equip_type, 6,
+		1)) POLE,
+		count(decode(c.equip_type, 7, 1)) CAUTION,
+		count(decode(c.equip_type, 8, 1)) SCARP_PROTECTION,
+		count(decode(c.equip_type, 9, 1)) CLOSURE,
+		count(decode(c.equip_type,
+		10, 1))ROUNTFLAG,
+		name
+		from AXX_STEP_TOUR_EQUIP c,
+		area d
+		where 1=1
+		and
+		c.area_id = d.area_id
+		and (c.create_date between to_date(#{min_time},
+		'yyyy-mm-dd') and
+		to_date(#{max_time}, 'yyyy-mm-dd'))
+		group by
+		c.area_id, name
+		)ss on tt.area_id=ss.area_id
+		where 1=1
+		<if test="area_id != null and area_id != ''">
+			and tt.area_id=#{area_id}
+ </if>
+
+	</select>
+
+	<select id="getCableRoutingFacility" parameterType="map"
+		resultType="map">
+		select ale.cable_name,
+		ale.relay_name,
+		ale.relay_id,
+		ale.cable_id ,
+		count(decode(c.equip_type, 1, 1))
+		MARKSTONE,
+		count(decode(c.equip_type,
+		2, 1)) WELLS,
+		count(decode(c.equip_type, 3, 1)) LANDMARK,
+		count(decode(c.equip_type,
+		4, 1)) BILLBOARD,
+		count(decode(c.equip_type,
+		5, 1)) BURIED,
+		count(decode(c.equip_type, 6, 1)) POLE,
+		count(decode(c.equip_type, 7,
+		1)) CAUTION,
+		count(decode(c.equip_type, 8,
+		1)) SCARP_PROTECTION,
+		count(decode(c.equip_type, 9, 1)) CLOSURE,
+		count(decode(c.equip_type,
+		10, 1)) ROUNTFLAG
+
+		from AXX_STEP_TOUR_EQUIP c,
+		area d,
+		(select ale.*,
+		atr.relay_name, atc.cable_name
+		from AXX_LINE_EQUIP
+		ale,
+		AXX_T_RELAY atr,
+		AXX_T_CABLE atc
+		where ale.relay_id = atr.relay_id
+		and atc.cable_id =
+		ale.cable_id) ale
+		where 1 = 1
+		and c.equip_id =
+		ale.equip_id
+		and
+		d.area_id=c.area_id
+		<if test="area !=''and area !=null">
+			and d.area_id=#{area}
+		</if>
+		<if test="p_cable_id !=null and p_cable_id !=''">
+			and ale.cable_id=#{p_cable_id}
+	</if>
+		<if test="p_relay_id !=null and p_relay_id !=''">
+			and ale.relay_id=#{p_relay_id}
+	</if>
+
+		group by ale.cable_id,
+		ale.relay_id,
+		ale.cable_name,
+		ale.relay_name
+	</select>
+
+	<select id="getProvinceDangerOrder" parameterType="map"
+		resultType="map">
+		select aa.name,
+		aa.aa REPORT_NUM,
+		bb.bb DISTRIBUTE_NUM,
+		cc.cc HANDLE_NUM,
+		ROUND(BB / AA, 2) * 100 || '%' DISTRIBUTE_RATE,
+		ROUND((CC / AA), 2) *
+		100 || '%' COMPLETE_RATE
+		from (select count(a.danger_id) aa, b.name
+		from AXX_T_DANGER_ORDER a,
+		area b,
+		AXX_DANGER_LIST c,
+		tb_base_staff tbs
+		where c.parent_city = b.area_id
+		and a.danger_id = c.danger_id
+		and
+		c.founder_uid = tbs.staff_id
+		and tbs.is_help_patrol != 1
+		<if test="area_id !=null and area_id !=''">
+			and tbs.area_id=#{area_id}
+	</if>
+		and c.found_time between to_date(#{min_time}, 'yyyy-mm-dd') and
+		to_date(#{max_time}, 'yyyy-mm-dd')
+		group by b.name) aa,
+		(select
+		count(a.danger_id) bb, b.name
+		from AXX_T_DANGER_ORDER a,
+		area b,
+		AXX_DANGER_LIST c,
+		tb_base_staff tbs
+		where c.parent_city = b.area_id
+		and
+		a.danger_id = c.danger_id
+		and c.founder_uid = tbs.staff_id
+		and
+		tbs.is_help_patrol != 1
+		and a.order_status in (1, 2, 3)
+		and c.found_time
+		between to_date(#{min_time}, 'yyyy-mm-dd') and
+		to_date(#{max_time},
+		'yyyy-mm-dd')
+		group by b.name) bb,
+		(select count(a.danger_id) cc, b.name
+		from AXX_T_DANGER_ORDER a,
+		area b,
+		AXX_DANGER_LIST c,
+		tb_base_staff tbs
+		where c.parent_city = b.area_id
+		and a.danger_id = c.danger_id
+		and
+		c.founder_uid = tbs.staff_id
+		and tbs.is_help_patrol != 1
+		and
+		a.order_status in (2, 3)
+		and c.found_time between to_date(#{min_time},
+		'yyyy-mm-dd') and
+		to_date(#{max_time}, 'yyyy-mm-dd')
+		group by b.name) cc
+		where aa.name = bb.name
+		and cc.name = aa.name
+	</select>
+	<select id="getProvinceDangerOrderByAll" parameterType="map"
+		resultType="map">
+		select SUM(AA) REPORT_NUM ,
+		SUM(BB) DISTRIBUTE_NUM,
+		SUM(CC)
+		HANDLE_NUM,
+		ROUND(SUM(BB) / SUM(AA), 2) * 100 || '%' DISTRIBUTE_RATE,
+		ROUND((SUM(CC) / SUM(AA)), 2) *100 || '%' COMPLETE_RATE
+		from (select
+		count(a.danger_id) aa, b.name
+		from AXX_T_DANGER_ORDER a,
+		area b,
+		AXX_DANGER_LIST c,
+		tb_base_staff tbs
+		where c.parent_city = b.area_id
+		and
+		a.danger_id = c.danger_id
+		and c.founder_uid = tbs.staff_id
+		and
+		tbs.is_help_patrol != 1
+		and c.found_time between to_date(#{min_time},
+		'yyyy-mm-dd') and
+		to_date(#{max_time}, 'yyyy-mm-dd')
+		group by b.name)
+		aa,
+		(select count(a.danger_id) bb, b.name
+		from AXX_T_DANGER_ORDER a,
+		area b,
+		AXX_DANGER_LIST c,
+		tb_base_staff tbs
+		where c.parent_city =
+		b.area_id
+		and a.danger_id = c.danger_id
+		and c.founder_uid = tbs.staff_id
+		and tbs.is_help_patrol != 1
+		and a.order_status in (1, 2, 3)
+		and
+		c.found_time between to_date(#{min_time}, 'yyyy-mm-dd') and
+		to_date(#{max_time}, 'yyyy-mm-dd')
+		group by b.name) bb,
+		(select
+		count(a.danger_id) cc, b.name
+		from AXX_T_DANGER_ORDER a,
+		area b,
+		AXX_DANGER_LIST c,
+		tb_base_staff tbs
+		where c.parent_city = b.area_id
+		and
+		a.danger_id = c.danger_id
+		and c.founder_uid = tbs.staff_id
+		and
+		tbs.is_help_patrol != 1
+		and a.order_status in (2, 3)
+		and c.found_time
+		between to_date(#{min_time}, 'yyyy-mm-dd') and
+		to_date(#{max_time},
+		'yyyy-mm-dd')
+		group by b.name) cc
+		where aa.name = bb.name
+		and cc.name =
+		aa.name
+	
+	</select>
+	<select id="getFacilityDensity" parameterType="map" resultType="map">
+		select aste.equip_id,
+		nvl(aste.equip_code, ' ') equip_code,
+		ale."ORDER",
+		aste.longitude,
+		aste.latitude,
+		ale.cable_id,
+		ale.relay_id,
+		aste.area_id,
+		aste.is_over,
+		RANK() OVER(partition by ale.cable_id,
+		ale.relay_id order by ale."ORDER")
+		rank
+		from AXX_STEP_TOUR_EQUIP aste
+		left join AXX_LINE_EQUIP ale
+		on aste.equip_id = ale.equip_id
+		where 1 = 1
+		and ale.cable_id is not null
+		and ale.relay_id is not null
+		and
+		aste.equip_type = #{EQUIP_TYPE}
+		and aste.area_id=#{AREA_ID}
+		and
+		aste.is_equip=1
+		and ale.relay_id = #{RELAY_ID}
+	</select>
+	<select id="getrelpyid" parameterType="map" resultType="map">
+		select
+		distinct a.relay_id from AXX_LINE_EQUIP a where a.relay_id is not null
+	</select>
+	<select id="getequiptype" parameterType="map" resultType="map">
+		select
+		distinct a.equip_type from AXX_STEP_TOUR_EQUIP a where a.equip_type
+		in(1,3,4)
+ 	 </select>
+	<insert id="saveEquipDensity" parameterType="map">
+		insert into
+		axx_step_density
+		values(#{START_EQUIP_ID},#{END_EQUIP_ID},#{START_EQUIP_CODE},#{END_EQUIP_CODE},#{EQUIP_TYPE},#{DISTANCE},
+		#{CABLE_ID},#{RELAY_ID},#{AREA_ID},#{REMARK})
+ 	 </insert>
+	<delete id="deleteEquipDensity" parameterType="map">
+		delete from
+		axx_step_density
+	  </delete>
+	<select id="getEquipDensity" parameterType="map" resultType="map">
+		select count(case
+		when a.equip_type = 1 and a.distances > 50 then
+		1
+		else
+		null
+		end) MARKSTONE,
+		count(case
+		when a.equip_type = 4 and a.distances >
+		200 then
+		1
+		else
+		null
+		end) BILLBOARD ,
+		count(case
+		when a.equip_type = 3 and
+		a.distances > 7 then
+		1
+		else
+		null
+		end) LANDMARK ,
+		a.area_id,b.name
+		from
+		axx_step_density a ,area b where a.area_id=b.area_id and a.remark=0
+		<if test=" area  != null and area  != ''"> 
+		  <![CDATA[ 
+     and b.area_id=#{area}
+	 ]]>
+		</if>
+		group by a.area_id,b.name
+	</select>
+	<select id="getDetailUI" parameterType="map" resultType="map">
+		select a.start_equip_id,
+		a.start_equip_code,
+		b.start_creator_name,
+		a.end_equip_id,
+		a.end_equip_code,
+		c.end_creator_name,
+		a.cable_id,
+		a.relay_id,
+		a.distances,
+		atc.cable_name,
+		atr.relay_name,
+		a.remark
+		from
+		axx_step_density a
+		inner join AXX_T_CABLE atc
+		on atc.cable_id =
+		a.cable_id
+		inner join AXX_T_RELAY atr
+		on atr.relay_id = a.relay_id
+		left
+		join (select a.start_equip_id,
+		b.creator start_creator,
+		tbs.staff_name
+		start_creator_name
+		from axx_step_density a
+		inner join
+		AXX_STEP_TOUR_EQUIP b
+		on a.start_equip_id = b.equip_id
+		inner join
+		tb_base_staff tbs
+		on tbs.staff_id = b.creator) b
+		on a.start_equip_id =
+		b.start_equip_id
+		left join (select a.end_equip_id,
+		b.creator
+		end_creator,
+		tbs.staff_name end_creator_name
+		from axx_step_density a
+		inner join AXX_STEP_TOUR_EQUIP b
+		on a.end_equip_id = b.equip_id
+		inner
+		join tb_base_staff tbs
+		on tbs.staff_id = b.creator) c
+		on a.end_equip_id
+		= c.end_equip_id
+		where a.distances > #{distances}
+		and a.equip_type =
+		#{equip_type}
+		and a.area_id = #{area_id}
+		<if test="remark !='' and remark !=null">
+			and a.remark=#{remark}
+		   </if>
+		<if test="p_cable_id !='' and p_cable_id !=null">
+			and a.cable_id =#{p_cable_id}
+		   </if>
+		<if test="p_relay_id!='' and p_relay_id !=null ">
+			and a.relay_id=#{p_relay_id}
+           </if>
+		<if test="staff_name !='' and staff_name !=null">
+			and b.start_creator_name like '%'||#{staff_name}||'%' or
+			c.end_creator_name like '%'||#{staff_name}||'%' 
+           </if>
+		ORDER BY a.distances desc
+	</select>
+
+	<select id="getStepTourCondition" parameterType="map"
+		resultType="map">
+		SELECT Count(CASE
+		WHEN atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN
+		1
+		END) FIBER_1,
+		Count(CASE
+		WHEN atc.fiber_grade = 2
+		AND aste.equip_type !=
+		3 THEN 1
+		END) FIBER_2,
+		Count(Decode(aste.equip_type, 3, 1)) LANDMARK,
+		Count(CASE
+		WHEN b.status = 1
+		AND atc.fiber_grade = 1
+		AND aste.equip_type
+		!= 3 THEN 1
+		END) ACT_FIBER_1,
+		Count(CASE
+		WHEN b.status = 1
+		AND
+		atc.fiber_grade = 2
+		AND aste.equip_type != 3 THEN 1
+		END) ACT_FIBER_2,
+		Count(CASE
+		WHEN b.status = 1
+		AND aste.equip_type = 3THEN 1
+		END)
+		ACT_LANDMARK,
+		Decode(Count(CASE
+		WHEN atc.fiber_grade = 1
+		AND
+		aste.equip_type != 3 THEN 1
+		END), 0, '-',
+		Round(Count(CASE
+		WHEN b.status
+		= 1
+		AND atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN 1
+		END) * 100 /
+		Count(CASE
+		WHEN
+		atc.fiber_grade = 1
+		AND aste.equip_type !=
+		3 THEN 1
+		END),
+		2)
+		||'%') FIBER_1_RATE ,
+		Decode(Count(CASE
+		WHEN atc.fiber_grade = 2
+		AND
+		aste.equip_type != 3 THEN 1
+		END) , 0, '-',
+		Round(Count(CASE
+		WHEN b.status
+		= 1
+		AND atc.fiber_grade = 2
+		AND aste.equip_type != 3 THEN 1
+		END) * 100 /
+		Count(CASE
+		WHEN
+		atc.fiber_grade = 2
+		AND aste.equip_type !=
+		3 THEN 1
+		END),
+		2)
+		||'%') FIBER_2_RATE,
+		Decode(Count(Decode(aste.equip_type, 3, 1)), 0,
+		'-',
+		Round(Count(CASE
+		WHEN b.status = 1
+		AND aste.equip_type = 3THEN 1
+		END) * 100 / Count(
+		Decode(aste.equip_type, 3, 1))
+		, 2)
+		||'%')LANDMARK_RATE,
+		a.inspect_id,
+		c.staff_name,
+		c.org_name,
+		#{start_time}||'至'||#{end_time} SEARCH_DATE
+		FROM axx_step_task a,
+		axx_step_task_equip b,
+		axx_step_tour_equip aste,
+		axx_t_cable atc,
+		(SELECT *
+		FROM (SELECT a.*,
+		b.staff_name,
+		c.org_name,
+		c.org_id,
+		b.staff_id
+		FROM axx_step_task a,
+		tb_base_staff b,
+		axx_t_organization c
+		WHERE
+		a.inspect_id = b.staff_id AND a.is_del=0
+		AND b.org_id = c.org_id) a
+		where (a.start_time &lt;=
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{start_time}, 'yyyy-mm-dd') &lt;= a.end_time)
+		or (a.start_time
+		&lt;= to_date(#{end_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd') &lt;= a.end_time)) c
+		WHERE b.task_id = a.task_id
+		AND
+		a.is_del = 0
+		AND aste.is_del=0
+		AND a.task_id = c.task_id
+		AND b.equip_id =
+		aste.equip_id
+		AND aste.cable_id = atc.cable_id
+		<if test="org_id !=''and org_id !=null">
+			and c.org_id=#{org_id}
+   </if>
+		<if test="cycle !='' and cycle !=null">
+			and a.circle_id=#{cycle}
+   </if>
+		<if test="user_id !=''and user_id !=null">
+			and c.staff_id=#{user_id}
+   </if>
+		<if test="area_id !=''and area_id !=null">
+			and c.area_id=#{area_id}
+ 	</if>
+
+		group by a.inspect_id, c.staff_name ,c.org_name
+	</select>
+
+
+	<select id="getStepTypeTourCondition" parameterType="map"
+		resultType="map">
+		SELECT modela.*,
+		Decode (modela.act_num, 0, '-',
+		Round(modela.act_num *
+		100 / modela.tol_num, 2)
+		|| '%') RATE FROM (
+		SELECT Count(1) TOL_NUM,
+		Count(CASE
+		WHEN b.status = 1 THEN 1
+		END) ACT_NUM,
+		a.inspect_id,
+		c.staff_name,
+		c.org_name,
+		#{start_time}
+		|| '至'
+		|| #{end_time} SEARCH_DATE
+		FROM axx_step_task a,
+		axx_step_task_equip b,
+		axx_step_tour_equip aste,
+		axx_t_cable atc,
+		(SELECT *
+		FROM (SELECT a.*,
+		b.staff_name,
+		c.org_name,
+		c.org_id,
+		b.staff_id
+		FROM axx_step_task a,
+		tb_base_staff b,
+		axx_t_organization c
+		WHERE a.inspect_id = b.staff_id
+		AND b.org_id =
+		c.org_id) a
+		WHERE ( a.start_time &lt;= To_date(#{start_time},
+		'yyyy-mm-dd')
+		AND To_date(#{start_time}, 'yyyy-mm-dd') &lt;= a.end_time
+		)
+		OR ( a.start_time &lt;= To_date(#{end_time}, 'yyyy-mm-dd')
+		AND
+		To_date(#{end_time}, 'yyyy-mm-dd') &lt;= a.end_time )) c
+		WHERE
+		b.task_id = a.task_id
+		AND a.is_del = 0
+		AND aste.is_del=0
+		AND a.task_id =
+		c.task_id
+		AND b.equip_id = aste.equip_id
+		AND aste.cable_id =
+		atc.cable_id
+		<if test="org_id !=''and org_id !=null">
+			and c.org_id=#{org_id}
+   </if>
+		<if test="cycle !='' and cycle !=null">
+			and a.circle_id=#{cycle}
+   </if>
+		<if test="user_id !=''and user_id !=null">
+			and c.staff_id=#{user_id}
+   </if>
+		<if test="area_id !=''and area_id !=null">
+			and c.area_id=#{area_id}
+ 	</if>
+
+		GROUP BY a.inspect_id,
+		c.staff_name,
+		c.org_name
+		)modela
+	</select>
+
+	<select id="getStepDetailUI" parameterType="map" resultType="map">
+		select ms.task_name,
+		TO_CHAR(ms.start_time,'yyyy-mm-dd hh24:mi:ss')
+		start_time,
+		TO_CHAR(ms.end_time,'yyyy-mm-dd hh24:mi:ss') end_time,
+		count(decode(aste.equip_type, 1, 1)) MARKSTONE,
+		count(decode(aste.equip_type, 2, 1)) WELLS,
+		count(decode(aste.equip_type, 3, 1)) LANDMARK ,
+		count(decode(aste.equip_type, 4, 1)) BILLBOARD,
+		count(decode(aste.equip_type, 5, 1)) BURIED,
+		count(decode(aste.equip_type, 6, 1)) POLE,
+		count(decode(aste.equip_type, 7, 1)) CAUTION,
+		count(decode(aste.equip_type, 8, 1)) SCARP_PROTECTION,
+		count(decode(aste.equip_type, 9, 1)) CLOSURE,
+		count(decode(aste.equip_type, 10, 1)) ROUNTFLAG
+		from
+		AXX_STEP_TASK_EQUIP ast,
+		AXX_STEP_TOUR_EQUIP aste,
+		(select *
+		from (select
+		a.*, b.staff_name, c.org_name, c.org_id ,b.staff_id
+		from AXX_STEP_TASK
+		a, tb_base_staff b, AXX_T_ORGANIZATION c
+		where a.inspect_id =
+		b.staff_id
+		and b.org_id = c.org_id) a
+		where (a.start_time &lt;=
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd') &lt;= a.end_time)
+		or (a.start_time &lt;=
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd') &lt;= a.end_time)) ms
+		where ast.task_id = ms.task_id
+		and
+		ast.equip_id = aste.equip_id
+		and ast.status = 1
+		and
+		ms.staff_id=#{staff_id}
+		and ms.area_id=#{area_id}
+		group by ms.task_name,
+		ms.start_time,
+		ms.end_time
+	  </select>
+	<select id="getEquipDistanceId" parameterType="map" resultType="map">
+		select a.end_equip_id equip_id from axx_step_density a where
+		a.start_equip_id=#{EQUIP_ID}
+	  </select>
+	<update id="updateEquipDistance" parameterType="map">
+		update
+		AXX_STEP_TOUR_EQUIP a set a.is_over=1 where a.equip_id=#{EQUIP_ID}
+	</update>
+	<update id="updateEquipDensity" parameterType="map">
+		update
+		axx_step_density a set a.remark=1 where a.start_equip_id=#{EQUIP_ID}
+	</update>
+	<update id="cancelEquipDensity" parameterType="map">
+		update
+		axx_step_density a set a.remark=0 where a.start_equip_id=#{EQUIP_ID}
+	</update>
+	<update id="cancelEquipDistance" parameterType="map">
+		update
+		axx_step_tour_equip a set a.is_over=0 where a.equip_id=#{EQUIP_ID}
+	</update>
+	<select id="getVariousStepType" parameterType="map" resultType="map">
+		select count(case
+		when aste.description like '%高标石%' and
+		aste.equip_type = 1 then
+		1
+		end) HIGHREMARK,
+		count(case
+		when
+		aste.description like '%矮标石%' and aste.equip_type = 1 then
+		1
+		end)
+		LOWREMARK,
+		count(case
+		when aste.description like '%有标石套%' and
+		aste.equip_type = 1 then
+		1
+		end) COVERREMARK,
+		count(case
+		when
+		aste.description like '%无标石套%' and aste.equip_type = 1 then
+		1
+		end)
+		UNCOVERREMARK,
+		count(case
+		when aste.description like '%普通标石%' and
+		aste.equip_type = 1 then
+		1
+		end) COMMREMARK,
+		count(case
+		when
+		aste.description like '%接头标石%' and aste.equip_type = 1 then
+		1
+		end)
+		CONTECTREMARK,
+		count(case
+		when aste.description like '%余缆标石%' and
+		aste.equip_type = 1 then
+		1
+		end) CABLEREMARK,
+		count(case
+		when
+		aste.description like '%转角标石%' and aste.equip_type = 1 then
+		1
+		end)
+		CORNERREMARK,
+		count(case
+		when aste.description like '%不锈钢%' and
+		aste.equip_type = 3 then
+		1
+		end) POLISHED,
+		count(case
+		when aste.description
+		like '%橡胶%' and aste.equip_type = 3 then
+		1
+		end) RUBBER,
+		count(case
+		when
+		aste.description like '%瓷砖%' and aste.equip_type = 3 then
+		1
+		end)
+		CERAMIC,
+		count(case
+		when aste.description like '%地砖%' and
+		aste.equip_type = 3 then
+		1
+		end) GROUND,
+		count(case
+		when aste.description
+		like '%圆井盖%' and aste.equip_type = 2 then
+		1
+		end) ROUND,
+		count(case
+		when
+		aste.description like '%方井盖%' and aste.equip_type = 2 then
+		1
+		end)
+		SQUARE,
+		count(case
+		when aste.description like '%双井盖%' and
+		aste.equip_type = 2 then
+		1
+		end) DOUBLE,
+		count(case
+		when aste.description
+		like '%三井盖%' and aste.equip_type = 2 then
+		1
+		end) THREE,
+		count(case
+		when
+		aste.description like '%铸铁%' and aste.equip_type = 2 then
+		1
+		end) IRON,
+		count(case
+		when aste.description like '%复合%' and aste.equip_type = 2
+		then
+		1
+		end) COMPLEX,
+		count(case
+		when aste.description like '%长途专用%' and
+		aste.equip_type = 2 then
+		1
+		end) SPECIAL,
+		count(case
+		when aste.description
+		like '%非长途专用%' and aste.equip_type = 2 then
+		1
+		end) UNSPECIAL,
+		count(case
+		when aste.description like '%普通井%' and aste.equip_type = 2 then
+		1
+		end)
+		COMM,
+		count(case
+		when aste.description like '%接头井%' and aste.equip_type
+		= 2 then
+		1
+		end) CONTECT,
+		count(case
+		when aste.description like '%余缆井%' and
+		aste.equip_type = 2 then
+		1
+		end) CABLE,
+		count(case
+		when aste.description
+		like '%小号(小于60x80)%' and aste.equip_type = 4 then
+		1
+		end) SMALL,
+		count(case
+		when aste.description like '%60x80%' and aste.equip_type = 4
+		then
+		1
+		end) NUMBER1,
+		count(case
+		when aste.description like
+		'%中号(大于60x80,小于120x100)%' and
+		aste.equip_type = 4 then
+		1
+		end) MIDDLE,
+		count(case
+		when aste.description like '%120x100%' and aste.equip_type =
+		4 then
+		1
+		end) FIGURE,
+		count(case
+		when aste.description like
+		'%大号(大于120x100)%' and
+		aste.equip_type = 4 then
+		1
+		end) LARGE,
+		count(case
+		when aste.description like '%8米%' and
+		aste.equip_type = 6 then
+		1
+		end)
+		HIGH1,
+		count(case
+		when aste.description like '%8-10米%' and
+		aste.equip_type = 6 then
+		1
+		end) HIGH2,
+		count(case
+		when aste.description
+		like '%10米以上%' and
+		aste.equip_type = 6 then
+		1
+		end) HIGH3,
+		count(case
+		when
+		aste.description like '%水泥电杆%' and
+		aste.equip_type = 6 then
+		1
+		end)
+		CONCRETE,
+		count(case
+		when aste.description like '%木电杆%' and
+		aste.equip_type = 6 then
+		1
+		end) WOOD,
+		count(case
+		when aste.description
+		like '%普通杆%' and
+		aste.equip_type = 6 then
+		1
+		end) COMM,
+		count(case
+		when
+		aste.description like '%引上(下)杆%' and
+		aste.equip_type = 6 then
+		1
+		end)UPPER,
+		count(case
+		when aste.description like '%角杆%' and
+		aste.equip_type = 6 then
+		1
+		end)ANGLE,
+		count(case
+		when aste.description
+		like '%H杆%' and
+		aste.equip_type = 6 then
+		1
+		end) HPOLE,
+		count(case
+		when
+		aste.description like '%警示牌%' and
+		aste.equip_type = 7 then
+		1
+		end) WARN,
+		count(case
+		when aste.description like '%宣传标语%' and
+		aste.equip_type = 7
+		then
+		1
+		end) SLOGAN,
+		count(case
+		when aste.description like '%限高牌%' and
+		aste.equip_type = 7 then
+		1
+		end) LIMIT,
+		count(case
+		when aste.description
+		like '%水线牌%' and
+		aste.equip_type = 7 then
+		1
+		end) LINE,
+		count(case
+		when
+		aste.description like '%砖砌%' and
+		aste.equip_type = 8 then
+		1
+		end) BRICK,
+		count(case
+		when aste.description like '%石块砌%' and
+		aste.equip_type = 8
+		then
+		1
+		end) MASONRY,
+		count(case
+		when aste.description like '%喷漆%' and
+		aste.equip_type = 8 then
+		1
+		end) SPARY,
+		count(case
+		when aste.description
+		like '%贴搪瓷牌%' and
+		aste.equip_type = 8 then
+		1
+		end) PLASTER ,
+		count(case
+		when aste.description like '%贴瓷砖%' and
+		aste.equip_type = 8 then
+		1
+		end)
+		TITLING,
+		count(case
+		when aste.description like '%卧式%' and
+		aste.equip_type = 9 then
+		1
+		end)HORIZTONTAL ,
+		count(case
+		when
+		aste.description like '%帽式%' and
+		aste.equip_type = 9 then
+		1
+		end) CAP ,
+		count(case
+		when aste.description like '%架空%' and
+		aste.equip_type = 9
+		then
+		1
+		end) OVERHEAD ,
+		count(case
+		when aste.description like '%直埋%' and
+		aste.equip_type = 9 then
+		1
+		end) BURIED ,
+		count(case
+		when aste.description
+		like '%管道%' and
+		aste.equip_type = 9 then
+		1
+		end) TUNNEL ,
+		count(case
+		when
+		aste.description like '%3M%' and
+		aste.equip_type = 9 then
+		1
+		end) M ,
+		count(case
+		when aste.description like '%瑞侃%' and
+		aste.equip_type = 9
+		then
+		1
+		end) RAYCHEM ,
+		count(case
+		when aste.description like '%5年内%' and
+		aste.equip_type = 9 then
+		1
+		end) YEAR1 ,
+		count(case
+		when aste.description
+		like '%5-10年%' and
+		aste.equip_type = 9 then
+		1
+		end) YEAR2 ,
+		count(case
+		when
+		aste.description like '%10-20年%' and
+		aste.equip_type = 9 then
+		1
+		end)
+		YEAR3 ,
+		count(case
+		when aste.description like '%>=20年%' and
+		aste.equip_type = 9 then
+		1
+		end) YEAR4 ,
+		count(case
+		when aste.description
+		like '%有托架%' and
+		aste.equip_type = 9 then
+		1
+		end) BRACKET ,
+		count(case
+		when
+		aste.description like '%无托架%' and
+		aste.equip_type = 9 then
+		1
+		end)
+		NOBRACKET ,
+		count(case
+		when aste.description like '%标识%' and
+		aste.equip_type = 10 then
+		1
+		end) IDENTIFE ,
+		count(case
+		when
+		aste.description like '%宣传牌%' and
+		aste.equip_type = 10 then
+		1
+		end) BRAND
+		,
+		count(case
+		when aste.description like '%警示牌%' and
+		aste.equip_type = 10
+		then
+		1
+		end) SIGN
+
+		from axx_step_tour_equip aste
+		where 1=1
+		<if test="area !='' and area !=null">
+			and aste.area_id=#{area} 
+    </if>
+		<if test="p_cable_id !='' and p_cable_id !=null">
+			and aste.cable_id=#{p_cable_id}   
+    </if>
+		<if test="p_relay_id !='' and p_relay_id !=null">
+			and aste.relay_id=#{p_relay_id}
+	 </if>
+	</select>
+	<select id="getProvinceStepTourCondition" parameterType="map"
+		resultType="map">
+		SELECT modelA.fiber_1_rate,
+		modelA.fiber_1_num,
+		modelA.fiber_1_act,
+		modelA.fiber_2_num,
+		modelA.fiber_2_act,
+		modelA.landmark_act,
+		modelA.landmark_num,
+		modelA.fiber_2_rate,
+		modelA.landmark_rate,
+		area.NAME,
+		case when nvl(modelB.danger_num1,0)=0
+		then 100
+		when nvl(modela.fiber_1_act,0)=0 then 100
+		else
+		100-round(modelb.danger_num1*100/modela.fiber_1_act,2) end ||'%'
+		danger_num1_rate,
+		case when nvl(modelB.danger_num2,0)=0 then 100
+		when
+		nvl(modela.fiber_2_act,0)=0 then 100
+		else
+		100-round(modelB.danger_num2*100/modela.fiber_2_act,2) end ||'%'
+		danger_num2_rate,
+		case when nvl(modelB.danger_landmark,0)=0 then 100
+		when nvl(modela.landmark_act,0)=0 then 100
+		else
+		100-round(modelB.danger_landmark*100/modela.landmark_act,2) end ||'%'
+		danger_landmark_rate,
+		Nvl(modelB.danger_num1, 0) danger_num1,
+		Nvl(modelB.danger_num2, 0) danger_num2,
+		Nvl(modelB.danger_landmark, 0)
+		danger_landmark,
+		modelA.search_date
+		FROM (SELECT model1.area_id,
+		Decode(SUM(model1.fiber_1), 0, '-',
+		Round(SUM(model1.act_fiber_1) * 100
+		/
+		SUM(model1.fiber_1), 2)
+		|| '%')FIBER_1_RATE,
+		SUM(model1.fiber_1)
+		FIBER_1_num,
+		SUM(model1.act_fiber_1) FIBER_1_act,
+		Decode(SUM(model1.fiber_2), 0, '-',
+		Round(SUM(model1.act_fiber_2) * 100
+		/
+		SUM(model1.fiber_2), 2)
+		||'%') FIBER_2_RATE,
+		SUM(model1.act_fiber_2)
+		FIBER_2_act,
+		SUM(model1.fiber_2) FIBER_2_num,
+		Decode(SUM(model1.landmark), 0, '-',
+		Round(
+		SUM(model1.act_landmark) *
+		100 /
+		SUM(model1.landmark), 2)
+		||'%')LANDMARK_RATE,
+		SUM(model1.act_landmark) LANDMARK_act ,
+		SUM(model1.landmark)
+		LANDMARK_num ,
+
+		model1.search_date
+		FROM (SELECT Count(CASE
+		WHEN
+		atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN 1
+		END)
+		FIBER_1,
+		Count(CASE
+		WHEN atc.fiber_grade = 2
+		AND aste.equip_type != 3 THEN 1
+		END)
+		FIBER_2,
+		Count(Decode(aste.equip_type, 3, 1))
+		LANDMARK,
+		Count(CASE
+		WHEN
+		b.status = 1
+		AND atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN 1
+		END)
+		ACT_FIBER_1,
+		Count(CASE
+		WHEN b.status = 1
+		AND atc.fiber_grade = 2
+		AND
+		aste.equip_type != 3 THEN 1
+		END)
+		ACT_FIBER_2,
+		Count(CASE
+		WHEN b.status = 1
+		AND aste.equip_type = 3THEN 1
+		END)
+		ACT_LANDMARK,
+		Decode(Count(CASE
+		WHEN
+		atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN 1
+		END), 0, '-',
+		Round(Count(CASE
+		WHEN b.status = 1
+		AND atc.fiber_grade
+		= 1
+		AND
+		aste.equip_type
+		!= 3
+		THEN 1
+		END) * 100 / Count(CASE
+		WHEN atc.fiber_grade
+		=
+		1
+		AND aste.equip_type !=
+		3 THEN 1
+		END), 2
+		)
+		||'%')
+		FIBER_1_RATE,
+		Decode(Count(CASE
+		WHEN atc.fiber_grade = 2
+		AND aste.equip_type != 3 THEN
+		1
+		END), 0, '-',
+		Round(Count(CASE
+		WHEN b.status = 1
+		AND atc.fiber_grade
+		= 2
+		AND aste.equip_type
+		!= 3
+		THEN 1
+		END) * 100 / Count(CASE
+		WHEN
+		atc.fiber_grade
+		= 2
+		AND aste.equip_type !=
+		3 THEN 1
+		END), 2
+		)
+		||'%')
+		FIBER_2_RATE,
+		Decode(Count(Decode(aste.equip_type, 3, 1)), 0, '-',
+		Round(
+		Count(CASE
+		WHEN
+		b.status = 1
+		AND
+		aste.equip_type = 3THEN 1
+		END) * 100
+		/
+		Count(Decode(aste.equip_type, 3, 1)), 2)
+		||'%')
+		LANDMARK_RATE
+		,
+		a.inspect_id,
+		c.staff_name,
+		aste.area_id,
+		#{start_time}
+		||'至'
+		||#{end_time}
+		SEARCH_DATE
+		FROM axx_step_task a,
+		axx_step_task_equip b,
+		axx_step_tour_equip aste,
+		axx_t_cable atc,
+		(SELECT *
+		FROM (SELECT a.*,
+		b.staff_name,
+		c.org_name,
+		c.org_id,
+		b.staff_id
+		FROM axx_step_task a,
+		tb_base_staff b,
+		axx_t_organization c
+		WHERE a.inspect_id = b.staff_id
+		AND b.org_id = c.org_id) a where (a.start_time &lt;=
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{start_time},
+		'yyyy-mm-dd') &lt;= a.end_time)
+		or (a.start_time &lt;=
+		to_date(#{end_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd') &lt;= a.end_time)) c
+		WHERE b.task_id = a.task_id
+		AND
+		a.is_del = 0
+		AND a.task_id = c.task_id
+		AND b.equip_id = aste.equip_id
+		AND aste.cable_id = atc.cable_id
+		GROUP BY a.inspect_id,
+		c.staff_name,
+		aste.area_id)model1
+		GROUP BY model1.area_id,
+		model1.search_date)modelA
+		left join area area
+		ON modelA.area_id = area.area_id
+		left join (SELECT
+		t.area_id,
+		area.name,
+		Count(CASE
+		WHEN t.fiber_grade = 1
+		AND t.equip_type
+		!= 3 THEN 1
+		END) danger_num1,
+		Count(CASE
+		WHEN t.fiber_grade = 2
+		AND
+		t.equip_type != 3 THEN 1
+		END) danger_num2,
+		Count(Decode(t.equip_type, 3,
+		1))danger_landmark
+		FROM (SELECT Rank()
+		over(
+		PARTITION BY a.equip_id
+		ORDER BY a.check_time DESC) rn,
+		a.*,
+		aste.area_id,
+		atc.fiber_grade
+		FROM
+		axx_equip_check a,
+		axx_step_tour_equip aste,
+		axx_t_cable atc
+		WHERE 1 = 1
+		AND atc.cable_id = aste.cable_id
+		AND a.equip_id IN (SELECT c.equip_id
+		FROM
+		axx_step_tour_equip c,
+		area d
+		WHERE 1 = 1
+		AND c.area_id = d.area_id)
+		AND aste.equip_id = a.equip_id
+		AND a.check_time BETWEEN
+		To_date(#{start_time},
+		'yyyy-mm-dd') AND
+		To_date
+		(
+		#{end_time},
+		'yyyy-mm-dd'))
+		t,
+		area area
+		WHERE t.rn = 1
+		AND t.area_id = area.area_id
+		AND t.status = 0
+		GROUP BY t.area_id,
+		area.name)modelB
+		ON modelA.area_id =
+		modelB.area_id 
+	    
+	    
+	 </select>
+
+
+	<select id="getProvienceData" parameterType="map" resultType="map">
+		SELECT modela.fiber_1_act,
+		modela.fiber_1_num,
+		modela.fiber_1_rate,
+		modela.fiber_2_num,
+		modela.fiber_2_act,
+		modela.fiber_2_rate,
+		modela.landmark_act,
+		modela.landmark_num,
+		modela.landmark_rate,
+		modela.aa name,
+		decode(Nvl(modelb.danger_num1,
+		0),0,100,100-round(modelb.danger_num1*100/modela.fiber_1_act,2))||'%'
+		danger_num1_rate ,
+		decode(Nvl(modelb.danger_num2, 0)
+		,0,100,100-round(modelb.danger_num2*100/modela.fiber_2_act,2))||'%'
+		danger_num2_rate ,
+		decode(Nvl(modelb.danger_landmark,
+		0),0,100,100-round(modelb.danger_landmark
+		*100/modela.landmark_act,2))||'%' danger_landmark_rate ,
+		Nvl(modelb.danger_num1, 0) danger_num1,
+		Nvl(modelb.danger_num2, 0)
+		danger_num2,
+		Nvl(modelb.danger_landmark, 0) danger_landmark,
+		modela.search_date
+		FROM (
+		SELECT '全省' aa,
+		Decode(Sum(model1.fiber_1), 0,
+		'-', Round(Sum(model1.act_fiber_1) * 100 / Sum(model1.fiber_1), 2)
+		||
+		'%')fiber_1_rate,
+		Sum(model1.fiber_1) fiber_1_num ,
+		Sum(model1.act_fiber_1) fiber_1_act ,
+		Decode(Sum(model1.fiber_2), 0,
+		'-', Round(Sum(model1.act_fiber_2) * 100 / Sum(model1.fiber_2), 2)
+		||'%') fiber_2_rate,
+		Sum(model1.fiber_2) fiber_2_num ,
+		Sum(model1.act_fiber_2) fiber_2_act ,
+		Decode(Sum(model1.landmark), 0,
+		'-', Round( Sum(model1.act_landmark) * 100 / Sum(model1.landmark),
+		2)
+		||'%')landmark_rate,
+		Sum(model1.landmark) landmark_num,
+		Sum(model1.act_landmark) landmark_act,
+		model1.search_date
+		FROM (
+		SELECT
+		Count(
+		CASE
+		WHEN atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN 1
+		END)
+		fiber_1,
+		Count(
+		CASE
+		WHEN atc.fiber_grade = 2
+		AND aste.equip_type != 3
+		THEN 1
+		END) fiber_2,
+		Count(Decode(aste.equip_type, 3, 1)) landmark,
+		Count(
+		CASE
+		WHEN b.status = 1
+		AND atc.fiber_grade = 1
+		AND aste.equip_type
+		!= 3 THEN 1
+		END) act_fiber_1,
+		Count(
+		CASE
+		WHEN b.status = 1
+		AND
+		atc.fiber_grade = 2
+		AND aste.equip_type != 3 THEN 1
+		END) act_fiber_2,
+		Count(
+		CASE
+		WHEN b.status = 1
+		AND aste.equip_type = 3THEN 1
+		END)
+		act_landmark,
+		Decode(Count(
+		CASE
+		WHEN atc.fiber_grade = 1
+		AND
+		aste.equip_type != 3 THEN 1
+		END), 0, '-', Round(Count(
+		CASE
+		WHEN b.status
+		= 1
+		AND atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN 1
+		END) * 100 /
+		Count(
+		CASE
+		WHEN atc.fiber_grade = 1
+		AND aste.equip_type != 3 THEN 1
+		END), 2 )
+		||'%') fiber_1_rate,
+		Decode(Count(
+		CASE
+		WHEN atc.fiber_grade = 2
+		AND aste.equip_type != 3 THEN 1
+		END), 0, '-', Round(Count(
+		CASE
+		WHEN
+		b.status = 1
+		AND atc.fiber_grade = 2
+		AND aste.equip_type != 3 THEN 1
+		END) * 100 / Count(
+		CASE
+		WHEN atc.fiber_grade = 2
+		AND aste.equip_type !=
+		3 THEN 1
+		END), 2 )
+		||'%') fiber_2_rate,
+		Decode(Count(Decode(aste.equip_type, 3, 1)), 0, '-', Round( Count(
+		CASE
+		WHEN b.status = 1
+		AND aste.equip_type = 3THEN 1
+		END) * 100 /
+		Count(Decode(aste.equip_type, 3, 1)), 2)
+		||'%') landmark_rate ,
+
+		#{start_time}
+		||'至'
+		||#{end_time} search_date
+		FROM axx_step_task a,
+		axx_step_task_equip b,
+		axx_step_tour_equip aste,
+		axx_t_cable atc,
+		(
+		SELECT *
+		FROM (SELECT a.*,
+		b.staff_name,
+		c.org_name,
+		c.org_id,
+		b.staff_id
+		FROM axx_step_task a,
+		tb_base_staff b,
+		axx_t_organization c
+		WHERE
+		a.inspect_id = b.staff_id
+		AND b.org_id = c.org_id) a where
+		(a.start_time &lt;=
+		to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{start_time}, 'yyyy-mm-dd') &lt;= a.end_time)
+		or (a.start_time
+		&lt;= to_date(#{end_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time},
+		'yyyy-mm-dd') &lt;= a.end_time)) c WHERE
+		b.task_id = a.task_id
+		AND
+		a.is_del = 0
+		AND
+		a.task_id = c.task_id
+		AND
+		b.equip_id = aste.equip_id
+		AND
+		aste.cable_id = atc.cable_id )model1 GROUP BY
+		model1.search_date)modela LEFT JOIN
+		(
+		SELECT '全省'bb,
+		count(
+		CASE
+		WHEN
+		t.fiber_grade = 1
+		AND t.equip_type != 3 THEN 1
+		END) danger_num1,
+		count(
+		CASE
+		WHEN t.fiber_grade = 2
+		AND t.equip_type != 3 THEN 1
+		END)
+		danger_num2,
+		count(decode(t.equip_type, 3, 1))danger_landmark
+		FROM (
+		SELECT rank() OVER( partition BY a.equip_id ORDER BY a.check_time
+		DESC) rn,
+		a.*,
+		aste.area_id,
+		atc.fiber_grade
+		FROM axx_equip_check a,
+		axx_step_tour_equip aste,
+		axx_t_cable atc
+		WHERE 1 = 1
+		AND atc.cable_id =
+		aste.cable_id
+		AND a.equip_id IN
+		(
+		SELECT c.equip_id
+		FROM
+		axx_step_tour_equip c,
+		area d
+		WHERE 1 = 1
+		AND c.area_id = d.area_id)
+		AND
+		aste.equip_id = a.equip_id
+		AND a.check_time BETWEEN
+		to_date(#{start_time}, 'yyyy-mm-dd') AND to_date
+		( #{end_time},
+		'yyyy-mm-dd'))t
+		WHERE t.rn = 1
+		AND t.status = 0
+		)modelb ON modela.aa =
+		modelb.bb
+</select>
+	<insert id="saveguardRate" parameterType="map">
+		insert into
+		axx_t_guardrate
+		(ORG_ID,STAFF_ID,PLAN_ID,PLAN_DATE,OUT_SITE_ID,RATEOFKANHU,WORKTIME,PLANTIME)values
+		(
+		#{org_id,jdbcType=VARCHAR},#{staff_id ,jdbcType=VARCHAR},#{plan_id
+		,jdbcType=VARCHAR},
+		to_date(#{date},'yyyy-mm-dd'),#{out_site_id,jdbcType=VARCHAR},
+		#{rateOfKanHu,jdbcType=VARCHAR},#{workTime,jdbcType=VARCHAR},#{planTime,jdbcType=VARCHAR}
+		)
+</insert>
+	<!-- 通过父级area_id查找子集区域信息 -->
+	<select id="getAllGroup" parameterType="string" resultType="map">
+		select * from AXX_T_ORGANIZATION where area_id = #{_parameter} 
+</select>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select * from ( select aec.check_id,
+		aec.equip_id,
+		aec.equip_type,
+		to_char(aec.check_time, 'yyyy-mm-dd hh24:mi:ss') CHECK_TIME,
+		aste.equip_code,
+		case when aec.status=0 then '问题' else '正常' end STATUS,
+		tbs.staff_name,
+		tbs.org_id,
+		a.name,
+		ato.org_name,
+		rank () OVER (PARTITION
+		BY aec.equip_id ORDER BY aec.check_time ) rank
+
+		from AXX_EQUIP_CHECK aec
+		join tb_base_staff tbs
+		on aec.check_staff_id = tbs.staff_id
+		join
+		AXX_T_ORGANIZATION ato
+		on tbs.org_id = ato.org_id
+		join
+		AXX_STEP_TOUR_EQUIP aste
+		on aste.equip_id=aec.equip_id
+		join AREA a
+		on
+		aste.area_id=a.area_id
+		where 1=1 and aec.status=0
+		<if test="queryParams.p_end_time !=null and queryParams.p_end_time !=''">
+			and trunc(aec.check_time)
+			&lt;=to_date(#{queryParams.p_end_time},'yyyy-mm-dd')
+      </if>
+		<if
+			test="queryParams.p_start_time !=null and queryParams.p_start_time !=''">
+			and trunc(aec.check_time)
+			&gt;=to_date(#{queryParams.p_start_time},'yyyy-mm-dd')
+      </if>
+		<if
+			test="queryParams.p_equip_name  != null and queryParams.p_equip_name  != ''"> 
+      <![CDATA[ and  aste.equip_code  like '%'||#{queryParams.p_equip_name }||'%'    ]]>
+		</if>
+
+		<if test="queryParams.area_id !=null and queryParams.area_id !=''">
+			AND ASTE.AREA_ID=#{queryParams.area_id}
+      </if>
+		<if test="queryParams.org_id !=null and queryParams.org_id !=''">
+			and ato.org_id=#{queryParams.org_id}
+      </if>
+		<if
+			test="queryParams.p_inspect_name != null and queryParams.p_inspect_name != ''">  
+            <![CDATA[
+	  		and tbs.staff_name like '%'||#{queryParams.p_inspect_name}||'%'
+	  		]]>
+		</if>
+
+		) a where a.rank =1
+
+
+
+
+	</select>
+
+	<!-- 步巡设施点地图上的位置 -->
+	<select id="getStepEquipLocation" parameterType="map"
+		resultType="map">
+		select * from AXX_STEP_TOUR_EQUIP where equip_id=
+		#{equip_id}
+</select>
+
+
+	<select id="queryDown" parameterType="map" resultType="map">
+
+		select
+		a.equip_id,a.equip_code,a.equip_type_name,a.status,a.staff_name,a.check_time
+		from (select aec.check_id,
+		aec.equip_id,
+		b.equip_type_name,
+		to_char(aec.check_time, 'yyyy-mm-dd hh24:mi:ss') CHECK_TIME,
+		aste.equip_code,
+		case when aec.status=0 then '问题'else '正常' end STATUS,
+		tbs.staff_name,
+		tbs.org_id,
+		a.name,
+		ato.org_name,
+		rank() OVER(PARTITION BY
+		aec.equip_id ORDER BY aec.check_time) rank
+
+		from AXX_EQUIP_CHECK aec
+		join tb_base_staff tbs
+		on aec.check_staff_id = tbs.staff_id
+		join
+		AXX_T_ORGANIZATION ato
+		on tbs.org_id = ato.org_id
+		join
+		AXX_STEP_TOUR_EQUIP aste
+		on aste.equip_id = aec.equip_id
+		join AREA a
+		on
+		aste.area_id = a.area_id
+		join (select distinct
+		a.equip_type_id,a.equip_type_name from
+		AXX_EQUIP_DANGER_PARAM a)b
+		on
+		b.equip_type_id = aec.equip_type
+		where 1=1 and aec.status=0
+
+		<if test="p_end_time !=null and p_end_time !=''">
+			and trunc(aec.check_time)
+			&lt;=to_date(#{p_end_time},'yyyy-mm-dd')
+      </if>
+		<if test="p_start_time !=null and p_start_time !=''">
+			and trunc(aec.check_time)
+			&gt;=to_date(#{p_start_time},'yyyy-mm-dd')
+      </if>
+		<if test="p_equip_name  != null and p_equip_name  != ''"> 
+      <![CDATA[ and  aste.equip_code  like '%'||#{p_equip_name }||'%'    ]]>
+		</if>
+
+		<if test="area_id !=null and area_id !=''">
+			AND ASTE.AREA_ID=#{area_id}
+      </if>
+		<if test="org_id !=null and org_id !=''">
+			and ato.org_id=#{org_id}
+      </if>
+		<if test="p_inspect_name != null and p_inspect_name != ''">  
+            <![CDATA[
+	  		and tbs.staff_name like '%'||#{p_inspect_name}||'%'
+	  		]]>
+		</if>
+		) a
+		where a.rank = 1
+
+
+	</select>
+
+	<select id="getAreaList" parameterType="map" resultType="map">
+		select *
+		from area a where a.area_level=3
+	</select>
+
+	<select id="getExportInspectTime" parameterType="map"
+		resultType="map">
+		select to_char(tc.inspect_date, 'yyyy-mm-dd') inspect_date,
+		to_char(tc.start_time, 'yyyy-mm-dd hh24:mi:ss') start_time,
+		to_char(tc.end_time, 'yyyy-mm-dd hh24:mi:ss') end_time,
+		to_char(round((nvl(td.ins_time_valid_morning,0)+nvl(te.ins_time_valid_afternoon,0))
+		/ 60,2),'fm9999999990.00') ins_time_valid_allday,
+		to_char(round(nvl(td.ins_time_valid_morning,0) /
+		60,2),'fm9999999990.00') ins_time_valid_morning,
+		to_char(round(nvl(te.ins_time_valid_afternoon,0) /
+		60,2),'fm9999999990.00') ins_time_valid_afternoon,
+		to_char(round(nvl(tf.stay_time,0) / 60,2),'fm9999999990.00')
+		os_nurse_time ,
+		bs.staff_name,ae.name area_name,ato.org_name
+		from
+		(select t.user_id,t.area_id,trunc(t.track_time) inspect_date,
+		min(t.track_time) start_time,max(t.track_time) end_time from
+		AXX_AUTO_USER_TRACK t
+		where
+		trunc(t.track_time)&gt;=to_date(#{start_date}, 'yyyy-mm-dd')
+		and
+		trunc(t.track_time)&lt;=to_date(#{end_date}, 'yyyy-mm-dd')
+		and
+		t.area_id=#{areaId}
+		and exists (select tms.match_id from
+		axx_t_macth_site tms,axx_t_task att
+		where tms.track_id=t.track_id and
+		tms.task_id=att.task_id and
+		att.status=0 )
+		group by t.user_id,
+		t.area_id, trunc(t.track_time)) tc,--全天轨迹时间
+		(select
+		t.line_date,t.user_id,to_number(#{total_min_m}) -
+		round(sum(to_number(least(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{end_date_m}||':00','yyyy-mm-dd hh24:mi:ss'),t.end_time)
+		-
+		greatest(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{start_date_m}||':00','yyyy-mm-dd hh24:mi:ss'),t.start_time)) *
+		1440)) ins_time_valid_morning
+		from AXX_T_INVALID_TIME t
+		where
+		t.line_date between to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date}, 'yyyy-mm-dd')
+		and to_char(t.start_time, 'hh24:mi')
+		&lt; #{end_date_m}
+		and to_char(t.end_time, 'hh24:mi') &gt;
+		#{start_date_m}
+		group by t.line_date, t.user_id) td,--上午有效时间
+		(select
+		t.line_date,t.user_id,to_number(#{total_min_a}) -
+		round(sum(to_number(least(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{end_date_a}||':00','yyyy-mm-dd hh24:mi:ss'),t.end_time)
+		-
+		greatest(to_date(to_char(t.line_date,'yyyy-mm-dd')
+		||#{start_date_a}||':00','yyyy-mm-dd hh24:mi:ss'),t.start_time)) *
+		1440)) ins_time_valid_afternoon
+		from AXX_T_INVALID_TIME t
+		where
+		t.line_date between to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date}, 'yyyy-mm-dd')
+		and to_char(t.end_time, 'hh24:mi')
+		&gt;= #{start_date_a}
+		and to_char(t.start_time, 'hh24:mi') &lt;=
+		#{end_date_a}
+		group by t.line_date, t.user_id) te,--下午有效时间
+		(select
+		t.user_id,trunc(t.start_time) inspect_time,sum(stay_time) stay_time
+		from AXX_T_STAY t
+		where trunc(t.start_time) between
+		to_date(#{start_date}, 'yyyy-mm-dd') and
+		to_date(#{end_date},
+		'yyyy-mm-dd')
+		and t.stay_type = 1 group by t.user_id,
+		trunc(t.start_time))
+		tf,--外力施工配合时长
+		tb_base_staff bs,area
+		ae,AXX_T_ORGANIZATION ato
+		where tc.user_id = bs.staff_id and tc.area_id
+		= ae.area_id
+		and tc.user_id = td.user_id(+) and tc.inspect_date =
+		td.line_date(+)
+		and tc.user_id = tf.user_id(+) and tc.inspect_date =
+		tf.inspect_time(+)
+		and tc.user_id = te.user_id(+) and tc.inspect_date =
+		te.line_date(+)
+		and bs.org_id=ato.org_id
+		<if test=" inspect_id  != null and inspect_id  != ''"> 
+         <![CDATA[
+               AND TC.USER_ID=#{inspect_id}
+          ]]>
+		</if>
+		<if test="org_id !=null and org_id !=''">
+			and ato.org_id=#{org_id} 
+	</if>
+		order by tc.user_id,tc.inspect_date
+	</select>
+
+	<select id="getProvienceOfStaffData" parameterType="map"
+		resultType="map">
+		select ato.org_name ,a.name,
+		tbs.staff_name ,
+		to_char(round(atvt.valid_m_time / 60, 2), 'fm9999999990.00')
+		INS_TIME_VALID_MORNING ,
+		to_char(round(atvt.valid_a_time / 60, 2),
+		'fm9999999990.00')
+		INS_TIME_VALID_AFTERNOON,
+		to_char(round(atvt.out_cooperation_time / 60, 2), 'fm9999999990.00')
+		OS_NURSE_TIME,
+		to_char(round((atvt.valid_m_time + atvt.valid_a_time) /
+		60, 2) ,
+		'fm9999999990.00') INS_TIME_VALID_ALLDAY,
+		to_char(atvt.inspect_date, 'yyyy-mm-dd') inspect_date,
+		to_char(atvt.start_time, 'yyyy-mm-dd hh24:mi:ss') start_time,
+		to_char(atvt.end_time, 'yyyy-mm-dd hh24:mi:ss') end_time
+		from
+		axx_t_valid_time atvt
+		join tb_base_staff tbs
+		on tbs.staff_id =
+		atvt.user_id
+		and tbs.is_help_patrol = 0
+		join axx_t_organization ato
+		on
+		ato.org_id = tbs.org_id
+		join area a on a.area_id=tbs.area_id
+		where 1=1
+		and atvt.inspect_date between to_date(#{start_time}, 'yyyy-mm-dd') and
+		to_date(#{end_time}, 'yyyy-mm-dd')
+		<if test="area_id !=null and area_id !='' ">
+			and tbs.area_id=#{area_id}
+		</if>
+		order by
+		atvt.user_id,atvt.inspect_date,a.name
+	</select>
+
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.cableCheck.dao.CheckTaskProcessDao">
+	
+	<select id="getProcess" parameterType="map" resultType="map">
+		select p.task_id,
+		       to_char(p.oper_time, 'yyyy/mm/dd hh24:mi:ss') oper_time,
+		       p.oper_staff,
+		       s.staff_name,
+		       p.status status_id,
+		       case p.status
+		         when '0' then
+		          '已完成'
+		         when '1' then
+		          '未开始'
+		         when '2' then
+		          '进行中'
+		         when '4' then
+		          '问题上报,待派单'
+		         when '5' then
+		          '退单,待派单'
+		         when '6' then
+		          '待回单'
+		         when '7' then
+		          '已整改回单,待审核'
+		         when '8' then
+		          '已归档'
+		         when '66' then
+		          '一键改'
+		       end status,
+		       p.remark
+		  from tb_cablecheck_process p
+		  left join TB_BASE_STAFF s
+		    on p.oper_staff = s.staff_id
+		 where p.task_id = #{task_id}
+		 order by p.oper_time desc
+	</select>
+	
+	<select id="getOldTaskId" parameterType="map" resultType="string">
+		select ts.old_task_id from tb_cablecheck_task ts where ts.task_id=#{task_id} 
+	</select>
+	
+	<select id="getProcessInfo" parameterType="map" resultType="map">
+		select p.task_id,
+		       to_char(p.oper_time, 'yyyy/mm/dd hh24:mi:ss') oper_time,
+		       p.oper_staff,
+		       s.staff_name,
+		       p.status status_id,
+		       case p.status
+		         when '0' then
+		          '已完成'
+		         when '1' then
+		          '未开始'
+		         when '2' then
+		          '进行中'
+		         when '4' then
+		          '问题上报,待派单'
+		         when '5' then
+		          '退单,待派单'
+		         when '6' then
+		          '待回单'
+		         when '7' then
+		          '已整改回单,待审核'
+		         when '8' then
+		          '已归档'
+		         when '66' then
+		          '一键改'
+		       end status,
+		       p.remark
+		  from tb_cablecheck_process p
+		  left join TB_BASE_STAFF s
+		    on p.oper_staff = s.staff_id
+		 where p.task_id in(#{oldTaskId},#{task_id})
+		 order by p.task_id desc, p.oper_time desc
+	</select>
+
+
+
+
+
+
+</mapper>

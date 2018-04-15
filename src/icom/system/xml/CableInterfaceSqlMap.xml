@@ -1,0 +1,1373 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.system.dao.CableInterfaceDao">
+
+	<select id="getAllTask" parameterType="map" resultType="map">
+	<![CDATA[
+		SELECT
+			T.TASK_ID,
+			T.TASK_NAME,
+			T.STATUS_ID,
+			A.NAME,
+			T.COMPLETE_TIME,
+			P.PLAN_KIND,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE > -1) MAINCOUNT,
+			(SELECT COUNT(1)
+           	 FROM TB_INS_TASK_DETAIL TD, TB_INS_POINT TIP, TB_INS_POINT_TYPE PT
+          	 WHERE TD.INSPECT_OBJECT_ID = TIP.POINT_ID
+             AND TIP.POINT_TYPE = PT.POINT_TYPE_ID
+             AND TD.TASK_ID = T.TASK_ID) MAINCOUNTFORCHECK,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE < 0) NORMALCOUNT,
+			(SELECT COUNT(1) FROM TB_INS_RECORD_NORMAL RN
+		      JOIN TB_INS_POINT TIP ON TIP.POINT_ID=RN.POINT_ID
+		      WHERE TIP.POINT_TYPE=-1 AND RN.TASK_ID=T.TASK_ID) SIGNNORMAL,
+      		(SELECT COUNT(1) FROM
+			TB_INS_RECORD TIR 
+			 JOIN TB_INS_TASK_DETAIL TD ON TD.TASK_DETAIL_ID = TIR.TASK_DETAIL_ID
+			 JOIN TB_INS_POINT TIP ON TIP.POINT_ID = TIR.POINT_ID
+			WHERE TIR.TASK_ID= T.TASK_ID 
+			and tir.record_type=0) AS SIGNINCOUNT,
+			P.CREATE_TIME AS MODIFYTIME
+      		,(SELECT MAX(LINE_TYPE) FROM TB_INS_LINE LINE,TB_INS_TASK_DETAIL TD WHERE LINE.LINE_ID=TD.INSPECT_OBJECT_ID AND T.TASK_ID=TD.TASK_ID ) AS LINETYPE
+		FROM TB_INS_TASK T, AREA A, TB_INS_PLAN P
+		WHERE A.AREA_ID = T.SON_AREA_ID
+			AND T.START_TIME <= TO_DATE(#{CURR_TIME}, ' YYYY-MM-DD HH24:MI:SS')
+			AND T.COMPLETE_TIME >= TO_DATE(#{CURR_TIME}, 'YYYY-MM-DD HH24:MI:SS')
+			]]>
+			AND P.PLAN_ID = T.PLAN_ID
+			AND P.PLAN_KIND IN (1,2)
+			AND P.ISDELETED = 0
+			AND T.INSPECTOR = #{STAFF_ID}
+			<if test="TASK_ID!=null and TASK_ID!=''">
+			AND T.TASK_ID=#{TASK_ID}
+			
+			<!--and t.status_id<3-->
+			
+			</if>
+		UNION ALL
+		<![CDATA[
+		SELECT
+			T.TASK_ID,
+			T.TASK_NAME,
+			T.STATUS_ID,
+			A.NAME,
+			T.COMPLETE_TIME,
+			P.PLAN_KIND,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE > -1) MAINCOUNT,
+			(SELECT COUNT(1)
+           	 FROM TB_INS_TASK_DETAIL TD, TB_INS_POINT TIP, TB_INS_POINT_TYPE PT
+          	 WHERE TD.INSPECT_OBJECT_ID = TIP.POINT_ID
+             AND TIP.POINT_TYPE = PT.POINT_TYPE_ID
+             AND TD.TASK_ID = T.TASK_ID) MAINCOUNTFORCHECK,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE < 0) NORMALCOUNT,
+			(SELECT COUNT(1) FROM TB_INS_RECORD_NORMAL RN
+		      JOIN TB_INS_POINT TIP ON TIP.POINT_ID=RN.POINT_ID
+		      WHERE TIP.POINT_TYPE=-1 AND RN.TASK_ID=T.TASK_ID) SIGNNORMAL,
+      		(SELECT COUNT(1) FROM
+			TB_INS_RECORD TIR 
+			 JOIN TB_INS_TASK_DETAIL TD ON TD.TASK_DETAIL_ID = TIR.TASK_DETAIL_ID
+			 JOIN TB_INS_POINT TIP ON TIP.POINT_ID = TIR.POINT_ID
+			WHERE TIR.TASK_ID= T.TASK_ID
+			and tir.record_type=0) AS SIGNINCOUNT,
+      		P.CREATE_TIME AS MODIFYTIME
+      		,(SELECT MAX(LINE_TYPE) FROM TB_INS_LINE LINE,TB_INS_TASK_DETAIL TD WHERE LINE.LINE_ID=TD.INSPECT_OBJECT_ID AND T.TASK_ID=TD.TASK_ID ) AS LINETYPE
+		FROM TB_INS_TASK T, AREA A, TB_INS_PLAN P
+		WHERE A.AREA_ID = T.SON_AREA_ID
+			AND T.START_TIME <= TO_DATE(#{CURR_TIME}, ' YYYY-MM-DD HH24:MI:SS')
+			AND T.COMPLETE_TIME >= TO_DATE(#{CURR_TIME}, 'YYYY-MM-DD HH24:MI:SS')
+			]]>
+			AND P.PLAN_ID = T.PLAN_ID
+			AND P.PLAN_KIND IN (1,2)
+			AND P.ISDELETED = 0
+			AND T.INSPECTOR in
+			(SELECT DEPT_ID FROM TB_INS_STAFF_DEPT WHERE STAFF_ID=#{STAFF_ID})
+			<if test="TASK_ID!=null and TASK_ID!=''">
+			AND T.TASK_ID=#{TASK_ID}
+			</if>
+			
+			<!--and t.status_id<3-->
+			
+	</select>
+	
+	<select id="getAllPoint" parameterType="String" resultType="map">
+	<![CDATA[
+		SELECT TIP.POINT_ID,
+       		TIP.POINT_TYPE,
+       		TD.TASK_DETAIL_ID,
+       		TIP.POINT_NAME,
+       		TD.COMPLETED,
+       		TIP.LONGITUDE,
+       		TIP.LATITUDE,
+       		ET.EQUIPMENT_TYPE_NAME EQP_TYPE,
+       		CASE WHEN EXISTS (SELECT 0 FROM TB_INS_RECORD R WHERE R.RECORD_TYPE = 0 AND R.TASK_DETAIL_ID = TD.TASK_DETAIL_ID AND R.POINT_ID = TIP.POINT_ID)
+           THEN 1
+           ELSE 0
+           END  COMPLETED,	
+       		M.LEVEL_NAME
+		FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP,TB_INS_TASK T,TB_INS_TASK_DETAIL TD,TB_INS_MNT M,TB_INS_EQUIPMENT_TYPE ET
+		WHERE TIPD.PLAN_ID = T.PLAN_ID
+      AND T.TASK_ID =TD.TASK_ID
+      AND M.LEVEL_ID = TIP.POINT_LEVEL
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.EQP_TYPE_ID = ET.EQUIPMENT_TYPE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE > 0
+      AND T.TASK_ID = #{TASK_ID}
+   	]]>
+	</select>
+
+	<select id="getAllPoint2" parameterType="String" resultType="map">
+		SELECT P.POINT_ID,
+      	 	TD.TASK_DETAIL_ID,
+      	 	TD.INSPECT_OBJECT_ID LINE_ID,
+       		P.POINT_TYPE POINT_TYPE_ID,
+       		P.POINT_NAME,
+       		P.LONGITUDE,
+       		P.LATITUDE,
+       		l.LINE_ID,
+          	L.LINE_TYPE,
+          	(select ET.EQUIPMENT_TYPE_NAME FROM TB_INS_EQUIPMENT_TYPE ET where 
+          	P.EQP_TYPE_ID = ET.EQUIPMENT_TYPE_ID
+          	) EQP_TYPE,
+       		CASE WHEN EXISTS (SELECT 0 FROM TB_INS_RECORD R WHERE R.RECORD_TYPE = 0 AND R.TASK_DETAIL_ID = TD.TASK_DETAIL_ID AND R.POINT_ID = P.POINT_ID)
+           THEN 1
+           ELSE 0
+           END  COMPLETED,
+           DECODE((
+           SELECT COUNT(1) FROM TB_INS_RECORD_NORMAL RN
+           WHERE RN.POINT_ID=P.POINT_ID AND RN.TASK_ID=TD.TASK_ID),0,0,1
+           ) NORMALCOMPLETED,
+           (SELECT M.LEVEL_NAME FROM  TB_INS_MNT M WHERE M.LEVEL_ID = P.POINT_LEVEL) LEVEL_NAME
+  		FROM TB_INS_POINT P, TB_INS_LINE_POINT LP, TB_INS_TASK_DETAIL TD,TB_INS_LINE L
+ 		WHERE P.POINT_ID = LP.POINT_ID
+   			AND LP.LINE_ID = TD.INSPECT_OBJECT_ID
+        	AND L.LINE_ID=LP.LINE_ID
+   			AND TD.TASK_ID = #{TASK_ID}
+   			ORDER BY LP.POINT_SEQ ASC
+   			
+	</select>
+	<select id="getTaskPoint" parameterType="String" resultType="map">
+		SELECT P.POINT_ID,
+      	 	TD.TASK_DETAIL_ID,
+      	 	TD.INSPECT_OBJECT_ID LINE_ID,
+       		P.POINT_TYPE POINT_TYPE_ID,
+       		P.POINT_NAME,P.POINT_NO,
+       		P.LONGITUDE,
+       		P.LATITUDE,
+       		l.LINE_ID,
+       		l.LINE_TYPE,
+       		ET.EQUIPMENT_TYPE_NAME EQP_TYPE,
+       		CASE WHEN EXISTS (SELECT 0 FROM TB_INS_RECORD R WHERE R.RECORD_TYPE = 0 AND R.TASK_DETAIL_ID = TD.TASK_DETAIL_ID AND R.POINT_ID = P.POINT_ID)
+           THEN 1
+           ELSE 0
+           END  COMPLETED,
+            DECODE((
+           SELECT COUNT(1) FROM TB_INS_RECORD_NORMAL RN
+           WHERE RN.POINT_ID=P.POINT_ID AND RN.TASK_ID=TD.TASK_ID),0,0,1
+           ) NORMALCOMPLETED,
+           (SELECT M.LEVEL_NAME FROM  TB_INS_MNT M WHERE M.LEVEL_ID = P.POINT_LEVEL) LEVEL_NAME
+  		FROM TB_INS_POINT P, TB_INS_LINE_POINT LP, TB_INS_TASK_DETAIL TD,TB_INS_LINE L,TB_INS_EQUIPMENT_TYPE ET
+ 		WHERE P.POINT_ID = LP.POINT_ID
+   			AND LP.LINE_ID = TD.INSPECT_OBJECT_ID
+        	AND L.LINE_ID=LP.LINE_ID
+        	AND P.EQP_TYPE_ID = ET.EQUIPMENT_TYPE_ID
+   			AND TD.TASK_ID = #{TASK_ID}
+   			ORDER BY LP.POINT_SEQ ASC
+	</select>
+	
+	<select id="pointForDistance" parameterType="map" resultType="map">
+		SELECT P.POINT_ID,
+       		P.LONGITUDE,
+       		P.LATITUDE,
+       		P.POINT_TYPE POINT_TYPE_ID,
+       		ROUND(sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type( P.LONGITUDE,P.LATITUDE,0),null,null),
+  			mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(#{LONGITUDE},#{LATITUDE},0),null,null),1)/1000,1) AS DISTANCE,
+  			 DECODE((
+           SELECT COUNT(1) FROM TB_INS_RECORD_NORMAL RN
+           WHERE RN.POINT_ID=P.POINT_ID AND RN.TASK_ID=TD.TASK_ID),0,0,1
+           ) NORMALCOMPLETED   
+  		FROM TB_INS_POINT P, TB_INS_LINE_POINT LP, TB_INS_TASK_DETAIL TD,TB_INS_LINE L
+ 		WHERE P.POINT_ID = LP.POINT_ID
+   			AND LP.LINE_ID = TD.INSPECT_OBJECT_ID
+        	AND L.LINE_ID=LP.LINE_ID
+   			AND TD.TASK_ID = #{TASK_ID}
+   			order by DISTANCE
+	</select>
+	
+	<select id="getPhotoId" resultType="string">
+		select
+		SEQ_TB_INS_PHOTO.NEXTVAL from DUAL
+	</select>
+
+	<insert id="insertPhoto" parameterType="map">
+		INSERT INTO TB_INS_PHOTO
+		(PHOTO_ID, PHOTO_TYPE, POINT_ID, TASK_ID, PHOTO_PATH,
+		MICRO_PHOTO_PATH, CREATE_STAFF, CREATE_TIME, TERMINAL_TYPE, SN)
+		VALUES
+		(#{PHOTO_ID}, #{PHOTO_TYPE}, #{POINT_ID}, #{TASK_ID}, #{PHOTO_PATH},
+		#{MICRO_PHOTO_PATH}, #{CREATE_STAFF}, SYSDATE, #{TERMINAL_TYPE},
+		#{SN})
+	</insert>
+
+	<select id="getZones" parameterType="String" resultType="map">
+		SELECT
+		a.AREA_ID, a.NAME
+		FROM AREA a, TB_BASE_STAFF s
+		WHERE s.STAFF_ID =
+		#{STAFF_ID}
+		AND s.AREA_ID = a.PARENT_AREA_ID
+	</select>
+
+	<select id="getTroubleTypes" resultType="map">
+		SELECT T.TYPE_ID,
+		T.TYPE_NAME, T.PARENT_TYPE_ID FROM TB_INS_TROUBLE_TYPE T
+	</select>
+
+	<select id="getPlanIdByTaskId" parameterType="String"
+		resultType="String">
+		select PLAN_ID from TB_INS_TASK where TASK_ID = #{TASK_ID}
+	</select>
+
+	<select id="getAreaIdBySonAreaId" parameterType="String"
+		resultType="String">
+		select t.PARENT_AREA_ID from AREA t where t.AREA_ID =
+		#{AREA_ID}
+	</select>
+
+	<update id="updateBill" parameterType="map">
+		update TB_INS_BILL
+		set
+		STATUS_ID = 1,
+		MODIFY_TIME = sysdate,
+		INSPECTOR = #{INSPECTOR},
+		MAINTOR =
+		null
+		where
+		BILL_ID = #{BILL_ID}
+	</update>
+
+	<update id="updateBillDetail" parameterType="map">
+		update
+		TB_INS_BILL_DETAIL
+		set
+		TROUBLE_IDS = #{TROUBLE_IDS},
+		DESCRP = #{DESCRP},
+		LONGITUDE = #{LONGITUDE},
+		LATITUDE = #{LATITUDE},
+		CABLE_NAME =
+		#{CABLE_NAME},
+		CABLE_LEVEL = #{CABLE_LEVEL, jdbcType=NUMERIC},
+		CONS_UNIT = #{CONS_UNIT},
+		CONS_CONTENT = #{CONS_CONTENT}
+		where
+		BILL_ID =
+		#{BILL_ID}
+	</update>
+
+	<insert id="saveBill" parameterType="map">
+		insert into TB_INS_BILL
+		(BILL_ID,
+		TASK_DETAIL_ID,
+		STATUS_ID,
+		PLAN_ID,
+		TASK_ID,
+		CREATE_TIME,
+		MODIFY_TIME,
+		INSPECTOR,
+		<if test="MAINTOR!=null">
+		MAINTOR,
+		</if>
+		<if test="AUDITOR!=null">
+		AUDITOR,
+		</if>
+		AREA_ID,
+		SON_AREA_ID,
+		POINT_ID,
+		type
+		<if test="GRID_ID!=null and GRID_ID!=''">
+		,GRID_ID
+		</if>
+		)
+		values
+		(SEQ_TB_INS_BILL.NEXTVAL,
+		#{TASK_DETAIL_ID},
+		1,
+		#{PLAN_ID},
+		#{TASK_ID},
+		SYSDATE,
+		SYSDATE,
+		#{INSPECTOR},
+		<if test="MAINTOR!=null">
+		#{MAINTOR},
+		</if>
+		<if test="AUDITOR!=null">
+		#{AUDITOR},
+		</if>
+		#{AREA_ID},
+		#{SON_AREA_ID},
+		#{POINT_ID},
+		#{type}
+		<if test="GRID_ID!=null and GRID_ID!=''">
+		,#{GRID_ID}
+		</if>
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="BILL_ID">
+			SELECT SEQ_TB_INS_BILL.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+
+	<insert id="saveBillDetail" parameterType="map">
+		insert into
+		TB_INS_BILL_DETAIL
+		(DETAIL_ID,
+		BILL_ID,
+		TROUBLE_IDS,
+		DESCRP,
+		LONGITUDE,
+		LATITUDE,
+		CABLE_NAME,
+		CABLE_LEVEL,
+		CONS_UNIT,
+		CONS_CONTENT)
+		VALUES
+		(SEQ_TB_INS_BILL_DETAIL.NEXTVAL,
+		#{BILL_ID},
+		#{TROUBLE_IDS},
+		#{DESCRP},
+		#{LONGITUDE},
+		#{LATITUDE},
+		#{CABLE_NAME},
+		#{CABlE_LEVEL,
+		jdbcType=NUMERIC},
+		#{CONS_UNIT},
+		#{CONS_CONTENT})
+	</insert>
+
+	<insert id="saveRecord" parameterType="map">
+		INSERT INTO TB_INS_RECORD
+		(RECORD_ID,
+		POINT_ID,
+		TASK_DETAIL_ID,
+		TASK_ID,
+		PLAN_ID,
+		INSPECTOR,
+		CREATE_TIME,
+		TROUBLE_IDS,
+		DESCRP,
+		LONGITUDE,
+		LATITUDE,
+		CABLE_NAME,
+		CABLE_LEVEL,
+		CONS_UNIT,
+		CONS_CONTENT,
+		AREA_ID,
+		SON_AREA_ID,
+		ISKEEP,
+		EQUIP_NAME,
+		EQUIP_CODE,
+		EQUIP_TYPE,
+		IS_FIX,
+		RECORD_TYPE,
+		TERMINAL_TYPE,
+		KEEP_RADIUS,
+		MNT_LEVEL_ID)
+		VALUES
+		(SEQ_TB_INS_RECORD.NEXTVAL,
+		#{POINT_ID},
+		#{TASK_DETAIL_ID},
+		#{TASK_ID},
+		#{PLAN_ID},
+		#{INSPECTOR},
+		SYSDATE,
+		#{TROUBLE_IDS},
+		#{DESCRP},
+		#{LONGITUDE},
+		#{LATITUDE},
+		#{CABLE_NAME},
+		#{CABLE_LEVEL, jdbcType=NUMERIC},
+		#{CONS_UNIT},
+		#{CONS_CONTENT},
+		#{AREA_ID, jdbcType=NUMERIC},
+		#{SON_AREA_ID, jdbcType=NUMERIC},
+		#{ISKEEP, jdbcType=NUMERIC},
+		#{EQUIP_NAME},
+		#{EQUIP_CODE},
+		#{EQUIP_TYPE,
+		jdbcType=NUMERIC},
+		#{IS_FIX, jdbcType=NUMERIC},
+		#{RECORD_TYPE},
+		#{TERMINAL_TYPE},
+		#{KEEPRADIUS},
+		#{MNT_LEVEL_ID})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="RECORD_ID">
+			SELECT SEQ_TB_INS_RECORD.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+
+	<insert id="insertPhotoRel" parameterType="map">
+		INSERT INTO
+		TB_INS_PHOTO_REL
+		(REL_ID, PHOTO_ID, 
+		<if test="RECORD_ID!=null">
+		RECORD_ID,
+		</if>
+		 BILL_ID)
+		VALUES
+		(SEQ_TB_INS_PHOTO_REL.NEXTVAL,
+		<if test="RECORD_ID!=null">
+		#{PHOTO_ID},
+		</if>
+		#{RECORD_ID},
+		#{BILL_ID,
+		jdbcType=NUMERIC})
+	</insert>
+
+	<select id="getConsTask" parameterType="map" resultType="map">
+	<![CDATA[
+		SELECT
+			t.TASK_ID,
+			t.TASK_NAME,
+			t.ENABLED,
+			a.NAME,
+			t.START_TIME,
+			t.COMPLETE_TIME,
+			p.INACCURACY
+		FROM TB_INS_TASK t, AREA a, TB_INS_PLAN p
+		WHERE a.AREA_ID = t.SON_AREA_ID
+			AND t.START_TIME >= TO_DATE(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+			AND t.START_TIME <= TO_DATE(#{END_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+			AND t.INSPECTOR = #{STAFF_ID}
+			AND p.PLAN_ID = t.PLAN_ID
+			AND p.PLAN_KIND = 3
+			and p.ISDELETED!=1
+	]]>
+	</select>
+
+	<select id="getBills" parameterType="String" resultType="map">
+		SELECT
+		b.BILL_ID,
+		p.POINT_ID,
+		p.POINT_NAME,
+		p.LONGITUDE,
+		p.LATITUDE,
+		a.NAME,
+		bd.DESCRP,
+		tt.TYPE_NAME
+		FROM TB_INS_BILL b, TB_INS_BILL_DETAIL bd,
+		TB_INS_POINT p, AREA a,
+		TB_INS_TROUBLE_TYPE tt
+		WHERE b.STATUS_ID = 2
+		AND
+		b.BILL_ID = bd.BILL_Id
+		AND b.POINT_ID = p.POINT_ID
+		AND b.SON_AREA_ID =
+		a.AREA_ID
+		AND bd.TROUBLE_IDS = tt.TYPE_ID
+		AND b.MAINTOR = #{MAINTOR}
+
+	</select>
+
+	<select id="getTroubles" parameterType="map" resultType="map">
+		SELECT
+		p.POINT_ID, p.POINT_NAME, a.NAME, p.LONGITUDE, p.LATITUDE
+		FROM
+		TB_INS_POINT p, AREA a
+		WHERE p.SON_AREA_ID = a.AREA_ID
+		AND p.POINT_TYPE = 2
+		AND p.SON_AREA_ID = #{AREA_ID}
+	</select>
+
+	<insert id="insertUploadPoint" parameterType="map">
+		INSERT INTO
+		TB_INS_UPLOAD_POINT
+		(POINT_ID, LONGITUDE, LATITUDE, UPLOAD_STAFF,
+		UPLOAD_TIME, TASK_ID,
+		KEEP_ARRIVALED,UPLOAD_TYPE)
+		VALUES
+		(SEQ_TB_INS_UPLOAD_POINT.NEXTVAL,
+		#{LONGITUDE},
+		#{LATITUDE},
+		#{UPLOAD_STAFF},
+		#{UPLOAD_TIME},
+		#{TASK_ID},
+		0,
+		#{UPLOAD_TYPE})
+		  <selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="UPLOAD_ID">
+			SELECT SEQ_TB_INS_UPLOAD_POINT.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+
+	<update id="updatePointType" parameterType="map">
+		UPDATE TB_INS_POINT
+		SET POINT_TYPE = #{POINT_TYPE}
+		WHERE POINT_ID = #{POINT_ID}
+		AND CHECKED
+		= 0
+	</update>
+
+	<insert id="insertPoint" parameterType="map">
+		INSERT INTO TB_INS_POINT
+		(POINT_ID,
+		POINT_NO,
+		POINT_NAME,
+		POINT_TYPE,
+		LONGITUDE,
+		LATITUDE,
+		CREATE_TIME,
+		CREATE_STAFF,
+		MODIFY_TIME,
+		MODIFY_STAFF,
+		AREA_ID,
+		SON_AREA_ID,
+		CHECKED,
+		KEEP_RADIUS)
+		VALUES
+		(SEQ_TB_INS_POINT.NEXTVAL,
+		#{NAME},
+		#{NAME},
+		#{POINT_TYPE},
+		#{LONGITUDE},
+		#{LATITUDE},
+		SYSDATE,
+		#{INSPECTOR},
+		SYSDATE,
+		#{INSPECTOR},
+		#{AREA_ID},
+		#{SON_AREA_ID},
+		0,
+		#{KEEPRADIUS})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="POINT_ID">
+			SELECT SEQ_TB_INS_POINT.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+
+	<select id="getRelInfo" parameterType="map" resultType="map">
+		SELECT
+		a.NAME, tt.TYPE_NAME FROM AREA a, TB_INS_TROUBLE_TYPE tt
+		WHERE
+		a.AREA_ID = #{SON_AREA_ID} AND tt.TYPE_ID = #{TROUBLE_IDS}
+	</select>
+
+	<update id="updatePoint" parameterType="map">
+		UPDATE TB_INS_POINT
+		SET LONGITUDE = #{LONGITUDE},
+		LATITUDE =
+		#{LATITUDE},
+		MODIFY_TIME = SYSDATE,
+		<if test="#{POINT_TYPE != null and POINT_TYPE != ''}">
+			POINT_TYPE = #{POINT_TYPE},
+		</if>
+		<if test="#{POINT_TYPE != null and POINT_TYPE != '' and POINT_TYPE == '3'}">
+			KEEP_RADIUS = #{KEEPRADIUS},
+		</if>
+		MODIFY_STAFF = #{INSPECTOR}
+		WHERE POINT_ID = #{POINT_ID}
+	</update>
+
+	<select id="getAuditorBySonAreaId" parameterType="String"
+		resultType="map">
+		SELECT s.STAFF_ID
+		FROM TB_BASE_STAFF s, TB_BASE_STAFF_ROLE
+		sr, TB_BASE_ROLE r
+		WHERE s.SON_AREA_ID = #{SON_AREA_ID} AND r.ROLE_NO =
+		'LXXJ_AUDITOR'
+		AND s.STAFF_ID = sr.STAFF_ID AND sr.ROLE_ID = r.ROLE_ID
+		ORDER BY
+		s.STAFF_ID
+	</select>
+
+	<select id="getAuditorNameBySonAreaId" parameterType="String"
+		resultType="map">
+		SELECT s.STAFF_Name,s.tel,s.area_id
+		FROM TB_BASE_STAFF s, TB_BASE_STAFF_ROLE
+		sr, TB_BASE_ROLE r
+		WHERE s.SON_AREA_ID = #{SON_AREA_ID} AND r.ROLE_NO =
+		'LXXJ_AUDITOR'
+		AND s.STAFF_ID = sr.STAFF_ID AND sr.ROLE_ID = r.ROLE_ID  and s.isdeleted=0
+		ORDER BY
+		s.STAFF_ID
+	</select>
+	<select id="getAuditorByAreaId" parameterType="String"
+		resultType="map">
+		SELECT s.STAFF_ID
+		FROM TB_BASE_STAFF s, TB_BASE_STAFF_ROLE
+		sr, TB_BASE_ROLE r
+		WHERE s.AREA_ID = #{SON_AREA_ID} AND r.ROLE_NO =
+		'LXXJ_AUDITOR'
+		AND s.STAFF_ID = sr.STAFF_ID AND sr.ROLE_ID = r.ROLE_ID
+		ORDER BY
+		s.STAFF_ID
+	</select>
+
+	<update id="updateDetailComplete" parameterType="string">
+		UPDATE
+		TB_INS_TASK_DETAIL SET COMPLETED = 1 WHERE TASK_DETAIL_ID =
+		#{TASK_DETAIL_ID}
+	</update>
+
+	<select id="getBillIdByPointId" parameterType="string"
+		resultType="map">
+		select BILL_ID, AUDITOR from TB_INS_BILL where POINT_ID =
+		#{POINT_ID}
+	</select>
+
+	<select id="getBillByPointId" parameterType="string" resultType="map">
+		select BILL_ID, AUDITOR from TB_INS_BILL where POINT_ID = #{POINT_ID}
+	</select>
+
+	<update id="updateBillAudit" parameterType="map">
+		update TB_INS_BILL
+		set STATUS_ID = 3
+		<!--  <if test="#{MAINTOR != null and MAINTOR != ''}">
+		,MAINTOR=#{MAINTOR}
+		</if>-->
+		where BILL_ID = #{BILL_ID}
+	</update>
+	<select id="getDBblinkName" parameterType="string" resultType="string">
+		select t.jndi from sys_dblink t where t.area_id=#{AREA_ID}
+	</select>
+	<select id="getOSSEqpmentInfoByPhy" parameterType="map" resultType="map">
+		select 
+			pe.no,
+			pe.name,
+			pe.address,
+			prs.name equipType,
+			pe.area_id,
+			sa.name area_name,
+			st.tml_id,
+			st.name tml_name
+		from ${jndi}.phy_equipment pe
+		left join ${jndi}.SPC_AREA sa on sa.area_id=pe.area_id
+		left join ${jndi}.SPC_TML st on st.tml_id=pe.tml_id
+		left join ${jndi}.pub_resource_spec prs on prs.res_spec_id=pe.res_spec_id
+		where 1=1
+		and pe.res_spec_id =#{equipType}
+		<if test="#{equipNo != null and equipNo != ''}">
+		<![CDATA[ 
+			and pe.no like '%${equipNo}%'
+			 ]]>
+		</if>
+		<if test="#{equipName != null and equipName != ''}">
+		<![CDATA[ 
+			and pe.name like '%${equipName}%'
+			 ]]>
+		</if>
+	</select>
+	
+		<select id="getOSSEqpmentInfoByBse" parameterType="map" resultType="map">
+		select 
+			pe.no,
+			pe.name,
+			pe.address,
+			prs.name equipType,
+			pe.area_id,
+			sa.name area_name,
+			st.tml_id,
+			st.name tml_name
+		from ${jndi}.bse_equipment pe
+		left join ${jndi}.SPC_AREA sa on sa.area_id=pe.area_id
+		left join ${jndi}.SPC_TML st on st.tml_id=pe.tml_id
+		left join ${jndi}.pub_resource_spec prs on prs.res_spec_id=pe.res_spec_id
+		where 1=1
+		and  pe.res_spec_id =#{equipType}
+		<if test="#{equipNo != null and equipNo != ''}">
+			 <![CDATA[ 
+			 and pe.no like '%${equipNo}%'
+			 ]]>
+		</if>
+		<if test="#{equipName != null and equipName != ''}">
+		<![CDATA[ 
+			and pe.name like '%${equipName}%'
+		 ]]>
+		</if>
+	</select>
+	
+	<select id="findPlanKidByTaskDetailId" parameterType="string" resultType="int">
+	select p.plan_kind
+  from TB_INS_TASK_DETAIL td, tb_ins_plan p, tb_ins_task t
+ where td.task_id = t.task_id
+   and t.plan_id = p.plan_id
+   and td.task_detail_id = #{task_detail_id}
+	</select>
+	
+	<select id="findAllDetail" parameterType="string" resultType="map">
+	select distinct td.completed from tb_ins_task_detail td where td.task_id = #{task_id}
+	</select>
+	
+	<select id="updateTaskComplete" parameterType="string">
+	update tb_ins_task set status_id = 3, actual_complete_time = sysdate where task_id = #{taskId}
+	</select>
+	
+	<select id="updateTaskBegin" parameterType="string">
+	update tb_ins_task set status_id = 2 where task_id = #{taskId}
+	</select>
+	
+	<select id="queryDetailFinish" parameterType="string" resultType="int">
+	select 1
+  from tb_ins_task_detail td
+ where td.task_detail_id = #{task_detail_id}
+   and (select count(lp.point_id)
+          from tb_ins_line_point lp, tb_ins_point p
+         where lp.point_id = p.point_id
+           and p.point_type in (1, 4)
+           and lp.line_id = td.inspect_object_id) =
+       (select  count(distinct(r.point_id))
+          from tb_ins_record r
+         where r.task_detail_id = td.task_detail_id)
+	</select>
+	
+	<select id="findTaskDetailByTaskId" parameterType="string" resultType="map">
+	select INSPECT_OBJECT_ID from tb_ins_task_detail where task_id = #{taskId}
+	</select>
+	<select id="findSignPointById" parameterType="map" resultType="int">
+		select count(0)
+		  from Tb_Ins_Record r 
+		 where r.task_id = #{TASK_ID}
+		   and r.task_detail_id = #{TASK_DETAIL_ID}
+		   and r.point_id=#{POINT_ID}
+		   and r.record_type=0
+	</select>
+	<!-- 
+	<select id="ifTaskIsCable" parameterType="map" resultType="map">
+		select type from tb_ins_plan
+		where plan_id=(select plan_id from tb_ins_task where task_id=#{TASK_ID})
+	</select>
+	<insert id="addStaffTask" parameterType="map">
+	INSERT INTO TB_INS_STAFF_TASK VALUES(#{INSPECTOR},#{TASK_ID},SYSDATE,#{POINT_ID})
+	</insert>
+	<delete id="deleteStaffTask" parameterType="map">
+	DELETE FROM TB_INS_STAFF_TASK WHERE STAFF_ID=#{INSPECTOR}
+	</delete>
+	 -->
+		<select id="getAllKeepPoint" parameterType="String" resultType="map">
+	<![CDATA[
+		SELECT p.POINT_ID,
+			td.TASK_DETAIL_ID,
+       		pt.POINT_TYPE_ID,
+       		p.POINT_NAME,
+       		td.COMPLETED,
+       		ROUND(sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type( P.LONGITUDE,P.LATITUDE,0),null,null),
+  			mdsys.sdo_geometry(2001,8307,mdsys.sdo_point_type(#{LONGITUDE},#{LATITUDE},0),null,null),1)/1000,1) AS DISTANCE,
+       		p.LONGITUDE,
+       		p.LATITUDE
+  		FROM TB_INS_TASK_DETAIL td, TB_INS_POINT p, TB_INS_POINT_TYPE pt
+ 		WHERE td.INSPECT_OBJECT_ID = p.POINT_ID
+   			AND p.POINT_TYPE = pt.POINT_TYPE_ID
+   			AND td.TASK_ID = #{TASK_ID}
+	]]>
+	</select>
+	
+	<update id="updateRecordType" parameterType="map">
+		UPDATE TB_INS_RECORD R SET R.TYPE='2' WHERE R.RECORD_ID=#{RECORD_ID}
+	</update>
+	
+	<select id="ifPointExist" parameterType="map" resultType="map">
+		SELECT COUNT(1) COUNT,MAX(P.POINT_ID) POINT_ID FROM TB_INS_POINT P WHERE P.POINT_NO=#{EQUIP_CODE}
+	</select>
+	
+	<insert id="insertEqpPoint" parameterType="map">
+		INSERT INTO TB_INS_POINT
+		(POINT_ID,
+		POINT_NO,
+		POINT_NAME,
+		POINT_LEVEL,
+		POINT_TYPE,
+		LONGITUDE,
+		LATITUDE,
+		CREATE_TIME,
+		CREATE_STAFF,
+		MODIFY_TIME,
+		MODIFY_STAFF,
+		AREA_ID,
+		EQP_TYPE_ID,
+		SON_AREA_ID,
+		CHECKED)
+		VALUES
+		(SEQ_TB_INS_POINT.NEXTVAL,
+		#{POINT_NO},
+		#{POINT_NAME},
+		#{MNT_LEVEL_ID},
+		#{POINT_TYPE},
+		#{LONGITUDE},
+		#{LATITUDE},
+		SYSDATE,
+		#{INSPECTOR},
+		SYSDATE,
+		#{INSPECTOR},
+		#{AREA_ID},
+		#{EQUIP_TYPE},
+		#{SON_AREA_ID},
+		0)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="POINT_ID">
+			SELECT SEQ_TB_INS_POINT.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<update id="updateEqpPoint" parameterType="map">
+		UPDATE TB_INS_POINT
+		SET LONGITUDE = #{LONGITUDE},
+		LATITUDE =
+		#{LATITUDE},
+		MODIFY_TIME = SYSDATE,
+		<!--  
+		<if test="MNT_LEVEL_ID != null and MNT_LEVEL_ID != ''}">
+			POINT_LEVEL = #{MNT_LEVEL_ID},
+		</if>
+		<if test="#{EQUIP_TYPE != null and EQUIP_TYPE != ''}">
+			POINT_TYPE = #{EQUIP_TYPE},
+		</if>
+		-->
+		MODIFY_STAFF = #{INSPECTOR}
+		WHERE POINT_ID = #{POINT_ID}
+	</update>
+	
+	<select id="ifEqpExistOss" parameterType="map" resultType="int">
+		SELECT COUNT(0) FROM PHY_EQUIPMENT@${jndi} PE WHERE PE.NO=#{equipCode}
+	</select>
+	
+	<select id="queryOnLineMembers" parameterType="map" resultType="map">
+	SELECT
+	UPLOAD_STAFF,STAFF_NAME,DEPT_NAME,LONGITUDE,LATITUDE,AREA_ID,SON_AREA_ID
+	FROM(
+	SELECT
+	UP.UPLOAD_STAFF,S.STAFF_NAME,UP.LONGITUDE,UP.LATITUDE,S.AREA_ID,S.SON_AREA_ID,D.DEPT_NAME,
+	ROW_NUMBER() OVER (PARTITION BY UP.UPLOAD_STAFF ORDER BY UP.UPLOAD_TIME
+	DESC) SEQ
+	FROM TB_INS_UPLOAD_POINT UP
+	LEFT JOIN TB_BASE_STAFF S ON S.STAFF_ID=UP.UPLOAD_STAFF
+	LEFT JOIN TB_INS_STAFF_DEPT SD ON SD.STAFF_ID=UP.UPLOAD_STAFF
+	LEFT JOIN TB_INS_DEPT D ON D.DEPT_ID=SD.DEPT_ID
+	<![CDATA[
+	WHERE UP.UPLOAD_TIME>=SYSDATE-1/48)
+	]]>
+	WHERE SEQ=1 AND AREA_ID=(SELECT AREA_ID FROM TB_BASE_STAFF S WHERE S.STAFF_ID=#{staff_id})
+	</select>
+	
+	<select id="ifPointCanInsert" parameterType="map" resultType="string">
+	select distinct nvl(t.keep_arrivaled,3) from tb_ins_upload_point t where
+	t.upload_time=
+	(select nvl(max(t.upload_time),sysdate) from tb_ins_upload_point t where
+	t.upload_staff=#{staff_id} and t.task_id=#{task_id})
+	and t.task_id is not null
+	</select>
+	
+	<insert id="addKeepPoint" parameterType="map">
+	INSERT INTO
+	TB_INS_UPLOAD_POINT(POINT_ID,LONGITUDE,LATITUDE,UPLOAD_STAFF,UPLOAD_TIME,TASK_ID
+	<if test="#{locate_span != null and locate_span != ''}">
+		,LOCATE_SPAN
+	</if>
+	,KEEP_ARRIVALED)
+	VALUES(SEQ_TB_INS_UPLOAD_POINT.NEXTVAL,#{longitude},#{latitude},#{staff_id},SYSDATE,#{task_id}
+	<if test="#{locate_span != null and locate_span != ''}">
+		,#{locate_span}
+	</if>
+	,#{sign_type})
+	</insert>
+	
+	<select id="calculateTimeCost" parameterType="map" resultType="string">
+	select distinct round((sysdate-t.upload_time)*24,2) from tb_ins_upload_point t
+	where
+	t.upload_time=
+	(select max(t.upload_time) from tb_ins_upload_point t where
+	t.upload_staff=#{staff_id} and t.task_id=#{task_id})
+	and t.keep_arrivaled=1
+	</select>
+	
+	<select id="getKeepPoints" parameterType="map" resultType="map">
+	select p.longitude,p.latitude from tb_ins_plan_detail pd
+	join tb_ins_point p on pd.inspect_object_id=p.point_id
+	left join tb_ins_task t on t.plan_id=pd.plan_id
+	where t.task_id=#{task_id}
+	</select>
+	
+	<select id="getCheckCondition" parameterType="map" resultType="map">
+     select item_id,item_name from tb_ins_check_item order by item_rank
+	</select>
+	
+	<select id="getTroubleType" parameterType="map" resultType="map">
+    select type_id,type_name
+	  from tb_ins_trouble_type
+	 where app_type_rank is not null
+	 order by app_type_rank
+	</select>
+	
+	<select id="getStaffSonAreaID" parameterType="map" resultType="map">
+	select tbs.staff_id, tbs.staff_name, area.area_id son_area_id, area.name
+	  from tb_base_staff tbs
+	  join area area on tbs.son_area_id = area.area_id
+	 where tbs.staff_id = #{staff_id}
+	</select>
+	
+	<select id="billQuery" parameterType="map" resultType="map">
+				SELECT b.BILL_ID,
+          b.BILL_ID as BILLID,
+          TO_CHAR(b.COMPLETE_TIME,'yyyy-MM-dd') AS COMPLETE_TIME,
+               p.POINT_NO,
+               p.POINT_NAME,
+               p.POINT_TYPE,
+               bs.STATUS_NAME,
+               bd.DESCRP,
+               a.NAME as SON_AREA,
+               (SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.INSPECTOR) AS INSPECTOR,
+               (SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.MAINTOR) AS MAINTOR,
+               (SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.AUDITOR) AS AUDITOR,
+               TO_CHAR(b.CREATE_TIME, 'yyyy-mm-dd hh24:mi:ss') AS CREATE_TIME,
+               DECODE(b.type, 2, '隐患整治', 4, '临时上报', '隐患上报') as BILL_TYPE
+          FROM TB_INS_BILL        b,
+               TB_INS_BILL_DETAIL bd,
+               TB_INS_POINT       p,
+               TB_INS_BILL_STAUS  bs,
+               AREA a
+         WHERE b.BILL_ID = bd.BILL_ID
+             AND p.POINT_ID = b.POINT_ID
+             AND b.STATUS_ID = bs.STATUS_ID
+             AND b.SON_AREA_ID = a.AREA_ID
+              <![CDATA[
+             and b.STATUS_ID<4
+             ]]>
+            <if test="AREA_ID != '' and AREA_ID != null">
+                <![CDATA[
+                and b.AREA_ID = #{AREA_ID}
+                ]]>
+            </if>
+            <if test="SON_AREA_ID != '' and SON_AREA_ID != null">
+                <![CDATA[
+                and b.SON_AREA_ID = #{SON_AREA_ID}
+                ]]>
+            </if>
+			order by b.CREATE_TIME desc
+	</select>
+	
+	<select id="getAreaByStaffId" parameterType="string" resultType="map">
+		select area_id,son_area_id from tb_base_staff where staff_id=#{staff_id}
+	</select>
+	
+	<select id="queryCablesExits" parameterType="map" resultType="map">
+		select l.line_id,l.line_no,l.line_name,l.son_area_id ,l.line_level
+		 from tb_ins_line l where 1=1  
+		 <![CDATA[
+	  		and l.line_no like '%'||#{queryNo}||'%'
+	  	 ]]>
+  		 and l.son_area_id = #{son_area_id} 
+  		 <if test="queryType == '' or queryType == null">
+			and l.parent_line_id is null
+			and l.line_type = 4
+		</if>
+		<if test="queryType != '' and queryType != null">
+			and l.parent_line_id is not null
+			and l.line_type = 0
+		</if>
+		<if test="parent_line_id != '' and parent_line_id != null">
+			and l.parent_line_id = #{parent_line_id}
+		</if>
+		 
+	</select>
+	
+	<select id="queryCableExits" parameterType="map" resultType="map">
+		select l.line_id,l.line_no,l.line_name,l.son_area_id ,l.line_level, dept.dept_id, dept.dept_no, dept.dept_name
+		 from tb_ins_line l,tb_ins_dept dept where 1=1 AND l.dept_no = dept.dept_no(+)
+		 <![CDATA[
+	  		and l.line_no like '%'||#{queryNo}||'%'
+	  	 ]]>
+  		 and l.son_area_id = #{son_area_id} 
+  		 <if test="queryType == '' or queryType == null">
+			and l.parent_line_id is null
+			and l.line_type = 4
+		</if>
+		<if test="queryType != '' and queryType != null">
+			and l.parent_line_id is not null
+			and l.line_type = 0
+		</if>
+		<if test="parent_line_id != '' and parent_line_id != null">
+			and l.parent_line_id = #{parent_line_id}
+		</if>
+		 
+		<!-- <if test="grid_id != '' and grid_id != null">
+			and dept.dept_id = #{grid_id}
+		</if>
+		
+		<if test="grid_no != '' and grid_no != null">
+			and dept.dept_no = #{grid_no}
+		</if>
+		
+		<if test="grid_name != '' and grid_name != null">
+			and dept.dept_name = #{grid_name}
+		</if>
+		
+		<if test="level != '' and level != null">
+			and l.line_level = #{level}
+		</if> -->
+		
+	</select>
+	
+	<!-- 查询光缆ID或者光缆段ID -->
+	<select id="queryLineId" resultType="String">
+		select seq_tb_ins_line.nextval line_id from dual
+	</select>
+	
+    <!-- 查询点ID -->
+	<select id="queryPointId" resultType="String">
+		select SEQ_TB_INS_POINT.NEXTVAL point_id from dual
+	</select>
+	
+	<select id="selIsHasLine" parameterType="map" resultType="map">
+		select l.line_id,l.line_no,l.line_name
+	  from tb_ins_line l
+	  where 1=1
+	    and son_area_id = #{son_area_id} 
+	   <if test="cableId != '' and cableId != null">
+			and l.parent_line_id = #{cableId}
+			and l.line_type = 0
+		</if>
+		<if test="line_no != '' and line_no != null">
+			and line_no = #{line_no}
+		</if>
+		<if test="is_cable != '' and is_cable != null">
+			and l.line_type = 4
+		</if>
+	</select>
+	
+	<select id="getMaxOrder" parameterType="String" resultType="String">
+		select nvl(max(t.point_seq),0)+1 maxOrder from tb_ins_line_point t where line_id = #{line_id}
+	</select>
+	
+	<insert id="intoLinePoint" parameterType="map">
+		insert into tb_ins_line_point(
+		line_id,point_id,point_seq
+		)values(
+		#{line_id},#{point_id},#{point_seq}
+		)
+	</insert>
+	
+	<insert id="intoPoint" parameterType="map">
+	   <![CDATA[
+		insert into tb_ins_point(
+			point_id, 
+			point_no, 
+			point_name, 
+			point_type, 
+			longitude, 
+			latitude, 
+			create_time, 
+			create_staff, 
+			area_id, 
+			eqp_type_id, 
+			son_area_id
+		)values(
+			#{point_id},
+			#{pointNo},
+			#{pointName},
+			#{pointType},
+			#{longitude},
+			#{latitude},
+			sysdate,
+			#{staffId},
+			#{area_id},
+			#{eqpType},
+			#{son_area_id}
+		)
+	 ]]>
+	</insert>
+	
+	<insert id="intoLine" parameterType="map">
+	  insert into tb_ins_line(
+		line_id, 
+		line_no, 
+		line_name, 
+		create_time, 
+		create_staff, 
+		area_id, 
+		son_area_id, 
+		line_level, 
+		line_type
+		<if test="parent_line_id != '' and parent_line_id != null">
+			,parent_line_id
+		</if>
+		<if test="dept_no != '' and dept_no != null">
+			,dept_no
+		</if>
+	  )values(
+	    #{line_id},
+	    #{line_no},
+	    #{line_name},
+		sysdate,
+		#{staff_id},
+		#{area_id},
+		#{son_area_id},
+		#{line_level}, 
+		#{line_type}
+	    <if test="parent_line_id != '' and parent_line_id != null">
+			,#{parent_line_id}
+		</if>
+		<if test="dept_no != '' and dept_no != null">
+			,#{dept_no}
+		</if>
+	  )
+	</insert>
+	
+	<select id="selCableRelay" parameterType="String" resultType="map">
+		select ptil.line_id   cable_id,
+	       ptil.line_no   cableNo,
+	       ptil.line_name cableName,
+	       til.line_id sectId,
+	       til.line_no sectNo,
+	       til.line_name sectName,
+	       til.son_area_id
+		  from tb_ins_line til
+		  left join tb_ins_line ptil on til.parent_line_id = ptil.line_id
+		 where til.line_id = #{line_id}	
+	</select>
+	
+	<select id="selPointInfo" parameterType="String" resultType="map">
+		 select p.point_id,
+		       point_no,
+		       point_name,
+		       lp.point_seq,
+		       point_type,
+		       eqp_type_id,
+		       longitude,
+		       latitude
+		  from tb_ins_point p
+		  join tb_ins_line_point lp on p.point_id = lp.point_id
+		 where lp.line_id = #{line_id}	
+		 order by lp.point_seq asc
+	</select>
+	
+	<update id="updatePointTypeByBillId" parameterType="string">
+		update tb_ins_point p set p.point_type=4
+		where p.point_id=(select point_id from tb_ins_bill where bill_id=#{BILL_ID}) 
+		and p.eqp_type_id is not null
+	</update>
+	
+	<select id="queryOwnEqpByDis" parameterType="map" resultType="map" statementType="STATEMENT">
+	SELECT
+	P.POINT_NO,P.POINT_NAME,P.LONGITUDE,P.LATITUDE,ET.EQUIPMENT_TYPE_NAME
+	EQP_TYPE,
+	DECODE(SIGN(${distance}-SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(P.LONGITUDE,P.LATITUDE,0),NULL,NULL),
+	MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(${longitude},${latitude},0),NULL,NULL),1)),-1,0,1) distance
+	FROM TB_BASE_CONTRACT_EQUIPMENT CE
+	JOIN TB_BASE_STAFF S ON S.STAFF_NO=CE.CONTRACT_PERSION_NO
+	JOIN TB_INS_POINT P ON P.POINT_NO=CE.EQUIPMENT_NO
+	LEFT JOIN TB_INS_EQUIPMENT_TYPE ET ON ET.EQUIPMENT_TYPE_ID=P.EQP_TYPE_ID
+	WHERE s.staff_id= ${staff_id}
+	<if test="eqp_type != '' and eqp_type != null">
+		AND P.EQP_TYPE_ID=${eqp_type}
+	</if>
+	</select>
+	
+	<select id="ifLinePointGreaterTwo" parameterType="string" resultType="int">
+	select count(1) from tb_ins_line l
+	join tb_ins_line_point lp on lp.line_id=l.line_id
+	where l.line_id=#{line_id}
+	</select>
+		<select id="queryOSSCableByNo" parameterType="map" resultType="map">
+		select no LINE_NO ,name LINE_NAME from  ${jndi}.cbl_cable cc where cc.grade_id in (80000381,80000382) and instr(cc.no ,#{queryNo})>0
+	</select>
+	<!--修改光缆段上的路由  -->
+	<update id="modifyPointInSect" parameterType="map">
+		update tb_ins_point
+		   set point_no   = #{pointNo},
+		       point_name = #{pointName},
+		       point_type = #{pointType},
+		       longitude  = #{longitude},
+		       latitude   = #{latitude}
+		 where point_id =#{pointId}
+	</update>
+	
+	<select id="queryGridList" parameterType="map"  resultType="map">
+		select bd.dept_id   as grid_id,
+	       bd.dept_no   as grid_no,
+	       bd.dept_name as grid_name,
+	       bd.son_area_id sonareaid
+		  from tb_base_staff s
+		  join tb_ins_staff_dept sd
+		    on sd.staff_id = s.staff_id
+		  join tb_ins_dept bd
+		    on bd.dept_id = sd.dept_id
+		 where s.staff_id = #{staffId}
+		union all
+		select bd.dept_id as grid_id, bd.dept_no as grid_no, bd.dept_name as grid_name,
+	       bd.son_area_id sonareaid
+		  from tb_base_staff s
+		  join tb_ins_dept bd
+		    on s.area_id = bd.area_id
+		 where s.staff_id = #{staffId}
+	</select>
+	
+	<select id="queryGridListForTrouble" parameterType="map"  resultType="map">
+		select bd.dept_id   as grid_id,
+	       bd.dept_no   as grid_no,
+	       bd.dept_name as grid_name,
+	       bd.son_area_id
+		  from tb_base_staff s
+		  join tb_ins_staff_dept sd
+		    on sd.staff_id = s.staff_id
+		  join tb_ins_dept bd
+		    on bd.dept_id = sd.dept_id
+		 where s.staff_id = #{staffId}
+		union all
+		select bd.dept_id as grid_id, bd.dept_no as grid_no, bd.dept_name as grid_name,
+	       bd.son_area_id
+			from  tb_ins_dept bd
+		 where bd.son_area_id = #{son_area_id}
+	</select>
+	
+	<!--查询缆线与路由点的关联关系 -->
+	<select id="queryLinePoint" parameterType="map" resultType="map">
+	    select line_id, point_id, point_seq, modify_staff, modify_time
+		  from tb_ins_line_point t
+		 where t.line_id=#{lineId} 
+		 order by t.point_id
+	</select>
+	<!--根据揽线与开始点联合查询缆线与路由点的关联关系 -->
+	<select id="queryLinePoint2" parameterType="map" resultType="map">
+	    select line_id, point_id, point_seq, modify_staff, modify_time
+		  from tb_ins_line_point t
+		 where t.line_id=#{lineId} and t.point_id=#{startPointId} 
+		 order by t.point_id
+	</select>
+	<!--根据揽线与开始点联合查询缆线与路由点的关联关系 -->
+	<select id="queryLinePoint3" parameterType="map" resultType="map">
+	    select line_id, point_id, point_seq, modify_staff, modify_time
+		  from tb_ins_line_point t
+		 where t.line_id=#{lineId} and t.point_id=#{endPointId} 
+		 order by t.point_id
+	</select>
+	
+	<!-- 删除缆线与路由点的关联关系 -->
+	<delete id="deletePointInSect" parameterType="map">
+	  delete from  tb_ins_line_point where line_id=#{lineId}
+	</delete>
+	
+	<!-- 插入缆线与路由点的关联关系 -->
+	<insert id="saveLinePoint" parameterType="map">
+		insert into tb_ins_line_point
+		  (line_id, point_id, point_seq, modify_staff, modify_time)
+		values
+		  (#{lineId}, #{pointId}, #{pointSeq}, #{modifyStaff}, sysdate)
+	</insert>
+	
+	<select id="checkPointExists" parameterType="string" resultType="string">
+	select point_id from tb_ins_point where point_no=#{point_no}
+	</select>
+	
+	<update id="updateCoordinate" parameterType="map">
+	update tb_ins_point p set p.longitude=#{longitude},p.latitude=#{latitude} where p.point_id=#{point_id}
+	</update>
+	
+	<!-- 综合巡检融合 -->
+	<select id="zhxjTask" parameterType="map" resultType="map">
+	select * from (
+select TASK_ID,TASK_NAME,TASK_STATUS,TASK_START_TIME,TASK_END_TIME,TASK_ORGIN_ID,TASK_TYPE,TYPE_NAME,TASK_ORGIN_NAME,SON_AREA,ZHXJ_TASK_ID,rownum rn from (
+	SELECT TIT.TASK_ID,
+		       TIT.TASK_NAME,
+		       DECODE(TIT.TASK_STATUS, 1, '未开始', 2, '进行中', 3, '已结束', '') TASK_STATUS,
+		       to_char(TIT.TASK_START_TIME,'yyyy-mm-dd hh24:mi:ss') TASK_START_TIME,
+		       to_char(TIT.TASK_END_TIME,'yyyy-mm-dd hh24:mi:ss') TASK_END_TIME,
+		       TIT.TASK_ORGIN TASK_ORGIN_ID,
+		       TIT.TASK_TYPE,
+		       TT.TYPE_NAME,
+		       DECODE(TIT.TASK_ORGIN,
+		              1,
+		              '干线巡检',
+		              2,
+		              '缆线巡检',
+		              3,
+		              '光网助手',
+		              '') TASK_ORGIN_NAME,
+		       A2.NAME SON_AREA,
+		       TIT.ZHXJ_TASK_ID
+		  FROM TB_ZHXJ_TASK      TIT,
+		       AREA              A2,
+		       TB_ZHXJ_TASK_TYPE TT
+		 WHERE  A2.AREA_ID(+) = TIT.SON_AREA_ID
+		   AND TT.TYPE_ID = TIT.TASK_TYPE
+         <if test="STAFF_ID != null and STAFF_ID != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_INSPECT_STAFF =#{STAFF_ID}
+	    	]]>
+		</if>
+		<if test="TASK_ORGIN != null and TASK_ORGIN != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_ORGIN = #{TASK_ORGIN}
+	    	]]>
+		</if>
+		<if test="TASK_TYPE != null and TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND TIT.task_type = #{TASK_TYPE}
+	    	]]>
+		</if>
+		union all
+			SELECT TIT.TASK_ID,
+		       TIT.TASK_NAME,
+		       DECODE(TIT.TASK_STATUS, 1, '未开始', 2, '进行中', 3, '已结束', '') TASK_STATUS,
+		       to_char(TIT.TASK_START_TIME,'yyyy-mm-dd hh24:mi:ss') TASK_START_TIME,
+		       to_char(TIT.TASK_END_TIME,'yyyy-mm-dd hh24:mi:ss') TASK_END_TIME,
+		       TIT.TASK_ORGIN TASK_ORGIN_ID,
+		       TIT.TASK_TYPE,
+		       TT.TYPE_NAME,
+		       DECODE(TIT.TASK_ORGIN,
+		              1,
+		              '干线巡检',
+		              2,
+		              '缆线巡检',
+		              3,
+		              '光网助手',
+		              '') TASK_ORGIN_NAME,
+		       A2.NAME SON_AREA,
+		       TIT.ZHXJ_TASK_ID
+		  FROM TB_ZHXJ_TASK      TIT,
+		       AREA              A2,
+		       TB_ZHXJ_TASK_TYPE TT
+		 WHERE  A2.AREA_ID(+) = TIT.SON_AREA_ID
+		   AND TT.TYPE_ID = TIT.TASK_TYPE
+		 <if test="STAFF_ID != null and STAFF_ID != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_INSPECT_STAFF in (
+	    	select dept_id from tb_ins_staff_dept d where d.staff_id=#{STAFF_ID}
+	    	)
+	    	]]>
+		</if>
+		<if test="TASK_ORGIN != null and TASK_ORGIN != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_ORGIN = #{TASK_ORGIN}
+	    	]]>
+		</if>
+		<if test="TASK_TYPE != null and TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND TIT.task_type = #{TASK_TYPE}
+	    	]]>
+		</if>
+		)) 
+		<![CDATA[
+		where rownum>=#{num1} and rownum <=#{num2}
+		]]>
+	</select>
+</mapper>

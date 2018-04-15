@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.MobileInfoDao">
+	<sql id="dynamicWhere">
+		<if test="queryParams.p_card_id  != null and queryParams.p_card_id  != ''"> 
+<![CDATA[ and  T.card_id  like '%'||#{queryParams.p_card_id }||'%'    ]]>
+		</if>
+		<if test="queryParams.p_tel_no  != null and queryParams.p_tel_no  != ''"> 
+<![CDATA[ and  T.tel_no  like '%'||#{queryParams.p_tel_no }||'%'    ]]>
+		</if>
+		<if test="queryParams.p_imei  != null and queryParams.p_imei  != ''"> 
+<![CDATA[ and  T.imei  like '%'||#{queryParams.p_imei }||'%'    ]]>
+		</if>
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select t.* from AXX_MOBILE_INFO t where 1=1
+		<include refid="dynamicWhere" />
+	</select>
+
+	<insert id="mobileInfoSave" parameterType="map">
+		INSERT INTO AXX_MOBILE_INFO(
+		<if test=" tel_no  != null and tel_no  != ''"> 
+ <![CDATA[ 
+TEL_NO,
+ ]]>
+		</if>
+		<if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+STATUS,
+ ]]>
+		</if>
+		<if test=" imei  != null and imei  != ''"> 
+ <![CDATA[ 
+IMEI,
+ ]]>
+		</if>
+		<if test=" card_id  != null and card_id  != ''"> 
+ <![CDATA[ 
+CARD_ID,
+ ]]>
+		</if>
+		<if test=" mobiletype  != null and mobiletype  != ''"> 
+ <![CDATA[ 
+MOBILETYPE,
+ ]]>
+		</if>
+		<if test=" batterynum  != null and batterynum  != ''"> 
+ <![CDATA[ 
+BATTERYNUM,
+ ]]>
+		</if>
+		<if test=" mobilestatus  != null and mobilestatus  != ''"> 
+ <![CDATA[ 
+MOBILESTATUS,
+ ]]>
+		</if>
+		<if test=" memo  != null and memo  != ''"> 
+ <![CDATA[ 
+MEMO,
+ ]]>
+		</if>
+		MOBILE_ID) values(
+		<if test=" tel_no  != null and tel_no  != ''"> 
+ <![CDATA[ 
+#{tel_no},
+ ]]>
+		</if>
+		<if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+#{status},
+ ]]>
+		</if>
+		<if test=" imei  != null and imei  != ''"> 
+ <![CDATA[ 
+#{imei},
+ ]]>
+		</if>
+		<if test=" card_id  != null and card_id  != ''"> 
+ <![CDATA[ 
+#{card_id},
+ ]]>
+		</if>
+		<if test=" mobiletype  != null and mobiletype  != ''"> 
+ <![CDATA[ 
+#{mobiletype},
+ ]]>
+		</if>
+		<if test=" batterynum  != null and batterynum  != ''"> 
+ <![CDATA[ 
+#{batterynum},
+ ]]>
+		</if>
+		<if test=" mobilestatus  != null and mobilestatus  != ''"> 
+ <![CDATA[ 
+#{mobilestatus},
+ ]]>
+		</if>
+		<if test=" memo  != null and memo  != ''"> 
+ <![CDATA[ 
+#{memo},
+ ]]>
+		</if>
+		SEQ_AXX_MOBILE_INFO.NEXTVAL)
+
+	</insert>
+
+	<delete id="mobileInfoDelete" parameterType="String">
+		DELETE FROM AXX_MOBILE_INFO WHERE MOBILE_ID=#{mobile_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_MOBILE_INFO WHERE MOBILE_ID=#{mobile_id}
+	</select>
+
+	<update id="mobileInfoUpdate" parameterType="map">
+		UPDATE AXX_MOBILE_INFO set
+		<if test=" tel_no  != null and tel_no  != ''"> 
+ <![CDATA[ 
+TEL_NO=#{tel_no},
+ ]]>
+		</if>
+		<if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+STATUS=#{status},
+ ]]>
+		</if>
+		<if test=" imei  != null and imei  != ''"> 
+ <![CDATA[ 
+IMEI=#{imei},
+ ]]>
+		</if>
+		<if test=" card_id  != null and card_id  != ''"> 
+ <![CDATA[ 
+CARD_ID=#{card_id},
+ ]]>
+		</if>
+		<if test=" mobiletype  != null and mobiletype  != ''"> 
+ <![CDATA[ 
+MOBILETYPE=#{mobiletype},
+ ]]>
+		</if>
+		<if test=" batterynum  != null and batterynum  != ''"> 
+ <![CDATA[ 
+BATTERYNUM=#{batterynum},
+ ]]>
+		</if>
+		<if test=" mobilestatus  != null and mobilestatus  != ''"> 
+ <![CDATA[ 
+MOBILESTATUS=#{mobilestatus},
+ ]]>
+		</if>
+		<if test=" memo  != null and memo  != ''"> 
+ <![CDATA[ 
+MEMO=#{memo},
+ ]]>
+		</if>
+		MOBILE_ID=#{mobile_id}
+		where MOBILE_ID=#{mobile_id}
+	</update>
+	
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_MOBILE_INFO
+	</select>
+	<!-- 1 连表查询空值情况 2 日期类型格式转换 -->
+</mapper>

@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.AutoTrackDao">
+	<sql id="dynamicWhere">
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select t.* from AXX_AUTO_USER_TRACK t
+		<include refid="dynamicWhere" />
+	</select>
+
+	<insert id="autoTrackSave" parameterType="map">
+		INSERT INTO AXX_AUTO_USER_TRACK(
+		ID,
+		TRACK_TIME,
+		USER_ID,
+		X,
+		Y,
+		IP,
+		TRACK_TYPE,
+		TRACK_FLAG,
+		OUT_SITE_ID,
+		OUT_SITE_NAME,
+		OUT_SITE_DISTANCE,
+		SITE_ID,
+		SITE_NAME,
+		SITE_DISTANCE,
+		LAND_MARK_NAME,
+		LAND_MARK_DISTANCE,
+		SPEED,
+		UPLOAD_TIME,
+		DOP,
+		PARENT_CITY,
+		CREATION_TIME,
+		CREATED_BY,
+		UPDATE_TIME,
+		UPDATED_BY,
+		DELETE_FLAG
+		)
+		values(
+		SEQ_AXX_AUTO_USER_TRACK.NEXTVAL,
+		to_date(#{track_time},'yyyy-mm-dd hh24:mi:ss'),
+		#{user_id},
+		#{x},
+		#{y},
+		#{ip},
+		#{track_type},
+		#{track_flag},
+		#{out_site_id},
+		#{out_site_name},
+		#{out_site_distance},
+		#{site_id},
+		#{site_name},
+		#{site_distance},
+		#{land_mark_name},
+		#{land_mark_distance},
+		#{speed},
+		to_date(#{upload_time},'yyyy-mm-dd hh24:mi:ss'),
+		#{dop},
+		#{parent_city},
+		to_date(#{creation_time},'yyyy-mm-dd hh24:mi:ss'),
+		#{created_by},
+		to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+		to_date(#{updated_by},'yyyy-mm-dd hh24:mi:ss'),
+		#{delete_flag}
+		)
+	</insert>
+
+	<delete id="autoTrackDelete" parameterType="String">
+		DELETE FROM AXX_AUTO_USER_TRACK WHERE ID=#{id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_AUTO_USER_TRACK WHERE ID=#{id}
+	</select>
+
+	<update id="autoTrackUpdate" parameterType="map">
+		UPDATE AXX_AUTO_USER_TRACK set
+		<if test=" track_time  != null and track_time  != ''"> 
+ <![CDATA[ 
+TRACK_TIME=#{track_time},
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+USER_ID=#{user_id},
+ ]]>
+		</if>
+		<if test=" x  != null and x  != ''"> 
+ <![CDATA[ 
+X=#{x},
+ ]]>
+		</if>
+		<if test=" y  != null and y  != ''"> 
+ <![CDATA[ 
+Y=#{y},
+ ]]>
+		</if>
+		<if test=" ip  != null and ip  != ''"> 
+ <![CDATA[ 
+IP=#{ip},
+ ]]>
+		</if>
+		<if test=" track_type  != null and track_type  != ''"> 
+ <![CDATA[ 
+TRACK_TYPE=#{track_type},
+ ]]>
+		</if>
+		<if test=" track_flag  != null and track_flag  != ''"> 
+ <![CDATA[ 
+TRACK_FLAG=#{track_flag},
+ ]]>
+		</if>
+		<if test=" out_site_id  != null and out_site_id  != ''"> 
+ <![CDATA[ 
+OUT_SITE_ID=#{out_site_id},
+ ]]>
+		</if>
+		<if test=" out_site_name  != null and out_site_name  != ''"> 
+ <![CDATA[ 
+OUT_SITE_NAME=#{out_site_name},
+ ]]>
+		</if>
+		<if test=" out_site_distance  != null and out_site_distance  != ''"> 
+ <![CDATA[ 
+OUT_SITE_DISTANCE=#{out_site_distance},
+ ]]>
+		</if>
+		<if test=" site_id  != null and site_id  != ''"> 
+ <![CDATA[ 
+SITE_ID=#{site_id},
+ ]]>
+		</if>
+		<if test=" site_name  != null and site_name  != ''"> 
+ <![CDATA[ 
+SITE_NAME=#{site_name},
+ ]]>
+		</if>
+		<if test=" site_distance  != null and site_distance  != ''"> 
+ <![CDATA[ 
+SITE_DISTANCE=#{site_distance},
+ ]]>
+		</if>
+		<if test=" land_mark_name  != null and land_mark_name  != ''"> 
+ <![CDATA[ 
+LAND_MARK_NAME=#{land_mark_name},
+ ]]>
+		</if>
+		<if test=" land_mark_distance  != null and land_mark_distance  != ''"> 
+ <![CDATA[ 
+LAND_MARK_DISTANCE=#{land_mark_distance},
+ ]]>
+		</if>
+		<if test=" speed  != null and speed  != ''"> 
+ <![CDATA[ 
+SPEED=#{speed},
+ ]]>
+		</if>
+		<if test=" upload_time  != null and upload_time  != ''"> 
+ <![CDATA[ 
+UPLOAD_TIME=#{upload_time},
+ ]]>
+		</if>
+		<if test=" dop  != null and dop  != ''"> 
+ <![CDATA[ 
+DOP=#{dop},
+ ]]>
+		</if>
+		<if test=" parent_city  != null and parent_city  != ''"> 
+ <![CDATA[ 
+PARENT_CITY=#{parent_city},
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+CREATION_TIME=#{creation_time},
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+CREATED_BY=#{created_by},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME=#{update_time},
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+UPDATED_BY=#{updated_by},
+ ]]>
+		</if>
+		<if test=" delete_flag  != null and delete_flag  != ''"> 
+ <![CDATA[ 
+DELETE_FLAG=#{delete_flag},
+ ]]>
+		</if>
+		ID=#{id}
+		where ID=#{id}
+	</update>
+	
+	
+	
+	<select id="getTheTrack" resultType="map" parameterType="map">
+		SELECT TO_CHAR(T.TRACK_TIME, 'YYYY-MM-DD HH24:MI:SS') TRACK_TIME,
+		       LONGITUDE,
+		       LATITUDE,
+		       TRACK_TYPE,
+		       SPEED,
+		       IS_GPS
+		  FROM AXX_AUTO_USER_TRACK T
+		 WHERE 1 = 1
+		 <if
+				test=" start_time  != null and start_time  != '' and end_time!=null and end_time!=''"
+			> 
+		 <![CDATA[ 
+		       and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND #{end_time}
+		 ]]>
+			</if>
+			<if
+				test=" start_time  != null and start_time  != '' and (end_time==null or end_time=='')"
+			> 
+		 <![CDATA[ 
+		        and    TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND '23:59'
+		 ]]>
+			</if>
+			<if
+				test=" (start_time  == null or start_time  == '') and end_time!=null and end_time!=''"
+			> 
+		 <![CDATA[ 
+		       and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN '00:00' AND #{end_time}
+		 ]]>
+			</if>
+		   AND T.GPS_FLAG != 1
+		   AND TRUNC(T.TRACK_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+		   AND T.USER_ID = #{inspact_id} 
+		ORDER BY TRACK_TIME
+	
+	<!--签到轨迹   UNION ALL
+SELECT TO_CHAR(T.SIGN_TIME, 'YYYY-MM-DD HH24:MI:SS') TRACK_TIME,
+       LONGITUDE,
+       LATITUDE,
+       '2' TRACK_TYPE,
+       0 SPEED
+  FROM AXX_T_USER_SIGN T
+ WHERE T.LONGITUDE != 0
+
+   AND TRUNC(T.SIGN_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+   AND T.USER_ID = #{inspact_id}  -->
+	</select>
+	
+	
+	<select id="findAll" resultType="map" parameterType="map">
+		SELECT * FROM AXX_AUTO_USER_TRACK
+	</select>
+	
+	<select id="getTheveryDayLineInfoIds" resultType="string" parameterType="map">
+	    <!-- 
+SELECT DISTINCT LI.LINE_ID
+  FROM AXX_AUTO_USER_TRACK T,AXX_T_TASK_LINE TTL,AXX_T_LINE_INFO LI
+  
+ WHERE  T.TASK_ID=TTL.TASK_ID AND LI.LINE_ID=TTL.LINE_ID
+ <if
+		test=" start_time  != null and start_time  != '' and end_time!=null and end_time!=''"
+	> 
+ <![CDATA[ 
+       and     TO_CHAR(T.UPLOAD_TIME, 'HH24:MI') BETWEEN #{start_time} AND #{end_time}
+ ]]>
+	</if>
+	<if
+		test=" start_time  != null and start_time  != '' and (end_time==null or end_time=='')"
+	> 
+ <![CDATA[ 
+        and    TO_CHAR(T.UPLOAD_TIME, 'HH24:MI') BETWEEN #{start_time} AND '23:59'
+ ]]>
+	</if>
+	<if
+		test=" (start_time  == null or start_time  == '') and end_time!=null and end_time!=''"
+	> 
+ <![CDATA[ 
+       and     TO_CHAR(T.UPLOAD_TIME, 'HH24:MI') BETWEEN '00:00' AND #{end_time}
+ ]]>
+	</if>
+
+
+	AND TRUNC(T.UPLOAD_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+	AND T.USER_ID = #{inspact_id}   -->
+	
+	SELECT DISTINCT TL.LINE_ID
+  FROM AXX_T_TASK_LINE TL, AXX_T_TASK TT
+ WHERE TL.TASK_ID = TT.TASK_ID
+   AND TT.INSPECT_ID = #{inspact_id}
+   <![CDATA[
+      AND TRUNC(TT.START_DATE) <= TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+   AND TRUNC(TT.END_DATE) >= TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+   ]]>
+   
+	</select>
+	
+	
+	<select id="getPersonList" parameterType="map" resultType="string">
+	     SELECT bs.staff_id
+  FROM TB_BASE_STAFF BS
+ WHERE 1 = 1
+      
+   AND BS.AREA_ID =#{area_id}
+   
+   <if
+		test=" son_area_id !=null and son_area_id !=''"
+	> 
+ <![CDATA[ 
+       AND BS.SON_AREA_ID =#{son_area_id}
+ ]]>
+	</if>
+   <if
+		test=" inspector_name !=null and inspector_name !=''"
+	> 
+ <![CDATA[ 
+       AND BS.STAFF_NAME LIKE '%'||#{inspector_name}||'%'
+ ]]>
+	</if>
+  
+  
+	     
+	</select>
+	
+	<select id="getTheRealTimeTrack" parameterType="map" resultType="map" >
+	
+	<!--  
+	    SELECT T.ID,
+       TO_CHAR(T.TRACK_TIME, 'YYYY-MM-DD HH:MI:SS') TRACK_TIME,
+       T.USER_ID,
+       T.X,
+       T.Y,
+       T.IP,
+       T.TRACK_TYPE,
+       T.TRACK_FLAG,
+       T.OUT_SITE_ID,
+       T.OUT_SITE_NAME,
+       T.OUT_SITE_DISTANCE,
+       T.SITE_ID,
+       T.SITE_NAME,
+       T.SITE_DISTANCE,
+       T.LAND_MARK_NAME,
+       T.LAND_MARK_DISTANCE,
+       T.SPEED,
+       TO_CHAR(T.UPLOAD_TIME, 'YYYY-MM-DD HH:MI:SS') UPLOAD_TIME,
+       T.DOP,
+       T.PARENT_CITY,
+       TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD HH:MI:SS') CREATION_TIME,
+       T.CREATED_BY,
+       TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH:MI:SS') UPDATE_TIME,
+       TO_CHAR(T.UPDATED_BY, 'YYYY-MM-DD HH:MI:SS') UPDATED_BY,
+       T.DELETE_FLAG,
+       T.TASK_ID,
+       
+       bs.staff_no,bs.staff_name
+       
+  from axx_auto_user_track t,tb_base_staff bs
+ where 
+  t.user_id=bs.staff_id
+ and t.upload_time = (select max(b.upload_time)
+                          from axx_auto_user_track b
+                         where t.user_id = b.user_id)
+   and trunc(t.upload_time) = trunc(sysdate)
+   and t.user_id in (${personIdS})  -->
+   
+   
+ SELECT TO_CHAR(T.TRACK_TIME, 'YYYY-MM-DD HH:MI:SS') TRACK_TIME,
+       T.USER_ID,  
+       T.Longitude,
+       T.Latitude,        
+       BS.STAFF_NAME,
+       T.SPEED, 
+       bs.staff_no,bs.staff_name
+  from axx_auto_user_track t,tb_base_staff bs
+ where 
+  t.user_id=bs.staff_id
+ and t.track_time = (select max(b.track_time)
+                          from axx_auto_user_track b
+                         where t.user_id = b.user_id)
+   and trunc(t.track_time) = trunc(sysdate)
+  <if test="son_area_id !='' and son_area_id !=null">
+    and bs.son_area_id=#{son_area_id}
+  </if>
+  and t.user_id in (${personIdS})
+  UNION
+  
+  select DISTINCT to_char(ospp.TRACK_TIME,'yyyy-mm-dd hh24:mi:ss') track_time,tbs.STAFF_ID USER_ID,ospp.X longitude,ospp.Y latitude,tbs.STAFF_NAME,0 SPEED,tbs.STAFF_NO,TBS.STAFF_NAME
+  from AXX_OUT_SITE_PLAN_POLYGN ospp inner join AXX_OUT_SITE_PLAN_SUB osps on ospp.PLAN_ID=osps.PLAN_ID
+  inner join tb_base_staff tbs on osps.USER_ID=tbs.STAFF_ID
+  inner join AXX_OUT_SITE_PLAN aosp on ospp.PLAN_ID=aosp.PLAN_ID
+  inner join AXX_MAIN_OUT_SITE amos on aosp.OUT_SITE_ID=amos.OUT_SITE_ID
+  where ospp.TRACK_TIME=(select max(pp.TRACK_TIME) from AXX_OUT_SITE_PLAN_POLYGN pp where pp.PLAN_ID=ospp.PLAN_ID ) 
+  and trunc(ospp.TRACK_TIME)=trunc(sysdate) and osps.USER_ID in (${personIdS})
+  <if test="son_area_id !='' and son_area_id !=null">
+    and tbs.son_area_id=#{son_area_id}
+  </if>
+  and amos.DELETE_FLAG=1 and amos.CON_STATUS=1 
+  
+	
+	</select>
+	
+	<select id="getLineSiteByRealTime"  parameterType="map" resultType="map" >
+	select nvl( amo.site_name,'-')site_name, amo.x, amo.y,nvl(amo.con_company,'-') con_company,nvl(amo.con_address,'-')con_address
+  from AXX_MAIN_OUT_SITE amo ,TB_BASE_STAFF tbs 
+ where amo.CON_STATUS = 1
+   and amo.DELETE_FLAG = 1
+   and amo.area_id=${area_id}
+   and amo.fiber_eponsible_by=tbs.staff_id
+  <if test="son_area_id !='' and son_area_id !=null">
+    and tbs.son_area_id=#{son_area_id}
+  </if>
+
+	</select>
+	
+	
+	<select id="getOutsiteByInspector" parameterType="string" resultType="map">
+		SELECT T.SITE_NAME, T.X, T.Y, T.CON_ADDRESS,t.*
+		  FROM AXX_MAIN_OUT_SITE T
+		 WHERE T.FIBER_EPONSIBLE_BY = #{INSPACT_ID}
+		   AND T.DELETE_FLAG = 1
+		   AND T.CON_STATUS = 1
+	</select>
+	
+		<select id="getLeastFive" parameterType="string" resultType="map">
+		<!-- select * from ins_points -->
+					select amos.out_site_id site_id,amos.site_name,amos.x longitude,amos.y latitude,t.speed  from axx_main_out_site amos join(
+			select atms.site_id,aaut.speed
+			  from axx_t_macth_site atms
+			  join axx_auto_user_track aaut
+			    on atms.track_id = aaut.track_id
+			where atms.site_type = 3 and trunc(aaut.track_time) >= trunc(sysdate - 10)
+			 and aaut.speed 
+			  <![CDATA[ 
+			 < ]]>
+			  5 group by atms.site_id,aaut.speed having count(1) > 30) t on amos.out_site_id = t.site_id
+			 where amos.user_id=#{inspact_id} 
+	</select>
+	
+			<select id="getElsePoints" parameterType="string" resultType="map">
+		<!-- select * from t_point_speed -->
+					select distinct amos.out_site_id site_id,amos.site_name,amos.x longitude,amos.y latitude,t.speed  from axx_main_out_site amos join(
+			select atms.site_id,aaut.speed
+			  from axx_t_macth_site atms
+			  join axx_auto_user_track aaut
+			    on atms.track_id = aaut.track_id
+			where atms.site_type = 3 AND TRUNC(aaut.TRACK_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+			 and aaut.speed > 10
+			 group by atms.site_id,aaut.speed) t on amos.out_site_id = t.site_id
+			 where amos.user_id=#{inspact_id} 
+	</select>
+	
+	<select id="getAlarmPoints" parameterType="map" resultType="map">
+		select T.TRACK_ID,to_char(T.TRACK_TIME,'yyyy-mm-dd hh24:mi:ss') TRACK_TIME,T.TRACK_TYPE,T.LONGITUDE,T.LATITUDE,
+		T.SPEED from axx_auto_user_track T
+		where 1=1 
+		 <if
+		test=" start_time  != null and start_time  != '' and end_time !=null and end_time !=''"
+	> 
+ <![CDATA[ 
+       and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND #{end_time}
+ ]]>
+	</if>
+	<if
+		test=" start_time  != null and start_time  != '' and (end_time == null or end_time == '')"
+	> 
+ <![CDATA[ 
+        and    TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND '23:59'
+ ]]>
+	</if>
+	<if
+		test=" (start_time  == null or start_time  == '') and end_time != null and end_time != ''"
+	> 
+ <![CDATA[ 
+       and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN '00:00' AND #{end_time}
+ ]]>
+	</if>
+   AND T.GPS_FLAG != 1
+   AND TRUNC(T.TRACK_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+   AND T.USER_ID = #{inspact_id} 
+    <![CDATA[ 
+   and t.speed<10
+    ]]>
+ORDER BY TRACK_TIME
+	</select>
+	
+	
+	<select id="selTrackForDG" parameterType="map" resultType="map">
+		select T.TRACK_ID,to_char(T.TRACK_TIME,'yyyy-mm-dd hh24:mi:ss') TRACK_TIME,T.TRACK_TYPE,T.LONGITUDE,T.LATITUDE from axx_auto_user_track T
+		where 1=1 
+		 <if
+		test=" start_time  != null and start_time  != '' and end_time !=null and end_time !=''"
+	> 
+ <![CDATA[ 
+       and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND #{end_time}
+ ]]>
+	</if>
+	<if
+		test=" start_time  != null and start_time  != '' and (end_time == null or end_time == '')"
+	> 
+ <![CDATA[ 
+        and    TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND '23:59'
+ ]]>
+	</if>
+	<if
+		test=" (start_time  == null or start_time  == '') and end_time != null and end_time != ''"
+	> 
+ <![CDATA[ 
+       and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN '00:00' AND #{end_time}
+ ]]>
+	</if>
+   AND T.GPS_FLAG != 1
+   AND TRUNC(T.TRACK_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+   AND T.USER_ID = #{inspact_id} 
+ORDER BY TRACK_TIME
+	</select>
+	
+	<select id="getPositionOfTeam" parameterType="map" resultType="map">
+	select test.*,
+       case
+         when (sysdate - to_date(test.track_time, 'yyyy-mm-dd hh24:mi:ss')) * 24 * 60 * 60 >
+              30 * 60 then
+          '0'
+         else
+          '1'
+       end mark
+   from ( select 
+                       aaut.longitude longitude,
+                       aaut.latitude latitude,
+                       model.staff_name staff_name,
+                       to_char(aaut.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time
+                  from axx_auto_user_track aaut
+                 inner join (select staff_id, staff_name
+                              from tb_base_staff
+                             where org_id = (select org_id
+                                               from tb_base_staff
+                                              where staff_id = #{user_id})) model
+                    on aaut.user_id = model.staff_id
+                 where aaut.track_time =
+                       (select max(track_time)
+                          from axx_auto_user_track
+                         where trunc(track_time) =
+                               trunc(sysdate)
+                           and user_id = aaut.user_id)
+           union
+                 select 
+                        aospp.x longitude,
+                        aospp.y latitude,
+                        model.staff_name staff_name,
+                        to_char(aospp.track_time,'yyyy-mm-dd hh24:mi:ss') track_time
+                 from AXX_OUT_SITE_PLAN_POLYGN aospp
+                   inner join (select staff_id, staff_name
+                      from tb_base_staff
+                     where org_id = (select org_id
+                                       from tb_base_staff
+                                      where staff_id = #{user_id})) model
+            on aospp.created_by = model.staff_id
+         where aospp.track_time =
+               (select max(track_time)
+                  from AXX_OUT_SITE_PLAN_POLYGN
+                 where trunc(track_time) =
+                       trunc(sysdate)
+                   and created_by = aospp.created_by)
+                   
+                   ) test
+		
+	</select>
+	
+	<select id="selPersonOfTeam" parameterType="map" resultType="map">
+		<![CDATA[
+			select tbs.staff_id, tbs.staff_name
+  from tb_base_staff tbs
+ inner join tb_base_staff_role tbsr
+    on tbs.staff_id = tbsr.staff_id
+ inner join tb_base_role tbr
+    on tbsr.role_id = tbr.role_id
+ where tbs.org_id =
+       (select org_id from tb_base_staff where staff_id = #{user_id})
+   and tbr.role_id = 126
+   and tbs.staff_id <> #{user_id}
+		]]>
+	</select>
+</mapper>

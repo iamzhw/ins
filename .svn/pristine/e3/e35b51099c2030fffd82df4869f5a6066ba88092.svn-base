@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.system.dao.RoleDao">
+	<sql id="dynamicWhere">
+			<if test="queryParams.ROLE_NO != null and queryParams.ROLE_NO != ''">  
+            <![CDATA[
+	    	AND R.ROLE_NO like '%'||#{queryParams.ROLE_NO}||'%' 
+	    	]]>
+       	    </if>
+			<if test="queryParams.ROLE_NAME != null and queryParams.ROLE_NAME != ''">  
+            <![CDATA[
+	    	AND R.ROLE_NAME like '%'||#{queryParams.ROLE_NAME}||'%'
+	    	]]>
+       	    </if>
+	</sql>
+	
+	<select id="query" parameterType="util.page.Query" resultType="map">
+SELECT ROLE_ID,
+       ROLE_NO,
+       ROLE_NAME,
+       DECODE(R.STATUS, 0, '正常', '停用') STATUS
+  FROM TB_BASE_ROLE R
+ WHERE 1=1
+   <include refid="dynamicWhere" />
+ ORDER BY R.ROLE_NO
+ 	</select> 
+	
+	
+	<select id="proveUniqueness" parameterType="map" resultType="Integer">
+SELECT COUNT(1) FROM TB_BASE_ROLE R WHERE R.ROLE_NO = #{ROLE_NO}
+   <if test="NOTROLE_NO != null and NOTROLE_NO != ''">  
+   <![CDATA[
+	AND R.ROLE_NO != #{NOTROLE_NO}
+	]]>
+   </if>
+	</select>
+	
+	<insert id="insert" parameterType="map" >
+INSERT INTO TB_BASE_ROLE
+  (ROLE_ID,
+   ROLE_NAME,
+   ROLE_NO,
+   STATUS,
+   CREATE_STAFF,
+   MODIFY_STAFF)
+VALUES
+  (SEQ_TB_BASE_ROLE.NEXTVAL,
+   #{ROLE_NAME},
+   #{ROLE_NO},
+   #{STATUS},
+   #{CREATE_STAFF},
+   #{MODIFY_STAFF})
+   	</insert>
+   	<select id="getRole" parameterType="String" resultType="map">
+   	SELECT * FROM TB_BASE_ROLE T WHERE T.ROLE_ID = #{ROLE_ID}
+	</select>
+	
+	
+	<update id="update" parameterType="map" >
+UPDATE TB_BASE_ROLE R
+   SET R.ROLE_NO   = #{ROLE_NO},
+       R.ROLE_NAME = #{ROLE_NAME},
+       R.STATUS=#{STATUS},
+       R.isdeleted =#{STATUS},
+       R.MODIFY_STAFF=#{MODIFY_STAFF},
+       R.modify_date=SYSDATE
+WHERE R.ROLE_ID = #{ROLE_ID}
+   	</update>
+   	
+   	<update id="delete" parameterType="map">
+UPDATE TB_BASE_ROLE R
+   SET R.isdeleted =1,
+       R.STATUS = 1,
+	   R.MODIFY_STAFF=#{MODIFY_STAFF}
+ WHERE R.ROLE_ID = #{ROLE_ID}
+	</update>	
+	   	<update id="deleteRole" parameterType="map">
+delete TB_BASE_ROLE R
+ WHERE R.ROLE_ID = #{ROLE_ID}
+	</update>	
+	
+	<select id="getAllGns" parameterType="map" resultType="map">
+SELECT DISTINCT G.*
+  FROM TB_BASE_GNS G
+ WHERE G.PARENTID = #{ID}
+ ORDER BY G.ID
+	</select>
+	
+	<select id="getResources" parameterType="map" resultType="map">
+ SELECT G.*
+   FROM TB_BASE_ROLE_GNS RG, TB_BASE_GNS G
+  WHERE RG.ROLE_ID = #{ROLE_ID}
+    AND RG.ID = G.ID
+  ORDER BY G.ID
+	</select>
+	
+	
+	<insert id="giveResource" parameterType="map">
+INSERT INTO TB_BASE_ROLE_GNS
+  SELECT #{roleId}, #{resource} FROM DUAL
+  	</insert>
+	<update id="delResource" parameterType="String">
+DELETE TB_BASE_ROLE_GNS S WHERE S.ROLE_ID = #{roleId}
+	</update>
+	
+	<select id="getAllByStaffId" parameterType="string" resultType="map">
+		SELECT r.ROLE_NO
+  		FROM TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr
+ 		WHERE r.ROLE_ID = sr.role_id
+   				AND sr.STAFF_ID = #{STAFF_ID}
+
+	</select>
+	
+	<select id="getRoleList" parameterType="map" resultType="string">
+		select r.ROLE_NO,r.ROLE_ID
+		from TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr 
+		where r.ROLE_ID = sr.ROLE_ID 
+			and sr.STAFF_ID = #{STAFF_ID}
+		<if test="ROLE_NO != null and ROLE_NO != ''">
+			and r.ROLE_NO = #{ROLE_NO}
+		</if>
+		order by r.ROLE_ID
+	</select>
+	
+	<select id="getRoleListForApk" parameterType="string" resultType="map">
+		select r.ROLE_NO,r.ROLE_ID
+		from TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr 
+		where r.ROLE_ID = sr.ROLE_ID 
+			and sr.STAFF_ID = #{STAFF_ID}
+		<if test="ROLE_NO != null and ROLE_NO != ''">
+			and r.ROLE_NO = #{ROLE_NO}
+		</if>
+		order by r.ROLE_ID
+	</select>
+</mapper>

@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.axx.dao.OutSiteInterfaceDao">
+  
+	<select id="getOsPlanCenter"  parameterType="string"  resultType="map">
+	     SELECT * FROM AXX_OUT_SITE_PLAN_SUB T WHERE T.PLAN_ID=#{plan_id}
+	</select>
+	
+	<select id="getLocalQrry"  parameterType="string"  resultType="map">
+	    SELECT BS.*
+  FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+ WHERE BS.STAFF_ID = BSR.STAFF_ID
+   AND BR.ROLE_ID = BSR.ROLE_ID
+   AND BR.ROLE_NO in ('AXX_JSY', 'AXX_GLRY')
+   AND BS.ORG_ID =
+       (SELECT T.ORG_ID FROM TB_BASE_STAFF T WHERE T.STAFF_ID = #{user_id})
+     
+	</select>
+	
+	<select id="getLocalSchemeMakers"  parameterType="string"  resultType="map">
+	    SELECT BS.*
+  FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+ WHERE BS.STAFF_ID = BSR.STAFF_ID
+   AND BR.ROLE_ID = BSR.ROLE_ID
+   AND BR.ROLE_NO in ('AXX_BZZ', 'AXX_DZ')
+   AND BS.ORG_ID =
+       (SELECT T.ORG_ID FROM TB_BASE_STAFF T WHERE T.STAFF_ID = #{user_id})
+     
+	</select>
+	
+	
+	<select id="getOutSiteByPlanId" parameterType="string" resultType="map">
+	   select mos.*
+  from AXX_OUT_SITE_PLAN osp, axx_main_out_site mos
+ where osp.out_site_id = mos.out_site_id
+   and osp.delete_flag !=1
+   and osp.plan_id = #{plan_id}
+	  
+	</select>
+	
+	<select id="getlineInspactSTaff" parameterType="string" resultType="string">
+	    SELECT LI.INSPECT_ID FROM AXX_T_LINE_INFO LI WHERE LI.LINE_ID=#{line_part}
+	</select>
+	
+	    <select id="getTodayTask" parameterType="map" resultType="map">
+          select *
+  from (SELECT T.TASK_ID,
+               T.TASK_NAME,
+               TO_CHAR(T.START_DATE, 'YYYY-MM-DD') START_DATE,
+               TO_CHAR(T.END_DATE, 'YYYY-MM-DD') END_DATE
+          FROM AXX_T_TASK T
+         where T.INSPECT_ID =#{userId}) t1
+where  not exists
+<![CDATA[
+(select 1 from (SELECT t.task_id
+                  FROM AXX_T_TASK T
+                 where (TRUNC(T.START_DATE) > to_date(#{end_time},'YYYY-MM-DD')
+                       or TRUNC(t.end_date) < to_date(#{start_time},'YYYY-MM-DD')) 
+                   and T.INSPECT_ID = #{userId}) t2
+         where t1.TASK_ID = t2.TASK_ID)
+]]>
+	</select>
+    
+    
+    <select id="getActualCount" parameterType="map" resultType="string">
+	 select count(1) actual_count from 
+	  	(select distinct user_id,site_id
+	     from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time 
+	            from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+	            inner join axx_main_out_site mos on mos.out_site_id=tms.site_id
+	            and aut.user_id=#{userId} and tms.site_type =3 and tms.task_id=#{task_id}
+	            and mos.site_danger_level !=4
+	            and trunc(aut.track_time)=to_date(#{query_time}, 'yyyy-mm-dd'))t
+	     group by con_label,user_id,site_id having (max(track_time)-min(track_time))*1440 > #{OutSiteStay}
+	     union all
+	       select distinct user_id,site_id
+	     from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time 
+	            from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+	            inner join axx_main_out_site mos on mos.out_site_id=tms.site_id
+	            and aut.user_id=#{userId} and tms.site_type =3 and tms.task_id=#{task_id}
+	            and mos.site_danger_level =4
+	            and trunc(aut.track_time)=to_date(#{query_time}, 'yyyy-mm-dd'))t
+	     group by con_label,user_id,site_id having (max(track_time)-min(track_time))*1440 > #{UnSafeOutSiteStay})             
+    </select>
+    
+    
+    <select id="getTask2Outsite" parameterType="map" resultType="map">
+	    select tto.task_id,tto.out_site_id,tto.site_match from  AXX_T_TASK_OUTSITE tto where
+	       	exists(select tt.task_id from axx_t_task tt where tt.start_date &lt;=to_date(#{query_time},'yyyy-mm-dd')
+	       	and tt.end_date &gt;=to_date(#{query_time},'yyyy-mm-dd') and tt.inspect_id=#{userId} and tt.task_id=tto.task_id)
+    
+    </select>
+    
+    <select id="getTaskInfo" parameterType="string" resultType="map">
+         SELECT * FROM AXX_T_TASK T WHERE T.TASK_ID=#{task_id}
+    </select>
+	
+
+  <insert id="insertMainOutsiteService" parameterType="map" >
+       insert into AXX_MAIN_OUT_SITE_SERVICE
+  (SITE_SERVICE_ID,
+   OUT_SITE_ID,
+   SITE_ID,
+   ORG_NAME,
+   LINE_LEVEL,
+   FIBER_NUM,
+   SERVICE_RESULT,
+   CHECK_BY,
+   CHECK_DATE,
+   END_DATE,
+   COMMIT_USER,
+   COMMIT_UID,
+   COMMIT_DATE,
+   SITE_FILE_IMG,
+   CON_SITUATION,
+   IS_CHECKED,
+   SITE_NO,
+   GUARDIAN_1,
+   GUARDIAN_1_TEL,
+   STAY_TIME_PART,
+   SERVICE_GROUP_ID,
+   SERVICE_COMPANY,
+   IS_SEND_2_LINER,
+   PARENT_CITY,
+   CREATION_TIME,
+   CREATED_BY,
+   UPDATE_TIME,
+   UPDATED_BY)
+values
+  (SEQ_AXX_MOSS.NEXTVAL,
+   #{out_site_id,
+   jdbcType=VARCHAR},
+   #{site_id,
+   jdbcType=NUMERIC},
+   #{org_name,
+   jdbcType=VARCHAR},
+   #{line_level,
+   jdbcType=VARCHAR},
+   #{fiber_num,
+   jdbcType=NUMERIC},
+   #{service_result,
+   jdbcType=VARCHAR},
+   #{check_by,
+   jdbcType=VARCHAR},
+   #{check_date,
+   jdbcType=VARCHAR},
+   to_date(#{end_date, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+   #{commit_user,
+   jdbcType=VARCHAR},
+   #{commit_uid,
+   jdbcType=VARCHAR},
+   to_date(#{commit_date, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+   #{site_file_img,
+   jdbcType=VARCHAR},
+   #{con_situation,
+   jdbcType=VARCHAR},
+   #{is_checked,
+   jdbcType=CHAR},
+   #{site_no,
+   jdbcType=VARCHAR},
+   #{guardian_1,
+   jdbcType=VARCHAR},
+   #{guardian_1_tel,
+   jdbcType=VARCHAR},
+   #{stay_time_part,
+   jdbcType=VARCHAR},
+   #{service_group_id,
+   jdbcType=VARCHAR},
+   #{service_company,
+   jdbcType=VARCHAR},
+   #{is_send_2_liner,
+   jdbcType=CHAR},
+   #{parent_city,
+   jdbcType=VARCHAR},
+   to_date(#{creation_time, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+   #{created_by,
+   jdbcType=VARCHAR},
+   to_date(#{update_time, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+   #{updated_by,
+   jdbcType=VARCHAR})
+       
+  
+  </insert>
+  
+  <select id="getTodayOustSite" parameterType="map" resultType="string">
+      SELECT T.plan_id
+  FROM AXX_OUT_SITE_PLAN T
+  inner join AXX_MAIN_OUT_SITE amos on t.OUT_SITE_ID=amos.OUT_SITE_ID
+  where amos.CON_STATUS=1 and amos.DELETE_FLAG=1
+  <![CDATA[
+      and TRUNC(T.START_DATE) <= TO_DATE(#{query_date}, 'YYYY-MM-DD')
+   AND TRUNC(T.END_DATE) >= TO_DATE(#{query_date}, 'YYYY-MM-DD')
+   AND T.USER_ID =#{userId}                                         
+    ]]>
+  </select>
+  
+  
+  <select id="getElebar" parameterType="string" resultType="map">
+      <!--  SELECT T.X,T.Y FROM AXX_OUT_SITE_INPUT_POINTS T WHERE T.PLAN_ID=#{plan_id} -->
+       SELECT T.X,T.Y,T.SITE_ORDER FROM AXX_OUT_SITE_INPUT_POINTS T WHERE T.PLAN_ID=#{plan_id} ORDER BY T.SITE_ORDER
+  </select>
+  
+  
+  <select id="getNurseTasks" parameterType="map" resultType="map">
+      SELECT to_char(OSPB.PLAN_DATE,'yyyy-mm-dd') TASK_DATE, OS.SITE_NAME TASK_NAME,OSP.PLAN_ID
+  FROM AXX_OUT_SITE_PLAN_SUB OSPB,
+       AXX_OUT_SITE_PLAN     OSP,
+       AXX_MAIN_OUT_SITE     OS
+ WHERE OSPB.PLAN_ID = OSP.PLAN_ID
+   AND OSP.OUT_SITE_ID = OS.OUT_SITE_ID
+   AND OSPB.USER_ID = #{userId}
+   and TRUNC(ospb.PLAN_DATE)=TRUNC(SYSDATE)
+  </select>
+  
+  <select id="getGuardInfoId" resultType="string">
+      SELECT SEQ_AXX_T_GUARD_INFO.NEXTVAL FROM DUAL
+  </select>
+	
+	
+	<insert id="insertGuardInfo" parameterType="map">
+	<!-- select t.INFO_ID,t.OUT_SITE_ID,to_char(t.UPLOAD_TIME,'yyyy-mm-dd hh24:mi:ss') UPLOAD_TIME,t.UPLOAD_USER,t.REMARK from AXX_T_GUARD_INFO t
+	 -->
+	     insert into AXX_T_GUARD_INFO
+  (INFO_ID, OUT_SITE_ID, UPLOAD_TIME, UPLOAD_USER, REMARK)
+values
+  (#{guardInfoId},
+   #{out_site_id,
+   jdbcType=NUMERIC},
+   to_date(#{upload_time, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+   #{upload_user,
+   jdbcType=NUMERIC},
+   #{remark,
+   jdbcType=VARCHAR})
+	
+	</insert>
+	
+	
+	<select id="getosIdByPlanid" parameterType="string" resultType="string">
+	   SELECT T.OUT_SITE_ID FROM AXX_OUT_SITE_PLAN T WHERE T.PLAN_ID=#{plan_id}
+	</select>
+	
+	
+	<select id="isInGuardLast" parameterType="map" resultType="map">
+	   SELECT T.IS_GUARD,T.GROUP_FLAG
+  from AXX_OUT_SITE_PLAN_POLYGN t
+ where t.track_time =
+       (select max(t.track_time)
+          from AXX_OUT_SITE_PLAN_POLYGN t
+         where trunc(t.track_time) = to_date(#{today}, 'yyyy-mm-dd')
+           and t.plan_id = #{plan_id})
+	</select>
+	
+		
+	<select id="getUserInfo" resultType="map" parameterType="map">
+	select tbs.staff_id,tbs.staff_no,tbs.staff_name,tbs.area_id,tul.manage_level,tul.area_level from tb_base_staff tbs 
+	inner join axx_t_user_level tul on tbs.staff_id=tul.staff_id
+  	where tbs.staff_id=#{staff_id}
+	</select>
+	
+	<select id="getMaxOutSiteFlow" resultType="map" parameterType="map">
+	select tof.flow_id,tof.out_site_id,tof.flow_status from axx_t_outsite_flow tof 
+	where tof.flow_id=(select max(flow_id) from axx_t_outsite_flow where out_site_id=#{out_site_id})
+	</select>
+ <select id="getOutSchemeBySiteId" parameterType="map" resultType="map">
+   SELECT T.SCHEME_ID,T.SCHEME_NAME,T.MS_CONTENT,T.OUT_SITE_ID,T.User_Id,TBS.STAFF_NAME,to_char(T.CREATION_TIME,'yyyy-mm-dd hh24:mi:ss') CREATION_TIME,T.area_id FROM AXX_OUT_SITE_MAINTAIN_SCHEME T 
+	inner join tb_base_staff TBS on T.USER_ID=TBS.STAFF_ID WHERE T.OUT_SITE_ID=#{out_site_id}
+ </select>
+	
+<update id="jxsUpdate" parameterType="map">
+UPDATE AXX_T_OPERATOR_INFO set
+<if test=" operator_name  != null and operator_name  != ''"> 
+ <![CDATA[ 
+	OPERATOR_NAME=#{operator_name},
+ ]]>
+ </if> 
+<if test=" car_no  != null and car_no  != ''"> 
+ <![CDATA[ 
+	CAR_NO=#{car_no},
+ ]]>
+ </if> 
+<if test=" car_type  != null and car_type  != ''"> 
+ <![CDATA[ 
+	CAR_TYPE=#{car_type},
+ ]]>
+ </if> 
+<if test=" mobile  != null and mobile  != ''"> 
+ <![CDATA[ 
+	MOBILE=#{mobile},
+ ]]>
+ </if> 
+<if test=" tel1  != null and tel1  != ''"> 
+ <![CDATA[ 
+	TEL1=#{tel1},
+ ]]>
+ </if> 
+<if test=" tel2  != null and tel2  != ''"> 
+ <![CDATA[ 
+	TEL2=#{tel2},
+ ]]>
+ </if> 
+<if test=" info  != null and info  != ''"> 
+ <![CDATA[ 
+	INFO=#{info},
+ ]]>
+ </if> 
+<if test=" upload_time  != null and upload_time  != ''"> 
+ <![CDATA[ 
+	UPLOAD_TIME=to_date(#{upload_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+ </if> 
+<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+	USER_ID=#{user_id},
+ ]]>
+ </if> 
+OUT_SITE_ID=#{out_site_id}
+where OUT_SITE_ID=#{out_site_id}
+</update>
+	
+<insert id="addOutsiteFlow" parameterType="map">
+	insert into AXX_T_OUTSITE_FLOW(FLOW_ID,OUT_SITE_ID,REVIEW_STAFF,REVIEW_TIME,OPINON,IS_SCENCE,REVIEW_STATUS,FLOW_STATUS)
+	values(SEQ_AXX_FLOW_ID.NEXTVAL,#{OUT_SITE_ID},#{REVIEW_STAFF},to_date(#{COMMIT_TIME},'yyyy-mm-dd hh24:mi:ss'),#{OPINON},#{IS_SCENCE},#{REVIEW_STATUS},#{FLOW_STATUS})
+</insert>
+
+<select id="getOutSitesByFlow" parameterType="map" resultType="map">
+        SELECT T.IMAGE_NAME,
+               T.IMAGE_PATH,
+               T.CON_STATUS,
+               T.INFO_SOURCE,
+               T.AFFECTED_FIBER,
+               T.RELAY_PART,
+               T.FIBER_LEVEL,
+               T.LINE_PART,
+               T.LANDMARKNO,
+               T.CON_COMPANY,
+               T.CON_ADDRESS,
+               T.CON_CONTENT,
+               T.IS_AGREEMENT,
+               T.SITE_DANGER_LEVEL,
+               TO_CHAR(T.CON_STARTDATE, 'YYYY-MM-DD') CON_STARTDATE,
+               TO_CHAR(T.PRE_ENDDATE, 'YYYY-MM-DD') PRE_ENDDATE,
+               T.CON_REPONSIBLE_BY,
+               T.CON_REPONSIBLE_BY_TEL,
+               T.GUARDIAN,
+               T.GUARDIAN_TEL,
+               T.SCENE_MEASURE,
+               BS1.STAFF_NAME FIBER_EPONSIBLE_BY,
+               T.FIBER_EPONSIBLE_TEL,
+               T.FIBER_UID,
+               STAY_TIME_PART,
+               T.IS_PLAN,
+               T.AREA_ID,
+               TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+               T.CREATED_BY,
+               TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS') UPDATE_TIME,
+               UPDATED_BY,
+               T.DELETE_FLAG,
+               T.OUT_SITE_ID,
+               T.SITE_NAME,
+               T.X,
+               T.Y,
+               BS.STAFF_NAME USER_ID,
+               T.FLOW_STATUS,
+               T.IS_MACHAINE,
+			   T.MACHAINE_NAME,
+			   T.RESIDUAL_CABLE,
+			   T.EFFECT_SERVICE
+          FROM AXX_MAIN_OUT_SITE T, TB_BASE_STAFF BS,TB_BASE_STAFF BS1
+          WHERE T.USER_ID = BS.STAFF_ID(+) and T.FIBER_EPONSIBLE_BY=BS1.STAFF_ID(+)
+           AND T.DELETE_FLAG = 1
+           AND T.AREA_ID=#{areaId}
+           AND T.FLOW_STATUS=#{flow_status}
+           <if test="outsite_id  != null and outsite_id  != ''">
+           AND T.OUT_SITE_ID=#{outsite_id}
+           </if>
+           <if test="staff_id  != null and staff_id  != ''"> 
+			 <![CDATA[ 
+				AND BS1.ORG_ID=(SELECT TBS2.ORG_ID FROM TB_BASE_STAFF TBS2 WHERE TBS2.STAFF_ID=#{staff_id})
+			 ]]>
+		   </if> 
+ </select>
+ 
+	<select id="getUsersByLevel"  parameterType="map"  resultType="map">
+	 	select tbs.staff_id,tbs.staff_no,tbs.staff_name,tul.manage_level,tul.area_level,tbs.tel from tb_base_staff tbs
+	 	inner join axx_t_user_level tul on tbs.staff_id=tul.staff_id
+		where tul.manage_level=#{manage_level}
+		  <if test=" area_id  != null and area_id  != ''"> 
+			 <![CDATA[ 
+				and tbs.area_id=#{area_id}
+			 ]]>
+		 </if> 
+	       <if test=" area_level  != null and area_level  != ''"> 
+			 <![CDATA[ 
+				and tul.area_level=#{area_level}
+			 ]]>
+		   </if> 
+		   <if test=" staff_id  != null and staff_id  != ''"> 
+			 <![CDATA[ 
+				and tbs.org_id=(select org_id from tb_base_staff where staff_id=#{staff_id})
+			 ]]>
+		   </if> 
+	</select>
+ 	
+ 	<select id="getOutSitesByMap"  parameterType="map"  resultType="map">
+      select out_site_id,site_name,X,Y from axx_main_out_site where 
+      relay_part = #{relay_id} and area_id = #{area_id} and con_status=1 and delete_flag=1
+	</select>
+ 	
+ 	<select id="selOutSiteCount" parameterType="map" resultType="int">
+ 	  select count(1)
+	  from axx_main_out_site s, TB_BASE_STAFF bs, AXX_T_ORGANIZATION ato
+	 where s.Fiber_Eponsible_By = bs.STAFF_ID(+)
+	   and bs.org_id = ato.org_id
+	   and s.area_id = #{area_id}
+	   and s.con_status = 1
+	   and s.delete_flag = 1
+	   <if test="org_id  != null and org_id  != ''">
+	  	 and bs.org_id = #{org_id}
+	   </if> 
+	   <if test="out_site_name  != null and out_site_name  != ''">
+	    <![CDATA[
+	  	  and s.site_name like '%'||#{out_site_name}||'%'
+	  	]]> 
+	   </if> 
+	   
+ 	</select>
+ 	
+ 	<select id="getOutSitesAndPhoto" parameterType="map" resultType="map">
+ 	  select * from (select rownum rn, model01.*
+          from (select s.out_site_id,
+                       s.site_name,
+                       s.X,
+                       s.Y,
+                       p.micro_photo,
+                       case
+                         when p.photo_type = 15 then
+                          1
+                         else
+                          0
+                       end is_file
+                  from axx_main_out_site s
+                  join TB_BASE_STAFF bs on s.Fiber_Eponsible_By=bs.STAFF_ID
+  				  join AXX_T_ORGANIZATION ato on bs.org_id=ato.org_id
+                  left join (select * from (SELECT p.*,
+                     ROW_NUMBER() OVER(PARTITION BY p.out_site_id ORDER BY p.upload_time desc) rn
+                                FROM (select s2.out_site_id, p1.*
+                                       from axx_main_out_site s2,
+                                                   axx_t_photo  p1
+                                             where s2.out_site_id = p1.site_id
+                                               and p1.photo_type in (3, 15)
+                                               and p1.status = 0
+                                               and s2.area_id = #{area_id}
+                                            union
+                                            select r.out_site_id, p2.*
+                                              from axx_out_site_check_record r,
+                                                   axx_t_photo               p2
+                                             where r.out_record_id = p2.site_id
+                                               and p2.photo_type = 4
+                                               and p2.status = 0
+                                               and r.area_id = #{area_id}) p) t
+                             where t.rn = 1) p on s.out_site_id =
+                                                  p.out_site_id
+                 where s.area_id = #{area_id}
+                   and s.con_status = 1
+                   and s.delete_flag = 1
+                   <if test="org_id  != null and org_id  != ''">
+				  	 and bs.org_id = #{org_id}
+				   </if> 
+				   <if test="out_site_name  != null and out_site_name  != ''">
+				    <![CDATA[
+				  	  and s.site_name like '%'||#{out_site_name}||'%'
+				    ]]> 
+				   </if>
+                 order by s.out_site_id) model01
+         where rownum &lt;= (#{page} * 12))
+ 	 where rn > ((#{page} - 1) * 12)
+ 	</select>
+ 	
+ 	<select id="getOutSitePhotos" parameterType="map" resultType="map">
+		select p.file_id photo_id,
+         p.staff_id,
+         s.staff_name,
+         p.photo_path,
+         p.micro_photo,
+         to_char(p.upload_time, 'yyyy-mm-dd hh24:mi:ss') upload_time,
+         p.photo_type,
+         case
+           when p.photo_type = 15 then
+            1
+           else
+            0
+         end is_file,
+         (select count(1)
+            from axx_t_photo_comment c
+           where c.photo_id = p.file_id
+             and c.status = 0) praise_number,
+         (select count(1)
+          from axx_t_photo_comment c
+         where c.photo_id = p.file_id
+           and c.status = 1) error_number,   
+         (select count(1)
+            from AXX_FIX_ORDER r
+           where r.is_file = 0
+             and r.spot_id = #{out_site_id}
+             and r.photo_id = p.file_id) is_repair
+	    from (select p1.*
+	            from axx_t_photo p1
+	           where p1.site_id = #{out_site_id}
+	             and p1.photo_type in (3, 15)
+	             and p1.status = 0
+	          union
+	          select p2.*
+	            from axx_out_site_check_record aosr, axx_t_photo p2
+	           where aosr.out_record_id = p2.site_id
+	             and aosr.out_site_id = #{out_site_id}
+	             and p2.photo_type = 4
+	             and p2.status = 0) p
+	    join tb_base_staff s on p.staff_id = s.staff_id
+	   order by p.upload_time desc
+ 	</select>
+ 	
+ 	<insert id="intoPhotoComment" parameterType="map">
+ 		insert into axx_t_photo_comment
+		  (check_id, staff_id, status, comment_time, 
+		  <if test=" questionType  != null and questionType  != ''"> 
+		  trouble,
+		   </if>
+		  <if test=" other_trouble  != null and other_trouble  != ''"> 
+		   other_trouble,
+		   </if>
+		   photo_id, equip_id)
+		values
+		  (seq_axx_t_photo_comment.nextval,
+		   #{user_id},
+		   #{is_praise},
+		   sysdate,
+		   <if test=" questionType  != null and questionType  != ''"> 
+		   #{questionType},
+		   </if>
+		   <if test=" other_trouble  != null and other_trouble  != ''"> 
+		   #{other_trouble},
+		   </if>
+		   #{photo_id},
+		   #{out_site_id})
+ 	</insert>
+ 	
+ 	<select id="getHistoryPhotoComments" parameterType="map" resultType="map">
+ 		select c.photo_id,
+       c.equip_id out_site_id,
+       to_char(c.comment_time,'yyyy-mm-dd hh24:mi:ss') comment_time,
+       c.staff_id comment_user,
+       c.status ispraise,
+       c.trouble question,
+       c.other_trouble,
+       s.staff_name
+	  from axx_t_photo_comment c join tb_base_staff s on c.staff_id = s.staff_id
+	 where c.photo_id = #{photo_id} and c.equip_id = #{out_site_id}
+	 order by c.comment_time desc
+ 	</select>
+ 	
+ 	<select id="selPhotolByID" parameterType="String" resultType="map">
+ 		select p.*,s.area_id from axx_t_photo p join tb_base_staff s
+ 		 on p.staff_id = s.staff_id where p.file_id = #{photo_id}
+ 	</select>
+ 	
+ 	<select id="selOrgByAreaIDs" parameterType="String" resultType="map">
+ 	  select * from AXX_T_ORGANIZATION where area_id = #{area_id}
+ 	</select>
+ 	
+ 	<select id="isDepthProbe" parameterType="String" resultType="int">
+      select count(1) from axx_main_out_site s
+	  where s.out_site_id = #{out_site_id}
+	    and s.out_site_id in (select out_site_id from AXX_T_DEPTH_PROBE)
+ 	</select>
+ 	
+ </mapper>

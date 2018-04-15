@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.roomInspection.dao.CheckItemDao">
+
+	<sql id="dynamicWhere">
+		<if
+			test="queryParams.ROOM_TYPE_ID != null and queryParams.ROOM_TYPE_ID != ''">  
+            <![CDATA[
+	    	AND jci.room_type_id = #{queryParams.ROOM_TYPE_ID} 
+	    	]]>
+		</if>
+		<if test="queryParams.CHECK_ITEM_NAME != null and queryParams.CHECK_ITEM_NAME != ''">  
+            <![CDATA[
+	    	AND jci.check_item_name like '%'||#{queryParams.CHECK_ITEM_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.CREATE_BY != null and queryParams.CREATE_BY != ''">  
+            <![CDATA[
+	    	AND jci.create_by like '%'||#{queryParams.CREATE_BY}||'%'
+	    	]]>
+		</if>
+	</sql>
+
+	<select id="queryCheckItem" parameterType="util.page.Query" resultType="map">
+	    select jci.check_item_id,jci.check_item_name,jci.check_item_content,jci.room_type_id,jrt.room_type_name,
+			 to_char(jci.create_date,'yyyy-mm-dd') CREATE_DATE,jci.create_by,jci.modify_date,jci.modify_by,jci.check_type
+		 from jfxj_check_item jci,jfxj_room_type jrt where jci.room_type_id=jrt.room_type_id and jci.status=0 
+		<include refid="dynamicWhere" />
+		ORDER BY jci.create_date desc
+	</select>
+	
+	<select id="queryCheckItemById" parameterType="map" resultType="map">
+		select jci.check_item_id,jci.check_item_name,jci.check_item_content,jci.room_type_id,
+			jci.create_date,jci.create_by,jci.modify_date,jci.modify_by,jci.check_type
+		 from jfxj_check_item jci where jci.check_item_id = #{CHECK_ITEM_ID}
+	</select>
+	
+	<select id="queryTroubleTypeList" parameterType="map" resultType="map">
+		select jtt.trouble_type_id,jtt.check_item_id,jtt.trouble_type_name from jfxj_trouble_type jtt
+		 where jtt.status=0 and jtt.check_item_id=#{CHECK_ITEM_ID} order by jtt.trouble_type_id
+	</select>
+	<select id="getCheckItemId" resultType="long">
+		select SEQ_CHECK_ITEM_ID.Nextval from dual
+	</select>
+	<insert id="insertCheckItem" parameterType="map">
+		insert into JFXJ_CHECK_ITEM (CHECK_ITEM_ID, CHECK_ITEM_NAME, CHECK_ITEM_CONTENT,
+		 ROOM_TYPE_ID, CREATE_DATE, CREATE_BY, CHECK_TYPE,STATUS)
+		 values(#{CHECK_ITEM_ID}, #{CHECK_ITEM_NAME}, #{CHECK_ITEM_CONTENT},
+		 #{ROOM_TYPE_ID}, to_date(#{CREATE_DATE},'yyyy-mm-dd'), #{CREATE_BY}, #{CHECK_TYPE},0)
+	</insert>
+	<update id="updateCheckItem" parameterType="map">
+		update JFXJ_CHECK_ITEM set CHECK_ITEM_NAME=#{CHECK_ITEM_NAME},CHECK_ITEM_CONTENT=#{CHECK_ITEM_CONTENT},
+		ROOM_TYPE_ID=#{ROOM_TYPE_ID},MODIFY_DATE=to_date(#{MODIFY_DATE},'yyyy-mm-dd'),MODIFY_BY=#{MODIFY_BY},CHECK_TYPE=#{CHECK_TYPE}
+		 where CHECK_ITEM_ID=#{CHECK_ITEM_ID}
+		
+	</update>
+	<delete id="deleteCheckItem" parameterType="map">
+		update JFXJ_CHECK_ITEM set status=1 where CHECK_ITEM_ID in (${CHECK_ITEM_ID})
+	</delete>
+	
+	<insert id="insertTroubleType" parameterType="map">
+		insert into JFXJ_TROUBLE_TYPE(TROUBLE_TYPE_ID,CHECK_ITEM_ID,TROUBLE_TYPE_NAME,STATUS)
+		 values(SEQ_TROUBLE_TYPE_ID.Nextval,#{CHECK_ITEM_ID},#{TROUBLE_TYPE_NAME},0)
+	</insert>
+	<update id="updateTroubleType" parameterType="map">
+		update JFXJ_TROUBLE_TYPE set TROUBLE_TYPE_NAME=#{TROUBLE_TYPE_NAME} where TROUBLE_TYPE_ID=#{TROUBLE_TYPE_ID}
+	</update>
+	<delete id="deleteTroubleType" parameterType="map">
+		update JFXJ_TROUBLE_TYPE set status=1 where CHECK_ITEM_ID=#{CHECK_ITEM_ID} 
+		<if test="TROUBLE_TYPE_ID != null and TROUBLE_TYPE_ID !=''">
+			and TROUBLE_TYPE_ID not in (${TROUBLE_TYPE_ID})
+		</if>
+	</delete>
+
+</mapper>

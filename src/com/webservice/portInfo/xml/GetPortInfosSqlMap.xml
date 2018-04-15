@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webservice.portInfo.dao.GetPortInfosDao">
+<select id="getDBblinkName" parameterType="string" resultType="string">
+		select t.jndi from sys_dblink t where t.area_id=#{AREA_ID}
+	</select>
+	<select id="getAreaId" parameterType="string" resultType="string">
+		select a.area_id from area a where a.name =#{areaName}
+	</select>
+<select id="getObdsByEqpId" parameterType="map" resultType="map">
+	         select distinct e.equipment_id SBID,
+              e.equipment_code SBBM,
+              e.equipment_name SBMC,
+              e.res_type_id SBLX
+         from TB_CABLECHECK_EQUIPMENT e
+        where e.install_sbid = #{eqpId}
+          and e.res_type_id = 2530
+          </select>
+          <select id="getGlList" parameterType="map" resultType="map">
+	select distinct t1.* from (
+  select T.*,
+           to_char(nvl(lbl.no,' ')) glbh,
+           to_char(nvl(lbl.name,' ')) glmc,
+           ps.state_id xz_id,
+           ps.name xz_name
+      from (SELECT distinct PTP.PHY_PORT_ID DZID,
+                   CASE
+                     WHEN PE.Res_Spec_Id IN ('2530', '414') THEN  PTP.NO
+                     ELSE PU.SEQUENCE || '/' || PTP.SEQ_IN_UNIT
+                   END DZBM,
+                   TO_CHAR(PTP.PHY_EQP_ID) SBID,
+                   PE.NO SBBM,
+                   PE.RES_SPEC_ID SBLX,
+                   PE.NAME SBMC,
+                   PE.ADDRESS,
+                   SPEC.NAME,
+                   PTP.SEQ_IN_UNIT SEQ_IN_UNIT,
+                   case when  alplc.z_phy_port_id is null
+                   then min(zlplc.a_phy_port_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.z_phy_port_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end z_phy_port_id,
+                    case when  alplc.z_phy_port_id is null
+                   then min(zlplc.link_id) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.link_id) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end link_id,
+                    case when  alplc.WO_ID is null
+                   then min(zlplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by zlplc.a_phy_port_id)
+                   else
+                    min(alplc.WO_ID) over(partition by PTP.PHY_PORT_ID order by alplc.z_phy_port_id)
+                    end WO_ID            
+              FROM ${jndi}.PHY_EQUIPMENT PE
+              left join ${jndi}.PHY_TERM_PORT PTP on PTP.PHY_EQP_ID = PE.PHY_EQP_ID
+              join ${jndi}.pub_resource_spec SPEC on PE.RES_SPEC_ID = SPEC.RES_SPEC_ID
+              left join ${jndi}.PHY_EQP_UNIT PU on PTP.Unit_Id = PU.UNIT_ID
+              left join ${jndi}.lnk_phy_link_component alplc on ptp.phy_port_id = alplc.a_phy_port_id
+              left join ${jndi}.lnk_phy_link_component zlplc on ptp.phy_port_id = zlplc.z_phy_port_id    
+             WHERE PE.PHY_EQP_ID = #{eqpId}
+           ) T
+      left join ${jndi}.lnk_busi_link_2_link lbl2l on lbl2l.link_id = t.link_id
+      left join ${jndi}.lnk_business_link lbl on lbl2l.busi_link_id = lbl.busi_link_id
+      left join ${jndi}.CBL_FIBER_CONJUNCTION cfc on T.DZID = cfc.phy_port_id and cfc.MNT_STATE_ID != 170350
+       left join ${jndi}.Srv_Work_Order swo on T.wo_id =  swo.wo_id
+      left join ${jndi}.PUB_STATUS ps on swo.state_id=ps.state_id
+     ) t1
+      ORDER BY  to_number(regexp_substr(t1.dzbm,'[0-9]*[0-9]',1)) asc,T1.SEQ_IN_UNIT ASC
+      </select>
+</mapper>

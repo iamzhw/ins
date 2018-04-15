@@ -1,0 +1,900 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.PointDao">
+
+	<select id="planQuery" parameterType="util.page.Query" resultType="map">
+		
+		<!--
+		select PLAN_ID,
+		PLAN_ID as PLANID,
+		PLAN_NO,
+		PLAN_NAME,
+		DECODE(PLAN_TYPE,0,'周期', 1,'临时') AS PLAN_TYPE,
+		TO_CHAR(PLAN_START_TIME, 'yyyy-mm-dd') AS PLAN_START_TIME,
+		TO_CHAR(PLAN_END_TIME, 'yyyy-mm-dd') AS PLAN_END_TIME,
+		DECODE(PLAN_CIRCLE,1,'日',2,'周',3,'月',4,'年') AS PLAN_CIRCLE,
+		PLAN_FREQUENCY,
+		DECODE(p.PLAN_KIND,2,'检查',3,'看护') AS PLAN_KIND,
+		DECODE(p.ISDISTRIBUTED,0,'未分配',1,'已分配') AS ISDISTRIBUTED,
+		CUSTOM_TIME,
+		a1.NAME as AREA,
+		a2.NAME as SON_AREA,
+		s1.STAFF_NAME as INSPECTOR 
+		FROM TB_INS_PLAN p, AREA a1, AREA a2, TB_BASE_STAFF s1 
+		WHERE p.ISDELETED = 0 and p.PLAN_KIND in (2, 3)
+			and p.AREA_ID = a1.AREA_ID
+			and p.SON_AREA_ID = a2.AREA_ID
+			and s1.STAFF_ID(+) = p.TASK_INSPECTOR
+			-->
+			<![CDATA[
+		select distinct p.PLAN_ID,
+			    p.PLAN_ID as PLANID,
+			    p.PLAN_NO,
+			    p.PLAN_NAME,
+			    DECODE(p.PLAN_TYPE,0,'周期', 1,'临时') AS PLAN_TYPE,
+			    TO_CHAR(p.PLAN_START_TIME, 'yyyy-mm-dd') AS PLAN_START_TIME,
+			    TO_CHAR(p.PLAN_END_TIME, 'yyyy-mm-dd') AS PLAN_END_TIME,
+			    DECODE(p.PLAN_CIRCLE,1,'日',2,'周',3,'月',4,'年') AS PLAN_CIRCLE,
+			    p.PLAN_FREQUENCY,
+			    DECODE(p.PLAN_KIND,2,'检查',3,'看护') AS PLAN_KIND,
+			    DECODE(p.ISDISTRIBUTED,0,'未分配',1,'已分配') AS ISDISTRIBUTED,
+			    p.CUSTOM_TIME,
+			    a1.NAME as AREA,
+			    a2.NAME as SON_AREA,
+			    s1.STAFF_NAME as INSPECTOR,
+	        	p.create_time 
+		    FROM TB_INS_PLAN p, 
+			    AREA a1, 
+			    AREA a2, 
+			    TB_BASE_STAFF s1,
+			    tb_ins_plan_detail pd,
+			    tb_ins_point po,
+			    tb_ins_bill b,
+			    tb_ins_bill_detail bd
+		    WHERE p.ISDELETED = 0 and p.PLAN_KIND in (2, 3)
+		      and p.AREA_ID = a1.AREA_ID
+		      and p.SON_AREA_ID = a2.AREA_ID
+		      and s1.STAFF_ID(+) = p.TASK_INSPECTOR
+		      and pd.plan_id(+)=p.plan_id
+	          and pd.inspect_object_id=po.point_id(+)
+	          and po.point_id=b.point_id(+)
+	          and b.bill_id=bd.bill_id(+)
+		]]>
+		<if test="queryParams.PLAN_NAME != null and queryParams.PLAN_NAME != ''">  
+            <![CDATA[
+	    	AND p.PLAN_NAME like '%'||#{queryParams.PLAN_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_START_TIME != null and queryParams.PLAN_START_TIME != ''">  
+            <![CDATA[
+	    	AND PLAN_START_TIME >= TO_DATE(#{queryParams.PLAN_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_END_TIME != null and queryParams.PLAN_END_TIME != ''">  
+            <![CDATA[
+	    	AND PLAN_END_TIME <= TO_DATE(#{queryParams.PLAN_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND p.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND p.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.point_type != null and queryParams.point_type != ''">  
+            <![CDATA[
+	    	AND po.point_type = #{queryParams.point_type }
+	    	]]>
+		</if>
+		<if test="queryParams.trouble != null and queryParams.trouble != ''">  
+            <![CDATA[
+	    	AND bd.trouble_ids = #{queryParams.trouble}
+	    	]]>
+		</if>
+		<if test="queryParams.if_complete==0">  
+            <![CDATA[
+	    	AND b.status_id <3
+	    	]]>
+		</if>
+		<if test="queryParams.if_complete==1">  
+            <![CDATA[
+	    	AND b.status_id >2
+	    	]]>
+		</if>
+		ORDER BY p.CREATE_TIME DESC
+	</select>
+	
+
+	<select id="getPoints" parameterType="map" resultType="map">
+		SELECT p.POINT_ID, 
+				p.POINT_NO, 
+				p.POINT_NAME, 
+				p.POINT_LEVEL, 
+				decode(p.POINT_LEVEL,1,'A1',2,'A2',3,'A3',4,'B1',5,'B2',6,'B3',7,'C1',8,'C2',9,'C3') pointlevel,
+				p.POINT_TYPE, 
+				p.LONGITUDE, 
+				p.LATITUDE, 
+				p.ADDRESS,
+				TO_CHAR(p.CREATE_TIME, 'yyyy-mm-dd') AS CREATE_TIME,
+				s.STAFF_NAME,
+				p.KEEP_RADIUS,
+				a.NAME SON_AREA_NAME,
+				p.SON_AREA_ID,
+				(SELECT COUNT(pd.PLAN_DETAIL_ID) 
+					FROM TB_INS_PLAN_DETAIL pd, TB_INS_PLAN ip 
+					WHERE pd.INSPECT_OBJECT_ID = p.POINT_ID 
+						AND ip.PLAN_KIND = #{POINT_TYPE} AND ip.PLAN_ID = pd.PLAN_ID) USERD_COUNT
+		 FROM TB_INS_POINT p, TB_BASE_STAFF s ,area a
+		 		WHERE p.CREATE_STAFF = s.STAFF_ID and p.son_area_id=a.area_id
+		 		AND p.POINT_TYPE = #{POINT_TYPE}
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND p.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND p.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="POINT_NO != null and POINT_NO != ''">  
+            <![CDATA[
+	    	AND p.POINT_NO like  '%'||#{POINT_NO}||'%'
+	    	]]>
+		</if>
+		<if test="POINT_NAME != null and POINT_NAME != ''">  
+            <![CDATA[
+	    	AND p.POINT_NAME like  '%'||#{POINT_NAME}||'%'
+	    	]]>
+		</if>
+		order by p.CREATE_TIME desc
+	</select>
+	
+	<insert id="insertPlan" parameterType="map">
+		INSERT INTO TB_INS_PLAN 
+			(PLAN_ID, PLAN_NO, PLAN_NAME, PLAN_TYPE, PLAN_START_TIME, PLAN_END_TIME, PLAN_CIRCLE, 
+				PLAN_FREQUENCY, CREATE_TIME, CREATE_STAFF, MODIFY_TIME, MODIFY_STAFF,ISDELETED, PLAN_KIND, ISDISTRIBUTED,
+				AREA_ID, SON_AREA_ID,CUSTOM_TIME, INACCURACY)
+		VALUES
+			(SEQ_TB_INS_PLAN.NEXTVAL, 
+			 #{PLAN_NO}, 
+			 #{PLAN_NAME},
+			 #{PLAN_TYPE}, 
+			 TO_DATE(#{PLAN_START_TIME}, 'yyyy-mm-dd'), 
+			 TO_DATE(#{PLAN_END_TIME}, 'yyyy-mm-dd'), 
+			 #{PLAN_CIRCLE, jdbcType=NUMERIC}, 
+			 #{PLAN_FREQUENCY, jdbcType=NUMERIC}, 
+			 SYSDATE, 
+			 #{CREATE_STAFF},
+			 SYSDATE, 
+			 #{CREATE_STAFF},
+			 0,
+			 #{PLAN_KIND}, 
+			 0,
+			 #{AREA_ID},
+			 #{SON_AREA_ID},#{CUSTOM_TIME, jdbcType=VARCHAR}, #{INACCURACY, jdbcType=VARCHAR})
+		<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="plan_id"> 
+			SELECT SEQ_TB_INS_PLAN.CURRVAL FROM DUAL 
+		</selectKey> 
+	</insert>
+	
+	<insert id="saveKeepTime" parameterType="map">
+		insert into TB_INS_PLAN_KEEP 
+			(KEEP_ID, PLAN_ID, START_TIME, END_TIME)
+		values
+			(SEQ_TB_INS_PLAN_KEEP.nextval, #{PLAN_ID}, #{START_TIME}, #{END_TIME})
+	</insert>
+	
+	<select id="getTimeList" parameterType="int" resultType="map">
+		select START_TIME, END_TIME from TB_INS_PLAN_KEEP where PLAN_ID = #{PLAN_ID} order by KEEP_ID
+	</select>
+	
+	<insert id="insertDetail" parameterType="map">
+		INSERT INTO TB_INS_PLAN_DETAIL 
+			(PLAN_DETAIL_ID, PLAN_ID, INSPECTOR, INSPECT_OBJECT_ID, INSPECT_OBJECT_TYPE)
+		VALUES
+			(SEQ_TB_INS_PLAN_DETAIL.NEXTVAL, 
+			 #{PLAN_ID},
+			 0,
+			 #{INSPECT_OBJECT_ID},
+			 #{INSPECT_OBJECT_TYPE})
+	</insert>
+	
+	<update id="deletePlan" parameterType="map" statementType="STATEMENT">
+		delete from TB_INS_PLAN SET
+			MODIFY_TIME = SYSDATE,
+			MODIFY_STAFF = ${MODIFY_STAFF},
+			ISDELETED = 1
+		WHERE 
+			PLAN_ID IN (${PLAN_ID})
+	</update>
+	
+	<select id="getPlan" parameterType="map" resultType="map">
+		SELECT PLAN_ID, PLAN_NO, PLAN_NAME, PLAN_TYPE,
+			TO_CHAR(PLAN_START_TIME,'yyyy-mm-dd') AS  PLAN_START_TIME, 
+			TO_CHAR(PLAN_END_TIME,'yyyy-mm-dd') AS PLAN_END_TIME,
+			PLAN_CIRCLE, PLAN_FREQUENCY, PLAN_KIND, ISDISTRIBUTED,
+			AREA_ID, SON_AREA_ID,CUSTOM_TIME,INACCURACY
+		FROM TB_INS_PLAN WHERE PLAN_ID = #{PLAN_ID}
+	</select>
+	
+	<select id="getPlanDetail" parameterType="int" resultType="map">
+		SELECT p.POINT_ID,
+				 p.POINT_NO, 
+				 p.POINT_NAME, 
+				 p.POINT_TYPE,
+				 p.POINT_LEVEL, 
+				 p.LONGITUDE, 
+				 p.LATITUDE, 
+				 p.ADDRESS,
+				 (select s.staff_name from TB_BASE_STAFF s where s.staff_id= p.create_staff) staff_name,
+				 TO_CHAR(p.CREATE_TIME, 'yyyy-mm-dd') AS CREATE_TIME  
+		FROM TB_INS_PLAN_DETAIL d, TB_INS_POINT p
+			WHERE d.PLAN_ID = #{PLAN_ID} AND d.INSPECT_OBJECT_ID = p.POINT_ID 
+	</select>
+	
+	<update id="updatePlan" parameterType="map">
+		UPDATE TB_INS_PLAN SET
+			PLAN_NO = #{PLAN_NO}, 
+			PLAN_NAME = #{PLAN_NAME},
+			PLAN_TYPE = #{PLAN_TYPE}, 
+			PLAN_START_TIME = TO_DATE(#{PLAN_START_TIME}, 'yyyy-mm-dd'), 
+			PLAN_END_TIME = TO_DATE(#{PLAN_END_TIME}, 'yyyy-mm-dd'), 
+			PLAN_CIRCLE = #{PLAN_CIRCLE}, 
+			PLAN_FREQUENCY = #{PLAN_FREQUENCY},
+			MODIFY_TIME = SYSDATE,
+			MODIFY_STAFF = #{MODIFY_STAFF},
+			CUSTOM_TIME = #{CUSTOM_TIME},
+			INACCURACY = #{INACCURACY}
+		WHERE 
+			PLAN_ID = #{PLAN_ID}
+	</update>
+	
+	<delete id="deletePlanDetail" parameterType="map">
+		DELETE FROM TB_INS_PLAN_DETAIL WHERE PLAN_ID IN(#{PLAN_ID})
+	</delete>
+	
+	<select id="getSpectors" parameterType="map" resultType="map">
+		SELECT STAFF_ID, STAFF_NAME FROM TB_BASE_STAFF WHERE ISDELETED = 0
+	</select>
+	
+	<insert id="saveTask" parameterType="map">
+		INSERT INTO TB_INS_TASK 
+			(TASK_ID, PLAN_ID, TASK_NO, TASK_NAME, COMPLETE_TIME, CREATE_TIME, CREATE_STAFF, 
+				START_TIME, INSPECTOR, STATUS_ID, AREA_ID, SON_AREA_ID, ENABLED)
+		VALUES 
+			(SEQ_TB_INS_TASK.NEXTVAL,
+			#{PLAN_ID},
+			#{PLAN_NO}||'_'||SEQ_TB_INS_TASK.CURRVAL,
+			#{PLAN_NO}||'_'||SEQ_TB_INS_TASK.CURRVAL,
+			TO_DATE(#{COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss'),
+			SYSDATE,
+			#{CREATE_STAFF},
+			TO_DATE(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss'),
+			#{INSPECTOR}, 
+			1,
+			#{AREA_ID},
+			#{SON_AREA_ID},
+			0)
+		<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="TASK_ID"> 
+			SELECT SEQ_TB_INS_TASK.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+	
+	<insert id="saveTaskDetail" parameterType="map">
+		INSERT INTO TB_INS_TASK_DETAIL
+			(TASK_DETAIL_ID, TASK_ID, INSPECT_OBJECT_ID, INSPECT_OBJECT_TYPE, INSPECTOR, COMPLETED)
+		VALUES
+			(SEQ_TB_INS_TASK_DETAIL.NEXTVAL, 
+			#{TASK_ID}, 
+			#{INSPECT_OBJECT_ID}, 
+			#{INSPECT_OBJECT_TYPE}, 
+			#{INSPECTOR}, 
+			0)
+	</insert>
+	
+	<select id="taskQuery" parameterType="util.page.Query" resultType="map">
+		SELECT TASK_ID, 
+		t.PLAN_ID, 
+		TASK_NO, 
+		TASK_NAME, 
+		STATUS_NAME, 
+		s.STAFF_NAME,
+		TO_CHAR(t.COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') AS COMPLETE_TIME, 
+		ACTUAL_COMPLETE_TIME, 
+		TO_CHAR(t.CREATE_TIME,'yyyy-mm-dd  hh24:mi:ss') AS CREATE_TIME, 
+		TO_CHAR(t.START_TIME,'yyyy-mm-dd hh24:mi:ss') AS START_TIME  
+		FROM TB_INS_TASK t, TB_INS_TASK_STAUS ts, TB_INS_PLAN p, TB_BASE_STAFF s 
+		WHERE t.STATUS_ID = ts.STATUS_ID
+		AND t.PLAN_ID = p.PLAN_ID
+		AND p.PLAN_KIND IN (2, 3)
+		AND t.INSPECTOR = s.STAFF_ID
+		AND p.ISDISTRIBUTED = 1
+		AND p.ISDELETED = 0
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_ID != null and queryParams.PLAN_ID != ''">
+			AND p.PLAN_ID = #{queryParams.PLAN_ID}
+		</if>
+		<if test="queryParams.PLAN_NAME != null and queryParams.PLAN_NAME != ''">
+			AND p.PLAN_NAME like '%'||#{queryParams.PLAN_NAME}||'%'
+		</if>
+		<if test="queryParams.START_TIME != null and queryParams.START_TIME != ''">  
+            <![CDATA[
+	    	AND t.START_TIME >= TO_DATE(#{queryParams.START_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="queryParams.COMPLETE_TIME != null and queryParams.COMPLETE_TIME != ''">  
+            <![CDATA[
+	    	AND t.COMPLETE_TIME <= TO_DATE(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		ORDER BY CREATE_TIME DESC, START_TIME DESC
+	</select>
+	
+	<select id="getAreaInfo" parameterType="map" resultType="map">
+		SELECT a.AREA_ID, a.NAME 
+			FROM AREA a, TB_BASE_STAFF s 
+			WHERE s.AREA_ID=a.AREA_ID AND s.STAFF_ID = #{STAFF_ID}
+	</select>
+	
+	<update id="updatePlanDistributed" parameterType="map">
+		UPDATE TB_INS_PLAN 
+		SET 
+			ISDISTRIBUTED = 1, 
+			TASK_INSPECTOR = #{TASK_INSPECTOR}, 
+			TASK_CREATOR = #{TASK_CREATOR} 
+		WHERE PLAN_ID = #{PLAN_ID}
+	</update>
+	
+	<delete id="deleteOldTask" parameterType="map">
+		DELETE FROM TB_INS_TASK WHERE PLAN_ID = #{PLAN_ID} AND STATUS_ID = 1
+	</delete>
+	
+	<select id="getInspector" parameterType="map" resultType="map">
+		SELECT INSPECTOR FROM TB_INS_TASK t, TB_INS_PLAN p WHERE p.PLAN_ID = #{PLAN_ID} AND p.PLAN_ID=t.PLAN_ID AND p.ISDISTRIBUTED = 1
+	</select>
+	
+	<select id="checkPlan" parameterType="map" resultType="int" statementType="STATEMENT">
+		SELECT COUNT(0) FROM TB_INS_PLAN WHERE PLAN_ID IN (${PLAN_ID}) AND ISDISTRIBUTED = 1
+	</select>
+	
+	<select id="billQuery" parameterType="util.page.Query" resultType="map">
+				SELECT b.BILL_ID,
+					b.BILL_ID as BILLID,
+					TO_CHAR(b.COMPLETE_TIME,'yyyy-MM-dd') AS COMPLETE_TIME,
+       				p.POINT_NO,
+       				p.POINT_NAME,
+       				p.POINT_TYPE,
+       				bs.STATUS_NAME,
+       				d.DEPT_NAME GRID_NAME,
+       				bd.DESCRP,
+       				a.NAME as SON_AREA,
+       				(SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.INSPECTOR) AS INSPECTOR,
+       				(SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.MAINTOR) AS MAINTOR,
+       				(SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.AUDITOR) AS AUDITOR,
+       				TO_CHAR(b.CREATE_TIME, 'yyyy-mm-dd') AS CREATE_TIME,
+       				DECODE(b.type, 2, '隐患整治', 4, '临时上报', '隐患上报') as BILL_TYPE,
+       				(select decode(min(bf.operate_time),null,
+			'-',to_char(min(bf.operate_time),'yyyy-mm-dd hh24:mi:ss')) 
+			from tb_ins_bill_flow bf where bf.status=4 and bf.bill_id=b.bill_id group by bf.bill_id) end_time
+  				FROM TB_INS_BILL        b,
+       				TB_INS_BILL_DETAIL bd,
+       				TB_INS_POINT       p,
+       				TB_INS_BILL_STAUS  bs,
+       				tb_ins_dept d,
+       				AREA a
+ 				WHERE b.BILL_ID = bd.BILL_ID
+   					AND p.POINT_ID = b.POINT_ID
+   					AND b.STATUS_ID = bs.STATUS_ID
+   					AND b.SON_AREA_ID = a.AREA_ID
+   					AND d.DEPT_ID(+) = b.GRID_ID
+   					AND (b.INSPECTOR = #{queryParams.STAFF_ID} 
+			    	OR b.MAINTOR = #{queryParams.STAFF_ID} 
+			    	OR b.AUDITOR = #{queryParams.STAFF_ID}
+   			
+			<if test="queryParams.ADMIN and queryParams.AREA_ID == null and queryParams.SON_AREA_ID == null">
+			    <![CDATA[
+			    OR 1=1)
+			    ]]>
+			</if>
+			<if test="queryParams.ADMIN and queryParams.AREA_ID != null and queryParams.SON_AREA_ID == null">
+			    <![CDATA[
+			    OR b.AREA_ID = #{queryParams.AREA_ID})
+			    ]]>
+			</if>
+			<if test="queryParams.ADMIN and queryParams.SON_AREA_ID != null and queryParams.AREA_ID != null">
+			    <![CDATA[
+			    OR b.SON_AREA_ID = #{queryParams.SON_AREA_ID})
+			    ]]>
+			</if>
+			<if test="queryParams.ADMIN and queryParams.SON_AREA_ID != null and queryParams.AREA_ID == null">
+			    <![CDATA[
+			    OR b.AUDITOR is null
+			    and b.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+			    )
+			    ]]>
+			</if>
+			<if test="! queryParams.ADMIN">
+			    <![CDATA[
+			    )
+			    ]]>
+			</if>
+			<if test="queryParams.POINT_NO != null and queryParams.POINT_NO != ''">  
+           		<![CDATA[
+	    		AND p.POINT_NO like '%'||#{queryParams.POINT_NO}||'%' 
+	    		]]>
+			</if>
+			<if test="queryParams.CREATE_TIME != null and queryParams.CREATE_TIME != ''">  
+            	<![CDATA[
+	    		AND to_date(to_char(b.CREATE_TIME,'yyyy-mm-dd'),'yyyy-mm-dd') >= TO_DATE(#{queryParams.CREATE_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="queryParams.COMPLETE_TIME != null and queryParams.COMPLETE_TIME != ''">  
+            	<![CDATA[
+	    		AND to_date(to_char(b.CREATE_TIME,'yyyy-mm-dd'),'yyyy-mm-dd') <= TO_DATE(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="queryParams.BILL_STATUS != null and queryParams.BILL_STATUS != ''">
+				AND b.STATUS_ID = #{queryParams.BILL_STATUS}
+			</if>
+			<if test="queryParams.GRID_NAME != null and queryParams.GRID_NAME != ''">
+				AND b.grid_id in (
+				select dept_id from tb_ins_dept where dept_name like '%'||#{queryParams.GRID_NAME}||'%' 
+				)
+			</if>
+			order by b.CREATE_TIME desc
+	</select>
+	
+	<select id="getAllBillStatus" resultType="map">
+		SELECT STATUS_VALUE, STATUS_NAME FROM TB_INS_BILL_STAUS
+	</select>
+	
+	<select id="getStatusIdsByBillIds" parameterType="string" resultType="map" statementType="STATEMENT">
+		SELECT DISTINCT b.STATUS_ID FROM TB_INS_BILL b WHERE BILL_ID IN (${_parameter}) ORDER BY b.STATUS_ID ASC
+	</select>
+	
+	<update id="updateBillHandle" parameterType="map">
+		UPDATE TB_INS_BILL 
+		SET STATUS_ID = ${STATUS_ID}
+		<if test="MAINTOR != null and MAINTOR != ''">
+			,MAINTOR = ${MAINTOR}
+		</if>
+		<if test="AUDITOR != null and AUDITOR != ''">
+			,AUDITOR = ${AUDITOR}
+		</if>
+		<if test="COMPLETE_TIME != null and COMPLETE_TIME != ''">
+			,COMPLETE_TIME = to_date(#{COMPLETE_TIME},'yyyy-MM-dd')
+		</if>
+		WHERE BILL_ID IN (${BILL_IDS})
+	</update>
+	
+	<select id="isAdmin" parameterType="map" resultType="int">
+		SELECT COUNT(0)
+  		FROM TB_BASE_STAFF_ROLE sr, TB_BASE_ROLE r
+ 		WHERE sr.STAFF_ID = #{STAFF_ID} AND sr.ROLE_ID = r.ROLE_ID 
+       		AND (r.ROLE_NO = 'GLY' OR r.ROLE_NO = 'LXXJ_ADMIN')
+	</select>
+	
+	<select id="insertBillFlow" parameterType="map">
+		INSERT INTO TB_INS_BILL_FLOW 
+			(BILL_ID, STATUS, OPERATE_TIME, OPERATOR, RECEIVOR, OPERATE_INFO)
+		VALUES
+			(#{BILL_ID}, #{STATUS}, SYSDATE, #{OPERATOR}, #{RECEIVOR, jdbcType=NUMERIC}, #{OPERATE_INFO})
+	</select>
+	
+	<insert id="" parameterType="map">
+		INSERT INTO TB_INS_PLAN_KEEP 
+			(KEEP_ID, PLAN_ID, START_TIME, END_TIME) 
+		VALUES 
+			(SEQ_TB_INS_PLAN_KEEP.NEXTVAL, #{PLAN_ID}, #{START_TIME}, #{END_TIME})
+	</insert>
+	
+	<select id="billInfo" parameterType="string" resultType="map">
+select p.POINT_NO,
+	 p.point_id,
+       p.POINT_NAME,
+       s.STAFF_NAME,
+       TO_CHAR(b.CREATE_TIME, 'yyyy-mm-dd hh24:mi:ss') as CREATE_TIME,
+       (select s1.STAFF_NAME
+          from TB_BASE_STAFF s1
+         where s1.STAFF_ID = b.MAINTOR) as MAINTOR,
+       (select s2.STAFF_NAME
+          from TB_BASE_STAFF s2
+         where s2.STAFF_ID = b.AUDITOR) as AUDITOR,
+       a1.NAME as AREA,
+       a2.NAME as SON_AREA,
+       bs.status_name,
+       t.TYPE_NAME,
+       bd.DESCRP,
+       bd.CABLE_NAME,
+       bd.CABLE_LEVEL,
+       bd.CONS_UNIT,
+       bd.CONS_CONTENT,
+       p.LONGITUDE,
+       p.LATITUDE,b.task_id
+  from TB_INS_BILL         b,
+       TB_INS_BILL_DETAIL  bd,
+       TB_INS_POINT        p,
+       TB_BASE_STAFF       s,
+       tb_ins_bill_staus  bs,
+       AREA                a1,
+       AREA                a2,
+       TB_INS_TROUBLE_TYPE t
+ where b.BILL_ID = #{BILL_ID}
+   and b.BILL_ID = bd.BILL_ID
+   and b.POINT_ID = p.POINT_ID
+   and bs.status_id=b.status_id
+   and b.INSPECTOR = s.STAFF_ID
+   and b.AREA_ID = a1.AREA_ID
+   and b.SON_AREA_ID = a2.AREA_ID
+   and bd.TROUBLE_IDS = t.TYPE_ID
+ order by b.BILL_ID desc
+	</select>
+	
+	<select id="billPhoto" parameterType="map" resultType="map">
+select replace(p.PHOTO_PATH,'61.160.128.47',#{url}) PHOTO_PATH, 
+replace(p.MICRO_PHOTO_PATH,'61.160.128.47',#{url}) MICRO_PHOTO_PATH
+  from TB_INS_PHOTO p, TB_INS_PHOTO_REL pr
+ where pr.RECORD_ID = #{RECORD_ID}
+   and p.PHOTO_ID = pr.PHOTO_ID
+   order by p.PHOTO_ID
+	</select>
+	
+	<select id="getRecordByBillId" parameterType="map" resultType="map">
+	 select r.RECORD_ID
+		from TB_INS_RECORD r, TB_INS_PHOTO_REL pr 
+	   where pr.BILL_ID = #{BILL_ID} 
+	   		AND pr.RECORD_ID = r.RECORD_ID
+	   		AND r.RECORD_TYPE = #{RECORD_TYPE}
+		order by r.CREATE_TIME desc
+	</select>
+	
+	<select id="billFlow" parameterType="string" resultType="map">
+select s1.STAFF_NAME as OPERATOR,
+       s2.STAFF_NAME as RECEIVOR,
+       bf.OPERATE_INFO,
+       to_char(bf.OPERATE_TIME, 'yyyy-mm-dd hh24:mi:ss') as OPERATE_TIME,
+       bf.STATUS,
+       bs.STATUS_NAME
+  from TB_INS_BILL_FLOW bf, TB_INS_BILL_STAUS bs, TB_BASE_STAFF s1, TB_BASE_STAFF s2
+ WHERE bf.BILL_ID = #{BILL_ID}
+   and bf.STATUS = bs.STATUS_VALUE
+   and bf.OPERATOR = s1.STAFF_ID
+   and bf.RECEIVOR = s2.STAFF_ID(+)
+   order by bf.OPERATE_TIME
+	</select>
+	
+	<select id="getUserList" parameterType="map" resultType="map" statementType="STATEMENT">
+	select distinct ${COLUMN} from TB_INS_BILL where BILL_ID in (${IDS})
+	</select>
+	
+	<select id="getAuditorByBillId" parameterType="string" resultType="string">
+	select AUDITOR from TB_INS_BILL where BILL_ID = #{BILL_ID}
+	</select>
+	
+	<select id="getMaintorByBillId" parameterType="string" resultType="string">
+	select MAINTOR from TB_INS_BILL where BILL_ID = #{BILL_ID}
+	</select>
+	
+	<delete id="deleteKeepTime" parameterType="map">
+	delete from TB_INS_PLAN_KEEP where PLAN_ID = #{PLAN_ID}
+	</delete>
+	
+	<select id="queryPlans" resultType="map" parameterType="map">
+	SELECT PLAN_ID, PLAN_NAME FROM TB_INS_PLAN WHERE ISDELETED = 0 AND PLAN_KIND IN (2, 3) 
+	<if test="KEYWORD != null and KEYWORD != ''">
+		AND PLAN_NAME LIKE '%'||#{KEYWORD}||'%'
+	</if>
+	ORDER BY CREATE_TIME DESC
+	</select>
+	
+	<delete id="deleteTaskById" parameterType="string">
+	delete from TB_INS_TASK where TASK_ID in (${_parameter})
+	</delete>
+	
+	<delete id="deleteTaskDetailByTaskId" parameterType="string">
+	delete from TB_INS_TASK_DETAIL where TASK_ID in (${_parameter})
+	</delete>
+	<select id="getKeepSpectors" parameterType="util.page.Query"
+		resultType="map">
+		SELECT distinct s.STAFF_ID, s.STAFF_NO, s.STAFF_NAME 
+    FROM TB_BASE_STAFF s, TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr 
+    WHERE s.ISDELETED = 0 
+      and s.STATUS = 0 
+      and s.STAFF_ID = sr.STAFF_ID
+      and r.ROLE_ID = sr.ROLE_ID
+      and (r.ROLE_NO = 'LXXJ_INSPECTOR'
+      or r.ROLE_NO = 'LXXJ_KHY')
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</select>
+	
+	<select id="getPointTypeByids" resultType="map" parameterType="string">
+	SELECT b.BILL_ID,
+	        p.POINT_ID,
+               p.POINT_TYPE,
+               p.eqp_type_id
+          FROM TB_INS_BILL        b,
+               TB_INS_BILL_DETAIL bd,
+               TB_INS_POINT       p,
+               TB_INS_BILL_STAUS  bs,
+               AREA a
+         WHERE b.BILL_ID = bd.BILL_ID
+             AND p.POINT_ID = b.POINT_ID
+             AND b.STATUS_ID = bs.STATUS_ID
+             AND b.SON_AREA_ID = a.AREA_ID
+             AND b.bill_id=#{ids}
+             </select>
+             
+             <update id="updatePointType" parameterType="map">
+             update TB_INS_POINT T SET T.POINT_TYPE =4 WHERE T.POINT_ID=#{POINT_ID}
+            </update> 
+            
+            <select id="ifTaskExists" parameterType="map" resultType="int">
+            select count(1) from tb_ins_task t where t.plan_id=#{PLAN_ID}
+			and t.start_time=to_date(#{START_TIME},'yyyy-mm-dd hh24:mi:ss') 
+      		and t.complete_time=to_date(#{COMPLETE_TIME},'yyyy-mm-dd hh24:mi:ss')
+			and t.inspector=#{INSPECTOR}
+            </select>
+            
+       <select id="queryTroubleBills" parameterType="string" resultType="map">
+            	SELECT b.BILL_ID,
+          b.BILL_ID as BILLID,
+          TO_CHAR(b.COMPLETE_TIME,'yyyy-MM-dd') AS COMPLETE_TIME,
+               p.POINT_NO,
+               p.POINT_NAME,
+               p.POINT_TYPE,
+               bs.STATUS_NAME,
+               bd.DESCRP,
+               a.NAME as zone_name,
+               (SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.INSPECTOR) AS INSPECTOR,
+               (SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.MAINTOR) AS MAINTOR,
+               (SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.AUDITOR) AS AUDITOR,
+               TO_CHAR(b.CREATE_TIME, 'yyyy-mm-dd hh24:mi:ss') AS CREATE_TIME,
+               DECODE(b.type, 2, '隐患整治', 4, '临时上报', '隐患上报') as BILL_TYPE
+          FROM TB_INS_BILL        b,
+               TB_INS_BILL_DETAIL bd,
+               TB_INS_POINT       p,
+               TB_INS_BILL_STAUS  bs,
+               AREA a
+         WHERE b.BILL_ID = bd.BILL_ID
+             AND p.POINT_ID = b.POINT_ID
+             AND b.STATUS_ID = bs.STATUS_ID
+             AND b.SON_AREA_ID = a.AREA_ID
+             AND (b.INSPECTOR = #{staffId} 
+            OR b.MAINTOR = #{staffId} 
+            OR b.AUDITOR = #{staffId}
+            )
+            and b.status_id!=4
+      </select>
+      
+      <select id="queryHandler" parameterType="map" resultType="map">
+		SELECT s.STAFF_ID, s.STAFF_NAME,'-' grid_name
+  			FROM TB_BASE_STAFF s, TB_BASE_STAFF_ROLE sr, TB_BASE_ROLE r, area a
+ 		WHERE s.STAFF_ID = sr.STAFF_ID
+   			AND sr.ROLE_ID = r.ROLE_ID
+   			and s.son_area_id = a.area_id
+  			AND r.ROLE_NO = #{ROLE_NO}
+		<if test="STAFF_NO != null and STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="STAFF_NAME != null and STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+		order by s.son_area_id
+	</select>
+	<select id="queryStafFromJYH" parameterType="map" resultType="map">
+		SELECT DISTINCT T.USER_NAME STAFF_NAME,T.USER_USER_ID STAFF_ID 
+		FROM OUTSOURCE_ORGUSER_XJ T WHERE T.XJ_AREA_ID=#{AREA_ID}
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+	</select>
+	<select id="getAreaByBillId" parameterType="string" resultType="map">
+		select * from tb_ins_bill
+		where  bill_id=#{bill_id}
+	</select>
+	<select id="getBillStatus" parameterType="string" resultType="int">
+		select status_id from tb_ins_bill where bill_id=#{bill_id}
+	</select>
+	
+	<select id="billExport" parameterType="map" resultType="map">
+				SELECT b.BILL_ID,
+					b.BILL_ID as BILLID,
+					TO_CHAR(b.COMPLETE_TIME,'yyyy-MM-dd') AS COMPLETE_TIME,
+       				p.POINT_NO,
+       				p.POINT_NAME,
+       				p.POINT_TYPE,
+       				bs.STATUS_NAME,
+       				bd.DESCRP,
+       				a.NAME as SON_AREA,
+       				(SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.INSPECTOR) AS INSPECTOR,
+       				(SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.MAINTOR) AS MAINTOR,
+       				(SELECT STAFF_NAME FROM TB_BASE_STAFF WHERE STAFF_ID = b.AUDITOR) AS AUDITOR,
+       				TO_CHAR(b.CREATE_TIME, 'yyyy-mm-dd') AS CREATE_TIME,
+       				DECODE(b.type, 2, '隐患整治', 4, '临时上报', '隐患上报') as BILL_TYPE,
+       				d.DEPT_NAME
+  				FROM TB_INS_BILL        b,
+       				TB_INS_BILL_DETAIL bd,
+       				TB_INS_POINT       p,
+       				TB_INS_BILL_STAUS  bs,
+       				TB_INS_DEPT d,
+       				AREA a
+ 				WHERE b.BILL_ID = bd.BILL_ID
+   					AND p.POINT_ID = b.POINT_ID
+   					AND b.STATUS_ID = bs.STATUS_ID
+   					AND b.SON_AREA_ID = a.AREA_ID
+   					AND d.dept_id(+) = b.GRID_ID
+   					AND (b.INSPECTOR = #{STAFF_ID} 
+			    	OR b.MAINTOR = #{STAFF_ID} 
+			    	OR b.AUDITOR = #{STAFF_ID}
+   			
+			<if test="ADMIN and AREA_ID == null and SON_AREA_ID == null">
+			    <![CDATA[
+			    OR 1=1)
+			    ]]>
+			</if>
+			<if test="ADMIN and AREA_ID != null and SON_AREA_ID == null">
+			    <![CDATA[
+			    OR b.AREA_ID = #{AREA_ID})
+			    ]]>
+			</if>
+			<if test="ADMIN and SON_AREA_ID != null and AREA_ID != null">
+			    <![CDATA[
+			    OR b.SON_AREA_ID = #{SON_AREA_ID})
+			    ]]>
+			</if>
+			<if test="ADMIN and SON_AREA_ID != null and AREA_ID == null">
+			    <![CDATA[
+			    OR b.AUDITOR is null
+			    and b.SON_AREA_ID = #{SON_AREA_ID}
+			    )
+			    ]]>
+			</if>
+			<if test="! ADMIN">
+			    <![CDATA[
+			    )
+			    ]]>
+			</if>
+			<if test="POINT_NO != null and POINT_NO != ''">  
+           		<![CDATA[
+	    		AND p.POINT_NO like '%'||#{POINT_NO}||'%' 
+	    		]]>
+			</if>
+			<if test="CREATE_TIME != null and CREATE_TIME != ''">  
+            	<![CDATA[
+	    		AND to_date(to_char(b.CREATE_TIME,'yyyy-mm-dd'),'yyyy-mm-dd') >= TO_DATE(#{CREATE_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="COMPLETE_TIME != null and COMPLETE_TIME != ''">  
+            	<![CDATA[
+	    		AND to_date(to_char(b.CREATE_TIME,'yyyy-mm-dd'),'yyyy-mm-dd') <= TO_DATE(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+	    		]]>
+			</if>
+			<if test="BILL_STATUS != null and BILL_STATUS != ''">
+				AND b.STATUS_ID = #{BILL_STATUS}
+			</if>
+			order by b.CREATE_TIME desc
+	</select>
+	
+	<select id="getTroubleType" resultType="map">
+		select type_id,type_name from tb_ins_trouble_type
+	</select>
+	
+	<select id="getPointArea" parameterType="string" resultType="map">
+		select * from tb_ins_point p where p.point_id=#{point_id}
+	</select>
+	
+	<update id="updatePointTypeByBillId" parameterType="string">
+		update tb_ins_point p set p.point_type=4
+		where p.point_id in (select point_id from tb_ins_bill where bill_id=#{bill_id}) 
+		and p.eqp_type_id is not null
+	</update>
+	
+	<select id="workStaffInfo" parameterType="string" resultType="map">
+		select s.staff_name,s.staff_no from tb_base_staff s where s.staff_id=#{staff_id}
+	</select>
+	
+	<select id="decodeEqyTypeByBill" parameterType="string" resultType="string">
+	select decode(d.trouble_ids,3,9,5,1,6,1,7,12,8,1,9,11,10,2,11,2,12,2,13,2,14,2,15,2,16,2,17,2,18,2,19,2,20,9,21,9,
+  22,10,24,3,25,4,26,5,27,6,28,7,29,8,0) flag from tb_ins_bill_detail d
+	where d.bill_id=#{bill_id}
+	</select>
+	
+	<select id="getSonAreaByBillId" parameterType="string" resultType="string">
+		select son_area_id from tb_ins_bill where bill_id=#{bill_id}
+	</select>
+	
+	<insert id="add_a_post" parameterType="map">
+	 insert into a_post
+	 VALUES (seq_a_post.nextval,#{post}, #{get}, SYSDATE,#{type},#{flag})
+	</insert>
+	
+		<select id="queryHandlerFromJYH" parameterType="util.page.Query" resultType="map">
+		SELECT DISTINCT T.USER_NAME STAFF_NAME,T.USER_USER_ID STAFF_ID,t.xj_area_name area
+		,T.USER_USER_ID STAFF_NO,t.xj_area_id son_area_id,t.grid_name
+		FROM OUTSOURCE_ORGUSER_XJ T WHERE T.XJ_AREA_ID=#{AREA_ID}
+		<if test="GRID_NAME!= null and GRID_NAME != ''">
+			  and t.grid_name like '%'||#{GRID_NAME}||'%'
+			</if>
+		order by t.xj_area_id
+	</select>
+	
+	<select id="getRemarksById" parameterType="string" resultType="string">
+	select descrp from tb_ins_bill_detail where bill_id=#{bill_id}
+	</select>
+	
+	<select id="getCoodByBillId" parameterType="string" resultType="map">
+	select p.latitude,p.longitude from TB_INS_BILL        b,
+       				TB_INS_POINT       p
+    where  p.POINT_ID = b.POINT_ID and b.bill_id=#{bill_id}
+	</select>
+	
+	<insert id="addKeepLinePoints" parameterType="map">
+	insert into tb_ins_keep_line_point(plan_id,point_id,point_seq,modify_staff,modify_time)
+	values(#{plan_id},#{point_id},#{point_seq},#{staff_id},sysdate)
+	</insert>
+	
+	<select id="queryKeepLinePoints" parameterType="map" resultType="map">
+	select lp.plan_id, p.longitude, p.latitude, p.point_id, lp.point_seq
+	  from tb_ins_keep_line_point lp, tb_ins_point p
+	 where p.point_id = lp.point_id
+	   and lp.plan_id = #{plan_id}
+	</select>
+	
+	<select id="getKeepPlanIDByTask" parameterType="string" resultType="string">
+	select plan_id from tb_ins_task where task_id=#{task_id}
+	</select>
+	
+	<delete id="removeKeepLine" parameterType="map">
+	delete from tb_ins_keep_line_point where plan_id=#{plan_id}
+	</delete>
+</mapper>

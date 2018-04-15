@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.ReplaceHolidayDao">
+	<sql id="dynamicWhere">
+
+		<if
+			test="p_inspactor_name  != null and p_inspactor_name  != ''"
+		> 
+<![CDATA[  and  T.USER_ID  =#{p_inspactor_name }   ]]>
+		</if>
+
+		<if
+			test="p_query_time  != null and p_query_time  != ''"
+		> 
+<![CDATA[  and  to_char(T.HOLIDAY_DATE,'yyyy-mm')  =#{p_query_time }   ]]>
+		</if>
+	</sql>
+	
+	<select id="query" parameterType="map" resultType="map">
+		select t.holiday_id,
+       to_char(t.holiday_date, 'yyyy-mm-dd') holiday_date,
+       bs1.staff_name user_name,
+       bs2.staff_name replace_name,
+       holiday_type,
+       t.HOLIDAY_DESC,
+       t.REST_TYPE
+  from AXX_T_REPLACE_HOLIDAY t, tb_base_staff bs1, tb_base_staff bs2
+ where t.user_id = bs1.staff_id
+   and t.replace_id = bs2.staff_id(+)
+   <if test="orgId != null and orgId != ''">
+   		and bs1.ORG_ID=#{orgId}
+   </if>
+		<include refid="dynamicWhere" />
+		
+	</select>
+
+	<insert id="replaceHolidaySave" parameterType="map">
+		insert into
+		AXX_T_REPLACE_HOLIDAY(HOLIDAY_ID,HOLIDAY_DATE,USER_ID,HOLIDAY_TYPE,REPLACE_ID,HOLIDAY_DESC,REST_TYPE)
+		values(SEQ_AXX_REPLACE_HOLIDAY.nextval,to_date(#{holiday_date,jdbcType=DATE},'yyyy-mm-dd'),#{user_id,jdbcType=NUMERIC},#{holiday_type,jdbcType=NUMERIC},#{replace_id,jdbcType=NUMERIC},
+			#{holiday_desc,jdbcType=VARCHAR},
+			#{rest_type}
+		)
+	</insert>
+
+	<delete id="replaceHolidayDelete" parameterType="String">
+		DELETE FROM AXX_T_REPLACE_HOLIDAY WHERE HOLIDAY_ID=#{holiday_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT T.HOLIDAY_ID,TO_CHAR(T.HOLIDAY_DATE,'YYYY-MM-DD') HOLIDAY_DATE,T.USER_ID,T.HOLIDAY_TYPE,T.REPLACE_ID,t.HOLIDAY_DESC,t.REST_TYPE  FROM AXX_T_REPLACE_HOLIDAY t WHERE HOLIDAY_ID=#{holiday_id}
+	</select>
+
+	<update id="replaceHolidayUpdate" parameterType="map">
+		UPDATE AXX_T_REPLACE_HOLIDAY set
+		<if test=" holiday_date  != null and holiday_date  != ''"> 
+ <![CDATA[ 
+HOLIDAY_DATE=to_date(#{holiday_date},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+USER_ID=#{user_id},
+ ]]>
+		</if>
+		<if test=" holiday_type  != null and holiday_type  != ''"> 
+ <![CDATA[ 
+HOLIDAY_TYPE=#{holiday_type},
+ ]]>
+		</if>
+		<if test=" replace_id  != null and replace_id  != ''"> 
+ <![CDATA[ 
+REPLACE_ID=#{replace_id},
+ ]]>
+		</if>
+		<if test="holiday_desc != null">
+			HOLIDAY_DESC=#{holiday_desc,jdbcType=VARCHAR},
+		</if>
+		<if test="rest_type != null and rest_type != ''">
+			REST_TYPE=#{rest_type},
+		</if>
+		HOLIDAY_ID=#{holiday_id}
+		where HOLIDAY_ID=#{holiday_id}
+	</update>
+	
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_T_REPLACE_HOLIDAY
+	</select>
+	<!-- 1 连表查询空值情况 2 日期类型格式转换 -->
+	
+	
+	<select id="getAllHoliday" parameterType="map" resultType="map">
+       
+select t.holiday_id,
+       to_char(t.holiday_date, 'yyyy-mm-dd') holiday_date,
+       bs1.staff_name user_name,
+       bs2.staff_name replace_name,
+       holiday_type
+  from AXX_T_REPLACE_HOLIDAY t, tb_base_staff bs1, tb_base_staff bs2
+ where t.user_id = bs1.staff_id
+   and t.replace_id = bs2.staff_id(+)
+   and to_char(t.holiday_date, 'yyyymm') = #{holiday_date}
+   and t.user_id = #{user_id}
+       	
+	</select>
+	
+	<select id="getAllHolidayByHid" parameterType="string" resultType="map">
+       
+select t.holiday_id,
+       to_char(t.holiday_date, 'yyyy-mm-dd') holiday_date,
+       bs1.staff_name user_name,
+       bs2.staff_name replace_name,
+       holiday_type
+  from AXX_T_REPLACE_HOLIDAY t, tb_base_staff bs1, tb_base_staff bs2
+ where t.user_id = bs1.staff_id
+   and t.replace_id = bs2.staff_id(+)
+   and to_char(t.holiday_date, 'yyyymm') = #{holiday_date}
+   and t.user_id = (select t.user_id from AXX_T_REPLACE_HOLIDAY t where t.holiday_id=#{holiday_id})
+   
+	</select>
+	
+	
+	<select id="showDetailInfo" parameterType="map" resultType="map">
+       select model.*, tbs.staff_name replace_name,to_char(model.holiday_date,'yyyy-mm-dd') model_holiday_date
+  from (select atrh.*, tbs.staff_name user_name
+          from AXX_T_REPLACE_HOLIDAY atrh
+         inner join TB_BASE_STAFF tbs
+            on atrh.user_id = tbs.STAFF_ID 
+         where 1=1
+         <if test="localId != null and localId != ''">
+         	and tbs.area_id = #{localId}
+         </if>
+         <if test="param_date != null and param_date != ''">
+         	and to_char(atrh.holiday_date,'yyyy-mm') = #{param_date}
+         </if>
+         ) model 
+  left join TB_BASE_STAFF tbs
+    on model.replace_id = tbs.staff_id
+    
+	</select>
+	
+</mapper>

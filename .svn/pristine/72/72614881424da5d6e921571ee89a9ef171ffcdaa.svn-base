@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.PhotoRemarkDao">
+	<insert id="insertRemark" parameterType="map">
+	insert into tb_ins_photo_remark
+	values(seq_tb_ins_photo_remark.nextval,#{photo_id},sysdate,#{staff_id},#{remark},#{status})
+	</insert>
+	
+	<select id="queryRemark" parameterType="string" resultType="map">
+	SELECT PR.REMARK_ID,
+	       PR.PHOTO_ID,
+	       to_char(PR.CTEATE_TIME,'yyyy-mm-dd hh24:mi:ss') CTEATE_TIME,
+	       S.STAFF_NAME,
+	       PR.REMARK,
+	       decode(PR.STATUS,0,'合格','不合格') STATUS
+	FROM TB_INS_PHOTO_REMARK PR
+	JOIN TB_BASE_STAFF S ON S.STAFF_ID=PR.STAFF_ID
+	WHERE PR.PHOTO_ID=#{photo_id}
+	</select>
+	
+	<select id="queryPhotoRemark" parameterType="util.page.Query" resultType="map">
+	SELECT P.PHOTO_ID,
+		   replace(P.PHOTO_PATH,'61.160.128.47',#{queryParams.url}) PHOTO_PATH,
+      	   replace(P.MICRO_PHOTO_PATH,'61.160.128.47',#{queryParams.url}) MICRO_PHOTO_PATH,
+	       A.NAME,
+	       A1.NAME SON_NAME,
+	       to_char(P.CREATE_TIME,'yyyy-mm-dd hh24:mi:ss') CREATE_TIME,
+	       T.TASK_NAME,
+	       L.LINE_NAME,
+	       PO.POINT_NAME,
+	       S.STAFF_NAME
+	 FROM TB_INS_PHOTO P 
+	JOIN TB_INS_TASK T ON T.TASK_ID=P.TASK_ID
+	JOIN TB_INS_POINT PO ON PO.POINT_ID=P.POINT_ID
+	JOIN AREA A ON A.AREA_ID=T.AREA_ID
+	JOIN AREA A1 ON A1.AREA_ID=T.SON_AREA_ID
+	JOIN TB_BASE_STAFF S ON S.STAFF_ID=P.CREATE_STAFF
+	JOIN TB_INS_PLAN PA ON PA.PLAN_ID=T.PLAN_ID
+	JOIN TB_INS_PLAN_DETAIL PD ON PD.PLAN_ID=PA.PLAN_ID
+	JOIN TB_INS_LINE L ON L.LINE_ID=PD.INSPECT_OBJECT_ID
+	WHERE 1=1
+	<if test="queryParams.area_id != null and queryParams.area_id != ''">
+	AND T.AREA_ID=#{queryParams.area_id}
+	</if>
+	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">
+	AND T.SON_AREA_ID=#{queryParams.son_area_id}
+	</if>
+	
+	<if test="queryParams.start_time != null and queryParams.start_time!= ''">
+	<![CDATA[
+	AND P.CREATE_TIME>=to_date(#{queryParams.start_time},'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</if>
+	<if test="queryParams.end_time != null and queryParams.end_time!= ''">
+	<![CDATA[
+	AND P.CREATE_TIME<=to_date(#{queryParams.end_time},'yyyy-mm-dd hh24:mi:ss')
+	]]>
+	</if>
+	<if test="queryParams.task_name != null and queryParams.task_name!= ''">
+	AND T.TASK_NAME LIKE '%${task_name}%'
+	</if>
+	<if test="queryParams.line_name != null and queryParams.line_name!= ''">
+	AND L.LINE_NAME LIKE '%${line_name}%'
+	</if>
+	<if test="queryParams.staff_name != null and queryParams.staff_name!= ''">
+	AND S.STAFF_NAME LIKE '%${staff_name}%'
+	</if>
+	<if test="queryParams.point_name != null and queryParams.point_name!= ''">
+	AND PO.POINT_NAME LIKE '%${point_name}%'
+	</if>
+	ORDER BY P.CREATE_TIME DESC
+	</select>
+</mapper>

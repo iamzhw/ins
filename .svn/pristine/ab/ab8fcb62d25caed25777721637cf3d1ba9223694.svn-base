@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC 
+	"-/mybatis.org/DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="icom.util.GISutil.dao.GisDao">
+	<select id="queryMap" resultType="map">
+	<!-- 	select distinct  pe.phy_eqp_id a_eqp,
+		                 pe.res_spec_id a_res_spec,
+		                 pe1.phy_eqp_id z_eqp,
+		                 pe1.res_spec_id z_res_spec,
+		                 cf.cbl_sect_id
+   		from lnk_phy_link_component@${jndi} lplc
+	       join phy_equipment@${jndi} pe on pe.phy_eqp_id=lplc.a_phy_eqp_id 
+	       join phy_equipment@${jndi}  pe1 on pe1.phy_eqp_id=lplc.z_phy_eqp_id
+	       join cbl_fiber@${jndi}  cf on cf.cbl_line_id=lplc.cbl_line_id  
+	    where
+	      lplc.link_id = (
+	      select l2l.link_id
+	      from lnk_business_link@${jndi}  lbl
+	      JOIN lnk_busi_link_2_link@${jndi}  l2l ON l2l.busi_link_id=lbl.busi_link_id
+	      <![CDATA[
+	      where  l2l.busi_link_id=#{busi_link_id} and rownum < 2
+	      ]]>
+	      ) -->
+	      		select distinct <!--  pe.phy_eqp_id a_eqp,
+		                 pe.res_spec_id a_res_spec,
+		                 pe1.phy_eqp_id z_eqp,
+		                 pe1.res_spec_id z_res_spec, -->
+		               bc.BSE_SECT_ID cbl_sect_id
+   		from 
+           lnk_business_link@${jndi}   lbl
+         JOIN lnk_busi_link_2_link@${jndi}   l2l ON l2l.busi_link_id=lbl.busi_link_id
+         join lnk_phy_link_component@${jndi}  lplc on  lplc.link_id=l2l.link_id
+	       join phy_equipment@${jndi}  pe on pe.phy_eqp_id=lplc.a_phy_eqp_id 
+	       join phy_equipment@${jndi}   pe1 on pe1.phy_eqp_id=lplc.z_phy_eqp_id
+	       join cbl_fiber@${jndi}   cf on cf.cbl_line_id=lplc.cbl_line_id  
+	        join bse_channel_cblsect@${jndi} bcc on bcc.cbl_sect_id=cf.cbl_sect_id
+	         join BSE_CHANNEL@${jndi} bc on bc.bse_channel_id=bcc.bse_channel_id
+	      where  lbl.busi_link_id=#{busi_link_id} 
+	</select>
+		<select id="getHisGLByBusiId" parameterType="map" resultType="map">
+	select  
+	distinct   a_eqp,
+		                 a_res_spec,
+		                  z_eqp,
+		                  z_res_spec,
+		                cbl_sect_id
+	from (
+		select   pe.phy_eqp_id a_eqp,
+		                 pe.res_spec_id a_res_spec,
+		                 pe1.phy_eqp_id z_eqp,
+		                 pe1.res_spec_id z_res_spec,
+		                 bc.BSE_SECT_ID cbl_sect_id,
+                     l2l.link_id,
+                     lplc.wo_id,
+                     lplc.create_time,
+                     max(lplc.create_time)over ( partition by cf.fiber_id) max_create_time
+                      
+   		from 
+           lnk_business_link@${jndi}  lbl
+         JOIN lnk_busi_link_2_link@${jndi}  l2l ON l2l.busi_link_id=lbl.busi_link_id
+         join his_lnk_phy_link_component@${jndi} lplc on  lplc.link_id=l2l.link_id
+	       left join phy_equipment@${jndi} pe on pe.phy_eqp_id=lplc.a_phy_eqp_id 
+	       left join phy_equipment@${jndi}  pe1 on pe1.phy_eqp_id=lplc.z_phy_eqp_id
+	       left join cbl_fiber@${jndi}  cf on cf.cbl_line_id=lplc.cbl_line_id  
+	      left  join bse_channel_cblsect@${jndi} bcc on bcc.cbl_sect_id=cf.cbl_sect_id
+	       left join BSE_CHANNEL@${jndi} bc on bc.bse_channel_id=bcc.bse_channel_id
+	      where  lbl.busi_link_id = #{busi_link_id} 
+        ) where create_time=max_create_time
+		</select>
+	<select id="getGLByEleRoad" parameterType="map" resultType="map">
+		select distinct to_char(t.res_spec_id) res_spec_id,
+					lbl.NO,
+					lbl.NAME,
+					lbl.NOTES,
+					to_char(lbl.busi_link_id) busi_link_id
+				  from lnk_link@${jndi}  t
+				  join lnk_busi_link_2_link@${jndi}  l2l on l2l.link_id=t.link_id
+				  join lnk_business_link@${jndi}  lbl on lbl.busi_link_id=l2l.busi_link_id
+				 where lbl.NO =#{no}
+	</select>
+	
+	<select id="get_cbl_sect_ByNo" parameterType="map" resultType="map">
+		 select p.cbl_sect_id from (
+         select distinct f.cbl_sect_id from ressz.cbl_fiber f 
+         join ressz.lnk_phy_link_component p on p.cbl_line_id=f.cbl_line_id
+         join ressz.lnk_busi_link_2_link l2l on l2l.link_id=p.link_id 
+         join ressz.lnk_business_link lbl on lbl.busi_link_id=l2l.busi_link_id
+         where lbl.no=#{dl1}
+         union all
+         select distinct f.cbl_sect_id from ressz.cbl_fiber f 
+         join ressz.lnk_phy_link_component p on p.cbl_line_id=f.cbl_line_id
+         join ressz.lnk_busi_link_2_link l2l on l2l.link_id=p.link_id 
+         join ressz.lnk_business_link lbl on lbl.busi_link_id=l2l.busi_link_id
+         where lbl.no=#{dl2}) p having count(cbl_sect_id)>1 group by cbl_sect_id
+	</select>
+		<select id="queryGisUrlByAreaId" parameterType="map" resultType="map">
+		 select (select url
+          from osspad.GIS_PAD_URL u
+         where 
+         1=1
+         <if test="areaId!=null and areaId!=''">
+         and u.area_id = #{areaId}
+         </if>
+          <if test="sonAreaId!=null and sonAreaId!=''">
+         and u.son_area_id = #{sonAreaId}
+         </if>
+         and u.is_www=1
+           and u.url_type = 'AG_DYNAMIC_MSL_URL'
+           and rownum=1) AG_DYNAMIC_MSL_URL,
+       (select url
+          from osspad.GIS_PAD_URL u
+         where 
+           1=1
+         <if test="areaId!=null and areaId!=''">
+         and u.area_id = #{areaId}
+         </if>
+          <if test="sonAreaId!=null and sonAreaId!=''">
+         and u.son_area_id = #{sonAreaId}
+         </if>
+          and u.is_www=1
+           and u.url_type = 'AG_TILED_MSL_URL'
+           and rownum=1
+           ) AG_TILED_MSL_URL
+  from dual
+	</select>
+		<select id="querySameSect" resultType="map" parameterType="map" >
+  select cbl_sect_id from (
+      select  cbl_sect_id,
+      count(0)over ( partition by cbl_sect_id) count
+      from (
+		      		select distinct 
+			               bc.BSE_SECT_ID cbl_sect_id,
+			               lbl.busi_link_id
+	   		from 
+	           lnk_business_link@${jndi}   lbl
+	         JOIN lnk_busi_link_2_link@${jndi}   l2l ON l2l.busi_link_id=lbl.busi_link_id
+	         join lnk_phy_link_component@${jndi}  lplc on  lplc.link_id=l2l.link_id
+		       join phy_equipment@${jndi}  pe on pe.phy_eqp_id=lplc.a_phy_eqp_id 
+		       join phy_equipment@${jndi}   pe1 on pe1.phy_eqp_id=lplc.z_phy_eqp_id
+		       join cbl_fiber@${jndi}   cf on cf.cbl_line_id=lplc.cbl_line_id  
+		        join bse_channel_cblsect@${jndi} bcc on bcc.cbl_sect_id=cf.cbl_sect_id
+		         join BSE_CHANNEL@${jndi} bc on bc.bse_channel_id=bcc.bse_channel_id
+		      where  lbl.no in (${busiNos})
+		      ) 
+	      )where count>=2
+	</select>
+</mapper>

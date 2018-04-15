@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.outsite.dao.PartTimeModelDao">
+	<sql id="dynamicWhere">
+
+		<if
+			test="queryParams.p_parent_city  != null and queryParams.p_parent_city  != ''"
+		> 
+<![CDATA[  and  T.parent_city  =#{queryParams.p_parent_city }   ]]>
+		</if>
+
+		<if
+			test="queryParams.p_start_time  != null and queryParams.p_start_time  != ''"
+		> 
+<![CDATA[  and  T.start_time  =#{queryParams.p_start_time }   ]]>
+		</if>
+
+		<if
+			test="queryParams.p_end_time  != null and queryParams.p_end_time  != ''"
+		> 
+<![CDATA[  and  T.end_time  =#{queryParams.p_end_time }   ]]>
+		</if>
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		
+SELECT PART_TIME_ID,
+       START_TIME,
+       END_TIME,
+       T.IS_ENABLED,
+       T.PARENT_CITY,
+       TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+       T.CREATED_BY,
+       TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS') UPDATE_TIME,
+       TO_CHAR(T.UPDATED_BY, 'YYYY-MM-DD HH24:MI:SS') UPDATED_BY,
+      
+       T.IS_PRITERMISSION,
+       ae.name CITY_NAME
+  FROM AXX_OUT_SITE_PART_TIME_MODEL T, area  ae
+ WHERE T.PARENT_CITY = ae.area_id and t.DELETE_FLAG=1 
+		<if test=" queryParams.area_id  != null and  queryParams.area_id != ''"> 
+	         <![CDATA[
+	             and t.PARENT_CITY=#{queryParams.area_id}
+	          ]]>
+		</if>
+		<include refid="dynamicWhere" />
+		ORDER BY T.START_TIME ASC
+	</select>
+
+	<insert id="partTimeModelSave" parameterType="map">
+		INSERT INTO AXX_OUT_SITE_PART_TIME_MODEL(
+		PART_TIME_ID,
+		<if test=" start_time  != null and start_time  != ''"> 
+ <![CDATA[ 
+START_TIME,
+ ]]>
+		</if>
+		
+		
+		<if test=" parent_city  != null and parent_city  != ''"> 
+ <![CDATA[ 
+PARENT_CITY,
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+CREATION_TIME,
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+CREATED_BY,
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME,
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+UPDATED_BY,
+ ]]>
+		</if>
+
+DELETE_FLAG,
+
+		<if test=" is_pritermission  != null and is_pritermission  != ''"> 
+ <![CDATA[ 
+IS_PRITERMISSION,
+ ]]>
+		</if>
+		<if test=" end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+END_TIME
+ ]]>
+		</if>
+		) values(
+	    SEQ_OS_PART_TIME_MODEL.NEXTVAL,
+		<if test=" start_time  != null and start_time  != ''"> 
+ <![CDATA[ 
+#{start_time},
+ ]]>
+		</if>
+		
+		
+		<if test=" parent_city  != null and parent_city  != ''"> 
+ <![CDATA[ 
+#{parent_city},
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+to_date(#{creation_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+#{created_by},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+to_date(#{updated_by},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		1,
+		<if test=" is_pritermission  != null and is_pritermission  != ''"> 
+ <![CDATA[ 
+#{is_pritermission},
+ ]]>
+		</if>
+		<if test=" end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+ #{end_time}
+ ]]>
+		</if>
+		)
+	</insert>
+
+	
+	
+	<update id="partTimeModelDelete" parameterType="String">
+	  
+	   UPDATE AXX_OUT_SITE_PART_TIME_MODEL T SET T.DELETE_FLAG=0 WHERE T.PART_TIME_ID=#{part_time_id}
+	</update>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_OUT_SITE_PART_TIME_MODEL WHERE
+		PART_TIME_ID=#{part_time_id}
+	</select>
+
+	<update id="partTimeModelUpdate" parameterType="map">
+		UPDATE AXX_OUT_SITE_PART_TIME_MODEL set
+		<if test=" start_time  != null and start_time  != ''"> 
+ <![CDATA[ 
+START_TIME=#{start_time},
+ ]]>
+		</if>
+		<if test=" end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+END_TIME=#{end_time},
+ ]]>
+		</if>
+		<if test=" is_enabled  != null and is_enabled  != ''"> 
+ <![CDATA[ 
+IS_ENABLED=#{is_enabled},
+ ]]>
+		</if>
+		<if test=" parent_city  != null and parent_city  != ''"> 
+ <![CDATA[ 
+PARENT_CITY=#{parent_city},
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+CREATION_TIME=to_date(#{creation_time},'yyyy-mm-dd hh24:mi:ss')
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+CREATED_BY=#{created_by},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME= to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss')
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+UPDATED_BY=#{updated_by},
+ ]]>
+		</if>
+		<if test=" delete_flag  != null and delete_flag  != ''"> 
+ <![CDATA[ 
+DELETE_FLAG=#{delete_flag},
+ ]]>
+		</if>
+		<if test=" is_pritermission  != null and is_pritermission  != ''"> 
+ <![CDATA[ 
+IS_PRITERMISSION=#{is_pritermission},
+ ]]>
+		</if>
+		PART_TIME_ID=#{part_time_id}
+		where PART_TIME_ID=#{part_time_id}
+	</update>
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_OUT_SITE_PART_TIME_MODEL
+	</select>
+	<!-- 1 连表查询空值情况 2 日期类型格式转换 -->
+	
+	<select id="getCity" resultType="map" parameterType="map">
+	   SELECT * FROM AXX_CITY_INFO
+	</select>
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.TroubleDao">
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		SELECT p.POINT_ID,
+			p.POINT_NO,
+			p.POINT_NAME,
+			pt.POINT_TYPE_NAME,
+			p.LONGITUDE,
+			p.LATITUDE,
+			TO_CHAR(p.CREATE_TIME, 'yyyy-mm-dd') as CREATE_TIME,
+			s.STAFF_NAME,
+			p.ADDRESS,
+			a.NAME
+		FROM TB_INS_POINT p
+		LEFT JOIN TB_BASE_STAFF s
+			ON p.CREATE_STAFF = s.STAFF_ID
+		LEFT JOIN TB_INS_POINT_TYPE pt
+			ON p.POINT_TYPE = pt.POINT_TYPE_ID
+		LEFT JOIN AREA a
+			ON a.AREA_ID = p.SON_AREA_ID
+		WHERE p.CHECKED = 0
+		<if test="queryParams.POINT_NO != null and queryParams.POINT_NO != ''">
+			p.POINT_NO LIKE '%'||#{queryParams.POINT_NO}||'%'
+		</if>
+		<if test="queryParams.POINT_NAME != null and queryParams.POINT_NAME != ''">
+			p.POINT_NAME LIKE '%'||#{queryParams.POINT_NAME}||'%'
+		</if>
+		<if test="queryParams.POINT_TYPE != null and queryParams.POINT_TYPE != ''">
+			p.POINT_TYPE = #{POINT_TYPE}
+		</if>
+		<if test="queryParams.CREATE_TIME != null and queryParams.CREATE_TIME != ''">
+			p.CREATE_TIME = TO_DATE(#{queryParams.CREATE_TIME}, 'yyyy-mm-dd')
+		</if>
+		ORDER BY p.CREATE_TIME DESC, p.POINT_ID DESC
+	</select>
+	
+	<update id="check" parameterType="String">
+		UPDATE TB_INS_POINT SET CHECKED = 1 WHERE POINT_ID = #{id}
+	</update>
+</mapper>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.gldManageDao">
+
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.cable_name != null and queryParams.cable_name != ''">  
+            <![CDATA[
+	    	AND tc.CABLE_NAME like '%'||#{queryParams.cable_name}||'%' 
+	    	]]>
+	    	
+		</if>
+
+	</sql>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		
+ select cable_id,
+        cable_name,
+        cable_color,
+        fiber_grade,
+        to_char(listagg(area_name,',') within group (order by area_name)) area_name
+   from (select tc.*, ae.name area_name
+           from axx_t_cable tc, AXX_T_CABLE_AREA ca, area ae
+          where tc.cable_id = ca.cable_id
+            and ca.area_id = ae.area_id  
+            <if test="queryParams.area_id != null and queryParams.area_id != ''">  
+            <![CDATA[
+                and ca.area_id=#{queryParams.area_id}
+	    	]]>
+		</if>
+            <include refid="dynamicWhere" /> ) t
+  group by cable_id, cable_name, cable_color, fiber_grade
+		
+
+
+	</select>
+
+
+	<insert id="save" parameterType="map">
+		INSERT INTO AXX_T_CABLE(
+		CABLE_ID,
+		CABLE_NAME,
+		CABLE_COLOR,
+		FIBER_GRADE
+		
+		)
+		values(
+		#{cable_id},
+		#{cable_name},
+		#{cable_color},
+		#{fiber_grade}
+		
+		)
+	</insert>
+
+	<delete id="delete" parameterType="String">
+		DELETE FROM AXX_T_CABLE WHERE CABLE_ID=#{cable_id}
+	</delete>
+
+	<select id="findById" parameterType="String" resultType="map">
+		SELECT * FROM AXX_T_CABLE WHERE CABLE_ID=#{cable_id}
+	</select>
+
+	<update id="update" parameterType="map">
+		UPDATE AXX_T_CABLE set
+		
+		CABLE_NAME=#{cable_name},
+		CABLE_COLOR=#{cable_color},
+		FIBER_GRADE=#{fiber_grade}
+		where CABLE_ID=#{cable_id}
+	</update>
+
+
+<select id="validateCblColor" parameterType="map" resultType="int">
+		select count(*) from AXX_T_CABLE t where 1=1
+		<![CDATA[ 
+		    AND to_number(t.cable_color,'xxxxxx')>#{smallerNum} and to_number(t.cable_color,'xxxxxx')<#{biggerNum}
+		
+		 ]]>
+		
+	</select>
+	
+	
+	<select id="findAll"  resultType="map">
+		SELECT * FROM AXX_T_CABLE 
+	</select>
+	
+	<select id="getGldByAreaId"  resultType="map" parameterType="string">
+       
+       SELECT T.*
+  FROM AXX_T_CABLE T, AXX_T_CABLE_AREA CA
+ WHERE T.CABLE_ID = CA.CABLE_ID
+   AND CA.AREA_ID = #{area_id}
+       
+	</select>
+	
+	
+	<select id="getRelayByCableId"  resultType="map" parameterType="string">     
+	    select r.relay_id,r.relay_name from AXX_T_RELAY  r,AXX_T_CABLE c
+			where r.cable_id=c.cable_id and c.cable_id=#{cable_id}       
+	</select>
+	
+	
+	<select id="getCableByids"  resultType="map" parameterType="map">
+		
+SELECT T.* FROM AXX_T_CABLE  T WHERE t.cable_id in (${idss}) 
+	</select>
+	
+	<select id="getLocalCableList" parameterType="string" resultType="map">
+	  SELECT * FROM  AXX_T_CABLE T inner join axx_t_cable_area tca on t.cable_id=tca.cable_id
+ 		where tca.area_id=#{areaId} order by t.fiber_grade desc
+	</select>
+	
+	<select id="getCableId"  resultType="string">
+	 SELECT  SEQ_CABLE_ID.NEXTVAL FROM DUAL
+	</select>
+	
+	<insert id="insertCable2Area" parameterType="map">
+	   INSERT INTO AXX_T_CABLE_AREA(CABLE_ID,AREA_ID) values(#{cable_id},#{area_id})
+	</insert>
+	
+	
+	<select id="getOwnAreaList" parameterType="string" resultType="string">
+	    SELECT to_char(WMSYS.WM_CONCAT(T.AREA_ID))  FROM AXX_T_CABLE_AREA T WHERE T.CABLE_ID=#{id}
+	</select>
+	
+	<delete id="deleteOldCable2Area" parameterType="string">
+	   DELETE FROM AXX_T_CABLE_AREA T WHERE T.CABLE_ID=#{cable_id}
+	  
+	</delete>
+	
+	<select id="getCableAreaList" parameterType="string" resultType="map">
+	     SELECT AE.AREA_ID, AE.NAME AREA_NAME
+  FROM AXX_T_CABLE_AREA CA, AREA AE
+ WHERE CA.AREA_ID = AE.AREA_ID
+   AND CA.CABLE_ID = #{cable_id}
+	</select>
+</mapper>

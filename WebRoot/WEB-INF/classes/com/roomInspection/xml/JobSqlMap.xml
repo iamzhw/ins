@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.roomInspection.dao.JobDao">
+	<sql id="listWhere">
+		<if test="queryParams.JOB_ID != null and queryParams.JOB_ID != ''">  
+            <![CDATA[
+	    	AND a.JOB_ID = #{queryParams.JOB_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.JOB_NAME != null and queryParams.JOB_NAME != ''">  
+            <![CDATA[
+	    	AND a.JOB_NAME like '%'||#{queryParams.JOB_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.CIRCLE_ID != null and queryParams.CIRCLE_ID != ''">  
+            <![CDATA[
+	    	AND a.CIRCLE_ID = #{queryParams.CIRCLE_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.ROOM_TYPE_ID != null and queryParams.ROOM_TYPE_ID != ''">  
+            <![CDATA[
+	    	AND a.ROOM_TYPE_ID = #{queryParams.ROOM_TYPE_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND a.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.CONTENT != null and queryParams.CONTENT != ''">  
+            <![CDATA[
+	    	AND a.CREATOR = #{queryParams.CREATOR}
+	    	]]>
+		</if>
+		<if test="queryParams.CREATOR != null and queryParams.CREATOR != ''">  
+            <![CDATA[
+	    	AND a.CREATOR = #{queryParams.CREATOR}
+	    	]]>
+		</if>
+		<if test="queryParams.CREATE_DATE != null and queryParams.CREATE_DATE != ''">  
+            <![CDATA[
+	    	AND a.CREATE_DATE = #{queryParams.CREATE_DATE}
+	    	]]>
+		</if>
+		<if test="queryParams.REPORT_STATUS != null and queryParams.REPORT_STATUS != ''">  
+            <![CDATA[
+	    	AND a.REPORT_STATUS = #{queryParams.REPORT_STATUS}
+	    	]]>
+		</if>
+	</sql>
+	<select id="query" resultType="map" parameterType="util.page.Query">
+		select a.*,c.name area_name,jrt.room_type_name,jc.circle_name
+		from jfxj_job a,area c,jfxj_room_type jrt,jfxj_circle jc
+		where
+		a.AREA_ID=c.area_id and a.room_type_id=jrt.room_type_id
+		and a.circle_id=jc.circle_id
+		and a.report_status=0
+		<include refid="listWhere" />
+	</select>
+	
+	<select id="getJobList" resultType="map" parameterType="util.page.Query">
+		select a.*,c.name area_name,jrt.room_type_name,jc.circle_name
+		from jfxj_job a,area c,jfxj_room_type jrt,jfxj_circle jc
+		where
+		a.AREA_ID=c.area_id and a.room_type_id=jrt.room_type_id
+		and a.circle_id=jc.circle_id
+		and a.report_status=0
+		<include refid="listWhere" />
+	</select>
+	<select id="getJob" resultType="map" parameterType="util.page.Query">
+		select a.*,b.name area_name,c.circle_name,d.room_type_name
+		from jfxj_job a,area b,jfxj_circle c,jfxj_room_type d
+		where
+		a.AREA_ID=b.area_id and job_id=#{id} and a.circle_id=c.circle_id and
+		a.room_type_id=d.room_type_id
+	</select>
+	<select id="getJobListCount" resultType="int" parameterType="util.page.Query">
+		select count(*) from jfxj_job a
+		where 1=1
+		<include refid="listWhere" />
+	</select>
+	<select id="getCircles" resultType="map">
+		select a.* from jfxj_circle a order by a.circle_id
+	</select>
+	<select id="getRoomTypes" resultType="map">
+		select a.* from JFXJ_ROOM_TYPE a order by a.ROOM_TYPE_ID
+	</select>
+	<select id="getAreaList" parameterType="int" resultType="map">
+		select * from AREA where parent_area_id=#{area_id} order by area_id
+	</select>
+	<select id="getJobsByCircleId" resultType="map" parameterType="int">
+		select * from jfxj_job a where a.report_status=0 and a.circle_id=#{circleId}
+	</select>
+	
+	<insert id="insert" parameterType="map">
+		insert into jfxj_job
+		(JOB_ID,JOB_NAME,CIRCLE_ID,ROOM_TYPE_ID,AREA_ID,
+		CONTENT,CREATOR,CREATE_DATE,REPORT_STATUS)
+		values
+		(SEQ_JOB_ID.Nextval,#{JOB_NAME},#{CIRCLE_ID},#{ROOM_TYPE_ID},#{AREA_ID},#{CONTENT, jdbcType=NVARCHAR},#{CREATOR},#{CREATE_DATE},0)
+	</insert>
+	<update id="update" parameterType="map">
+		update jfxj_job set
+		JOB_NAME=#{JOB_NAME},
+		CIRCLE_ID=#{CIRCLE_ID},
+		ROOM_TYPE_ID=#{ROOM_TYPE_ID},
+		AREA_ID=#{AREA_ID},
+		CONTENT=#{CONTENT}
+		where
+		JOB_ID=#{JOB_ID}
+	</update>
+	<update id="stop" parameterType="map">
+		update jfxj_job set REPORT_STATUS=1 where JOB_ID IN (${JOB_ID})	
+	</update>
+	<delete id="delete" parameterType="map">
+		delete from jfxj_job where
+		JOB_ID IN (${JOB_ID})
+	</delete>
+</mapper>

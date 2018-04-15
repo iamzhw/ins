@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableInspection.dao.CablePlanDao">
+
+	<sql id="dynamicWhere_plan">
+		<if test="queryParams.PLAN_NO != null and queryParams.PLAN_NO != ''">  
+            <![CDATA[
+	    	AND PLAN_NO like '%'||#{queryParams.PLAN_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_NAME != null and queryParams.PLAN_NAME != ''">  
+            <![CDATA[
+	    	AND PLAN_NAME like '%'||#{queryParams.PLAN_NAME}||'%' 
+	    	]]>
+		</if>
+		<if
+			test="queryParams.PLAN_START_TIME != null and queryParams.PLAN_START_TIME != ''">  
+            <![CDATA[
+	    	AND PLAN_START_TIME >= TO_DATE(#{queryParams.PLAN_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if
+			test="queryParams.PLAN_END_TIME != null and queryParams.PLAN_END_TIME != ''">  
+            <![CDATA[
+	    	AND PLAN_END_TIME <= TO_DATE(#{queryParams.PLAN_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND TB_INS_PLAN.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND TB_INS_PLAN.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_TYPE != null and queryParams.PLAN_TYPE != ''">  
+            <![CDATA[
+	    	AND l.line_type = #{queryParams.PLAN_TYPE}
+	    	]]>
+		</if>
+	</sql>
+	<sql id="dynamicWhere">
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+	</sql>
+	<select id="planQuery" parameterType="util.page.Query"
+		resultType="map">
+		SELECT distinct TB_INS_PLAN.PLAN_ID,
+		TB_INS_PLAN.PLAN_ID as PLANID,
+		TB_INS_PLAN.PLAN_NO,
+		TB_INS_PLAN.PLAN_NAME,
+		nvl(TB_INS_PLAN.INSPECTOR_TYPE,1) INSPECTOR_TYPE,
+		(select to_char(wm_concat(distinct(d.dept_name)))  from tb_ins_dept d where d.dept_no=TB_INS_PLAN.dept_no) dept_name,
+		decode(l.line_type,0,'缆线计划',1,'区域计划',3,'点计划') line_type,
+		DECODE(PLAN_TYPE, 0, '周期性', 1, '临时性') AS PLAN_TYPE,
+		TO_CHAR(PLAN_START_TIME, 'yyyy-mm-dd') AS PLAN_START_TIME,
+		TO_CHAR(PLAN_END_TIME, 'yyyy-mm-dd') AS PLAN_END_TIME,
+		DECODE(PLAN_CIRCLE, 1, '日', 2, '周', 3, '月', 4, '年',5,'半月') AS PLAN_CIRCLE,
+		PLAN_FREQUENCY,
+		A.NAME AS AREA_NAME,
+		B.NAME AS SON_AREA_NAME,
+		TO_CHAR(TB_INS_PLAN.CREATE_TIME, 'yyyy-MM-dd hh24:mi:ss') AS CREATE_TIME,
+		TBS.STAFF_NAME,
+		case  when 
+	    INSPECTOR_TYPE = 1
+	    then 
+	     (select dp.dept_name from tb_ins_dept dp where dp.dept_id=TASK_INSPECTOR)
+	    else
+	    (select s.STAFF_NAME from tb_base_staff s where s.staff_id=TASK_INSPECTOR)
+	    end INSPECTOR,
+	    case  when 
+	    INSPECTOR_TYPE = 0
+	    then 
+	     (select s.STAFF_no from tb_base_staff s where s.staff_id=TASK_INSPECTOR)
+	    end INSPECTOR_NO,
+		CUSTOM_TIME,
+		decode(ISDISTRIBUTED ,1,'已分配' ,'未分配') as ISDISTRIBUTED,
+		TYPE,
+		send_type
+		FROM TB_INS_PLAN, AREA A, AREA B, TB_BASE_STAFF TBS,tb_ins_plan_detail pd,tb_ins_line l
+	    WHERE TB_INS_PLAN.PLAN_KIND = 1
+	    AND TB_INS_PLAN.ISDELETED = 0
+	    AND A.AREA_ID(+) = TB_INS_PLAN.AREA_ID
+	    AND B.AREA_ID(+) = TB_INS_PLAN.SON_AREA_ID
+	    AND TBS.STAFF_ID(+) = TB_INS_PLAN.CREATE_STAFF
+	    and pd.plan_id=TB_INS_PLAN.plan_id
+	    and l.line_id=pd.inspect_object_id
+		<include refid="dynamicWhere_plan" />
+		ORDER BY CREATE_TIME DESC
+	</select>
+
+
+	<select id="getPoints" resultType="map">
+		SELECT POINT_ID,
+		POINT_NO,
+		POINT_NAME,
+		POINT_LEVEL,
+		POINT_TYPE,
+		LONGITUDE,
+		LATITUDE,
+		TO_CHAR(p.CREATE_TIME, 'yyyy-mm-dd') AS CREATE_TIME,
+		STAFF_NAME
+		FROM TB_INS_POINT p, TB_BASE_STAFF s
+		WHERE p.CREATE_STAFF = s.STAFF_ID
+	</select>
+
+	<insert id="insertPlan" parameterType="map">
+		INSERT INTO TB_INS_PLAN
+		(PLAN_ID, PLAN_NO, PLAN_NAME, PLAN_TYPE, PLAN_START_TIME, PLAN_END_TIME,
+		PLAN_CIRCLE, PLAN_FREQUENCY, CREATE_TIME,
+		CREATE_STAFF,PLAN_KIND,ISDELETED,AREA_ID,SON_AREA_ID,CUSTOM_TIME,TYPE
+		<if test="DEPT_NO != null and DEPT_NO != ''">  
+	    	,DEPT_NO 
+		</if>
+		<if test="SEND_TYPE != null and SEND_TYPE != ''">  
+	    	,SEND_TYPE 
+		</if>
+		)
+		VALUES
+		(SEQ_TB_INS_PLAN.NEXTVAL,
+		#{PLAN_NO},
+		#{PLAN_NAME},
+		#{PLAN_TYPE},
+		TO_DATE(#{PLAN_START_TIME}, 'yyyy-mm-dd'),
+		TO_DATE(#{PLAN_END_TIME}, 'yyyy-mm-dd'),
+		#{PLAN_CIRCLE},
+		#{PLAN_FREQUENCY},
+		SYSDATE,
+		#{CREATE_STAFF},
+		#{PLAN_KIND},0,#{AREA_ID},#{SON_AREA_ID},#{CUSTOM_TIME},1
+		<if test="DEPT_NO != null and DEPT_NO != ''">  
+	    	,#{DEPT_NO} 
+		</if>
+		<if test="SEND_TYPE != null and SEND_TYPE != ''">  
+	    	,#{SEND_TYPE} 
+		</if>
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="plan_id">
+			SELECT SEQ_TB_INS_PLAN.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+
+	<insert id="insertDetail" parameterType="map">
+		INSERT INTO
+		TB_INS_PLAN_DETAIL
+		(PLAN_DETAIL_ID, PLAN_ID, INSPECT_OBJECT_ID, INSPECT_OBJECT_TYPE)
+		VALUES
+		(SEQ_TB_INS_PLAN_DETAIL.NEXTVAL,
+		#{PLAN_ID},
+		#{INSPECT_OBJECT_ID},
+		#{INSPECT_OBJECT_TYPE})
+	</insert>
+
+	<delete id="deletePlan" parameterType="map" statementType="STATEMENT">
+		UPDATE TB_INS_PLAN SET
+		MODIFY_TIME = SYSDATE,
+		MODIFY_STAFF = ${MODIFY_STAFF},
+		ISDELETED = 1
+		WHERE
+		PLAN_ID IN (${PLAN_ID})
+	</delete>
+
+	<delete id="deletePlanDetail" parameterType="map">
+		DELETE FROM
+		TB_INS_PLAN_DETAIL WHERE PLAN_ID IN(#{PLAN_ID})
+	</delete>
+	<select id="getPlan" parameterType="map" resultType="map">
+		SELECT
+		PLAN_ID, PLAN_NO, PLAN_NAME, PLAN_TYPE,
+		TO_CHAR(PLAN_START_TIME,'yyyy-mm-dd') AS PLAN_START_TIME,
+		TO_CHAR(PLAN_END_TIME,'yyyy-mm-dd') AS PLAN_END_TIME,
+		PLAN_CIRCLE, PLAN_FREQUENCY,AREA_ID,SON_AREA_ID,CUSTOM_TIME
+		FROM TB_INS_PLAN WHERE PLAN_ID = #{PLAN_ID}
+	</select>
+
+	<select id="getPlanDetail" parameterType="int" resultType="map">
+		select til.*
+		from tb_ins_line til, TB_INS_PLAN_DETAIL tipd
+		where til.line_id = tipd.inspect_object_id
+		and PLAN_ID = #{plan_id}
+	</select>
+
+	<select id="getPlanExitCable" parameterType="int" resultType="map">
+		select *
+		from tb_ins_line
+		MINUS
+		select til.*
+		from tb_ins_line til, TB_INS_PLAN_DETAIL tipd
+		where til.line_id = tipd.inspect_object_id
+		and til.line_type in (0,1)
+		and PLAN_ID = #{plan_id}
+	</select>
+
+	<update id="updatePlan" parameterType="map">
+		UPDATE TB_INS_PLAN SET
+		PLAN_NO = #{PLAN_NO},
+		PLAN_NAME = #{PLAN_NAME},
+		PLAN_TYPE = #{PLAN_TYPE},
+		PLAN_START_TIME = TO_DATE(#{PLAN_START_TIME}, 'yyyy-mm-dd'),
+		PLAN_END_TIME = TO_DATE(#{PLAN_END_TIME}, 'yyyy-mm-dd'),
+		PLAN_CIRCLE = #{PLAN_CIRCLE},
+		PLAN_FREQUENCY = #{PLAN_FREQUENCY},
+		MODIFY_TIME = SYSDATE,
+		CUSTOM_TIME = #{CUSTOM_TIME},
+		MODIFY_STAFF = #{MODIFY_STAFF}
+		WHERE
+		PLAN_ID = #{PLAN_ID}
+	</update>
+
+	<update id="updatePlanIsDistributed" parameterType="map">
+		UPDATE TB_INS_PLAN SET
+		ISDISTRIBUTED = #{ISDISTRIBUTED},
+		TASK_INSPECTOR = #{TASK_INSPECTOR}, 
+		INSPECTOR_TYPE = #{INSPECTOR_TYPE}, 
+		TASK_CREATOR = #{TASK_CREATOR} 
+		WHERE
+		PLAN_ID = #{PLAN_ID}
+	</update>
+	<select id="getSpectors" parameterType="util.page.Query"
+		resultType="map">
+		SELECT s.STAFF_ID, s.STAFF_NO, s.STAFF_NAME ,0 as STAFF_type,'个人' as STAFF_TYPE_NAME
+		FROM TB_BASE_STAFF s, TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr 
+		WHERE s.ISDELETED = 0 
+			and s.STATUS = 0 
+			and s.STAFF_ID = sr.STAFF_ID
+			and r.ROLE_ID = sr.ROLE_ID
+			and r.ROLE_NO = 'LXXJ_INSPECTOR'
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		union
+		select dept.dept_id,dept.dept_no,dept.dept_name,1 as dept_type,'班组' as STAFF_TYPE_NAME from tb_ins_dept dept
+		where 1=1
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND dept.dept_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND dept.dept_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</select>
+	
+	<select id="getSonAreaIdByPlan" parameterType="string" resultType="map">
+		select p.son_area_id,p.type,p.send_type from tb_ins_plan p where p.plan_id=#{plan_id}
+	</select>
+	
+	<select id="getStaffFromJYH" parameterType="map" resultType="map">
+	select t.jyh_account staff_no,t.name staff_name,0 as staff_type,'个人' as
+	staff_type_name
+	from outsource_orguser_xj_celection t where t.xj_area_id=#{area_id}
+	and t.jyh_account is not null
+	<if test="STAFF_NO != null and STAFF_NO != ''">  
+            <![CDATA[
+	    	AND t.jyh_account like '%'||#{STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="STAFF_NAME != null and STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND t.name like '%'||#{STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+	</select>
+	
+	<select id="getStaffIdByNo" parameterType="map" resultType="string">
+		select nvl(staff_id,0) staff_id from tb_base_staff where staff_no=#{STAFF_NO}  and isdeleted=0
+	</select>
+	
+		<select id="getStaffFromDEPT" parameterType="map" resultType="map">
+		select dept.dept_id staff_id,dept.dept_no staff_no,dept.dept_name staff_name,1 as dept_type,1 as STAFF_TYPE,'班组' as STAFF_TYPE_NAME from tb_ins_dept dept
+		where 1=1
+		<if test="STAFF_NO != null and STAFF_NO != ''">  
+            <![CDATA[
+	    	AND dept.dept_NO like '%'||#{STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="STAFF_NAME != null and STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND dept.dept_NAME like '%'||#{STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+	</select>
+
+	<insert id="saveTask" parameterType="map">
+		INSERT INTO TB_INS_TASK
+		(TASK_ID, PLAN_ID, TASK_NO, TASK_NAME, COMPLETE_TIME, CREATE_TIME,
+		CREATE_STAFF, START_TIME, INSPECTOR, STATUS_ID,AREA_ID,SON_AREA_ID,ENABLED)
+		VALUES
+		(SEQ_TB_INS_TASK.NEXTVAL,
+		#{PLAN_ID},
+		#{PLAN_NO}||'_'||SEQ_TB_INS_TASK.CURRVAL,
+		#{PLAN_NO}||'_'||SEQ_TB_INS_TASK.CURRVAL,
+		TO_DATE(#{COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss'),
+		SYSDATE,
+		#{CREATE_STAFF},
+		TO_DATE(#{START_TIME}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{INSPECTOR},
+		1,#{AREA_ID},
+		#{SON_AREA_ID},0)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="TASK_ID">
+			SELECT SEQ_TB_INS_TASK.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+
+	<insert id="saveTaskDetail" parameterType="map">
+		INSERT INTO
+		TB_INS_TASK_DETAIL
+		(TASK_DETAIL_ID, TASK_ID, INSPECT_OBJECT_ID, INSPECT_OBJECT_TYPE, INSPECTOR,
+		COMPLETED)
+		VALUES
+		(SEQ_TB_INS_TASK_DETAIL.NEXTVAL,
+		#{TASK_ID},
+		#{INSPECT_OBJECT_ID},
+		#{INSPECT_OBJECT_TYPE},
+		#{INSPECTOR},
+		0)
+	</insert>
+    <select id="getLineByLineId" parameterType="map" resultType="map">
+       select line_id, 
+		line_no, 
+		line_name, 
+		create_time, 
+		create_staff, 
+		modify_time, 
+		modify_staff, 
+		road_name, 
+		area_id, 
+		son_area_id, 
+		line_level, 
+		line_type, 
+		parent_line_id
+ from  tb_ins_line l where l.line_id = ${lineId}
+    </select>
+    
+    <!-- 查询关键点计划 -->
+    <select id="queryPoint" parameterType="util.page.Query" resultType="map">
+select distinct p.POINT_ID,
+       p.POINT_NO,
+       p.POINT_NAME,
+       p.POINT_TYPE,
+       pt.POINT_TYPE_NAME,
+       et.EQUIPMENT_TYPE_NAME,
+       p.LONGITUDE,
+       p.LATITUDE,
+       p.ADDRESS,
+       a1.NAME                as AREA,
+       a2.NAME                as SON_AREA,
+       p.point_level,
+       MNT.LEVEL_NAME,
+        to_char(wm_concat(distinct(d.dept_name)) over (partition by p.POINT_ID)) dept_name
+  from TB_INS_POINT          p,
+       TB_INS_POINT_TYPE     pt,
+       AREA                  a1,
+       AREA                  a2,
+       TB_INS_EQUIPMENT_TYPE et,
+       tb_ins_mnt  MNT,
+       tb_ins_point_dept pd,
+       tb_ins_dept d
+ where p.POINT_TYPE > -1
+   and p.POINT_TYPE = pt.POINT_TYPE_ID
+   and p.AREA_ID = a1.AREA_ID
+   and p.SON_AREA_ID = a2.AREA_ID
+   and p.EQP_TYPE_ID = et.EQUIPMENT_TYPE_ID(+)
+   AND P.POINT_LEVEL=MNT.LEVEL_ID(+)
+   and pd.point_no(+)=p.point_no
+   and d.dept_no(+)=pd.dept_no
+   <if test="queryParams.POINT_NO != null and queryParams.POINT_NO != ''">
+   		and p.POINT_NO like '%'||#{queryParams.POINT_NO}||'%'
+   </if>
+    <if test="queryParams.DEPT_NAME != null and queryParams.DEPT_NAME != ''">
+   		and d.dept_name like '%'||#{queryParams.DEPT_NAME}||'%'
+   </if>
+     <if test="queryParams.DEPT_NO!= null and queryParams.DEPT_NO != ''">
+   		and d.dept_no = #{queryParams.DEPT_NO}
+   </if>
+   <if test="queryParams.POINT_NAME != null and queryParams.POINT_NAME != ''">
+   		and p.POINT_NAME like '%'||#{queryParams.POINT_NAME}||'%'
+   </if>
+   <if test="queryParams.ADDRESS != null and queryParams.ADDRESS != ''">
+   		and p.ADDRESS like '%'||#{queryParams.ADDRESS}||'%'
+   </if>
+   <if test="queryParams.POINT_TYPE != null and queryParams.POINT_TYPE != ''">
+   		and p.POINT_TYPE = #{queryParams.POINT_TYPE}
+   </if>
+   <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	          <![CDATA[
+	   	AND p.AREA_ID = #{queryParams.AREA_ID}
+	   	]]>
+	</if>
+	<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+	          <![CDATA[
+	   	AND p.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	   	]]>
+	</if>
+	<if test="queryParams.POINT_LEVEL != null and queryParams.POINT_LEVEL != ''">
+	 		and p.POINT_LEVEL  in ( ${queryParams.POINT_LEVEL})
+   </if>
+   	<if test="queryParams.EQP_TYPE != null and queryParams.EQP_TYPE != ''">
+	 		and p.EQP_TYPE_ID  = #{queryParams.EQP_TYPE}
+   </if>
+     	<if test="queryParams.IS_DISTRIBUTE != null and queryParams.IS_DISTRIBUTE != ''">
+     		<if test="queryParams.IS_DISTRIBUTE == 0">
+	    			  and not exists
+	  			(select 1
+	      		  from tb_ins_line_point lp
+	              join tb_ins_plan_detail pd on pd.inspect_object_id = lp.line_id
+	              join tb_ins_task task on task.plan_id=pd.plan_id
+	               where task.start_time &lt; =sysdate and task.complete_time &gt;=sysdate
+	               and  lp.point_id=p.POINT_ID)
+              	 </if>
+               	<if test="queryParams.IS_DISTRIBUTE == 1">
+		    	and  exists
+	  			(select 1
+	      		  from tb_ins_line_point lp
+	              join tb_ins_plan_detail pd on pd.inspect_object_id = lp.line_id
+	              join tb_ins_task task on task.plan_id=pd.plan_id
+	               where task.start_time&lt;=sysdate and task.complete_time&gt;=sysdate
+	               and  lp.point_id=p.POINT_ID)
+               </if>
+   </if>
+ order by POINT_NO
+
+	</select>
+	
+	<!-- 查询计划名称是否存在-->
+    <select id="getPointPlanByName" parameterType="map" resultType="map">
+    	select * from tb_ins_plan tip where tip.plan_name = #{plan_name}
+	</select>
+	<!--  根绝计划id查询关键点计划-->
+    <select id="getPointPlanById" parameterType="map" resultType="map">
+    	select tip.plan_id,
+       tip.plan_no,
+       tip.plan_name,
+       tip.plan_type,
+       to_char(tip.plan_start_time, 'yyyy-mm-dd') plan_start_time,
+       to_char(tip.plan_end_time, 'yyyy-mm-dd') plan_end_time,
+       tip.plan_circle,
+       tip.plan_frequency,
+       tip.area_id,
+       tip.son_area_id,
+       tip.dept_no
+  from tb_ins_plan tip
+ where tip.plan_id =  #{plan_id}
+	</select>
+	<!-- 添加线 -->
+	<insert id="insertPointLine" parameterType="map">
+		insert into tb_ins_line
+		  (LINE_ID,
+		   LINE_NO,
+		   LINE_NAME,
+		   CREATE_TIME,
+		   CREATE_STAFF,
+		   MODIFY_TIME,
+		   MODIFY_STAFF,
+		   ROAD_NAME,
+		   AREA_ID,
+		   SON_AREA_ID,
+		   LINE_LEVEL,
+		   LINE_TYPE,
+		   <if test="dept_no != null and dept_no != ''">  
+	    	dept_no,
+		</if>
+		   PARENT_LINE_ID)
+		values
+		  (seq_tb_ins_line.nextval,
+		   #{plan_name},
+		    #{plan_name},
+		   sysdate,
+		   #{staffId},
+		   null,
+		   null,
+		   null,
+		   #{areaId},
+		   #{son_area_id},
+		   2,
+		   3,
+		   	<if test="dept_no != null and dept_no != ''">  
+	    	#{dept_no},
+		</if>
+		   null)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="lineId">
+			SELECT seq_tb_ins_line.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+	<!-- 添加线和点对应关系-->
+	<insert id="insertPointLineDetail" parameterType="map">
+		insert into tb_ins_line_point
+		  (LINE_ID, POINT_ID, POINT_SEQ, MODIFY_STAFF, MODIFY_TIME)
+		values
+		  (${lineId}, ${pointId}, ${pointSeq}, null, null)
+	</insert>
+	
+	<!-- 添加计划 -->
+	<insert id="insertPointPlan" parameterType="map">
+		INSERT INTO TB_INS_PLAN
+		(PLAN_ID, PLAN_NO, PLAN_NAME, PLAN_TYPE, PLAN_START_TIME, PLAN_END_TIME,
+		PLAN_CIRCLE, PLAN_FREQUENCY, CREATE_TIME,
+		<if test="dept_no != null and dept_no != ''">  
+	    	dept_no,
+		</if>
+		CREATE_STAFF,PLAN_KIND,ISDELETED,AREA_ID,SON_AREA_ID,CUSTOM_TIME,TYPE)
+		VALUES
+		(SEQ_TB_INS_PLAN.NEXTVAL,
+		#{plan_name},
+		#{plan_name},
+		#{plan_type},
+		TO_DATE(#{plan_start_time}, 'yyyy-mm-dd'),
+		TO_DATE(#{plan_end_time}, 'yyyy-mm-dd'),
+		#{plan_circle},
+		#{plan_frequency},
+		SYSDATE,
+		<if test="dept_no != null and dept_no != ''">  
+	    	#{dept_no},
+		</if>
+		#{staffId},
+		1,0,#{areaId},#{son_area_id},null,3)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="planId">
+			SELECT SEQ_TB_INS_PLAN.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+	
+	<!-- 添加计划详情 -->
+	<insert id="insertPointPlanDetail" parameterType="map">
+		insert into tb_ins_plan_detail
+		  (PLAN_DETAIL_ID,
+		   PLAN_ID,
+		   INSPECTOR,
+		   INSPECT_OBJECT_ID,
+		   INSPECT_OBJECT_TYPE)
+		values
+		  (SEQ_TB_INS_PLAN_DETAIL.NEXTVAL,
+			#{planId},
+			null,
+			#{lineId},
+			2)
+	</insert>
+	
+	 <!-- 查询已选中的关键点计划 -->
+    <select id="searchPointData" parameterType="util.page.Query" resultType="map">
+		select p.POINT_ID,
+		       p.POINT_NO,
+		       p.POINT_NAME,
+		       p.POINT_TYPE,
+		       pt.POINT_TYPE_NAME,
+		       et.EQUIPMENT_TYPE_NAME,
+		       p.LONGITUDE,
+		       p.LATITUDE,
+		       p.ADDRESS,
+		       a1.NAME                as AREA,
+		       a2.NAME                as SON_AREA,
+		       p.point_level,
+		       MNT.LEVEL_NAME,
+		       d.dept_name
+		  from TB_INS_POINT p
+		  left join TB_INS_POINT_TYPE pt
+		    on p.POINT_TYPE = pt.POINT_TYPE_ID
+		  left join AREA a1
+		    on p.AREA_ID = a1.AREA_ID
+		  left join AREA a2
+		    on p.SON_AREA_ID = a2.AREA_ID
+		  left join TB_INS_EQUIPMENT_TYPE et
+		    on p.EQP_TYPE_ID = et.EQUIPMENT_TYPE_ID
+		  left join tb_ins_mnt MNT
+		    on P.POINT_LEVEL = MNT.LEVEL_ID
+		  left join tb_ins_point_dept pd
+		    on pd.point_no = p.point_no
+		  left join tb_ins_dept d
+		    on d.dept_no = pd.dept_no
+		 inner join tb_ins_line_point tilp
+		    on tilp.point_id = p.point_id
+		 inner join tb_ins_line til
+		    on til.line_id = tilp.line_id
+		 inner join tb_ins_plan_detail tipd
+		    on tipd.inspect_object_id = til.line_id
+		 inner join tb_ins_plan tip
+		    on tip.plan_id = tipd.plan_id
+		 where p.POINT_TYPE > -1
+		   and tip.plan_id =  #{queryParams.PLAN_ID} 
+		 order by POINT_ID desc
+	</select>
+	
+	<!-- 查询编辑的关键点名称是否已存在-->
+    <select id="getEditPointPlanByName" parameterType="map" resultType="map">
+    	select * from tb_ins_plan tip where tip.plan_name = #{plan_name} and tip.plan_id !=  #{plan_id}
+	</select>
+	<!-- 修改线 -->
+	<update id="updatePointLine" parameterType="map" >
+		update tb_ins_line til
+	   set til.line_no      = #{plan_name},
+	       til.line_name    = #{plan_name},
+	       til.modify_time  = sysdate,
+	          <if test="dept_no != null and dept_no != ''">  
+	    	til.dept_no  =#{dept_no},
+		</if>
+	       til.modify_staff = #{staffId}
+	 where til.line_id in (select tipd.inspect_object_id
+                         from TB_INS_PLAN_DETAIL tipd
+                        where tipd.plan_id =#{plan_id})
+	</update>
+	<!-- 删除关键点和线的关系-->
+	<delete id="deletePointLineDetail" parameterType="map" >
+		delete tb_ins_line_point tilp where tilp.line_id in( select tipd.inspect_object_id
+                         from TB_INS_PLAN_DETAIL tipd
+                        where tipd.plan_id =#{plan_id})
+	</delete>
+	<!-- 修改关键点计划-->
+	<update id="updatePointPlan"  parameterType="map" >
+		update tb_ins_plan
+   set PLAN_NO         = #{plan_name},
+       PLAN_NAME       = #{plan_name},
+       PLAN_TYPE       = #{plan_type},
+       PLAN_START_TIME = TO_DATE(#{plan_start_time}, 'yyyy-mm-dd'),
+       PLAN_END_TIME   = TO_DATE(#{plan_end_time}, 'yyyy-mm-dd'),
+       PLAN_CIRCLE     = #{plan_circle},
+       PLAN_FREQUENCY  = #{plan_frequency},
+       MODIFY_TIME     = sysdate,
+       MODIFY_STAFF    = #{staffId},
+       AREA_ID         = #{areaId},
+      <if test="dept_no != null and dept_no != ''">  
+	    	dept_no=#{dept_no},
+		</if>
+       SON_AREA_ID     = #{son_area_id}
+ where PLAN_ID =#{plan_id}
+		
+	</update>
+	
+	<!-- 查询线ID-->
+    <select id="getPointLineId" parameterType="map" resultType="map">
+    	 select tipd.inspect_object_id lineId
+                         from TB_INS_PLAN_DETAIL tipd
+                        where tipd.plan_id =#{plan_id}
+	</select>
+	
+	<select id="ifStaffNocorrect" parameterType="string" resultType="int">
+	select count(1) from outsource_orguser_xj_celection t
+	where t.jyh_account=#{staff_no}
+	</select>
+	
+	<update id="editPlanInspector" parameterType="map">
+	update tb_ins_plan p set p.task_inspector=#{staff_id}, INSPECTOR_TYPE=#{inspector_type} where p.plan_id=#{plan_id}
+	</update>
+	
+	<update id="editTaskInspector" parameterType="map">
+	update tb_ins_task t set t.inspector=#{staff_id} where t.plan_id=#{plan_id}
+	</update>
+</mapper>

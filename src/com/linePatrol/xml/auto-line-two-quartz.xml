@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans default-lazy-init="true">
+   <description>QuartzLocal Cron JobConfiguration</description>   
+   	<bean id="autoLineTwoScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" lazy-init="false">
+      <property name="triggers">
+         <list>   
+         <ref bean="quoteLineTwoCronTrigger"/>
+         <ref bean="matchSiteThreeCronTrigger"/>
+         <ref bean="matchSiteFourCronTrigger"/>
+         </list>
+      </property>
+      <property name="quartzProperties">
+         <props>
+            <prop key="org.quartz.threadPool.threadCount">3</prop>
+         </props>
+      </property>
+   </bean>  
+
+   <bean id="quoteLineTwoCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="quoteLineTwoJobDetail" />
+      <property name="cronExpression" value="0 0 4 * * ?" />
+   </bean>   
+   
+   <bean id="quoteLineTwoJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="quoteLineTwoInspectHelperJob" />
+      <property name="targetMethod" value="execute" />
+      <property name="concurrent" value="false" />
+   </bean> 
+      
+   <bean id="matchSiteThreeCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="matchSiteThreeJobDetail" />
+      <property name="cronExpression" value="0 0/1 6-22 * * ?" />
+   </bean>   
+   
+   <bean id="matchSiteThreeJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="quoteLineTwoInspectHelperJob" />
+      <property name="targetMethod" value="calMatchSitesThree" />
+      <property name="concurrent" value="false" />
+   </bean>  
+   <bean id="matchSiteFourCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail" ref="matchSiteFourJobDetail" />
+      <property name="cronExpression" value="0 0/1 6-22 * * ?" />
+   </bean>   
+   
+   <bean id="matchSiteFourJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+      <property name="targetObject" ref="quoteLineTwoInspectHelperJob" />
+      <property name="targetMethod" value="calMatchSitesFour" />
+      <property name="concurrent" value="false" />
+   </bean>  
+   <bean id="quoteLineTwoInspectHelperJob" class="com.linePatrol.service.impl.InspectHelperJob">  
+   </bean>
+</beans>

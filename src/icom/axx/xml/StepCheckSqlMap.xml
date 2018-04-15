@@ -1,0 +1,1202 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.axx.dao.StepCheckDao">
+ 
+ <select id="getInfoOfRelayCollection" parameterType="map" resultType="map">
+	
+select nvl(model.start_code,' ') || '-' || nvl(model.end_code,' ') collect_name,start_equip_type,end_equip_type,
+       to_char(model.create_date,'yyyy-mm-dd') collect_time,
+       nvl(model.total,0) collect_length
+  from (select test2.*, aste.equip_code end_code,aste.EQUIP_TYPE end_equip_type  
+          from AXX_STEP_TOUR_EQUIP aste
+         inner join (select test1.*, aste.Equip_Code start_code,aste.EQUIP_TYPE start_equip_type 
+                      from AXX_STEP_TOUR_EQUIP aste
+                     inner join (select min(START_EQUIP) start_equip,
+                                       max(END_EQUIP) end_equip,
+                                       sum(DISTANCE) total,
+                                       CREATE_DATE
+                                  from AXX_STEP_TOUR
+                                 where 1=1 
+                                 <if test="cable_id != null and cable_id != ''">
+                                 	  and cable_id = #{cable_id} 
+                                 </if>
+                                  <if test="relay_id != null and relay_id != ''">
+                               		  and relay_id = #{relay_id}
+                                 </if>
+                                 group by CREATE_DATE) test1
+                        on aste.equip_id = test1.start_equip) test2
+            on aste.equip_id = test2.end_equip) model
+ </select>
+ 
+ <select id="getDetailInfoOfRelayCollection" parameterType="map" resultType="map">
+ 	select model.start_equip start_equip,
+       model.end_equip end_equip,
+       model.distance collect_length,
+       model.collect_time,
+       test1.EQUIP_CODE || '-' || test2.equip_code collect_name
+  from (select start_equip,
+               end_equip,
+               distance,
+               to_char(create_date, 'yyyy-mm-dd hh24:mi:ss') collect_time
+          from AXX_STEP_TOUR
+         where 1=1  
+         <if test="cable_id != null and cable_id != ''">
+         	and cable_id = #{cable_id} 
+         </if>
+         <if test="relay_id != null and relay_id != ''">
+         	and relay_id = #{relay_id}
+         </if>
+         <if test="create_date !=null and create_date != ''">
+         	and to_char(create_date, 'yyyy-mm-dd') = #{create_date}
+         </if>
+         ) model
+ inner join AXX_STEP_TOUR_EQUIP test1
+    on model.start_equip = test1.equip_id
+ inner join AXX_STEP_TOUR_EQUIP test2
+    on model.end_equip = test2.equip_id
+ </select>
+ 
+ <insert id="addTourEquip" parameterType="map">
+ 	insert into AXX_STEP_TOUR_EQUIP( equip_id
+ 		<if test="equip_code !=null and equip_code != ''">
+ 			,equip_code 
+ 		</if>
+ 		<if test="equip_address !=null and equip_address != ''">
+ 			,equip_address 
+ 		</if>
+ 		<if test="description != null and description != ''">
+ 			,description 
+ 		</if>
+ 		<if test="longitude !=null and longitude != ''">
+ 			,longitude
+ 		</if>
+ 		<if test="latitude !=null and latitude != ''">
+ 			,latitude
+ 		</if>
+ 		<if test="equip_type !=null and equip_type !=''">
+ 			,equip_type
+ 		</if>
+ 		<if test="owner_name !=null and owner_name != ''">
+ 			,owner_name
+ 		</if>
+ 		<if test="owner_tel !=null and owner_tel !=''">
+ 			,owner_tel
+ 		</if>
+ 		<if test="protecter != null and protecter != ''">
+ 			,protecter
+ 		</if>
+ 		<if test="protect_tel !=null and protect_tel != ''">
+ 			,protect_tel
+ 		</if>
+ 		<if test="creator != null and creator != ''">
+ 			,creator
+ 		</if>
+ 		<if test="create_date != null and create_date != ''">
+ 			,create_date
+ 		</if>
+ 		<if test="updator != null and updator != ''">
+ 			,updator
+ 		</if>
+ 		<if test="update_date != null and update_date !=''">
+ 			,update_date
+ 		</if>
+ 		<if test="is_equip !=null and is_equip !=''">
+ 			,is_equip
+ 		</if>
+ 		<if test="is_lose !=null and is_lose !=''">
+ 			,is_lose
+ 		</if>
+ 		<if test="relation_equip !=null and relation_equip !=''">
+ 			,RELATION_EQUIP
+ 		</if>
+ 		<if test="area_id !=null and area_id !=''">
+ 			,AREA_ID
+ 		</if>
+ 	) values(
+      		seq_STEP_TOUR_EQUIP.nextVal
+       <if test="equip_code !=null and equip_code != ''">
+ 			,#{equip_code} 
+ 		</if>
+ 		<if test="equip_address !=null and equip_address != ''">
+ 			,#{equip_address} 
+ 		</if>
+ 		<if test="description != null and description != ''">
+ 			,#{description} 
+ 		</if>
+ 		<if test="longitude !=null and longitude != ''">
+ 			,#{longitude}
+ 		</if>
+ 		<if test="latitude !=null and latitude != ''">
+ 			,#{latitude}
+ 		</if>
+ 		<if test="equip_type !=null and equip_type !=''">
+ 			,#{equip_type}
+ 		</if>
+ 		<if test="owner_name !=null and owner_name != ''">
+ 			,#{owner_name}
+ 		</if>
+ 		<if test="owner_tel !=null and owner_tel !=''">
+ 			,#{owner_tel}
+ 		</if>
+ 		<if test="protecter != null and protecter != ''">
+ 			,#{protecter}
+ 		</if>
+ 		<if test="protect_tel !=null and protect_tel != ''">
+ 			,#{protect_tel}
+ 		</if>
+ 		<if test="creator != null and creator != ''">
+ 			,#{creator}
+ 		</if>
+ 		<if test="create_date != null and create_date != ''">
+ 			,to_date(#{create_date},'yyyy/mm/dd hh24:mi:ss') 
+ 		</if>
+ 		<if test="updator != null and updator != ''">
+ 			,#{updator}
+ 		</if>
+ 		<if test="update_date != null and update_date !=''">
+ 			,to_date(#{update_date},'yyyy/mm/dd hh24:mi:ss') 
+ 		</if>
+ 		<if test="is_equip !=null and is_equip !=''">
+ 			,#{is_equip}
+ 		</if>
+ 		<if test="is_lose !=null and is_lose !=''">
+ 			,#{is_lose}
+ 		</if>
+ 		<if test="relation_equip !=null and relation_equip !=''">
+ 			,#{relation_equip}
+ 		</if>
+ 		<if test="area_id !=null and area_id !=''">
+ 			,#{area_id}
+ 		</if>
+	)
+ </insert>
+ 
+ <insert id="addLineEquipByEnd" parameterType="map">
+ 	insert into AXX_LINE_EQUIP(
+	equip_id, 
+	cable_id, 
+	relay_id, 
+	"ORDER"
+	) values(seq_STEP_TOUR_EQUIP.currVal,#{cable_id},#{relay_id},
+ 	case 
+     when (select max("ORDER")
+      from AXX_LINE_EQUIP
+     where cable_id = #{cable_id}
+       and relay_id = #{relay_id}) is not null  then (select max("ORDER")
+      from AXX_LINE_EQUIP
+     where cable_id = #{cable_id}
+       and relay_id = #{relay_id}) +1
+     else 1
+  	 end 
+   )
+ </insert>
+ 
+ 
+ <select id="selOrder" parameterType="map" resultType="string">
+	select "ORDER" from AXX_LINE_EQUIP where cable_id=#{cable_id} and relay_id=#{relay_id} and equip_id=#{point}	
+ </select>
+ <update id="updLineEquip" parameterType="map">
+ 	update AXX_LINE_EQUIP set "ORDER"="ORDER"+1 where cable_id=#{cable_id} and relay_id=#{relay_id} and "ORDER">=#{order} 
+ </update>
+ <insert id="addLineEquipByBefore" parameterType="map">
+ 	insert into AXX_LINE_EQUIP(
+	equip_id, 
+	cable_id, 
+	relay_id, 
+	"ORDER"
+	) values(seq_STEP_TOUR_EQUIP.currVal,#{cable_id},#{relay_id},#{order})
+ </insert>
+ 
+ 
+<!--  删除某条中继段上的设施段落 -->
+ <delete id="delStepTour" parameterType="map">
+ 	delete from AXX_STEP_TOUR where cable_id=#{cable_id} and relay_id=#{relay_id} 
+ 	<if test="create_date != null and create_date !=''">
+ 		and to_char(CREATE_DATE,'yyyy-mm-dd')=#{create_date} 
+ 	</if>
+ </delete>
+ 
+<!--  以排序升序的方式获得设施点集合 -->
+ <select id="selEquipList" parameterType="map" resultType="map">
+ 	select aste.equip_id,
+       aste.equip_code,
+       ale."ORDER",
+       to_char(aste.create_date,'yyyy-mm-dd hh24:mi:ss') create_date,
+       aste.longitude,
+       aste.latitude,
+       ale.cable_id,
+       ale.relay_id
+  from AXX_STEP_TOUR_EQUIP aste
+ left join AXX_LINE_EQUIP ale
+    on aste.equip_id = ale.equip_id
+ where 1=1
+ 	<if test="cable_id !=null and cable_id !=''">
+		and ale.cable_id = #{cable_id} 
+ 	</if>
+ 	<if test="relay_id !=null and relay_id !=''">
+	    and ale.relay_id = #{relay_id} 
+ 	</if> 
+ 	<if test="is_equip !=null and is_equip !=''">
+ 		and aste.is_equip = #{is_equip} 
+ 	</if>
+ 	<if test="area_id !=null and area_id !=''">
+ 		and aste.area_id =#{area_id}
+ 	</if>
+ 	<if test="equip_type !=null and equip_type !=''">
+ 		and aste.equip_type = #{equip_type} 
+ 	</if>
+   <if test="create_date !=null and create_date != ''">
+   	and to_char(aste.create_date, 'yyyy-mm-dd') =#{create_date} 
+   </if>
+ order by ale."ORDER"
+ </select>
+ 
+<!--  新增路由设施段落 -->
+ <insert id="addStepTour" parameterType="map">
+ 	insert into AXX_STEP_TOUR(
+ 		FAC_ID
+ 		<if test="cable_id != null and cable_id != ''">
+ 			,CABLE_ID
+ 		</if>
+ 	 	<if test="relay_id !=null and relay_id != ''">
+ 			,RELAY_ID
+ 		</if>
+ 		<if test="start_equip !=null and start_equip != ''">
+ 			,START_EQUIP
+ 		</if>
+ 		<if test="end_equip != null and end_equip != ''">
+ 			,END_EQUIP
+ 		</if>
+ 		<if test="distance !=null and distance != ''">
+ 			,DISTANCE	
+ 		</if>
+ 		<if test="order != null and order != ''">
+ 			,"ORDER"
+ 		</if>
+ 		<if test="create_date !=null and create_date != ''">
+ 			,CREATE_DATE
+ 		</if>
+ 		<if test="creator !=null and creator != ''">
+ 			,CREATOR
+ 		</if>
+ 		<if test="update_date != null and update_date !=''">
+ 			,UPDATE_DATE
+ 		</if>
+ 		<if test="updator != null and updator != ''">
+ 			,UPDATOR
+ 		</if>
+ 		) 
+ 		values(
+ 			seq_AXX_STEP_TOUR.nextVal
+		<if test="cable_id != null and cable_id != ''">
+ 			,#{cable_id}
+ 		</if>
+ 	 	<if test="relay_id !=null and relay_id != ''">
+ 			,#{relay_id}
+ 		</if>
+ 		<if test="start_equip !=null and start_equip != ''">
+ 			,#{start_equip}
+ 		</if>
+ 		<if test="end_equip != null and end_equip != ''">
+ 			,#{end_equip}
+ 		</if>
+ 		<if test="distance !=null and distance != ''">
+ 			,#{distance,jdbcType=INTEGER}	
+ 		</if>
+ 		<if test="order != null and order != ''">
+ 			,#{order}
+ 		</if>
+ 		<if test="create_date !=null and create_date != ''">
+ 			,to_date(#{create_date},'yyyy/mm/dd hh24:mi:ss') 
+ 		</if>
+ 		<if test="creator !=null and creator != ''">
+ 			,#{creator}
+ 		</if>
+ 		<if test="update_date != null and update_date !=''">
+ 			,to_date(#{update_date},'yyyy/mm/dd hh24:mi:ss') 
+ 		</if>
+ 		<if test="updator != null and updator != ''">
+ 			,#{updator}
+ 		</if>
+ 		)
+ </insert>
+ 
+ 
+<!--  获得当前设施点id -->
+ <select id="getCurrentEquipId" resultType="string">
+ 	select max(equip_id) equip_id from AXX_STEP_TOUR_EQUIP 
+ </select>
+ 
+<!--  查询结束点设施 -->
+ <select id="selEndEquipId" parameterType="map" resultType="string">
+	select end_equip from AXX_STEP_TOUR where START_EQUIP=#{start_euqip} and cable_id=#{cable_id} and relay_id = #{relay_id}	 	
+ </select>
+ 
+<!--  页面设施查询数据源 -->
+ <select id="selEquipListForWEB" parameterType="util.page.Query" resultType="map">
+select tt.cable_id,tt.relay_id,kk.c distance,s.name,nvl(a1.equip_code, a1.equip_type) start_equip,nvl(a2.equip_code, a2.equip_type) end_equip,
+   atc.cable_name,atr.relay_name  from (
+   select e.cable_id,e.relay_id,min(e."ORDER") a,max(e."ORDER") b,te.area_id from AXX_LINE_EQUIP e
+   join axx_step_tour_equip te on e.relay_id = te.relay_id  and e.equip_id = te.equip_id
+   <if test="queryParams.city_id != null and queryParams.city_id != ''">
+  	and te.area_id=#{queryParams.city_id} 
+  </if>
+   group by  e.cable_id,e.relay_id,te.area_id　) tt
+  join AXX_LINE_EQUIP tt1 on tt.cable_id = tt1.cable_id　and tt.relay_id = tt1.relay_id　and tt.a = tt1."ORDER" 
+  join axx_step_tour_equip a1 on a1.relay_id=tt1.relay_id and tt1.equip_id = a1.equip_id　 and a1.is_equip = 1  and a1.area_id = tt.area_id
+  join AXX_LINE_EQUIP tt2 on tt.cable_id = tt2.cable_id　and tt.relay_id = tt2.relay_id and tt.b = tt2."ORDER"
+  join axx_step_tour_equip a2 on a2.relay_id=tt2.relay_id and tt2.equip_id = a2.equip_id　and a2.is_equip = 1  and a2.area_id = tt.area_id
+  join area s on a1.area_id = s.area_id
+  join (select ast.cable_id, ast.relay_id, sum(ast.distance) c　from axx_step_tour ast
+            group by ast.cable_id, ast.relay_id) kk on tt.cable_id = kk.cable_id and tt.relay_id =　kk.relay_id
+  join AXX_T_CABLE atc on tt.cable_id = atc.cable_id
+  join AXX_T_RELAY atr on tt.relay_id = atr.relay_id
+ where 1 = 1
+ <if test="queryParams.cable_id !=null and queryParams.cable_id != ''">
+ 		and tt.cable_id=#{queryParams.cable_id}
+ 	</if>
+  <if test="queryParams.relay_id !=null and queryParams.relay_id != ''">
+    and tt.relay_id=#{queryParams.relay_id}
+  </if>
+  order by kk.relay_id
+ </select>
+ 
+ <select id="getStepEquip" parameterType="map" resultType="map">
+	SELECT ste.area_id,
+	       a.name area_name,
+	       c.cable_id,
+	       c.cable_name,
+	       r.relay_id,
+	       r.relay_name,
+	       ste.equip_id,
+	       ste.equip_code,
+	       le."ORDER",
+	       ste.equip_address,
+	       ste.longitude,
+	       ste.latitude,
+	       ste.is_part,
+	       ste.is_del
+	  FROM AXX_T_CABLE c
+	  left join AXX_T_RELAY r on c.cable_id = r.cable_id
+	  left join axx_step_tour_equip ste on ste.relay_id = r.relay_id
+	  left join area a on ste.area_id = a.area_id
+	  left join AXX_LINE_EQUIP le on ste.equip_id=le.equip_id
+	 where ste.area_id = #{area_id}
+	   and c.cable_id = #{cable_id}
+	   and r.relay_id = #{relay_id}
+	 order by ste.area_id, c.cable_id, r.relay_id,le."ORDER",ste.equip_id
+ </select>
+ 
+ <select id="selCollectPartNearUser" parameterType="map" resultType="map">
+ 	select ast.start_equip,
+       ast.end_equip,
+       nvl(aste1.equip_code,' ') start_equip_code,
+       nvl(aste2.equip_code,' ') end_equip_code,
+       nvl(ast.distance,0) distance,
+       to_char(aste2.create_date,'yyyy-mm-dd') create_date 
+  from AXX_STEP_TOUR ast
+ inner join AXX_STEP_TOUR_EQUIP aste1
+    on ast.start_equip = aste1.equip_id
+ inner join axx_step_tour_equip aste2
+    on ast.end_equip = aste2.equip_id
+ where 1 = 1
+ <if test="EQUIP_ID !=null and EQUIP_ID !=''">
+ 	and ast.start_equip = #{EQUIP_ID}
+ </if>
+ <if test="cable_id != null and cable_id !=''">
+ 	and ast.cable_id=#{cable_id}
+ </if>  
+ <if test="relay_id != null and relay_id !=''">
+    and ast.relay_id=#{relay_id} 
+ </if>
+ </select>
+  
+ <!-- 	查询所有路由设施点 -->
+	<select id="selEquipPartByTaskId" parameterType="map" resultType="map">
+		select 
+		aste.EQUIP_TYPE,
+		aste.OWNER_TEL,
+		aste.UPDATOR,
+		aste.DESCRIPTION,
+		aste.EQUIP_CODE,
+		aste.CREATOR,
+		to_char(aste.CREATE_DATE,'yyyy-mm-dd hh24:mi:ss') CREATE_DATE, 
+		aste.EQUIP_ADDRESS,
+		aste.EQUIP_ID,
+		aste.LATITUDE,
+		aste.PROTECTER,
+		aste.OWNER_NAME,
+		aste.PROTECT_TEL,
+		aste.LONGITUDE,
+		aste.IS_LOSE,
+		ale.cable_id, ale.relay_id  ,atc.cable_name,atr.relay_name
+  from AXX_STEP_TOUR_EQUIP aste
+ inner join AXX_LINE_EQUIP ale
+    on aste.equip_id = ale.equip_id
+ inner join axx_t_cable atc
+ 	on ale.cable_id=atc.cable_id
+ inner join axx_t_relay atr
+ 	on ale.relay_id=atr.relay_id
+ where aste.is_equip = 1 
+ <if test="area_id !=null and area_id !=''">
+ 	and aste.area_id=#{area_id} 
+ </if>
+ <if test="cable_id !=null and cable_id !=''">
+ 	and ale.cable_id=#{cable_id} 
+ </if>
+ <if test="relay_id !=null and relay_id !=''">
+ 	and ale.relay_id=#{relay_id} 
+ </if>
+ <if test="CABLE_ID !=null and CABLE_ID !=''">
+ 	and ale.cable_id=#{CABLE_ID} 
+ </if>
+ <if test="RELAY_ID !=null and RELAY_ID !=''">
+ 	and ale.relay_id=#{RELAY_ID} 
+ </if>
+ <if test="equip_id !=null and equip_id !=''">
+ 	and aste.equip_id=#{equip_id} 
+ </if>
+    order by ale."ORDER"
+	</select>
+<!-- 	通过起始点找到路由段落中的结束点 -->
+	<select id="selEndByStart" parameterType="string" resultType="string">
+		select end_equip from AXX_STEP_TOUR where start_equip=#{_parameter}
+	</select>
+    <select id="selEquipInfoByTask" parameterType="map" resultType="map">
+    	select aste.equip_id,aste.equip_code,aste.equip_address,aste.description,aste.longitude,aste.latitude,aste.equip_type,aste.owner_name,aste.owner_tel,
+    	aste.protecter,aste.protect_tel,aste.creator,to_char(aste.create_date,'yyyy-mm-dd') create_date,aste.updator,to_char(aste.update_date,'yyyy-mm-dd') update_date,
+    	#{task_id}  task_id 
+    	 from AXX_STEP_TOUR_EQUIP aste
+    	 inner join AXX_LINE_EQUIP ale on aste.EQUIP_ID = ale.EQUIP_ID 
+    	  where aste.EQUIP_ID in (${equipList})
+   	  order by ale."ORDER"
+    </select>
+    
+    
+    <select id="selAllMainEquip" parameterType="map" resultType="map">
+		select aste.equip_id, aste.longitude, aste.latitude
+  from AXX_STEP_TOUR_EQUIP aste
+ inner join AXX_LINE_EQUIP ale
+    on aste.equip_id = ale.equip_id
+ where aste.is_equip = 1
+   and ale.cable_id = #{cable_id}
+   and ale.relay_id = #{relay_id}
+    </select>
+    
+    
+    <insert id="collectInfoOfMinorRelay" parameterType="map">
+ 	insert into AXX_STEP_TOUR_EQUIP( equip_id
+ 		<if test="equip_code !=null and equip_code != ''">
+ 			,equip_code 
+ 		</if>
+ 		<if test="equip_address !=null and equip_address != ''">
+ 			,equip_address 
+ 		</if>
+ 		<if test="description != null and description != ''">
+ 			,description 
+ 		</if>
+ 		<if test="longitude !=null and longitude != ''">
+ 			,longitude
+ 		</if>
+ 		<if test="latitude !=null and latitude != ''">
+ 			,latitude
+ 		</if>
+ 		<if test="equip_type !=null and equip_type !=''">
+ 			,equip_type
+ 		</if>
+ 		<if test="owner_name !=null and owner_name != ''">
+ 			,owner_name
+ 		</if>
+ 		<if test="owner_tel !=null and owner_tel !=''">
+ 			,owner_tel
+ 		</if>
+ 		<if test="protecter != null and protecter != ''">
+ 			,protecter
+ 		</if>
+ 		<if test="protect_tel !=null and protect_tel != ''">
+ 			,protect_tel
+ 		</if>
+ 		<if test="creator != null and creator != ''">
+ 			,creator
+ 		</if>
+ 		<if test="create_date != null and create_date != ''">
+ 			,create_date
+ 		</if>
+ 		<if test="updator != null and updator != ''">
+ 			,updator
+ 		</if>
+ 		<if test="update_date != null and update_date !=''">
+ 			,update_date
+ 		</if>
+ 		<if test="is_lose !=null and is_lose !=''">
+ 			,is_lose 
+ 		</if>
+ 			,IS_EQUIP 
+ 			,RELATION_EQUIP 
+ 		<if test="area_id !=null and area_id !=''">
+ 		 	,area_id
+ 		</if>
+ 	) values(
+      		seq_STEP_TOUR_EQUIP.nextVal
+       <if test="equip_code !=null and equip_code != ''">
+ 			,#{equip_code} 
+ 		</if>
+ 		<if test="equip_address !=null and equip_address != ''">
+ 			,#{equip_address} 
+ 		</if>
+ 		<if test="description != null and description != ''">
+ 			,#{description} 
+ 		</if>
+ 		<if test="longitude !=null and longitude != ''">
+ 			,#{longitude}
+ 		</if>
+ 		<if test="latitude !=null and latitude != ''">
+ 			,#{latitude}
+ 		</if>
+ 		<if test="equip_type !=null and equip_type !=''">
+ 			,#{equip_type}
+ 		</if>
+ 		<if test="owner_name !=null and owner_name != ''">
+ 			,#{owner_name}
+ 		</if>
+ 		<if test="owner_tel !=null and owner_tel !=''">
+ 			,#{owner_tel}
+ 		</if>
+ 		<if test="protecter != null and protecter != ''">
+ 			,#{protecter}
+ 		</if>
+ 		<if test="protect_tel !=null and protect_tel != ''">
+ 			,#{protect_tel}
+ 		</if>
+ 		<if test="creator != null and creator != ''">
+ 			,#{creator}
+ 		</if>
+ 		<if test="create_date != null and create_date != ''">
+ 			,to_date(#{create_date},'yyyy/mm/dd hh24:mi:ss') 
+ 		</if>
+ 		<if test="updator != null and updator != ''">
+ 			,#{updator}
+ 		</if>
+ 		<if test="update_date != null and update_date !=''">
+ 			,to_date(#{update_date},'yyyy/mm/dd hh24:mi:ss') 
+ 		</if>
+ 		<if test="is_lose !=null and is_lose !=''">
+ 			,#{is_lose}  
+ 		</if>
+ 			,0
+ 			,#{equip_id} 
+ 		<if test="area_id !=null and area_id !=''">
+ 			,#{area_id}
+ 		</if>
+	)
+ </insert>
+ 
+<!--  查询该路有点关联的所有非路由点 -->
+ <select id="selMinorEquips" parameterType="map" resultType="map">
+ 	select 
+   		aste.EQUIP_TYPE,
+		aste.OWNER_TEL,
+		aste.UPDATOR,
+		aste.DESCRIPTION,
+		aste.EQUIP_CODE,
+		aste.CREATOR,
+		to_char(aste.CREATE_DATE,'yyyy-mm-dd hh24:mi:ss') CREATE_DATE,
+		aste.EQUIP_ADDRESS,
+		aste.EQUIP_ID,
+		aste.LATITUDE,
+		aste.PROTECTER,
+		aste.OWNER_NAME,
+		aste.PROTECT_TEL,
+		aste.LONGITUDE,
+		aste.IS_LOSE
+    from AXX_STEP_TOUR_EQUIP aste where aste.relation_equip=to_char(#{EQUIP_ID}) 
+ </select>
+ 
+ <insert id="saveEquipReviewsInfo" parameterType="map">
+	insert into AXX_EQUIP_CHECK(
+		CHECK_ID,
+		EQUIP_ID,
+		EQUIP_TYPE,
+		CHECK_STAFF_ID,
+		CHECK_TIME,
+		STATUS
+		<if test="check_field1 !=null and check_field1 !=''">
+			,CHECK_FIELD1 
+		</if>
+		<if test="check_field2 !=null and check_field2 !=''">
+			,CHECK_FIELD2 
+		</if>
+		<if test="check_field3 !=null and check_field3 !=''">
+			,CHECK_FIELD3 
+		</if>
+		<if test="check_field4 !=null and check_field4 !=''">
+			,CHECK_FIELD4 
+		</if>
+		<if test="check_field5 !=null and check_field5 !=''">
+			,CHECK_FIELD5 
+		</if>
+		<if test="check_field6 !=null and check_field6 !=''">
+			,CHECK_FIELD6 
+		</if>
+		<if test="check_field7 !=null and check_field7 !=''">
+			,CHECK_FIELD7 
+		</if>
+		<if test="check_field8 !=null and check_field8 !=''">
+			,CHECK_FIELD8 
+		</if>
+		<if test="other_trouble !=null and other_trouble !=''">
+			,OTHER_TROUBLE
+		</if>
+	) values(
+		seq_AXX_EQUIP_CHECK_id.nextval,
+		#{equip_id},
+		#{equip_type},
+		#{check_staff_id},
+		to_date(#{check_time},'yyyy-mm-dd hh24:mi:ss'),
+		#{status}
+		<if test="check_field1 !=null and check_field1 !=''">
+			,#{check_field1}
+		</if>
+		<if test="check_field2 !=null and check_field2 !=''">
+			,#{check_field2}
+		</if>
+		<if test="check_field3 !=null and check_field3 !=''">
+			,#{check_field3}
+		</if>
+		<if test="check_field4 !=null and check_field4 !=''">
+			,#{check_field4}
+		</if>
+		<if test="check_field5 !=null and check_field5 !=''">
+			,#{check_field5}
+		</if>
+		<if test="check_field6 !=null and check_field6 !=''">
+			,#{check_field6}
+		</if>
+		<if test="check_field7 !=null and check_field7 !=''">
+			,#{check_field7}
+		</if>
+		<if test="check_field8 !=null and check_field8 !=''">
+			,#{check_field8}
+		</if>
+		<if test="other_trouble !=null and other_trouble !=''">
+			,#{other_trouble}
+		</if>
+	)
+ </insert>
+ 
+ <select id="recordOfEquipReviews" parameterType="map" resultType="map">
+ 	select aec.EQUIP_ID,
+       aec.EQUIP_TYPE,
+       aec.CHECK_STAFF_ID,
+       to_char(aec.CHECK_TIME, 'yyyy-mm-dd hh24:mi:ss') CHECK_TIME,
+       aec.STATUS,
+       aec.CHECK_FIELD1,
+       aec.CHECK_FIELD2,
+       aec.CHECK_FIELD3,
+       aec.CHECK_FIELD4,
+       aec.CHECK_FIELD5,
+       aec.CHECK_FIELD6,
+       aec.CHECK_FIELD7,
+       aec.CHECK_FIELD8,
+       aec.OTHER_TROUBLE,
+       tbs.staff_name,
+       tbs.staff_id
+  from AXX_EQUIP_CHECK aec
+ inner join tb_base_staff tbs
+    on aec.Check_Staff_Id = tbs.staff_id
+ 	where equip_id = #{equip_id}
+ 	ORDER BY CHECK_TIME DESC
+ </select>
+ 
+ <select id="selEquipImgs" parameterType="map" resultType="map">
+	select file_id,
+       staff_id,
+       site_id,
+       photo_path,
+       micro_photo,
+       photo_type,
+       to_char(upload_time, 'yyyy-mm-dd hh24:mi:ss') upload_time,
+       status,
+       comments
+  from AXX_T_PHOTO  
+ where Site_Id = #{equip_id}
+   and PHOTO_TYPE = #{photo_type} 
+   <if test="query_time !=null and query_time !=''">
+   		and trunc(UPLOAD_TIME)=to_date(#{query_time},'yyyy-mm-dd')  
+   </if>
+   ORDER BY UPLOAD_TIME DESC 
+ </select>
+ 
+ <select id="selParamForTaskId" parameterType="map" resultType="map">
+	 	select aste.equip_id, aste.area_id, ale.cable_id, ale.relay_id
+  from AXX_STEP_TOUR_EQUIP aste
+ left join AXX_LINE_EQUIP ale
+    on aste.equip_id = ale.equip_id
+ where aste.equip_id = #{equip_id}
+ </select>
+ 
+ <update id="updStepStatus" parameterType="map">
+ 	update AXX_STEP_TASK_EQUIP
+   set STATUS = 1, COMPLETE_TIME = sysdate
+ where TASK_ID = (select aste.task_id
+                    from AXX_STEP_TASK ast inner join AXX_STEP_TASK_EQUIP aste on ast.TASK_ID=aste.TASK_ID 
+                   where IS_DEL != 1
+                     and cable_id = #{CABLE_ID}
+                     and relay_id = #{RELAY_ID}
+                     and (to_date(#{check_time}, 'yyyy-mm-dd hh24:mi:ss') between
+                         trunc(START_TIME) and trunc(end_time))
+                     and area_id = #{AREA_ID}
+                     and aste.equip_id = #{EQUIP_ID})
+                     and equip_id = #{EQUIP_ID}
+ </update>
+ 
+ <select id="selStepStatus" parameterType="map" resultType="map"> 
+ 	select *
+  from AXX_STEP_TASK_EQUIP
+ where TASK_ID = (select aste.task_id
+                    from AXX_STEP_TASK ast inner join AXX_STEP_TASK_EQUIP aste on ast.TASK_ID=aste.TASK_ID 
+                   where IS_DEL != 1
+                     and (to_date(#{check_time}, 'yyyy-mm-dd') between
+                         trunc(START_TIME) and trunc(end_time))
+                     and area_id = #{AREA_ID}
+                     and aste.equip_id = #{EQUIP_ID})
+                     and equip_id = #{EQUIP_ID}
+ </select>
+ 
+ <select id="selEquipCount" parameterType="map" resultType="int">
+ 	 <!-- 之前万鹏写的，由于步巡设施点表做了修改，所以相应调整sql语句
+ 	 select count(aste_is_equip.equip_id) allCount
+  from AXX_STEP_TOUR_EQUIP aste_is_equip inner join AXX_LINE_EQUIP ale on aste_is_equip.EQUIP_ID=ale.EQUIP_ID
+ where aste_is_equip.IS_EQUIP = 1
+   and aste_is_equip.IS_DEL=0    
+   and ale.RELAY_ID=#{relay_id}
+   and aste_is_equip.area_id = #{area_id}
+ group by aste_is_equip.area_id -->
+ select count(aste_is_equip.equip_id) allCount
+  from AXX_STEP_TOUR_EQUIP aste_is_equip inner join AXX_LINE_EQUIP ale on aste_is_equip.EQUIP_ID=ale.EQUIP_ID
+ where aste_is_equip.IS_EQUIP = 1
+   and aste_is_equip.IS_DEL=0    
+   and aste_is_equip.RELAY_ID=#{relay_id}
+   and aste_is_equip.area_id = #{area_id}
+ group by aste_is_equip.area_id
+ </select>
+ 
+ <select id="is_equip" parameterType="map" resultType="map">
+	 <if test="page !=null and page !=''">
+	 select * from (
+       select rownum rn, model01.*
+from (
+	 </if>
+     select aste_is_equip.equip_id,aste_is_equip.equip_code,aste_is_equip.longitude,aste_is_equip.latitude,
+     aste_is_equip.equip_type,ale."ORDER",aste_is_equip.cable_id,aste_is_equip.relay_id 
+  from AXX_STEP_TOUR_EQUIP aste_is_equip inner join AXX_LINE_EQUIP ale on aste_is_equip.EQUIP_ID=ale.EQUIP_ID
+ where aste_is_equip.IS_EQUIP = 1
+   and aste_is_equip.IS_DEL=0   
+   <if test="relay_id != null and relay_id != ''"> 
+   and aste_is_equip.RELAY_ID=#{relay_id}
+   </if> 
+   <if test="area_id != null and area_id != ''">
+   and aste_is_equip.area_id = #{area_id}
+    </if>
+ order by ale."ORDER" asc
+ <if test="page !=null and page !=''">
+) model01 where rownum &lt;=(#{page}*#{pageSize})
+) where rn>((#{page}-1)*#{pageSize})
+ </if>
+ </select>
+ 
+ <select id="no_equip" parameterType="map" resultType="map">
+ 	<!--万鹏以前写的。 孙敏2016/3/28更改，因为步巡设施表中加了光缆id和段落id来解决查询时候会出现别的段落上面
+ 		的点。
+		 	select aste_is_equip.equip_id,aste_is_equip.longitude,
+		 	aste_is_equip.latitude,aste_is_equip.equip_type,#{cable_id} CABLE_ID,#{relay_id} RELAY_ID 
+		  from AXX_STEP_TOUR_EQUIP aste_is_equip 
+		 where aste_is_equip.IS_EQUIP = 1
+		   and aste_is_equip.IS_DEL=1 
+		   and aste_is_equip.area_id = #{area_id}   -->
+ 	select aste_is_equip.equip_id,aste_is_equip.equip_code,aste_is_equip.longitude,aste_is_equip.latitude,
+ 	aste_is_equip.equip_type,aste_is_equip.CABLE_ID,aste_is_equip.RELAY_ID 
+    from AXX_STEP_TOUR_EQUIP aste_is_equip 
+    where aste_is_equip.IS_EQUIP = 1
+    and aste_is_equip.IS_DEL=1  
+    <if test="area_id != null and area_id != ''">
+    and aste_is_equip.area_id = #{area_id} 
+    </if>
+    <if test="cable_id != null and cable_id != ''">
+   	  and aste_is_equip.cable_id=#{cable_id}
+    </if>
+    <if test="relay_id != null and relay_id != ''">
+  	  and aste_is_equip.RELAY_ID=#{relay_id}
+    </if> 
+ </select>
+ 
+<!--  修改设施点的删除状态  删除 -->
+ <update id="updEqiupStuOfDel" parameterType="int">
+	 update AXX_STEP_TOUR_EQUIP aste
+   set aste.IS_DEL = 1
+ where aste.equip_id=#{_parameter}
+ </update>
+ 
+<!--  修改设施点的删除状态 恢复 --> 
+<update id="updEqiupStuOfAdd" parameterType="int">
+	 update AXX_STEP_TOUR_EQUIP aste
+   set aste.IS_DEL = 0
+ where aste.equip_id=#{_parameter}
+ </update>
+ 
+ <update id="updIsEquip" parameterType="int">
+ 	update AXX_STEP_TOUR_EQUIP aste
+      set aste.IS_EQUIP=1,aste.IS_DEL = 0,aste.relation_equip = ''
+ where aste.equip_id=#{_parameter}
+ </update>
+ 
+<!--  删除设施排序关系 -->
+ <delete id="delLineEquip" parameterType="map">
+ 	            delete from AXX_LINE_EQUIP a
+  where EXISTS (select *
+           from AXX_STEP_TOUR_EQUIP b
+          inner join AXX_LINE_EQUIP c
+             on b.EQUIP_ID = c.EQUIP_ID
+          where b.AREA_ID = #{area_id}
+            and b.CABLE_ID = #{cable_id}
+            and b.RELAY_ID = #{relay_id}
+            and a.EQUIP_ID = b.EQUIP_ID)
+ </delete>
+ 
+<!--  删除路由段 -->
+ <delete id="delStepTourByEquipId" parameterType="map">
+ 	         delete from AXX_STEP_TOUR a
+        where EXISTS (select *
+                 from AXX_STEP_TOUR_EQUIP b
+                inner join AXX_STEP_TOUR c
+                   on b.EQUIP_ID = c.START_EQUIP
+                where b.AREA_ID = #{area_id}
+                  and b.CABLE_ID = #{cable_id}
+                  and b.RELAY_ID = #{relay_id}
+                  and a.START_EQUIP = b.EQUIP_ID)
+
+ </delete>
+ 
+ <insert id="changeLineEquip" parameterType="map">
+	insert into AXX_LINE_EQUIP(
+		equip_id,
+		cable_id,
+		relay_id,
+		"ORDER"
+	) values (
+		#{EQUIP_ID},
+		#{CABLE_ID},
+		#{RELAY_ID},
+		#{ORDER}
+	)
+ </insert>
+ 
+ <insert id="changeStepTour" parameterType="map">
+ 	insert into AXX_STEP_TOUR(
+ 		FAC_ID,
+ 		CABLE_ID,
+ 		RELAY_ID,
+ 		START_EQUIP,
+ 		END_EQUIP,
+ 		DISTANCE,
+ 		"ORDER",
+ 		CREATE_DATE,
+ 		CREATOR,
+ 		UPDATE_DATE,
+ 		UPDATOR
+ 	) values(
+ 		SEQ_AXX_STEP_TOUR.NEXTVAL,
+ 		#{cable_id},
+ 		#{relay_id},
+ 		#{start_equip},
+ 		#{end_equip},
+ 		#{distance},
+ 		#{order},
+ 		to_date(#{create_date},'yyyy-mm-dd hh24:mi:ss'),
+ 		#{creator},
+ 		to_date(#{update_date},'yyyy-mm-dd hh24:mi:ss'),
+ 		#{updator}
+ 	)
+ </insert>
+ 
+ <select id="selRelationEquips" parameterType="map" resultType="map">
+ 	<!-- 之前万鹏写的
+ 	select aste01.equip_id,aste01.equip_code,aste01.DESCRIPTION,aste01.longitude,aste01.latitude,aste01.equip_type,aste01.is_equip,aste01.relation_equip 
+  ,aste01.area_id,ale01."ORDER" ,ale01.cable_id,ale01.relay_id  
+  from AXX_STEP_TOUR_EQUIP aste01
+ inner join AXX_LINE_EQUIP ale01
+    on aste01.EQUIP_ID = ale01.EQUIP_ID
+ where aste01.EQUIP_ID = #{equip_id}
+   and aste01.IS_EQUIP = 1
+   and aste01.IS_DEL = 0
+   and ale01.CABLE_ID = #{cable_id}
+   and ale01.RELAY_ID = #{relay_id}
+union all
+select aste02.equip_id,aste02.equip_code,aste02.DESCRIPTION,aste02.longitude,aste02.latitude,aste02.equip_type,aste02.is_equip,aste02.relation_equip 
+  ,aste02.area_id,ale02."ORDER" ,ale02.cable_id,ale02.relay_id  
+  from AXX_STEP_TOUR_EQUIP aste02
+  left join AXX_LINE_EQUIP ale02
+    on aste02.EQUIP_ID = ale02.EQUIP_ID
+ where aste02.RELATION_EQUIP = #{equip_id}
+   and aste02.IS_EQUIP = 0
+   and aste02.IS_DEL = 0 -->
+   select aste01.equip_id,aste01.equip_code,aste01.DESCRIPTION,aste01.longitude,aste01.latitude,
+   aste01.equip_type,aste01.is_equip,aste01.relation_equip 
+  ,aste01.area_id,ale01."ORDER" ,aste01.cable_id,aste01.relay_id  
+  from AXX_STEP_TOUR_EQUIP aste01
+ inner join AXX_LINE_EQUIP ale01
+    on aste01.EQUIP_ID = ale01.EQUIP_ID
+ where aste01.EQUIP_ID = #{equip_id}
+   and aste01.IS_EQUIP = 1  
+   and aste01.IS_DEL = 0   
+   and aste01.CABLE_ID = #{cable_id}
+   and aste01.RELAY_ID = #{relay_id}
+   and aste01.AREA_ID=#{area_id}
+union all
+select aste02.equip_id,aste02.equip_code,aste02.DESCRIPTION,aste02.longitude,
+aste02.latitude,aste02.equip_type,aste02.is_equip,aste02.relation_equip 
+  ,aste02.area_id,ale02."ORDER" ,aste02.cable_id,aste02.relay_id  
+  from AXX_STEP_TOUR_EQUIP aste02
+  left join AXX_LINE_EQUIP ale02
+    on aste02.EQUIP_ID = ale02.EQUIP_ID
+ where aste02.RELATION_EQUIP = to_char(#{equip_id})
+   and aste02.IS_EQUIP = 0   
+   and aste02.IS_DEL = 1
+   and aste02.AREA_ID=#{area_id}
+ </select>
+ 
+ <update id="initEquipStatus" parameterType="map">
+ 	update AXX_STEP_TOUR_EQUIP a
+   set a.IS_EQUIP = 1
+ where a.IS_DEL = 0
+   and a.IS_LOSE=0 
+   and a.area_id = #{area_id} 
+   and EXISTS (select *
+          from AXX_LINE_EQUIP b
+         where a.EQUIP_ID = b.EQUIP_ID
+           and b.CABLE_ID = #{cable_id}
+           and b.RELAY_ID = #{relay_id}) 
+ </update>
+ 
+ <update id="updRelationStatus" parameterType="map">
+ 	update AXX_STEP_TOUR_EQUIP a
+   set a.RELATION_EQUIP = #{relation_id} , a.IS_EQUIP = 0, a.IS_DEL = 1
+ where a.EQUIP_ID = #{equip_id}
+ </update>
+ 
+ <select id="selByEquipId" parameterType="map" resultType="map">
+	select * from  AXX_STEP_TOUR_EQUIP a where 1=1
+	<if test="_parameter !=null and _parameter !=''">
+		and a.equip_id = #{_parameter} 
+	</if>
+ </select>
+ 
+ 
+ <!-- 展示所有路由设施点（包括非路由，路由，缺失路由点；不包含非路由设施点） -->
+ <select id="stepAllEquipPart" parameterType="map" resultType="map">
+	select a.equip_id, a.longitude, a.latitude
+  from axx_step_tour_equip a inner join AXX_LINE_EQUIP b on a.equip_id = b.equip_id 
+ where a.area_id = #{area_id,jdbcType=VARCHAR} and a.is_equip=1 
+   and a.relation_equip is null
+   and b.cable_id = #{cable_id}
+   and b.relay_id = #{relay_id} 
+   order by b."ORDER" 
+ </select>
+
+ <select id="getEquip" parameterType="String" resultType="map">
+	SELECT e.*,r.relay_name,dp.equip_type_name FROM axx_step_tour_equip e
+	 LEFT JOIN(SELECT DISTINCT d.equip_type_id,d.equip_type_name FROM AXX_EQUIP_DANGER_PARAM d) dp ON e.equip_type = dp.equip_type_id
+	 LEFT JOIN axx_t_relay r ON r.relay_id=e.relay_id
+	 WHERE e.equip_id=#{equip_id}
+ </select>
+ 
+ <select id="getCheckList" parameterType="String" resultType="map">
+	SELECT c.*,s.staff_name FROM axx_equip_check c LEFT JOIN tb_base_staff s
+ ON c.check_staff_id=s.staff_id WHERE c.equip_id =#{equip_id} ORDER BY c.check_time DESC
+	</select>
+ 
+  <select id="getPhotoList" parameterType="String" resultType="map">
+	SELECT * FROM axx_t_photo p WHERE p.SITE_ID = #{equip_id} and p.photo_type in (8,9,12) ORDER BY p.upload_time DESC 
+	</select>
+ 
+ 	<update id="update" parameterType="map">
+ 		UPDATE axx_step_tour_equip e
+		SET e.equip_code = #{equip_code},
+		<if test="depth != null and depth != ''">  
+		e.depth = #{depth},
+		</if>
+		e.equip_address= #{equip_address},
+		e.owner_name= #{owner_name},
+		e.owner_tel= #{owner_tel},
+		e.protecter =  #{protecter},
+		e.protect_tel =  #{protect_tel}
+		WHERE e.equip_id =  #{equip_id}
+	</update>
+ 
+ 	<!-- 	通过检查id找到隐患描述拼接成的字符串 -->
+	<select id="selTroubleByCheckId" parameterType="string" resultType="string">
+	SELECT to_char(wm_concat(danger_name)) FROM (
+	 select * from(
+	 select 
+	      c.equip_type,
+	      case 
+	        when c.check_field1  = 1 then to_number(replace('check_field1','check_field','')) 
+	        else 0
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	 union
+	 select 
+	     c.equip_type,
+	      case 
+	        when c.check_field2  = 1 then to_number(replace('check_field2','check_field','')) 
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	  union
+	 select 
+	      c.equip_type,
+	      case 
+	        when c.check_field3  = 1 then to_number(replace('check_field3','check_field','')) 
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	 union
+	 select 
+	      c.equip_type,
+	      case 
+	        when c.check_field4  = 1 then to_number(replace('check_field4','check_field','')) 
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	 union
+	 select 
+	      c.equip_type,
+	      case 
+	        when c.check_field5  = 1 then to_number(replace('check_field5','check_field','')) 
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	 union
+	 select 
+	      c.equip_type,
+	      case 
+	        when c.check_field6  = 1 then to_number(replace('check_field6','check_field','')) 
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	 union
+	 select 
+	      c.equip_type,
+	      case 
+	        when c.check_field7  = 1 then to_number(replace('check_field7','check_field','')) 
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	 union
+	 select 
+	      c.equip_type,
+	      case 
+	        when c.check_field8  = 1 then to_number(replace('check_field8','check_field','')) 
+	     end field_id
+	 from axx_equip_check c
+	 where c.check_id = #{check_id}
+	 ) t 
+	 join AXX_EQUIP_DANGER_PARAM p
+	 on t.equip_type=p.equip_type_id
+	 and to_number(t.field_id)=p.check_field
+	 where t.field_id is not null)
+	</select>
+ 	
+ 	<select id="selNoRelationPoint" parameterType="String" resultType="map">
+ 		select equip_id,equip_code,equip_address,description,longitude,latitude,
+ 		equip_type,area_id from axx_step_tour_equip  where cable_id is null and area_id =#{areaId} 
+ 	</select>
+ 	
+ 	<select id="noRouthEquip" parameterType="map" resultType="map">
+ 	  select e.*, p.equip_type_name from axx_step_tour_equip e,
+       (select distinct equip_type_id, equip_type_name
+          from AXX_EQUIP_DANGER_PARAM) p
+ 	   where e.equip_type = p.equip_type_id
+	    and cable_id = #{cable_id}
+		and relay_id = #{relay_id}
+		and area_id = #{area_id}
+		and is_equip = 0
+		 order by equip_id 
+ 	</select>
+ 	
+ 	<select id="getUnfinishStepSitesByUser" parameterType="map" resultType="map">
+		select A.EQUIP_ID,
+		A.EQUIP_CODE,
+		A.EQUIP_ADDRESS,
+		A.DESCRIPTION,
+		A.LONGITUDE,
+		A.LATITUDE,
+		d.EQUIP_TYPE_NAME,
+		A.OWNER_NAME,
+		A.OWNER_TEL,
+		A.CREATOR,
+		A.CREATE_DATE,
+		A.IS_EQUIP,
+		A.RELATION_EQUIP,
+		A.AREA_ID,
+		A.RELAY_ID,
+		A.DEPTH,
+		C.TASK_ID,
+		C.TASK_NAME,
+		atc.cable_name,
+		atr.relay_name,
+		aseq.steppart_name,
+		C.INSPECT_ID
+		from AXX_STEP_TOUR_EQUIP A
+		join AXX_STEP_TASK_EQUIP B
+		on A.EQUIP_ID = B.EQUIP_ID
+		join AXX_STEP_TASK C
+		on B.TASK_ID = C.TASK_ID
+		join AXX_T_CABLE atc
+		on atc.cable_id = a.cable_id
+		join AXX_T_RELAY atr
+		on atr.relay_id = a.relay_id
+		join AXX_STEP_EQUIP_ALLOT aseq
+		on b.allot_id = aseq.allot_id
+		join TB_BASE_STAFF TBS
+		on TBS.STAFF_ID = C.INSPECT_ID
+		join (select distinct a.equip_type_id,a.equip_type_name from
+		AXX_EQUIP_DANGER_PARAM a)d
+		on d.equip_type_id = a.equip_type
+		where C.END_TIME &gt;= (SELECT TRUNC(SYSDATE) FROM DUAL)
+		and B.STATUS = 0
+		AND
+		C.INSPECT_ID=#{USER_ID} 
+   </select>
+   
+   <select id="ifStartOrEndEquip" parameterType="map" resultType="map">
+		SELECT *
+		  FROM AXX_STEP_EQUIP_ALLOT sea, AXX_LINE_EQUIP le
+		 where sea.start_equip = le.equip_id
+		 and le.equip_id in (${ids})
+		UNION
+		SELECT *
+		  FROM AXX_STEP_EQUIP_ALLOT sea, AXX_LINE_EQUIP le
+		 where sea.end_equip = le.equip_id
+		 and le.equip_id in (${ids})
+   </select>
+   
+   <select id="ifEquipInPart" parameterType="map" resultType="map">
+		select *
+		  from AXX_STEP_TOUR_EQUIP ste, AXX_LINE_EQUIP le
+		 where ste.equip_id = le.equip_id
+		   and ste.equip_id in (${ids})
+		   and ste.is_part = 1
+   </select>
+   
+   <delete id="deleteLineEquip" parameterType="map">
+		delete from AXX_LINE_EQUIP e where e.EQUIP_ID in (${ids})
+   </delete>
+ 	
+ 	<delete id="deleteStepEquip" parameterType="map">
+ 		delete from AXX_STEP_TOUR_EQUIP te where te.EQUIP_ID in (${ids})
+ 	</delete>
+ 	
+</mapper>

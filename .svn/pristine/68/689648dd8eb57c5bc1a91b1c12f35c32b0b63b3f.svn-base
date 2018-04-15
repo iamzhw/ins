@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webservice.changeCoordinate.dao.ChangeCooDao">
+	<!-- 查询巡线点列表 -->
+	<select id="querySiteList" resultType="map" parameterType="map">
+		SELECT 
+			SITE_ID,
+			LONGITUDE,
+			LATITUDE
+		FROM 
+			AXX_T_SITE
+		WHERE
+		    COORDINATE_TYPE = #{coordinate_type}
+	</select>
+	
+    <!-- 查询设施点列表 -->
+	<select id="queryStepEquipList" parameterType="map" resultType="map">
+		SELECT 
+			EQUIP_ID,
+			LONGITUDE,
+			LATITUDE
+	  	FROM 
+	  		AXX_STEP_TOUR_EQUIP
+	  	WHERE
+	  		COORDINATE_TYPE = #{coordinate_type}
+	</select>
+	
+	<!-- 修改巡线点信息 -->
+	<update id="updateSite" parameterType="map">
+		UPDATE
+			AXX_T_SITE
+		SET
+			LONGITUDE = #{longitude},
+			LATITUDE = #{latitude},
+			COORDINATE_TYPE = #{coordinate_type}
+		WHERE
+			SITE_ID = #{site_id}
+	</update>
+	
+	<!-- 修改设施点信息 -->
+	<update id="updateStepEquip" parameterType="map">
+		UPDATE
+			AXX_STEP_TOUR_EQUIP
+		SET
+			LONGITUDE = #{longitude},
+			LATITUDE = #{latitude},
+			COORDINATE_TYPE = #{coordinate_type}
+		WHERE
+			EQUIP_ID = #{equip_id}
+	</update>
+</mapper>

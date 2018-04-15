@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableInspection.dao.LxxjCityDao">
+	<delete id="del_lxxj_signed_rate_area">
+		delete from lxxj_signed_rate_area
+	</delete>
+	<delete id="del_lxxj_key_point_detail">
+		delete from lxxj_key_point_detail
+	</delete>
+	<delete id="del_lxxj_key_task_distri_rate_grid">
+		delete from lxxj_key_task_distri_rate_grid
+	</delete>
+	<delete id="del_lxxj_key_task_distri_rate_area">
+		delete from lxxj_key_task_distri_rate_area
+	</delete>
+	<delete id="del_lxxj_city">
+		delete from lxxj_city
+	</delete>
+	<delete id="del_lxxj_signed_rate_grid">
+		delete from lxxj_signed_rate_grid
+	</delete>
+	<delete id="del_lxxj_signed_detail">
+		delete from lxxj_signed_detail
+	</delete>
+
+	<insert id="add_lxxj_city">
+		insert into lxxj_city
+select bdate,name,offset,point_rate,rate,mydate from (
+select bdate,name,to_char(round(max(rate)-min(rate),2),'fm9990.09')||'%' offset,
+to_char(round(nvl(sum(sum6),0)/decode(sign(nvl(sum(sum7),1)-nvl(sum(sum6),0)),-1,nvl(sum(sum6),0),nvl(sum(sum7),1))*100,2),'fm9990.09')||'%' point_rate,
+to_char(decode(sign(round(nvl((nvl2(sum(sum17),sum(sum20),0)/nvl(sum(sum17),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(sum17),sum(sum20),0)/nvl(sum(sum17),1))*100,0),2)),'fm9990.09')||'%' rate,mydate from (
+select to_char(sysdate,'yyyymm') bdate,gg.sum7,ff.sum6,qq.sum17,tt.sum20,
+b.area_id,
+b.name,
+decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)) point_rate,
+decode(sign(round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)) rate,
+sysdate mydate
+from area a
+join area b on b.area_id=a.parent_area_id
+ left join(
+   select count(distinct(point_id)) sum6,son_area_id from (
+ select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+     <![CDATA[
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type =4
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.son_area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ ) group by son_area_id
+  ) ff on ff.son_area_id=a.area_id
+
+ left join(
+  select count(distinct(point_id)) sum7,area_id
+		from (select distinct(t.point_id),plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and   t.point_type in (1,4)
+   union all
+		 select t.point_id,t.son_area_id area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+   and t.point_level not in (6,9,0) and t.create_time<trunc(sysdate,'month')
+   ) g group by area_id
+  ) gg on gg.area_id=a.area_id
+left join(
+  select area_id,count(point_id) sum17  from (
+		select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+ and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+  ) qq on qq.area_id=a.area_id
+  left join(
+		select count(*) sum20,task.son_area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=trunc(sysdate,'month') and t.create_time<=sysdate and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.son_area_id
+		) tt on tt.area_id=a.area_id
+where a.area_level=4
+order by a.area_id
+) group by area_id,name,bdate,mydate
+union all
+select bdate,'全省' name,to_char(round(max(rate)-min(rate),2),'fm9990.09')||'%' offset,
+to_char(round(nvl(sum(sum6),0)/decode(sign(nvl(sum(sum7),1)-nvl(sum(sum6),0)),-1,nvl(sum(sum6),0),nvl(sum(sum7),1))*100,2),'fm9990.09')||'%' point_rate,
+to_char(decode(sign(round(nvl((nvl2(sum(sum17),sum(sum20),0)/nvl(sum(sum17),1))*100,0),2)-100),1,100,round(nvl((nvl2(sum(sum17),sum(sum20),0)/nvl(sum(sum17),1))*100,0),2)),'fm9990.09')||'%' rate,mydate from (
+select to_char(sysdate,'yyyymm') bdate,gg.sum7,ff.sum6,qq.sum17,tt.sum20,
+decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)) point_rate,
+decode(sign(round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,decode(sign(nvl(tt.sum20,0)-nvl(qq.sum17,0)),1,nvl(qq.sum17,0),nvl(tt.sum20,0)),0)/nvl(qq.sum17,1))*100,0),2)) rate,
+sysdate mydate
+from area a
+ left join(
+   select count(distinct(point_id)) sum6,area_id from (
+ select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type =4
+    and plan.plan_circle!=2
+  union all
+   select distinct(t.point_id) point_id,plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and t.point_type in (1,4)
+    and plan.plan_circle=2
+ )
+    group by area_id
+  ) ff on ff.area_id=a.area_id
+ left join(
+  select count(distinct(point_id)) sum7,area_id
+  from (select distinct(t.point_id),plan.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where 
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+     and task.plan_id=plan.plan_id
+    and plan.isdeleted=0
+    and   t.point_type in (1,4)
+   union all
+   select t.point_id,t.area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+   and t.point_level not in (6,9,0) and t.create_time<trunc(sysdate,'month')
+   ) g group by area_id
+  ) gg on gg.area_id=a.area_id
+
+left join(
+  select area_id,count(point_id) sum17  from (
+  select  t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,task.area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+   where
+   llp.point_id=t.point_id
+   and llp.line_id=pd.inspect_object_id
+   and pd.plan_id=plan.plan_id
+   and task.plan_id=plan.plan_id
+ and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+    and plan.isdeleted=0
+    and   t.point_type =4
+    ) group by area_id order by area_id
+  ) qq on qq.area_id=a.area_id
+ left join(
+		select count(*) sum20,task.area_id area_id from tb_ins_record t,tb_base_staff s,tb_ins_task task where   t.task_id is not null
+		and s.staff_id=t.inspector and  t.create_time >=trunc(sysdate,'month') and t.create_time<=sysdate and t.record_type=0
+		and task.task_id=t.task_id
+		group by task.area_id
+  ) tt on tt.area_id=a.area_id
+ where a.parent_area_id=2 
+order by a.area_id
+) group by bdate,mydate)
+ ]]>
+	</insert>
+	
+	<insert id="add_lxxj_signed_rate_area">
+insert into lxxj_signed_rate_area
+select to_char(sysdate,'yyyymm'),
+b.name,
+a.name,
+nvl(tt.sum20,0) ,
+nvl(qq.sum17,0),
+to_char(decode(sign(round(nvl((nvl2(qq.sum17,tt.sum20,0)/nvl(qq.sum17,1))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,tt.sum20,0)/nvl(qq.sum17,1))*100,0),2)),'fm9990.09')||'%',
+sysdate
+from area a
+join area b on b.area_id=a.parent_area_id
+left join(
+    select area_id,count(times) sum17  from (
+    select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,t.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+     where
+     llp.point_id=t.point_id
+     and llp.line_id=pd.inspect_object_id
+     and pd.plan_id=plan.plan_id
+     and task.plan_id=plan.plan_id
+     <![CDATA[
+ and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+  ]]>
+		  and plan.isdeleted=0
+		  and   t.point_type in (4)
+		  ) group by area_id order by area_id
+		) qq on qq.area_id=a.area_id
+left join(
+		select count(*) sum20,s.son_area_id area_id from tb_ins_record t,tb_base_staff s where   t.task_id is not null
+		<![CDATA[
+		and s.staff_id=t.inspector and  t.create_time >=trunc(sysdate,'month') and t.create_time<sysdate and t.record_type=0
+		]]>
+		group by s.son_area_id
+		) tt on tt.area_id=a.area_id
+where a.area_level=4
+order by a.area_id
+	</insert>
+	<insert id="add_lxxj_key_point_detail">
+		insert into lxxj_key_point_detail
+select distinct to_char(sysdate,'yyyymm'),
+b.name,
+a.name,
+d.dept_name,
+p.point_no,
+p.point_name,
+pt.point_type_name,
+et.equipment_type_name,
+decode(p.point_level,1,'A1',2,'A2',3,'A3',4,'B1',5,'B2',6,'B3',7,'C1',8,'C2',9,'C3',''),
+sysdate
+from tb_ins_point p
+left join tb_ins_point_dept pd on pd.point_id=p.point_id
+left join tb_ins_dept d on d.dept_id=pd.dept_id
+left join tb_ins_point_type pt on pt.point_type_id=p.point_type
+left join tb_ins_equipment_type et on et.equipment_type_id=p.eqp_type_id
+join area a on a.area_id=d.son_area_id
+join area b on b.area_id=a.parent_area_id
+where p.point_type in (1,4)
+	</insert>
+	<insert id="add_lxxj_key_task_distri_rate_grid">
+insert into lxxj_key_task_distri_rate_grid
+select to_char(sysdate,'yyyymm'),
+b.name,
+a.name,
+nvl(ff.sum6,0) ,
+(nvl(gg.sum7,0)-nvl(ff.sum6,0)),
+nvl(gg.sum7,0),
+to_char(decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)),'fm9990.09')||'%',
+sysdate,
+d.dept_name
+from tb_ins_dept d
+join area a on a.area_id=d.son_area_id
+join area b on b.area_id=a.parent_area_id
+left join(
+select count(distinct(t.point_id)) sum6,pdd.dept_no from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+,tb_ins_point_dept pdd
+ where 
+ llp.point_id=t.point_id
+ and llp.line_id=pd.inspect_object_id
+ and pd.plan_id=plan.plan_id
+ <![CDATA[
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+   and task.plan_id=plan.plan_id
+  and plan.isdeleted=0
+  and t.point_type in (1,4)
+  and pdd.point_id=t.point_id
+  group by pdd.dept_no
+) ff on ff.dept_no=d.dept_no
+left join(
+select count(distinct(point_id)) sum7,dept_no
+from (select distinct(t.point_id),pdd.dept_no from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+ ,tb_ins_point_dept pdd
+ where 
+ llp.point_id=t.point_id
+ and llp.line_id=pd.inspect_object_id
+ and pd.plan_id=plan.plan_id
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+  ]]>
+   and task.plan_id=plan.plan_id
+  and plan.isdeleted=0
+  and   t.point_type in (1,4)
+  and pdd.point_id=t.point_id
+ union all
+ select t.point_id,pd.dept_no from tb_ins_point t,tb_ins_point_dept pd where  t.point_type in (4) and t.point_level  is not null 
+ and t.point_level not in (6,9,0) and pd.point_id=t.point_id
+ ) g group by dept_no
+) gg on gg.dept_no=d.dept_no
+order by a.area_id
+	</insert>
+	<insert id="add_lxxj_key_task_distri_rate_area">
+insert into lxxj_key_task_distri_rate_area
+select to_char(sysdate,'yyyymm'),
+b.name,
+a.name,
+nvl(ff.sum6,0) ,
+(nvl(gg.sum7,0)-nvl(ff.sum6,0)),
+nvl(gg.sum7,0),
+to_char(decode(sign(round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)-100),1,100,round(nvl((nvl2(gg.sum7,ff.sum6,0)/nvl(gg.sum7,1))*100,0),2)),'fm9990.09')||'%',
+sysdate
+from area a
+join area b on b.area_id=a.parent_area_id
+--已派发关键点数
+left join(
+select count(distinct(t.point_id)) sum6,plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+ where 
+ llp.point_id=t.point_id
+ and llp.line_id=pd.inspect_object_id
+ and pd.plan_id=plan.plan_id
+ <![CDATA[
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+   and task.plan_id=plan.plan_id
+  and plan.isdeleted=0
+  and t.point_type in (1,4)
+  group by plan.son_area_id
+) ff on ff.area_id=a.area_id
+--应派发的关键点数
+left join(
+select count(distinct(point_id)) sum7,area_id
+from (select distinct(t.point_id),plan.son_area_id area_id from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+ where 
+ llp.point_id=t.point_id
+ and llp.line_id=pd.inspect_object_id
+ and pd.plan_id=plan.plan_id
+  and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+  ]]>
+   and task.plan_id=plan.plan_id
+  and plan.isdeleted=0
+  and   t.point_type in (1,4)
+ union all
+ select t.point_id,t.son_area_id area_id from tb_ins_point t where  t.point_type in (4) and t.point_level  is not null 
+ and t.point_level not in (6,9,0) 
+ ) g group by area_id
+) gg on gg.area_id=a.area_id
+where a.area_level=4
+order by a.area_id
+	</insert>
+	<insert id="add_lxxj_signed_detail">
+		insert into lxxj_signed_detail
+select to_char(sysdate,'yyyymm'),
+ seq_lxxj_signed_detail.nextval,oo.* from (
+select 
+distinct
+uu.line_name,uu.point_name,nvl2(r.record_id,'已签到','未签到'),r.create_time,s.staff_name,sysdate from (
+select distinct l.line_name,p.point_name,p.point_id,t.task_id
+from tb_ins_point p,
+tb_ins_plan plan,
+tb_ins_plan_detail pd,
+tb_ins_line_point lp,
+tb_ins_task t,
+tb_ins_line l
+ where 
+ lp.point_id=p.point_id
+ and lp.line_id=pd.inspect_object_id
+ and lp.line_id=l.line_id
+ and pd.plan_id=plan.plan_id
+ <![CDATA[
+  and t.start_time>=trunc(sysdate,'month')
+ and t.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+  ]]>
+   and t.plan_id=plan.plan_id
+  and plan.isdeleted=0
+  and p.point_type in (1,4)
+) uu 
+left join tb_ins_record r on r.point_id=uu.point_id and r.task_id=uu.task_id and R.RECORD_TYPE = 0
+left join tb_base_staff s on s.staff_id=r.inspector 
+) oo
+	</insert>
+<insert id="add_lxxj_signed_rate_grid">
+    insert into lxxj_signed_rate_grid
+select to_char(sysdate,'yyyymm'),
+b.name,
+a.name,
+d.dept_name,
+nvl(tt.sum20,0) ,
+nvl(qq.sum17,0),
+to_char(decode(sign(round(nvl((nvl2(qq.sum17,tt.sum20,0)/nvl(qq.sum17,1))*100,0),2)-100),1,100,round(nvl((nvl2(qq.sum17,tt.sum20,0)/nvl(qq.sum17,1))*100,0),2)),'fm9990.09')||'%',
+sysdate
+from tb_ins_dept d
+join area a on a.area_id=d.son_area_id
+join area b on b.area_id=a.parent_area_id
+left join(
+    select dept_no,count(times) sum17  from (
+    select t.point_id,decode(t.point_level,1,4,2,4,3,4,4,2,5,2,7,1,8,1,0) times,pdd.dept_no from tb_ins_point t,tb_ins_plan plan,tb_ins_plan_detail pd,tb_ins_line_point llp,tb_ins_task task
+    ,tb_ins_point_dept pdd
+     where
+     llp.point_id=t.point_id
+     and llp.line_id=pd.inspect_object_id
+     and pd.plan_id=plan.plan_id
+     and task.plan_id=plan.plan_id
+     <![CDATA[
+ and task.start_time>=trunc(sysdate,'month')
+ and task.complete_time<trunc(add_months(sysdate,1),'month')
+  and plan.plan_end_time>=trunc(sysdate,'month')
+      and plan.isdeleted=0
+      and   t.point_type in (4)
+      and pdd.point_id=t.point_id
+      ) group by dept_no order by dept_no
+    ) qq on qq.dept_no=d.dept_no
+left join(
+    select count(*) sum20,pd.dept_no from tb_ins_record t,tb_base_staff s,tb_ins_point_dept pd where   t.task_id is not null
+    and s.staff_id=t.inspector and  t.create_time >=trunc(sysdate,'month') and t.create_time<sysdate and t.record_type=0
+    and pd.point_id=t.point_id
+    group by pd.dept_no
+    ) tt on tt.dept_no=d.dept_no
+    ]]>
+</insert>
+
+<update id="updateLineLength">
+    update tb_ins_line l
+     set l.length =
+         (select c.distance
+            from (select line_id, sum(dis) distance
+                    from (select lp.line_id,
+                                 lp.point_seq,
+                                 round(sdo_geom.sdo_distance(mdsys.sdo_geometry(2001,
+                                                                                8307,
+                                                                                mdsys.sdo_point_type(p.longitude,
+                                                                                                     p.latitude,
+                                                                                                     0),
+                                                                                null,
+                                                                                null),
+                                                             mdsys.sdo_geometry(2001,
+                                                                                8307,
+                                                                                mdsys.sdo_point_type(b.longitude,
+                                                                                                     b.latitude,
+                                                                                                     0),
+                                                                                null,
+                                                                                null),
+                                                             1),
+                                       2) dis
+                            from tb_ins_point p
+                            join tb_ins_line_point lp
+                              on lp.point_id = p.point_id
+                            join tb_ins_line l
+                              on l.line_id = lp.line_id
+                            join (select distinct lp.line_id,
+                                                 lp.point_seq - 1 point_seq,
+                                                 p.longitude,
+                                                 p.latitude
+                                   from tb_ins_point p
+                                   join tb_ins_line_point lp
+                                     on lp.point_id = p.point_id
+                                   join tb_ins_line l
+                                     on l.line_id = lp.line_id
+                                  where l.line_type in (0, 4)
+                                    and lp.point_seq is not null
+                                  order by lp.line_id, point_seq) b
+                              on b.line_id = lp.line_id
+                             and lp.point_seq = b.point_seq
+                           where l.line_type in (0, 4)
+                             and lp.point_seq is not null
+                           order by lp.line_id, lp.point_seq)
+                   group by line_id) c
+           where c.line_id = l.line_id)
+</update>
+
+<select id="queryWorkById" resultType="map" parameterType="string">
+select t.inspector,t.task_id,t.task_name,pp.send_type,
+(select count(1) from tb_ins_record r
+where r.task_id=t.task_id and r.record_type=0) signpoint,
+(select to_char(nvl(sum(rn.distance),0)/1000,'FM99990.09') from tb_ins_record_normal rn where rn.task_id=t.task_id) dis,
+(select to_char(nvl(sum(rn.timecount),0)/60,'FM99990.09') from tb_ins_record_normal rn where rn.task_id=t.task_id) worktime
+ from tb_ins_task t 
+join tb_ins_plan_detail p on t.plan_id=p.plan_id
+join tb_ins_plan pp pp.plan_id=p.plan_id
+where t.status_id=3 and t.task_id=#{task_id}
+</select>
+
+<select id="querywork" resultType="map">
+select distinct t.inspector,t.task_id,t.task_name,
+(select count(1) from tb_ins_record r
+where r.task_id=t.task_id and r.record_type=0) signpoint,
+(select to_char(nvl(sum(rn.distance),0)/1000,'FM99990.09') from tb_ins_record_normal rn where rn.task_id=t.task_id) dis,
+(select to_char(nvl(sum(rn.timecount),0)/60,'FM99990.09') from tb_ins_record_normal rn where rn.task_id=t.task_id) worktime
+ from tb_ins_task t 
+join tb_ins_plan_detail p on t.plan_id=p.plan_id
+join tb_ins_plan tip on tip.plan_id=p.plan_id
+<![CDATA[
+where trunc(t.complete_time)>=trunc(sysdate,'month') 
+and t.status_id=3
+and not exists (
+select 1 from (select substr(ap.postmsg,instr(ap.postmsg,'<taskId>')+8,instr(ap.postmsg,'</taskId>')-instr(ap.postmsg,'<taskId>')-8) postmsg
+]]>
+from a_post ap
+) app where app.postmsg = t.task_id
+) and (tip.send_type =1 or tip.send_type is null)
+</select>
+
+<select id="getStaffInfo" parameterType="string" resultType="map">
+select s.staff_name,s.staff_no from tb_base_staff s
+where s.staff_id=#{staff_id}
+</select>
+
+<select id="getstaffByDept" parameterType="string" resultType="map">
+select s.staff_id,s.staff_name,s.staff_no from tb_base_staff s
+join tb_ins_staff_dept sd on sd.staff_id=s.staff_id
+where sd.dept_id=#{dept_id} and rownum=1
+order by s.staff_id desc
+</select>
+
+<select id="getTimeCount" parameterType="string" resultType="string">
+select  decode(p.type,1,(
+select to_char(round(nvl(sum(r.timecount),0)/60,2),'fm99990,09') sum1 from tb_ins_record_normal r 
+where r.task_id=#{task_id}
+),'_') from tb_ins_task t 
+join tb_ins_plan p on p.plan_id=t.plan_id
+where t.task_id=#{task_id}
+</select>
+<select id="getTroubleCount" parameterType="string" resultType="string">
+select count(1) from tb_ins_bill where task_id=#{task_id}
+</select>
+<select id="getDistance" parameterType="string" resultType="string">
+select  decode(p.type,1,(
+select to_char(round(nvl(sum(r.distance),0)/1000,2),'fm99990,09') sum1 from tb_ins_record_normal r 
+where r.task_id=#{task_id}
+),'_') from tb_ins_task t 
+join tb_ins_plan p on p.plan_id=t.plan_id
+where t.task_id=#{task_id}
+</select>
+
+
+	
+<insert id="insertStaff" parameterType="map">
+insert into tb_base_staff
+  (staff_id,
+   staff_no,
+   password,
+   password_,
+   staff_name,
+   tel,
+   id_number,
+   status,
+   isdeleted,
+   area_id,
+   son_area_id,
+   create_staff,
+   create_date,
+   is_help_patrol,
+   is_leader)
+  select SEQ_TB_BASE_STAFF.NEXTVAL,
+         #{STAFF_NO},
+         'ayw_1234',
+         'mnhJIc:Ah]:cV:7[h_'||'&amp;'||'f9Y8'||'$'||';5b3^88b',
+         #{STAFF_NAME},
+         #{TEL},
+         #{ID_NUMBER},
+         0,
+         0,
+         (select parent_area_id from area a where a.area_id = #{SON_AREA_ID}),
+         #{SON_AREA_ID},
+         3326,
+         sysdate,
+         0,
+         0
+    from dual
+   		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="STAFF_ID">
+			SELECT SEQ_TB_BASE_STAFF.CURRVAL STAFF_ID FROM DUAL 
+		</selectKey>
+</insert>
+<select id="checkStaffExists" parameterType="map" resultType="int">
+select count(1) from tb_base_staff s where s.staff_no=#{STAFF_NO}
+</select>
+<insert id="addRole" parameterType="map">
+insert into tb_base_staff_role
+values(#{STAFF_ID},7)
+</insert>
+
+		<select id="queryStaffFromJYH" resultType="map">
+select t.jyh_account staff_no,
+       t.name staff_name,
+       t.cell_phone tel,
+       t.id_number,
+       min(t.xj_area_id) son_area_id
+  from outsource_orguser_xj_celection t
+ where t.jyh_account is not null
+   and t.name is not null
+ group by t.jyh_account, t.name, t.cell_phone, t.id_number
+	</select>
+	
+	<!-- 查询集约化线路代维人员 -->
+	<select id="queryjyh1" resultType="map">
+		select t.name, t.jyh_account, t.org_id,t.id_number
+  from outsource_orguser_2_xjsys t
+ where t.zone_id is not null
+   and t.post = '组员'
+   and t.major_id like '%'||'16'||'%'
+	</select>
+	
+	<!-- 查询集约化班组长 -->
+	<select id="queryjyh2" resultType="map">
+		select t.name, t.jyh_account, t.org_id,t.id_number
+  from outsource_orguser_2_xjsys t
+ where t.zone_id is not null
+   and t.post = '组长'
+   and t.major_id like '%16%' and t.jyh_account is not null
+	</select>
+	<!--查集约化班组长所在班组人员 -->
+	<select id="queryjyh3" parameterType="string" resultType="map">
+	select t.name, t.jyh_account, t.org_id,t.id_number
+  from outsource_orguser_2_xjsys t
+ where t.zone_id = (select tt.zone_id
+                      from outsource_orguser_2_xjsys tt
+                     where tt.jyh_account = #{no}) and t.jyh_account is not null
+	</select>
+	<!-- 查询集约化代维公司管理员 -->
+	<select id="queryjyh4" resultType="map">
+	select t.name, t.jyh_account, r.org_id, r.org_type, r.org_name,t.id_number
+  from outsource_orguser_2_xjsys t, outsource_org_2_xjsys r
+ where r.org_id = t.org_id
+   and t.post in ('代维公司管理员')
+   and t.major_id like '%16%' and t.jyh_account is not null
+	</select>
+	<!-- 查询代维公司所辖员工 -->
+	<select id="queryjyh5" parameterType="string" resultType="map">
+	select t.name, t.jyh_account, t.org_id,t.id_number
+  from outsource_orguser_2_xjsys t
+ where t.zone_id in (select org_id
+                       from outsource_org_2_xjsys
+                     connect by parent_id = prior org_id
+                      START WITH org_id = #{org_id})
+   and t.zone_id is not null and t.jyh_account is not null
+	</select>
+	<!-- 查询网格主页管理员 -->
+	<select id="queryjyh6" resultType="map">
+	select t.name, t.jyh_account, r.org_id, r.org_type, r.org_name,t.id_number
+  from outsource_orguser_2_xjsys t, outsource_org_2_xjsys r
+ where r.org_id = t.org_id
+   and t.post in ('主业管理员', '主业管理员视')
+   and t.major_id like '%16%' and t.jyh_account is not null
+	</select>
+	
+	<!-- 根据网格管理员查询网格人员 -->
+	<select id="queryjyh7" parameterType="string" resultType="map">
+	select t.name, t.jyh_account, t.org_id,t.id_number
+  from outsource_orguser_2_xjsys t
+ where t.zone_id in (select org_id
+                       from outsource_org_2_xjsys
+                     connect by parent_id = prior org_id
+                      START WITH org_id = #{org_id})
+   and t.zone_id is not null and t.jyh_account is not null
+	</select>
+	
+	<select id="getTaskByJYHNo" parameterType="map" resultType="map">
+SELECT T.TASK_ID,t.inspector,
+	<![CDATA[
+       (SELECT COUNT(1)
+          FROM TB_INS_PLAN_DETAIL TIPD,
+               TB_INS_LINE_POINT  TILP,
+               TB_INS_POINT       TIP
+         WHERE TIPD.PLAN_ID = P.PLAN_ID
+           AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+           AND TIP.POINT_ID = TILP.POINT_ID
+           AND TIP.POINT_TYPE > -1) MAINCOUNT,
+       (SELECT COUNT(1)
+          FROM TB_INS_PLAN_DETAIL TIPD,
+               TB_INS_LINE_POINT  TILP,
+               TB_INS_POINT       TIP
+         WHERE TIPD.PLAN_ID = P.PLAN_ID
+           AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+           AND TIP.POINT_ID = TILP.POINT_ID
+           AND TIP.POINT_TYPE < 0) NORMALCOUNT,
+       (SELECT COUNT(1)
+          FROM TB_INS_RECORD_NORMAL RN
+          JOIN TB_INS_POINT TIP
+            ON TIP.POINT_ID = RN.POINT_ID
+         WHERE TIP.POINT_TYPE = -1
+           AND RN.TASK_ID = T.TASK_ID) SIGNNORMAL,
+       (SELECT COUNT(1)
+          FROM TB_INS_RECORD TIR
+          JOIN TB_INS_TASK_DETAIL TD
+            ON TD.TASK_DETAIL_ID = TIR.TASK_DETAIL_ID
+          JOIN TB_INS_POINT TIP
+            ON TIP.POINT_ID = TIR.POINT_ID
+         WHERE TIR.TASK_ID = T.TASK_ID
+           and tir.record_type = 0) AS SIGNINCOUNT
+  FROM TB_INS_TASK T, AREA A, TB_INS_PLAN P, tb_base_staff s
+ WHERE A.AREA_ID = T.SON_AREA_ID
+   and t.start_time >= trunc(sysdate, 'month')
+   and t.complete_time < add_months(trunc(sysdate, 'month'), 1)
+   ]]>
+   AND P.PLAN_ID = T.PLAN_ID
+   and s.staff_id = t.inspector
+   AND P.PLAN_KIND IN (1, 2)
+   AND P.ISDELETED = 0
+   AND s.staff_no = #{JYH_ACCOUNT}
+	</select>
+	
+	<select id="allPoints" parameterType="map" resultType="map">
+		SELECT P.POINT_ID,
+       		P.LONGITUDE,
+       		P.LATITUDE,
+       		P.POINT_TYPE POINT_TYPE_ID,
+       		 DECODE((
+           SELECT COUNT(1) FROM TB_INS_RECORD_NORMAL RN
+           WHERE RN.POINT_ID=P.POINT_ID AND RN.TASK_ID=TD.TASK_ID),0,0,1
+           ) NORMALCOMPLETED   
+  		FROM TB_INS_POINT P, TB_INS_LINE_POINT LP, TB_INS_TASK_DETAIL TD,TB_INS_LINE L
+ 		WHERE P.POINT_ID = LP.POINT_ID
+   			AND LP.LINE_ID = TD.INSPECT_OBJECT_ID
+        	AND L.LINE_ID=LP.LINE_ID
+   			AND TD.TASK_ID = #{TASK_ID}
+	</select>
+</mapper>

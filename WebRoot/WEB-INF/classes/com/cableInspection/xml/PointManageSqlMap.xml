@@ -1,0 +1,580 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.PointManageDao">
+
+	<select id="getPointTypes" resultType="map">
+select POINT_TYPE_ID, POINT_TYPE_NAME from TB_INS_POINT_TYPE where POINT_TYPE_ID > 0
+	</select>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+select p.POINT_ID,
+       p.POINT_NO,
+       p.POINT_NAME,
+       p.POINT_TYPE,
+       pt.POINT_TYPE_NAME,
+       et.EQUIPMENT_TYPE_NAME,
+       p.LONGITUDE,
+       p.LATITUDE,
+       p.ADDRESS,
+       a1.NAME                as AREA,
+       a2.NAME                as SON_AREA,
+       p.point_level,
+       MNT.LEVEL_NAME,
+       d.dept_name,
+       decode(p.area_type,1,'小区',2,'路边','') AREA_TYPE
+  from TB_INS_POINT          p,
+       TB_INS_POINT_TYPE     pt,
+       AREA                  a1,
+       AREA                  a2,
+       TB_INS_EQUIPMENT_TYPE et,
+       tb_ins_mnt  MNT,
+       tb_ins_point_dept pd,
+       tb_ins_dept d
+ where p.POINT_TYPE > -1
+   and p.POINT_TYPE = pt.POINT_TYPE_ID
+   and p.AREA_ID = a1.AREA_ID
+   and p.SON_AREA_ID = a2.AREA_ID
+   and p.EQP_TYPE_ID = et.EQUIPMENT_TYPE_ID(+)
+   AND P.POINT_LEVEL=MNT.LEVEL_ID(+)
+   and pd.point_no(+)=p.point_no
+   and d.dept_no(+)=pd.dept_no
+   <if test="queryParams.POINT_NO != null and queryParams.POINT_NO != ''">
+   		and p.POINT_NO like '%'||#{queryParams.POINT_NO}||'%'
+   </if>
+    <if test="queryParams.DEPT_NAME != null and queryParams.DEPT_NAME != ''">
+   		and d.dept_name like '%'||#{queryParams.DEPT_NAME}||'%'
+   </if>
+   <if test="queryParams.POINT_NAME != null and queryParams.POINT_NAME != ''">
+   		and p.POINT_NAME like '%'||#{queryParams.POINT_NAME}||'%'
+   </if>
+   <if test="queryParams.ADDRESS != null and queryParams.ADDRESS != ''">
+   		and p.ADDRESS like '%'||#{queryParams.ADDRESS}||'%'
+   </if>
+   <if test="queryParams.POINT_TYPE != null and queryParams.POINT_TYPE != ''">
+   		and p.POINT_TYPE = #{queryParams.POINT_TYPE}
+   </if>
+   <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	          <![CDATA[
+	   	AND p.AREA_ID = #{queryParams.AREA_ID}
+	   	]]>
+	</if>
+	<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+	          <![CDATA[
+	   	AND p.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	   	]]>
+	</if>
+	<if test="queryParams.POINT_LEVEL != null and queryParams.POINT_LEVEL != ''">
+	 		and p.POINT_LEVEL  = #{queryParams.POINT_LEVEL}
+   </if>
+ order by POINT_ID desc
+	</select>
+	
+	<select id="getEquipTypes" resultType="map">
+		select EQUIPMENT_TYPE_ID, EQUIPMENT_TYPE_NAME from TB_INS_EQUIPMENT_TYPE
+	</select>
+	
+	<select id="getMntLevel" resultType="map">
+		select LEVEL_ID,LEVEL_NAME from tb_ins_mnt
+	</select>
+	
+	<select id="getSonAreas" parameterType="int" resultType="map">
+	select a1.NAME, a2.AREA_ID, a2.NAME as SON_AREA from AREA a1, AREA a2 
+		where a2.PARENT_AREA_ID = a1.AREA_ID and a1.AREA_ID = #{AREA_ID} order by AREA_ID
+	</select>
+	
+	<select id="isRepeat" parameterType="map" resultType="int">
+	select count(0) from TB_INS_POINT where POINT_NO = #{POINT_NO}
+	</select>
+	
+	<insert id="insertPoint" parameterType="map">
+	insert into TB_INS_POINT 
+		(POINT_ID, POINT_NO, POINT_NAME, POINT_LEVEL, POINT_TYPE, LONGITUDE, LATITUDE, CREATE_TIME, 
+			CREATE_STAFF, MODIFY_TIME, MODIFY_STAFF, ADDRESS, EQP_TYPE_ID, AREA_ID, SON_AREA_ID, CHECKED,ORIGIN_TYPE)
+	values
+		(SEQ_TB_INS_POINT.NEXTVAL, #{POINT_NO}, #{POINT_NAME}, #{POINT_LEVEL}, #{POINT_TYPE}, #{LONGITUDE}, #{LATITUDE}, sysdate,
+			#{CREATE_STAFF}, sysdate, #{CREATE_STAFF}, #{ADDRESS}, #{EQP_TYPE_ID}, 
+			#{AREA_ID, jdbcType=NUMERIC}, #{SON_AREA_ID, jdbcType=NUMERIC}, 1,0)
+	</insert>
+	
+	<delete id="delete" parameterType="string" statementType="STATEMENT">
+	delete from TB_INS_POINT where POINT_ID in (${_parameter})
+	</delete>
+	
+	<select id="getAreaNameById" parameterType="string" resultType="map">
+	select AREA_ID||'' as AREA_ID from AREA where NAME = #{AREA_NAME}
+	</select>
+	
+	<select id="getPlanIdByPointId" parameterType="string" resultType="map">
+	select distinct tipd.plan_id,tipd.inspect_object_type as point_type from tb_ins_plan_detail tipd 
+ 	where tipd.inspect_object_id in (${_parameter})
+	</select>
+	
+	<select id="hasPlan" parameterType="string" resultType="map">
+	select distinct tip.point_name from tb_ins_plan_detail tipd 
+	inner join tb_ins_point tip on tipd.inspect_object_id = tip.point_id
+	where tipd.inspect_object_id in (${_parameter})
+	</select>
+	
+	<delete id="deletePlanDetailByPointId" parameterType="string" statementType="STATEMENT">
+	delete from tb_ins_plan_detail where inspect_object_id in (${_parameter})
+	</delete>
+	
+	<delete id="deletePlanById" parameterType="string" statementType="STATEMENT">
+	delete from tb_ins_plan where PLAN_ID = ${_parameter}
+	</delete>
+	
+	<delete id="deleteTaskDetailByPointId" parameterType="string" statementType="STATEMENT">
+	delete from tb_ins_task_detail where inspect_object_id in (${_parameter})
+	</delete>
+	
+	<delete id="deleteTaskByPlanId" parameterType="string" statementType="STATEMENT">
+	delete from tb_ins_task where PLAN_ID = ${_parameter}
+	</delete>
+	
+	<select id="queryExistsPoint" parameterType="string" resultType="map">
+	select point_no, 
+		point_name, 
+		point_level, 
+		point_type, 
+		longitude, 
+		latitude, 
+		address,
+		to_char(create_time, 'yyyy-mm-dd') create_time  
+	from tb_ins_point 
+	where son_area_id = #{son_area_id}
+		and point_type > 0
+	</select>
+		
+	<select id="getPointNoByPointId" parameterType="map" resultType="map" >
+	select distinct(point_no) point_no  from tb_ins_point where point_id in (${pointId})
+	</select>
+		<update id="deleteRecordByEqpNo" parameterType="map">
+		update TB_INS_RECORD set IS_DELETE = 1 where equip_code =#{point_no}
+	</update>
+	
+	<select id="queryPoint" parameterType="map" resultType="map">
+	select p.point_no,
+       p.point_name,
+       pt.point_type_name,
+       decode(p.point_level,1,'A1',2,'A2',3,'A3',4,'B1',5,'B2',6,'B3',7,'C1',8,'C2',9,'C3') point_level,
+       et.equipment_type_name,
+       p.longitude,
+       p.latitude,
+       decode(lp.line_id,null,'未使用','已使用') aa,
+       p.address,
+       a1.name area,
+       a2.name son_area,
+       d.dept_name,
+       decode(p.area_type,1,'小区',2,'路边','') AREA_TYPE
+  from tb_ins_point          p,
+       area                  a1,
+       area                  a2,
+       tb_ins_point_type     pt,
+       tb_ins_equipment_type et,
+       tb_ins_point_dept pd,
+       tb_ins_dept d,
+       tb_ins_line_point lp
+ where p.area_id = a1.area_id
+   and p.son_area_id = a2.area_id
+   and p.point_type = pt.point_type_id
+   and p.eqp_type_id = et.equipment_type_id(+)
+   and pd.point_no(+)=p.point_no
+   and d.dept_no(+)=pd.dept_no
+   and  lp.point_id(+) = p.point_id
+   <if test="POINT_NO != null and POINT_NO != ''">
+   		and p.POINT_NO like '%'||#{POINT_NO}||'%'
+   </if>
+    <if test="DEPT_NAME != null and DEPT_NAME != ''">
+   		and d.dept_name like '%'||#{DEPT_NAME}||'%'
+   </if>
+   <if test="POINT_NAME != null and POINT_NAME != ''">
+   		and p.POINT_NAME like '%'||#{POINT_NAME}||'%'
+   </if>
+   <if test="ADDRESS != null and ADDRESS != ''">
+   		and p.ADDRESS like '%'||#{ADDRESS}||'%'
+   </if>
+   <if test="POINT_TYPE != null and POINT_TYPE != ''">
+   		and p.POINT_TYPE = #{POINT_TYPE}
+   </if>
+   <if test="AREA_ID != null and AREA_ID != ''">  
+	          <![CDATA[
+	   	AND p.AREA_ID = #{AREA_ID}
+	   	]]>
+	</if>
+	<if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+	          <![CDATA[
+	   	AND p.SON_AREA_ID = #{SON_AREA_ID}
+	   	]]>
+	</if>
+	<if test="POINT_LEVEL != null and POINT_LEVEL != ''">
+	 		and p.POINT_LEVEL  = #{POINT_LEVEL}
+   </if>
+ 	order by p.area_id, p.son_area_id
+ 	<!-- 
+ 		select p.point_no 光交编码,
+       p.point_name 光交名称,
+       decode(p.point_level,1,'A1',2,'A2',3,'A3',4,'B1',5,'B2',6,'B3',7,'C1',8,'C2',9,'C3') 维护等级,
+       pt.point_type_name 光交烈性,
+       et.equipment_type_name 设备类型,
+       p.longitude 经度,
+       p.latitude 纬度,
+       decode(lp.line_id,null,'未使用','已使用') 使用情况,
+       p.address 地址,
+       a1.name 地市,
+       a2.name 区域,
+       d.dept_name 网格
+  from tb_ins_point          p,
+       area                  a1,
+       area                  a2,
+       tb_ins_point_type     pt,
+       tb_ins_equipment_type et,
+       tb_ins_point_dept pd,
+       tb_ins_dept d,
+       tb_ins_line_point lp
+ where p.area_id = a1.area_id
+   and p.son_area_id = a2.area_id
+   and p.point_type = pt.point_type_id
+   and p.eqp_type_id = et.equipment_type_id(+)
+   and pd.point_no(+)=p.point_no
+   and d.dept_no(+)=pd.dept_no
+   and  lp.point_id(+) = p.point_id
+ 	 -->
+	</select>
+	<update id="updatePointName" parameterType="map">
+		update tb_ins_point p set p.point_name = #{pointName},p.ORIGIN_TYPE=0 where p.point_id = #{pointId} and p.POINT_TYPE in(1,2,3)
+	</update>
+
+	<select id="queryKeyPoints" parameterType="util.page.Query" resultType="map">
+		select t.POINT_ID,t.POINT_NO,t.POINT_NAME,t.LONGITUDE,t.LATITUDE,t.POINT_CREATE_TIME,t.POINT_CREATOR,
+  		t.ADDRESS,t.POINT_SON_AREA,t.LINE_NO,t.LINE_NAME,t.LINE_CREATE_TIME,t.LINE_CREATOR,
+  		t.LINE_SON_AREA,t.COUNT
+  		from (select distinct p.point_id,
+  						p.point_no,
+                        p.point_name,
+                        p.longitude,
+                        p.latitude,
+                        to_char(p.create_time,'yyyy-MM-dd hh24:mi:ss') point_create_time,
+                        s.staff_name point_creator,
+                        p.address,
+                        (select a.name
+                           from area a
+                          where a.area_id = p.son_area_id) point_son_area,
+                        l.line_no,
+                        l.line_name,
+                        to_char(l.create_time,'yyyy-MM-dd hh24:mi:ss') line_create_time,
+                        (select s.staff_name
+                           from tb_base_staff s
+                          where s.staff_id = l.create_staff) line_creator,
+                        (select a.name
+                           from area a
+                          where a.area_id = l.son_area_id) line_son_area,
+                        count(0) over(partition by p.point_no, l.line_id) count
+          	from Tb_Ins_Point p
+          	join tb_ins_line_point lp on lp.point_id = p.point_id
+          	left join tb_ins_line l on lp.line_id = l.line_id
+          	left join tb_base_staff s on s.staff_id = p.create_staff
+          	where p.point_type != -1
+		    <if test="queryParams.POINT_NO != null and queryParams.POINT_NO != ''">
+		   		<![CDATA[
+		   			and p.POINT_NO like '%'||#{queryParams.POINT_NO}||'%'
+		   		]]>
+   			</if>
+		    <if test="queryParams.POINT_NAME != null and queryParams.POINT_NAME != ''">
+		   		<![CDATA[
+		   			and p.POINT_NAME like '%'||#{queryParams.POINT_NAME}||'%'
+		   		]]>
+		    </if>
+		    <if test="queryParams.POINT_CREATOR != null and queryParams.POINT_CREATOR !=''">
+		    	<![CDATA[
+		    		and s.STAFF_NAME like '%'||#{queryParams.POINT_CREATOR}||'%'
+		    	]]>
+		    </if>
+		    <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.AREA_ID = #{queryParams.AREA_ID}
+			    ]]>
+			</if>
+		    <if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+			    ]]>
+		    </if>
+        	union
+          	select distinct p.point_id,
+          				p.point_no,
+                        p.point_name,
+                        p.longitude,
+                        p.latitude,
+                        to_char(p.create_time,'yyyy-MM-dd hh24:mi:ss') point_create_time,
+                        s.staff_name point_creator,
+                        p.address,
+                        (select a.name
+                           from area a
+                          where a.area_id = p.son_area_id) point_son_area,
+                        '' line_no,
+                        '' line_name,
+                        null line_create_time,
+                        null line_creator,
+                        '' as line_son_area,
+                        0 count
+           from Tb_Ins_Point p
+           left join tb_base_staff s on s.staff_id = p.create_staff
+           where p.point_id not in
+               (select distinct lp.point_id from tb_ins_line_point lp)
+           and p.point_type != -1
+           <if test="queryParams.POINT_NO != null and queryParams.POINT_NO != ''">
+		   		<![CDATA[
+		   			and p.POINT_NO like '%'||#{queryParams.POINT_NO}||'%'
+		   		]]>
+   			</if>
+		    <if test="queryParams.POINT_NAME != null and queryParams.POINT_NAME != ''">
+		   		<![CDATA[
+		   			and p.POINT_NAME like '%'||#{queryParams.POINT_NAME}||'%'
+		   		]]>
+		    </if>
+		    <if test="queryParams.POINT_CREATOR != null and queryParams.POINT_CREATOR !=''">
+		    	<![CDATA[
+		    		and s.STAFF_NAME like '%'||#{queryParams.POINT_CREATOR}||'%'
+		    	]]>
+		    </if>
+		    <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.AREA_ID = #{queryParams.AREA_ID}
+			    ]]>
+			</if>
+		    <if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+			    ]]>
+		    </if>
+           ) t where 1=1
+           <if test="queryParams.LINE_NO != null and queryParams.LINE_NO !=''">
+		    	<![CDATA[
+		    		and t.LINE_NO like '%'||#{queryParams.LINE_NO}||'%'
+		    	]]>
+		   </if>
+		   <if test="queryParams.LINE_NAME != null and queryParams.LINE_NAME !=''">
+		    	<![CDATA[
+		    		and t.LINE_NAME like '%'||#{queryParams.LINE_NAME}||'%'
+		    	]]>
+		   </if>
+ 		order by t.count desc, t.point_create_time asc
+	</select>
+
+	<select id="queryKeyPointsExl" parameterType="map" resultType="map">
+		select t.POINT_NO,t.POINT_NAME,t.LONGITUDE,t.LATITUDE,t.POINT_CREATE_TIME,t.POINT_CREATOR,
+  		t.ADDRESS,t.POINT_SON_AREA,t.LINE_ID,t.LINE_NO,t.LINE_NAME,t.LINE_CREATE_TIME,t.LINE_CREATOR,
+  		t.LINE_SON_AREA,t.COUNT
+  		from (select distinct p.point_no,
+                        p.point_name,
+                        p.longitude,
+                        p.latitude,
+                        to_char(p.create_time,'yyyy-MM-dd hh24:mi:ss') point_create_time,
+                        s.staff_name point_creator,
+                        p.address,
+                        (select a.name
+                           from area a
+                          where a.area_id = p.son_area_id) point_son_area,
+                        l.line_id,
+                        l.line_no,
+                        l.line_name,
+                        to_char(l.create_time,'yyyy-MM-dd hh24:mi:ss') line_create_time,
+                        (select s.staff_name
+                           from tb_base_staff s
+                          where s.staff_id = l.create_staff) line_creator,
+                        (select a.name
+                           from area a
+                          where a.area_id = l.son_area_id) line_son_area,
+                        count(0) over(partition by p.point_no, l.line_id) count
+          	from Tb_Ins_Point p
+          	join tb_ins_line_point lp on lp.point_id = p.point_id
+          	left join tb_ins_line l on lp.line_id = l.line_id
+          	left join tb_base_staff s on s.staff_id = p.create_staff
+          	where p.point_type != -1
+		    <if test="POINT_NO != null and POINT_NO != ''">
+		   		<![CDATA[
+		   			and p.POINT_NO like '%'||#{POINT_NO}||'%'
+		   		]]>
+   			</if>
+		    <if test="POINT_NAME != null and POINT_NAME != ''">
+		   		<![CDATA[
+		   			and p.POINT_NAME like '%'||#{POINT_NAME}||'%'
+		   		]]>
+		    </if>
+		    <if test="POINT_CREATOR != null and POINT_CREATOR !=''">
+		    	<![CDATA[
+		    		and s.STAFF_NAME like '%'||#{POINT_CREATOR}||'%'
+		    	]]>
+		    </if>
+		    <if test="AREA_ID != null and AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.AREA_ID = #{AREA_ID}
+			    ]]>
+			</if>
+		    <if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.SON_AREA_ID = #{SON_AREA_ID}
+			    ]]>
+		    </if>
+        	union
+          	select distinct p.point_no,
+                        p.point_name,
+                        p.longitude,
+                        p.latitude,
+                        to_char(p.create_time,'yyyy-MM-dd hh24:mi:ss') point_create_time,
+                        s.staff_name point_creator,
+                        p.address,
+                        (select a.name
+                           from area a
+                          where a.area_id = p.son_area_id) point_son_area,
+                        null line_id,
+                        '' line_no,
+                        '' line_name,
+                        null line_create_time,
+                        null line_creator,
+                        '' as line_son_area,
+                        0 count
+           from Tb_Ins_Point p
+           left join tb_base_staff s on s.staff_id = p.create_staff
+           where p.point_id not in
+               (select distinct lp.point_id from tb_ins_line_point lp)
+           and p.point_type != -1
+           <if test="POINT_NO != null and POINT_NO != ''">
+		   		<![CDATA[
+		   			and p.POINT_NO like '%'||#{POINT_NO}||'%'
+		   		]]>
+   			</if>
+		    <if test="POINT_NAME != null and POINT_NAME != ''">
+		   		<![CDATA[
+		   			and p.POINT_NAME like '%'||#{POINT_NAME}||'%'
+		   		]]>
+		    </if>
+		    <if test="POINT_CREATOR != null and POINT_CREATOR !=''">
+		    	<![CDATA[
+		    		and s.STAFF_NAME like '%'||#{POINT_CREATOR}||'%'
+		    	]]>
+		    </if>
+		    <if test="AREA_ID != null and AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.AREA_ID = #{AREA_ID}
+			    ]]>
+			</if>
+		    <if test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+		        <![CDATA[
+			    	and p.SON_AREA_ID = #{SON_AREA_ID}
+			    ]]>
+		    </if>
+           ) t where 1=1
+           <if test="LINE_NO != null and LINE_NO !=''">
+		    	<![CDATA[
+		    		and t.LINE_NO like '%'||#{LINE_NO}||'%'
+		    	]]>
+		   </if>
+		   <if test="LINE_NAME != null and LINE_NAME !=''">
+		    	<![CDATA[
+		    		and t.LINE_NAME like '%'||#{LINE_NAME}||'%'
+		    	]]>
+		   </if>
+ 		order by t.count desc, t.point_create_time asc
+	</select>
+	
+	<select id="queryPointById" parameterType="string" resultType="map">
+		select p.POINT_ID,
+       p.POINT_NO,
+       p.POINT_NAME,
+       p.POINT_TYPE,
+       pt.POINT_TYPE_NAME,
+       et.EQUIPMENT_TYPE_NAME,
+       p.LONGITUDE,
+       p.LATITUDE,
+       a2.NAME                as SON_AREA,
+       p.SON_AREA_ID,
+       p.point_level,
+       MNT.LEVEL_NAME,
+       p.EQP_TYPE_ID,
+       p.area_type,
+       pd.dept_no,
+       pd.dept_name
+  from TB_INS_POINT          p,
+       TB_INS_POINT_TYPE     pt,
+       AREA                  a2,
+       TB_INS_EQUIPMENT_TYPE et,
+       tb_ins_mnt  MNT,
+       tb_ins_point_dept pd
+ where p.POINT_TYPE > -1
+   and p.POINT_TYPE = pt.POINT_TYPE_ID
+   and p.SON_AREA_ID = a2.AREA_ID
+   and p.EQP_TYPE_ID = et.EQUIPMENT_TYPE_ID(+)
+   AND P.POINT_LEVEL=MNT.LEVEL_ID(+)
+   and p.point_id=pd.point_id(+)
+   and p.point_id=#{point_id}
+	</select>
+	
+	<update id="updateCoordinate" parameterType="map">
+		UPDATE TB_INS_POINT P 
+	   SET P.POINT_NAME=#{POINT_NAME},
+	       P.EQP_TYPE_ID=#{EQP_TYPE_ID},
+	       P.POINT_LEVEL=#{POINT_LEVEL},
+	       p.POINT_TYPE=#{POINT_TYPE},
+	       p.MODIFY_TIME=sysdate,
+	       p.MODIFY_STAFF=#{MODIFY_STAFF},
+	       p.SON_AREA_ID=#{SON_AREA_ID},
+	       p.ORIGIN_TYPE=0,
+	       p. AREA_TYPE=#{AREA_TYPE}
+	   WHERE P.POINT_ID=#{POINT_ID}
+	</update>
+	
+	<update id="updateNormalPoint" parameterType="map">
+		UPDATE TB_INS_POINT P 
+	   SET p.POINT_NO=#{POINT_NO},
+	   	   P.POINT_NAME=#{POINT_NAME},
+	   	   <if test="EQP_TYPE_ID != null and EQP_TYPE_ID !=''">
+	   	   P.EQP_TYPE_ID=#{EQP_TYPE_ID},
+		   </if>
+	       <if test="POINT_LEVEL != null and POINT_LEVEL !=''">
+	   	  P.POINT_LEVEL=#{POINT_LEVEL},
+		   </if>
+	       p.POINT_TYPE=#{POINT_TYPE},
+	       p.MODIFY_TIME=sysdate,
+	       p.MODIFY_STAFF=#{MODIFY_STAFF},
+	       p.SON_AREA_ID=#{SON_AREA_ID},
+	       p.ORIGIN_TYPE=0,
+	       p. AREA_TYPE=#{AREA_TYPE}
+	   WHERE P.POINT_ID=#{POINT_ID}
+	</update>
+	
+	<select id="getAreaByParentId" parameterType="string" resultType="map">
+		SELECT A.NAME,A.AREA_ID FROM AREA A 
+		WHERE A.PARENT_AREA_ID=(select A.PARENT_AREA_ID from AREA A where A.AREA_ID=#{SON_AREA_ID})
+	</select>
+	
+		<select id="getPointInfo" parameterType="string" resultType="map">
+		select p.point_name,p.point_no,p.point_id from tb_ins_point p where p.point_id=#{point_id}
+	</select>
+	
+	<select id="getDeptInfo" parameterType="string" resultType="map">
+		select d.dept_id,d.dept_name,d.dept_no from tb_ins_dept d where d.dept_no=#{dept_no}
+	</select>
+	
+	<insert id="addPointRelationship" parameterType="map">
+		insert into tb_ins_point_dept(point_name,point_no,dept_no,point_id,dept_id,dept_name,create_time) 
+		values(#{POINT_NAME},#{POINT_NO},#{DEPT_NO},#{POINT_ID},#{DEPT_ID},#{DEPT_NAME},sysdate)
+	</insert>
+	
+	<update id="editPointDept" parameterType="map">
+		update tb_ins_point_dept pd set pd.dept_no=#{DEPT_NO},pd.dept_id=#{DEPT_ID},pd.dept_name=#{DEPT_NAME}
+		where pd.point_id=#{POINT_ID}
+	</update>
+	
+	<select id="ifPointDeptExists" parameterType="string" resultType="int">
+		select count(1) from tb_ins_point_dept pd where pd.point_id=#{point_id}
+	</select>
+	
+	<select id="getAreaIdByName" parameterType="string" resultType="string">
+		select area_id from area where name=#{name}
+	</select>
+		<select id="getEqpTypeList" resultType="map">
+		select equipment_type_id,equipment_type_name from tb_ins_equipment_type
+	</select>
+</mapper>

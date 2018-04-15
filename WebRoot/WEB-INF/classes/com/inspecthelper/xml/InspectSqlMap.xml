@@ -1,0 +1,1342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inspecthelper.dao.InspectHelperDao">
+	<sql id="dynamicWhere">
+		<if test="queryParams.taskCode!= null and queryParams.taskCode!=''">  
+            <![CDATA[
+	    	AND it.task_code = #{queryParams.taskCode}
+	    	]]>
+		</if>
+		<if test="queryParams.equCode!= null and queryParams.equCode!=''">  
+            <![CDATA[
+	    	AND ie.equipment_code like '%'||#{queryParams.equCode}||'%'
+	    	]]>
+		</if>
+	</sql>
+
+<select id="getRes" parameterType="java.util.HashMap"
+		resultType="java.util.HashMap" statementType="STATEMENT">
+		select ie.equipment_id,ie.equipment_code ,ie.address
+		,ie.equipment_name,ie.res_type_id
+		from ins_equipment ie where equipment_code like '%${equipmentCode}%' and
+		rownum &lt; 20
+</select>
+<select id="getTroubleOrderList" parameterType="java.util.Map"
+	resultType="java.util.HashMap">
+	select t.trouble_id,
+	t.order_id,t.staff_id,t.staff_name,s.own_company,t.equipment_name,t.task_id
+	,t.type,t.target_name
+	,t.task_code,t.happen_date,t.remarks,t.project_no,t.check_staff_name,t.sn,
+	case
+	when t.state='0' then '未派发'
+	when t.state='1' then '待回单'
+	when
+	t.state='2' then '待审核'
+	when t.state='3' then '归档'
+	when t.state='4' then
+	'已退单'
+	end trstate
+	,case when t.type='1' then '已处理'
+	when t.type='0' then
+	'问题上报'
+	end trtype,
+	t.res_type,t.son_area,t.equipment_code,s.staff_name
+	upload_staff_name,t.ins_company
+	from <!-- (select trlist.trouble_id,
+	it.target_name,it.target_id,trlist.order_id,trlist.repaire_staff,
+	ff.staff_id,ff.staff_name,ff.own_company,equm.equipment_name,equm.equipment_code,equm.area,equm.res_type,trlist.state,trlist.type,trlist.remarks,trlist.happen_date,task.task_code,task.task_id,trlist.check_staff,trlist.upload_staff
+	,trlist.trouble_code,trlist.project_no,trlist.ftth,equm.res_type_id,equm.son_area,s.own_company
+	ins_company,cf.staff_name check_staff_name,trlist.sn
+	from ins_equ_target_trouble_list trlist
+	left join ins_task_order taskorder on trlist.order_id=taskorder.order_id
+	left join ins_task task on task.task_id=taskorder.task_id
+	left join ins_equipment equm on trlist.equipment_id=equm.equipment_id
+	left join tb_base_staff s on s.staff_id=equm.staff_id
+	left join tb_base_staff ff on trlist.repaire_staff=ff.staff_id
+	left join tb_base_staff cf on trlist.check_staff=cf.staff_id
+	left join ins_target it on it.target_id=trlist.target_id) -->
+	TROUBLE_ORDER_TASK t
+	join
+	tb_base_staff s on s.staff_no=t.upload_staff
+	left join
+	tb_base_staff s1
+	on s1.staff_id=t.check_staff
+	left join (select
+	ac.trouble_id,
+	max(trunc(ac.action_date)) maxdate
+	from ins_action_history ac
+	group by
+	ac.trouble_id) md
+	on t.trouble_id=md.trouble_id where 1=1
+	<include refid="dynamicWhere2" />
+	order by t.happen_date desc
+</select>
+
+<sql id="dynamicWhere2">
+		 	<if test="overDayState!= null and overDayState!=''" >  
+            <![CDATA[
+	    	AND  exists (select 1 from ins_action_history iah where iah.trouble_id=t.trouble_id and iah.action_type=6) and  ${overDayState}
+	    	]]>
+			</if>
+			<if test="sn!= null and sn!=''" >  
+            <![CDATA[
+	    	AND  t.sn = #{sn}
+	    	]]>
+			</if>
+			<if test="orderNo!= null and orderNo!=''" >  
+            <![CDATA[
+	    	AND  t.order_id = #{orderNo}
+	    	]]>
+			</if>
+			<if test="typeId!= null and typeId!=''" >  
+            <![CDATA[
+	    	AND  t.type = #{typeId}
+	    	]]>
+			</if>
+			<if test="order_equ!= null and order_equ!=''" >  
+            <![CDATA[
+	    	AND  t.equipment_code like '%${order_equ}%'
+	    	]]>
+			</if>
+			<if test="remarks!= null and remarks!=''" >  
+            <![CDATA[
+	    	AND  t.remarks like '%${remarks}%'
+	    	]]>
+			</if>
+			<if test="stateId!= null and stateId!=''" >  
+            <![CDATA[
+	    	AND  t.state = #{stateId}
+	    	]]>
+			</if>
+			<if test="targetId!= null and targetId!=''" >  
+            <![CDATA[
+	    	AND  t.target_id = #{targetId}
+	    	]]>
+			</if>
+			<if test="areaId!= null and areaId!=''" >  
+            <![CDATA[
+	    	AND  t.son_area like '%${areaId}%'
+	    	]]>
+			</if>
+			<if test="area!= null and area!=''" >  
+            <![CDATA[
+	    	AND  s.area_id=#{area}
+	    	]]>
+			</if>
+			<if test="resTypeId!= null and resTypeId!=''" >  
+            <![CDATA[
+	    	AND  t.res_type_id = #{resTypeId}
+	    	]]>
+			</if>
+			<if test="staffId!= null and staffId!=''" >  
+            <![CDATA[
+	    	AND  t.repaire_staff = #{staffId} and t.state = '1'
+	    	]]>
+			</if>
+			<if test="staffNo1!= null and staffNo1!=''" >  
+            <![CDATA[
+	    	AND  t.check_staff = #{staffNo1} and t.state in('0','2','4')
+	    	]]>
+			</if>
+			<if test="staffId_!= null and staffId_!=''" >  
+            <![CDATA[
+	    	AND  (t.check_staff = #{staffId_} or t.repaire_staff = #{staffId_})
+	    	]]>
+			</if>
+			<if test="ownCompany!= null and ownCompany!=''" >  
+            <![CDATA[
+	    	AND  t.ins_company like '%${ownCompany}%'
+	    	]]>
+			</if>
+			<if test="overDay!= null and overDay!=''" >  
+            <![CDATA[
+	    	AND   trunc(sysdate)-md.maxdate &gt; ${overDay}
+	    	]]>
+			</if>
+			<if test="overTime!= null and overTime!=''" >  
+            <![CDATA[
+	    	AND   t.state in ${overTime}  
+				and t.check_staff in (1313, 1314, 2646, 2654, 17, 18, 19, 20, 156, 165, 170)
+	    	]]>
+			</if>
+			<if test="startDate!= null and startDate!=''" >  
+            <![CDATA[
+	    	AND   t.happen_date &gt; to_date(#{startDate},'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+			</if>
+			<if test="endDate!= null and endDate!=''" >  
+            <![CDATA[
+	    	AND   t.happen_date &lt; to_date(#{endDate},'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+			</if>
+			<if test="checkStaffNo!= null and checkStaffNo!=''" >  
+            <![CDATA[
+	    	AND   s1.staff_no like '%${checkStaffNo}%'
+	    	]]>
+			</if>
+			<if test="repairer!= null and repairer!=''" >  
+            <![CDATA[
+	    	AND   t.staff_name like '%${repairer}%'
+	    	]]>
+			</if>
+	</sql>
+	<insert id="insertRegisterLog" parameterType="map">
+		insert into
+		register_log(sn, content, state_id, handle_date,
+		handle_name,staff_no)
+		values(#{sn,jdbcType=VARCHAR},#{content,jdbcType=VARCHAR},
+		#{state_id,jdbcType=VARCHAR},sysdate,#{hadle_name,jdbcType=VARCHAR},#{staff_no,jdbcType=VARCHAR})
+	</insert>
+	<select id="getTskOrderListCount" resultType="java.lang.Integer"
+		parameterType="map">
+		select count(1) from (
+		select distinct ito.order_id
+		from ins_task_order
+		ito
+		join ins_task it on it.task_id = ito.task_id
+		join tb_base_staff s on
+		s.staff_id = it.check_staff_id
+		join ins_cycle ic on
+		it.cycle_id=ic.cycle_id
+		join ins_task_equ ite on ite.task_id=it.task_id
+		join ins_equipment ie on ite.equipment_id=ie.equipment_id
+		where
+		s.staff_no = #{staffNo} and ito.state in (0,1,2,3) and it.state_id=1
+		<if test="taskCode!= null and taskCode!=''">  
+            <![CDATA[
+	    	AND it.task_code = #{taskCode}
+	    	]]>
+		</if>
+		<if test="equCode!= null and equCode!=''">  
+            <![CDATA[
+	    	AND ie.equipment_code like '%'||#{equCode}||'%'
+	    	]]>
+		</if>
+		)
+	</select>
+	<select id="getOBDByGJNo" parameterType="java.util.HashMap"
+		statementType="STATEMENT" resultType="java.util.HashMap">
+		SELECT DECODE(PR.DESC_CHINA,NULL,PE1.NO||'@空白',PE1.NO||'@'||PR.DESC_CHINA)
+		NO, PE1.NAME
+		FROM ${dblinkUsername}.PHY_EQUIPMENT PE
+		JOIN ${dblinkUsername}.PHY_EQP_UNIT PEU
+		ON PE.PHY_EQP_ID = PEU.PHY_EQP_ID
+		JOIN ${dblinkUsername}.PHY_EQUIPMENT PE1
+		ON PE1.INSTALL_UNIT_ID = PEU.UNIT_ID
+		LEFT JOIN ${dblinkUsername}.PHY_EQP_PROPERTY PEP
+		ON PE1.PHY_EQP_ID = PEP.OBJ_ID
+		AND PEP.PROP_SPEC_ID = '685'
+		LEFT JOIN ${dblinkUsername}.PUB_RESTRICTION PR
+		ON PEP.VALUE = PR.SERIAL_NO
+		WHERE PE.NO = '${resCode}'
+		AND (PEU.RES_SPEC_ID = '1140' OR PEU.RES_SPEC_ID='1135')
+		AND PE1.RES_SPEC_ID = '2530'
+	</select>
+	<select id="getOrderCount" parameterType="map" resultType="java.lang.Integer">
+		select count(*) from (select trlist.trouble_id,
+		it.target_name,it.target_id,trlist.order_id,trlist.repaire_staff,
+		ff.staff_id,ff.staff_name,ff.own_company,equm.equipment_name,equm.equipment_code,equm.area,equm.res_type,trlist.state,trlist.type,trlist.remarks,trlist.happen_date,task.task_code,task.task_id,trlist.check_staff,trlist.upload_staff
+		,trlist.trouble_code,trlist.project_no,trlist.ftth,equm.res_type_id,equm.son_area,s.own_company
+		ins_company,cf.staff_name check_staff_name,trlist.sn
+		from
+		ins_equ_target_trouble_list trlist
+		left join ins_task_order taskorder
+		on trlist.order_id=taskorder.order_id
+		left join ins_task task on
+		task.task_id=taskorder.task_id
+		left join ins_equipment equm on
+		trlist.equipment_id=equm.equipment_id
+		left join tb_base_staff s on
+		s.staff_id=equm.staff_id
+		left join tb_base_staff ff on
+		trlist.repaire_staff=ff.staff_id
+		left join tb_base_staff cf on
+		trlist.check_staff=cf.staff_id
+		left join ins_target it on
+		it.target_id=trlist.target_id) t
+		join tb_base_staff s on
+		t.repaire_staff = s.staff_id
+		where t.type=0 and
+		s.staff_no=#{staffNo}
+		and t.state = '1'
+	</select>
+
+
+	<select id="query" resultType="map" parameterType="util.page.Query">
+		select distinct ito.order_id,
+		TO_CHAR(ito.start_date,'yyyy-mm-dd
+		hh24:mi:ss') start_date,
+		TO_CHAR(ito.end_date,'yyyy-mm-dd hh24:mi:ss')
+		end_date,
+		ito.state,
+		ito.eqp_num,
+		ito.check_eqp_num,
+		it.task_code,
+		ic.cycle_name||it.frequency||'次' cycle,
+		case
+		when ito.end_date &gt;=
+		sysdate then '进行中'
+		when ito.end_date &lt;= sysdate then '已完成'
+		end as
+		taskstate
+		from
+		ins_task_order ito
+		join ins_task it on it.task_id =
+		ito.task_id
+		join
+		tb_base_staff s on s.staff_id = it.check_staff_id
+		join
+		ins_cycle ic on
+		it.cycle_id=ic.cycle_id
+		join ins_task_equ ite on
+		ite.task_id=it.task_id
+		join ins_equipment ie on
+		ite.equipment_id=ie.equipment_id
+		where
+		
+		
+		<!--
+			s.staff_no =#{queryParams.staffNo} and
+		-->ito.state
+		in (0,1,2,3) and it.state_id=1
+		and ito.end_date &gt; sysdate
+		<include refid="dynamicWhere" />
+	</select>
+	<select id="getTaskEquCount" resultType="int" parameterType="java.lang.String">
+		select count(1) from
+		ins_task_order_equipment_sign where
+		order_id=#{orderId}
+	</select>
+
+	<select id="getEquTarget" resultType="map" parameterType="map">
+		select target_id,target_name,res_spec_id,area_id,check_item_type
+		from
+		ins_target t
+		where 1=1
+		<if test="resTypeId != null and resTypeId != ''">  
+            <![CDATA[
+	    	AND t.res_spec_id=#{resTypeId}
+	    	]]>
+		</if>
+		<if test="areaId != null and areaId != ''">  
+            <![CDATA[
+	    	AND t.area_id=#{areaId}
+	    	]]>
+		</if>
+		order by t.area_id,t.target_id
+	</select>
+
+	<select id="getTaskEquList" resultType="map" parameterType="java.lang.String">
+		select ite.equipment_id
+		from ins_task_equ ite
+		join ins_task_order ito on
+		ito.task_id = ite.task_id
+		where ito.order_id = #{orderId}
+	</select>
+
+	<insert id="createTaskOrderSign" parameterType="map">
+		insert into
+		ins_task_order_equipment_sign
+		(sign_id,order_id,equipment_id,state)
+		values(SIGN_ID.NEXTVAL,#{orderId},#{equipmentId},0)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="signId">
+			SELECT SIGN_ID.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+
+	<insert id="createTaskOrderCheck1" parameterType="map">
+		insert into
+		ins_task_equipment_check(check_id,order_id,equipment_id,state)
+		values(#{signId},#{orderId},#{equipmentId},0)
+	</insert>
+
+	<insert id="createTaskOrderCheck" parameterType="map">
+		insert into
+		ins_task_equipment_check(check_id,order_id,check_date,equipment_id,state,actual_check_staff_no,is_odf_check,sn,begin_time,end_time)
+		values(#{signId,jdbcType=INTEGER},#{orderId,jdbcType=INTEGER},#{ckDate,jdbcType=DATE},#{equipmentId},0,#{staffNo},#{odfCheck,jdbcType=INTEGER},#{sn},to_date(#{beginTime,jdbcType=DATE},'yyyy-mm-dd
+		hh24:mi:ss'),to_date(#{endTime,jdbcType=DATE},'yyyy-mm-dd
+		hh24:mi:ss'))
+	</insert>
+
+
+	<select id="getTaskOrderSign" parameterType="map" resultType="map">
+		select distinct itoes.equipment_id,
+		ie.latitude,
+		ie.longitude,
+		itoes.state sign_state,
+		ie.equipment_code,
+		itec.state check_state,
+		ie.equipment_name,
+		ie.address,
+		ie.res_type_id,
+		ito.state
+		from
+		ins_task_order_equipment_sign itoes
+		join ins_task_equipment_check itec
+		on itoes.sign_id=itec.check_id
+		join ins_task_order ito on ito.order_id
+		= itoes.order_id
+		join ins_equipment ie on ie.equipment_id =
+		itoes.equipment_id
+		where ito.order_id=#{orderId} and ito.state in
+		(0,1,2,3)
+		<if test="taskCode!= null and taskCode!=''">  
+            <![CDATA[
+	    	AND it.task_code = #{taskCode}
+	    	]]>
+		</if>
+		<if test="equCode!= null and equCode!=''">  
+            <![CDATA[
+	    	AND ie.equipment_code like '%'||#{equCode}||'%'
+	    	]]>
+		</if>
+	</select>
+
+
+	<select id="getStr" parameterType="map" resultType="java.lang.String">
+		select
+		ie.equipment_code||'/'||it.target_name||'/'||#{staffNo}||'/'||to_char(sysdate,'yyyy-mm-dd')
+		str
+		from ins_equipment ie,ins_target it where
+		ie.equipment_id=#{equipmentId}
+		and it.target_id=#{targetId}
+	</select>
+
+	<select id="getTargetQues" parameterType="java.lang.String"
+		resultType="map">
+		select remarks from ins_equ_target_trouble_list t where
+		t.trouble_code=#{troubleCode}
+	</select>
+
+	<select id="getLastTrouPhotoPath" parameterType="map"
+		resultType="map">
+		select replace(photo_path,'ip',#{ip}) photo_path
+		,replace(micro_photo_path,'ip',#{ip})
+		micro_photo_path,to_char(rp.upload_date,'yyyy-mm-dd')||'('||rownum||')'
+		photo_name from resource_photo rp where rp.resource_code
+		=#{resourceCode}
+	</select>
+
+	<delete id="deleResTrou" parameterType="java.lang.String">
+		delete from
+		ins_equ_target_trouble_list t where t.trouble_code = #{troubleCode}
+	</delete>
+
+	<select id="getEquArea" parameterType="map" resultType="java.lang.String">
+		select
+		ie.area from ins_equipment ie where ie.equipment_id=#{equipmentId}
+	</select>
+	<select id="getEquAreaId" parameterType="map" resultType="java.lang.String">
+		select
+		ie.area_id from ins_equipment ie where ie.equipment_id=#{equipmentId}
+	</select>
+
+	<select id="getCheckStaffTC" parameterType="map" resultType="map">
+		select to_char(t.staff_id) staff_id
+		from tb_base_staff t where
+		t.staff_no='950012'
+	</select>
+
+	<select id="getCheckStaffCS" parameterType="map" resultType="map">
+		select to_char(t.staff_id) staff_id
+		from tb_base_staff t where
+		t.staff_no='201369'
+	</select>
+	<select id="getCheckStaffZXC" parameterType="map" resultType="map">
+		select to_char(t.staff_id) staff_id
+		from tb_base_staff t where
+		t.staff_no='100491'
+	</select>
+
+	<select id="getCheckStaff2" parameterType="map" resultType="map">
+		select to_char(t.staff_id) staff_id
+		from ins_staff_target t
+		where
+		t.target_id = #{targetId}||(select ie.son_area from ins_equipment ie
+		where ie.equipment_id=#{equipmentId})
+	</select>
+
+	<select id="getCheckStaff3" parameterType="map" resultType="map">
+		select to_char(t.staff_id) staff_id,staff_name
+		from ins_staff_target t
+		join tb_base_staff s on t.staff_id = s.staff_id
+		where t.target_id
+		=
+		#{targetId}
+		and (select s1.own_company from tb_base_staff s1
+		where
+		s1.staff_id =
+		(select ie.staff_id from ins_equipment ie where
+		ie.equipment_id=#{equipmentId} )
+		)=s.own_company order by s.staff_name
+	</select>
+
+	<select id="getCheckStaff" parameterType="map" resultType="map">
+		select to_char(t.staff_id) staff_id
+		from ins_staff_target t
+		join
+		tb_base_staff s on t.staff_id = s.staff_id
+		where t.target_id =
+		#{targetId}
+		and (select s1.own_company from tb_base_staff s1 where
+		s1.staff_no =
+		#{checkStaffNoForNotSpecial})=s.own_company
+	</select>
+
+	<select id="getCheckStaff12" parameterType="map" resultType="map">
+		select to_char(t.staff_id) staff_id,staff_name
+		from ins_staff_target t
+		join tb_base_staff s on t.staff_id = s.staff_id
+		where t.target_id
+		=
+		#{targetId} 
+	</select>
+
+	<select id="getCheckStaff1" parameterType="map" resultType="map">
+		select distinct to_char(s.staff_id) staff_id,staff_name
+		from
+		tb_base_staff s
+		join tb_base_staff_role br on br.staff_id = s.staff_id
+		where br.role_id=62 and s.son_area_id=(
+		select dos.son_area_id from
+		tb_base_staff dos
+		where dos.staff_no=#{checkStaffNoForNotSpecial})
+		order by s.staff_name
+	</select>
+
+	<select id="getCheckStaff11" parameterType="map" resultType="map">
+		select distinct to_char(s.staff_id) staff_id
+		from tb_base_staff s
+		join
+		tb_base_staff_role br on br.staff_id = s.staff_id
+		join ins_company ic
+		on ic.company_name = s.own_company
+		where ic.company_id = 200
+	</select>
+
+	<select id="getNextSeqVal" resultType="java.lang.String"
+		parameterType="map" statementType="STATEMENT">
+		SELECT ${seqName}.NEXTVAL
+		FROM DUAL
+	</select>
+
+	<insert id="saveResTrouble" parameterType="map">
+		insert into
+		ins_equ_target_trouble_list(trouble_id,target_id,happen_date,remarks,state,equipment_id,type,order_id,trouble_code,end_time,upload_staff,check_staff,sn,dinamic_change_id,ftth)
+		values(#{troubleId},#{targetId},sysdate,#{description},#{state},#{equipmentId},#{type},#{orderId,jdbcType=INTEGER},#{troubleCode},sysdate,#{uploadStaff},#{checkStaff},#{sn},#{id,jdbcType=VARCHAR},#{ftth,jdbcType=VARCHAR})
+	</insert>
+
+	<select id="getOpticalPathNameByCode" parameterType="map"
+		resultType="java.lang.String" statementType="STATEMENT">
+		SELECT LB.NAME
+		FROM
+		${DBLINKUSERNAME}.LNK_BUSINESS_LINK LB
+		WHERE LB.NO = #{code} AND ROWNUM
+		= 1          
+	</select>
+
+
+	<update id="updateResTrou" parameterType="java.util.HashMap">
+		update
+		ins_equ_target_trouble_list t
+		set t.remarks = #{remarks}
+		where
+		t.trouble_code=#{troubleCode}
+	</update>
+
+	<select id="checkResCount" parameterType="map" resultType="java.lang.Integer">
+		select count(*) count from INS_TASK_EQUIPMENT_CHECK t
+		where
+		t.order_id=#{orderId} and t.equipment_id=#{equipmentId}
+	</select>
+
+	<update id="checkRes" parameterType="map">
+		update
+		ins_task_equipment_check t set t.state='1', t.check_date=sysdate,
+		t.sn=#{sn},t.begin_time=to_date(#{beginTime,jdbcType=DATE},'yyyy-mm-dd
+		hh24:mi:ss'),
+		t.end_time=to_date(#{endTime,jdbcType=DATE},'yyyy-mm-dd
+		hh24:mi:ss')
+		where t.order_id=#{orderId,jdbcType=INTEGER} and
+		t.equipment_id=#{equipmentId}
+	</update>
+
+
+
+	<update id="updateTaskOrder" parameterType="map">
+		update
+		ins_task_order
+		ito set ito.state=1 where ito.state=0 and
+		ito.order_id=#{orderId}
+	</update>
+
+	<update id="updateTaskOrder1" parameterType="map">
+		update
+		ins_task_order ito set ito.check_eqp_num=(select count(distinct
+		c.equipment_id) from
+		ins_task_equipment_check c where
+		c.order_id=#{orderId} and c.state=1)
+		where ito.order_id=#{orderId}
+	</update>
+
+	<update id="updateTaskOrder2" parameterType="map">
+		update
+		ins_task_order ito set ito.state=2 , ito.complete_time=sysdate where
+		ito.eqp_num=ito.check_eqp_num and ito.order_id=#{orderId}
+	</update>
+
+	<select id="getResTrouble" parameterType="map" resultType="map">
+		select t.remarks,t.order_id,t.type,TO_CHAR(t.happen_date,'yyyy-mm-dd')
+		happendate,t.trouble_code,to_char(t.trouble_id)
+		trouble_id,it.target_name
+		from ins_equ_target_trouble_list t
+		join
+		ins_target it on t.target_id=it.target_id
+		where
+		t.equipment_id=#{equipmentId}
+
+		<if test="targetId!= null and targetId!=''">  
+            <![CDATA[
+	    	AND t.target_id=#{targetId}
+	    	]]>
+		</if>
+
+		<if test="orderId!= null and orderId!=''">  
+            <![CDATA[
+	    	AND t.order_id = #{orderId}
+	    	]]>
+		</if>
+		order by happen_date desc
+	</select>
+
+
+	<select id="getLastCheckDate" parameterType="map" resultType="java.lang.String">
+		select to_char(check_date,'yyyy-mm-dd hh24:mi:ss') check_date
+		from
+		(select check_date
+		from ins_task_equipment_check t
+		<if test="equipmentId!= null and equipmentId!=''">  
+            <![CDATA[
+	    	where t.equipment_id=#{equipmentId} 
+	    	]]>
+		</if>
+		<if test="resNo!= null and resNo!=''">  
+            <![CDATA[
+	    	join ins_equipment ie on t.equipment_id = ie.equipment_id
+			where ie.equipment_code = #resNo# 
+	    	]]>
+		</if>
+		and t.check_date is not null
+		order by t.check_date desc) where rownum=1
+	</select>
+
+	<select id="getGJCDuanInfo" resultType="map" parameterType="map">
+		select
+		t.project_type,t.project_no,t.project_name,t.manage_company,to_char(t.end_date,'yyyy-mm-dd')
+		end_date,to_char(t.export_date,'yyyy-mm-dd')
+		export_date,t.res_no,t.change_status,t.insp_company
+		from ins_cduan t
+		<if test="resNo!= null and resNo!=''">  
+            <![CDATA[
+	    	 t.res_no = #{resNo}
+	    	]]>
+		</if>
+		<if test="equipmentId!= null and equipmentId!=''">  
+            <![CDATA[
+	    	join ins_equipment ie on
+			t.res_no=ie.equipment_code
+			where ie.equipment_id=#{equipmentId}
+	    	]]>
+		</if>
+		<if test="startDate!= null and startDate!=''">  
+            <![CDATA[
+	    	and t.end_date >=
+			to_date(#{startDate},'yyyy-mm-dd hh24:mi:ss') and t.end_date <=
+			to_date(#{endDate},'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="lastCheckDate!= null and lastCheckDate!=''">  
+            <![CDATA[
+	    	and t.end_date >=
+			to_date(#{lastCheckDate},'yyyy-mm-dd hh24:mi:ss') and t.end_date <=
+			sysdate 
+	    	]]>
+		</if>
+		<if test="date!= null and date!=''">  
+            <![CDATA[
+            and t.end_date >= sysdate-#{date}
+			and t.end_date <= sysdate
+	    	]]>
+		</if>
+	</select>
+
+	<select id="getODFStaffRole" parameterType="java.lang.String"
+		resultType="java.lang.String">
+		select max(t.role_id) from tb_base_role t
+		join tb_base_staff_role
+		t1 on t1.role_id=t.role_id
+		join tb_base_staff s on
+		s.staff_id=t1.staff_id
+		where t.role_id
+		in(14,15,16,17) and
+		s.staff_no=#{staffNo}
+  </select>
+
+	<update id="updateDinamicChange" parameterType="map">
+		update sh_zyjc_odf_change t set
+		<if test="state_a!= null and state_a!=''">  
+            <![CDATA[
+            t.state_a=#{state_a}
+			,t.check_date_a=sysdate, t.staff_a=#{staffId} 
+	    	]]>
+		</if>
+		<if test="state_b!= null and state_b!=''">  
+            <![CDATA[
+            t.state_b=#{state_b}
+			,t.check_date_a=sysdate, t.staff_b=#{staffId} 
+	    	]]>
+		</if>
+		<if test="state_c!= null and state_c!=''">  
+            <![CDATA[
+            t.state_c=#{state_c}
+			,t.check_date_a=sysdate, t.staff_c=#{staffId} 
+	    	]]>
+		</if>
+		<if test="state_d!= null and state_d!=''">  
+            <![CDATA[
+            t.state_d=#{state_d}
+			,t.check_date_a=sysdate, t.staff_d=#{staffId} 
+	    	]]>
+		</if>
+		where t.PHY_PORT_ID_A in(${trueIds})
+	</update>
+
+	<select id="getODFDinamicRes" parameterType="map" resultType="map">
+		select distinct to_char(t.id) id,
+		t.光路编码_A,t.设备编码_B,t.设备名称_B,t.端口_B,t.端口_A,t.光路编码_B,t1.name,t.光路名称_B
+		,to_char(t.修改时间_B,'yyyy-mm-dd')
+		修改时间_B,to_char(t.insertdate,'yyyy-mm-dd') insertdate,t.area_b,
+		case
+		when t.state_a='0' then '未检查' when t.state_a='1' then '正确' when
+		t.state_a='2' then '错误' end as state_a,
+		case when t.state_b='0' then
+		'未检查' when t.state_b='1' then '正确' when t.state_b='2' then '错误' end as
+		state_b,
+		case when t.state_c='0' then '未检查' when t.state_c='1' then
+		'正确' when t.state_c='2' then '错误' end as state_c,
+		case when
+		t.state_d='0' then '未检查' when t.state_d='1' then '正确' when
+		t.state_d='2' then '错误' end as state_d,
+		ie.equipment_id,
+		'' no,
+		t.insertdate idate,
+		s.own_company,
+		s.staff_name,
+		t.phy_port_id_a,
+		tcs.name tcs_name
+		from SH_ZYJC_ODF_change t
+		join ins_equipment ie on
+		t.设备编码_B=ie.equipment_code
+		left join PUB_STATUS_MY t1 on
+		t.光路状态_B=t1.state_id
+		left join tb_base_staff s on
+		s.staff_id=t.staff_a
+		left join tb_base_staff s1 on
+		s1.staff_id=t.staff_b
+		left join
+		tb_cablecheck_srv_pso_type tcs
+		on tcs.pso_type_id=t.property_id
+		where
+		1=1
+		<include refid="dynamicWhere5" />
+		order by t.insertdate desc
+	</select>
+
+	<sql id="dynamicWhere5">
+		<if test="areaId!= null and areaId!=''">  
+            	<![CDATA[
+            	and ie.area_id=#{areaId} 
+	    		]]>
+		</if>
+		<if test="port!= null and port!=''">  
+            	<![CDATA[
+            	and t.端口_A like '%|'||'${port}'||'%' 
+	    		]]>
+		</if>
+		<if test="no!= null and no!=''">  
+            	<![CDATA[
+            	and (t.光路编码_B like '%'||'${no}'||'%' or
+				t.光路编码_A like '%'||'${no}'||'%') 
+	    		]]>
+		</if>
+		<if test="staffNo1!= null and staffNo1!=''">  
+            	<![CDATA[
+            	and s1.staff_no=#{staffNo1} 
+	    		]]>
+		</if>
+		<if test="staffNo_!= null and staffNo_!=''">  
+            	<![CDATA[
+            	and (s1.staff_no=#{staffNo_} or
+				s.staff_no=#{staffNo_}) 
+	    		]]>
+		</if>
+		<if test="ownCompany!= null and ownCompany!=''">  
+            	<![CDATA[
+            	and s.own_company = #{ownCompany}
+	    		]]>
+		</if>
+		<if test="resNo!= null and resNo!=''">  
+            	<![CDATA[
+            	and t.设备编码_B= #{resNo}
+	    		]]>
+		</if>
+		<if test="equipmentId!= null and equipmentId!=''">  
+            	<![CDATA[
+            	and ie.equipment_id= #{equipmentId}
+	    		]]>
+		</if>
+		<if test="staffNo!= null and staffNo!=''">  
+            	<![CDATA[
+            	and s.staff_no= #{staffNo}
+	    		]]>
+		</if>
+		<if test="startDate!= null and startDate!=''">  
+            	<![CDATA[
+            	and t.insertdate >=
+				to_date(#{startDate},'yyyy-mm-dd hh24:mi:ss')
+	    		]]>
+		</if>
+		<if test="endDate!= null and endDate!=''">  
+            	<![CDATA[
+            	and t.insertdate <=
+				to_date(#{endDate},'yyyy-mm-dd hh24:mi:ss')
+	    		]]>
+		</if>
+		<if test="equCode!= null and equCode!=''">  
+            	<![CDATA[
+            	and t.设备编码_B like '%'||'${equCode}'||'%' 
+	    		]]>
+		</if>
+
+		<if test="state!= null and state!=''">  
+            	<![CDATA[
+            	and ${state} != '0' 
+	    		]]>
+		</if>
+		<if test="state_!= null and state_!=''">  
+            	<![CDATA[
+            	and ${state_} = '0' 
+	    		]]>
+		</if>
+		<if test="lastCheckDate!= null and lastCheckDate!=''">  
+            	<![CDATA[
+            	and t.insertdate >=
+				to_date(#{lastCheckDate},'yyyy-mm-dd hh24:mi:ss') and t.insertdate
+				<= sysdate 
+	    		]]>
+		</if>
+		<if test="date!= null and date!=''">  
+            	<![CDATA[
+            	and t.insertdate >= sysdate-${date}
+				and t.insertdate <= sysdate
+	    		]]>
+		</if>
+		<if test="ischecked!= null and ischecked!=''">
+			<if test="ischecked =='0' || ischecked==0"> 
+				 	<![CDATA[
+            			and	t.state_a ='0' and t.state_b ='0' and t.state_c ='0' and t.state_d ='0'
+	    			]]>
+			</if>
+			<if test="ischecked =='1' || ischecked==1"> 
+				 	<![CDATA[
+            		 	and	t.state_a !='0' or t.state_b !='0' or t.state_c !='0' or t.state_d !='0'
+	    			]]>
+			</if>
+
+		</if>
+
+		<if test="sonArea!= null and sonArea!=''">  
+            	<![CDATA[
+            	and ie.son_area like '%'||'${sonArea}'||'%'
+	    		]]>
+		</if>
+	</sql>
+
+	<select id="getRealTimeOpticalCode" parameterType="map"
+		statementType="STATEMENT" resultType="java.lang.String">
+		SELECT LB.NO
+		FROM
+		${DBLINKUSERNAME}.LNK_PHY_LINK_COMPONENT LP,
+		${DBLINKUSERNAME}.LNK_BUSI_LINK_2_LINK LBL,
+		${DBLINKUSERNAME}.LNK_BUSINESS_LINK LB
+		WHERE LP.Z_PHY_PORT_ID =
+		#{portId}
+		AND LP.LINK_ID = LBL.LINK_ID(+)
+		AND LBL.BUSI_LINK_ID =
+		LB.BUSI_LINK_ID(+)
+		UNION
+		SELECT LB.NO
+		FROM
+		${DBLINKUSERNAME}.LNK_PHY_LINK_COMPONENT LP,
+		${DBLINKUSERNAME}.LNK_BUSI_LINK_2_LINK LBL,
+		${DBLINKUSERNAME}.LNK_BUSINESS_LINK LB
+		WHERE LP.A_PHY_PORT_ID =
+		${portId}
+		AND LP.LINK_ID = LBL.LINK_ID(+)
+		AND LBL.BUSI_LINK_ID =
+		LB.BUSI_LINK_ID(+)  
+	</select>
+
+	<insert id="insertResLog" parameterType="map">
+		insert into register_log
+		(sn,
+		content,
+		state_id,
+		handle_date,
+		handle_name,
+		res_no,
+		res_name,
+		res_area,
+		res_in)
+		values
+		(#{sn,jdbcType=VARCHAR},
+		#{content,jdbcType=VARCHAR},
+		#{state_id,jdbcType=VARCHAR},
+		sysdate,
+		#{hadle_name,jdbcType=VARCHAR},
+		#{res_no,jdbcType=VARCHAR},
+		#{res_name,jdbcType=VARCHAR},
+		#{res_area,jdbcType=VARCHAR},
+		#{res_in,jdbcType=VARCHAR})
+    </insert>
+
+
+	<select id="getContentByUno" parameterType="map" statementType="STATEMENT"
+		resultType="map">
+		select to_char(peu.sequence) as uNo,
+		ptp.SEQ_IN_UNIT,
+		to_char(ptp.SEQ_IN_UNIT) no,
+		cs.name as gName,
+		cs.no as gNo,
+		ptp.phy_port_id,
+		to_char(nvl((select ll.link_Id
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.z_phy_port_id) and rownum &lt; 2),
+		(select ll.link_Id
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.a_phy_port_id and rownum &lt; 2)))) link_Id,
+		nvl((select lbl.name
+		lname
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.z_phy_port_id) and rownum &lt; 2),
+		(select lbl.name lname
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.a_phy_port_id and rownum &lt; 2))) lname,
+		nvl((select lbl.no lno
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.z_phy_port_id) and rownum &lt; 2),
+		(select lbl.no lno
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.a_phy_port_id and rownum &lt; 2))) lno,
+		nvl((select ps.name
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		left join
+		${dblinkUsername}.pub_status ps on ps.state_id =
+		lbl.mnt_state_id
+		where
+		(ptp.phy_port_id = ll.z_phy_port_id) and rownum &lt; 2),
+		(select
+		ps.name
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		left join
+		${dblinkUsername}.pub_status ps on ps.state_id =
+		lbl.mnt_state_id
+		where
+		(ptp.phy_port_id = ll.a_phy_port_id and rownum &lt; 2))) state
+		From
+		${dblinkUsername}.phy_equipment pe
+		left join
+		${dblinkUsername}.phy_eqp_unit peu on pe.phy_eqp_id =
+		peu.phy_eqp_id
+		left join ${dblinkUsername}.phy_term_port ptp on ptp.unit_id =
+		peu.unit_id
+		left join ${dblinkUsername}.CBL_FIBER_CONJUNCTION cfc on
+		ptp.phy_port_id = cfc.phy_port_id
+		and cfc.MNT_STATE_ID != 170350
+		left
+		join ${dblinkUsername}.cbl_fiber cf on cfc.fiber_id =
+		cf.fiber_id
+		left
+		join ${dblinkUsername}.CBL_SECTION cs on cs.CBL_SECT_ID =
+		cf.CBL_SECT_ID
+		where pe.res_spec_Id in ('703','411')
+		and pe.no =
+		'${resCode}' and peu.sequence=${uNo}
+		and peu.res_spec_id = '313'
+		order by
+		ptp.SEQ_IN_UNIT
+	</select>
+
+
+	<select id="getJumpPortNo" parameterType="map" statementType="STATEMENT"
+		resultType="map">
+		select ptp.phy_port_id portId,
+		jp.phy_port_id jumpPortId,
+		jp.no jumpPortNo,
+		to_char(jp.seq_in_unit) jumpPortSeqNo,
+		to_char(peu.no) jumpUnitNo,
+		peu.sequence jumpUnitSeq,
+		pe.no jumpEqpNo,
+		pe.res_spec_id jumpEqpResTypeId
+		from ${dblinkUsername}.phy_term_port
+		ptp
+		join ${dblinkUsername}.lnk_phy_link_component lplc on
+		ptp.phy_port_id = lplc.a_phy_port_id
+		and nvl(lplc.cbl_line_id, 0) = 0
+		join ${dblinkUsername}.phy_term_port jp on jp.phy_port_id =
+		lplc.z_phy_port_id
+		join ${dblinkUsername}.phy_equipment pe on
+		jp.phy_eqp_id =
+		pe.phy_eqp_id
+		left join ${dblinkUsername}.phy_eqp_unit
+		peu on jp.unit_id =
+		peu.unit_id
+		where ptp.phy_port_id = ${PHY_PORT_ID}
+		union all
+		select ptp.phy_port_id portId,
+		jp.phy_port_id jumpPortId,
+		jp.no jumpPortNo,
+		to_char(jp.seq_in_unit) jumpPortSeqNo,
+		to_char(peu.no) jumpUnitNo,
+		peu.sequence jumpUnitSeq,
+		pe.no jumpEqpNo,
+		pe.res_spec_id jumpEqpResTypeId
+		from ${dblinkUsername}.phy_term_port
+		ptp
+		join ${dblinkUsername}.lnk_phy_link_component lplc on
+		ptp.phy_port_id = lplc.z_phy_port_id
+		and nvl(lplc.cbl_line_id, 0) = 0
+		join ${dblinkUsername}.phy_term_port jp on jp.phy_port_id =
+		lplc.a_phy_port_id
+		join ${dblinkUsername}.phy_equipment pe on
+		jp.phy_eqp_id =
+		pe.phy_eqp_id
+		left join ${dblinkUsername}.phy_eqp_unit
+		peu on jp.unit_id =
+		peu.unit_id
+		where ptp.phy_port_id = ${PHY_PORT_ID}
+	</select>
+
+	<select id="getOBDContentByUno" parameterType="map"
+		statementType="STATEMENT" resultType="map">
+		select
+		to_char(ptp.no) no,
+		cs.name
+		as gName,
+		cs.no as gNo,
+		ptp.phy_port_id,
+		to_char(nvl((select ll.link_Id
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.z_phy_port_id and rownum &lt; 2)),
+		(select ll.link_Id
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.a_phy_port_id and rownum &lt; 2)))) link_Id,
+
+		nvl((select lbl.name
+		lname
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.z_phy_port_id and rownum &lt; 2)),
+		(select lbl.name lname
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.a_phy_port_id and rownum &lt; 2))) lname,
+
+		nvl((select lbl.no lno
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.z_phy_port_id and rownum &lt; 2)),
+		(select lbl.no lno
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		where (ptp.phy_port_id =
+		ll.a_phy_port_id and rownum &lt; 2))) lno,
+
+		nvl((select ps.name
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_link llink on
+		ll.link_Id=llink.link_Id
+		left join
+		${dblinkUsername}.pub_status ps on ps.state_id =
+		llink.opr_state_id
+		where (ptp.phy_port_id = ll.z_phy_port_id and rownum &lt; 2)),
+		(select
+		ps.name
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_link llink on
+		ll.link_Id=llink.link_Id
+		left join
+		${dblinkUsername}.pub_status ps on ps.state_id =
+		llink.opr_state_id
+		where (ptp.phy_port_id = ll.a_phy_port_id and rownum &lt; 2)))
+		opr_state,
+
+		nvl((select ps.name
+		from
+		${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		left join
+		${dblinkUsername}.pub_status ps on ps.state_id =
+		lbl.mnt_state_id
+		where
+		(ptp.phy_port_id = ll.z_phy_port_id and rownum &lt; 2)),
+		(select
+		ps.name
+		from ${dblinkUsername}.lnk_phy_link_component ll
+		left join
+		${dblinkUsername}.lnk_busi_link_2_link lbl2l on
+		ll.link_id =
+		lbl2l.link_id
+		left join ${dblinkUsername}.lnk_business_link lbl on
+		lbl2l.busi_link_id =
+		lbl.busi_link_id
+		left join
+		${dblinkUsername}.pub_status ps on ps.state_id =
+		lbl.mnt_state_id
+		where
+		(ptp.phy_port_id = ll.a_phy_port_id and rownum &lt; 2))) mnt_state
+
+
+		From ${dblinkUsername}.phy_equipment pe
+		left join
+		${dblinkUsername}.phy_eqp_unit peu on pe.phy_eqp_id =
+		peu.phy_eqp_id
+		left join ${dblinkUsername}.phy_term_port ptp on ptp.unit_id =
+		peu.unit_id
+		left join ${dblinkUsername}.CBL_FIBER_CONJUNCTION cfc on
+		ptp.phy_port_id = cfc.phy_port_id
+		and cfc.MNT_STATE_ID != 170350
+		left
+		join ${dblinkUsername}.cbl_fiber cf on cfc.fiber_id =
+		cf.fiber_id
+		left
+		join ${dblinkUsername}.CBL_SECTION cs on cs.CBL_SECT_ID =
+		cf.CBL_SECT_ID
+
+		where pe.res_spec_Id = '2530'
+		and pe.no = #{resNo}
+		order
+		by 4
+	</select>
+	<select id="getTskOrderList" parameterType="map"
+		resultType="map">
+		select distinct ito.order_id,
+		TO_CHAR(ito.start_date,'yyyy-mm-dd hh24:mi:ss') start_date,
+		TO_CHAR(ito.end_date,'yyyy-mm-dd hh24:mi:ss') end_date,
+		ito.state,
+		ito.eqp_num,
+		ito.check_eqp_num,
+		it.task_code,
+		ic.cycle_name||it.frequency||'次' cycle,
+		case
+		  when ito.end_date &gt;= sysdate then '进行中' 
+		  when ito.end_date &lt;= sysdate then '已完成'
+		end  as taskstate
+		from ins_task_order ito
+		join ins_task it on it.task_id = ito.task_id
+		join tb_base_staff s on s.staff_id = it.check_staff_id
+		join ins_cycle ic on it.cycle_id=ic.cycle_id
+		join ins_task_equ ite on ite.task_id=it.task_id
+		join ins_equipment ie on ite.equipment_id=ie.equipment_id
+		where s.staff_no = #{staffNo} and ito.state in (0,1,2,3) and it.state_id=1
+		and ito.end_date &gt; sysdate
+		<include refid="dynamicWhere_1" />
+	</select>
+	<sql id="dynamicWhere_1">
+		<if test="taskCode!= null and taskCode!=''">  
+            <![CDATA[
+	    	AND it.task_code = #{taskCode}
+	    	]]>
+		</if>
+		<if test="equCode!= null and equCode!=''">  
+            <![CDATA[
+	    	AND ie.equipment_code like '%'||${equCode}||'%'
+	    	]]>
+		</if>
+	</sql>
+	
+	<select id="getUnoByResNo" parameterType="java.util.Map" statementType="STATEMENT"
+	resultType="map">
+	select distinct to_char(peu.sequence) as uNo
+	From ${dblinkUsername}.phy_equipment pe
+	join ${dblinkUsername}.phy_eqp_unit peu on pe.phy_eqp_id =peu.phy_eqp_id
+	where pe.no = '${resNo}' order by peu.sequence
+	</select>
+	<select id="getStaffNo" parameterType="java.lang.String"
+		resultType="java.lang.String">
+    SELECT STAFF_NO FROM tb_base_staff WHERE STAFF_ID = #{STAFF_ID}
+	</select>
+	
+	<select id="getCheckedTimes" parameterType="java.util.HashMap"
+		resultType="java.lang.Integer">
+		select count(*) as count
+		from ins_task_order ito
+		inner join ins_task_equipment_check itec on ito.order_id=itec.order_id
+		inner join tb_base_staff s on itec.actual_check_staff_no=s.staff_no
+		where itec.state='1'
+		and ito.start_date &lt;=itec.check_date
+		and ito.end_date &gt;=itec.check_date
+		and itec.equipment_id=#{equipmentId}
+		and itec.order_id=#{orderId} and s.area_id=20
+	</select>
+	
+	 <select id="getCheckedTimesNotForSZ" parameterType="java.util.HashMap"
+		resultType="java.lang.Integer">
+				select count(*) as count		
+		from ins_task_equipment_check itec
+		inner join tb_base_staff s on itec.actual_check_staff_no=s.staff_no
+		where itec.state='1'
+		and sysdate&lt;=itec.check_date+2	and itec.equipment_id=#{equipmentId}
+		and itec.actual_check_staff_no=#{staffNo} and s.area_id!=20
+	</select>
+	
+	<select id="getEqu" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		select t.equipment_code, t.equipment_name from
+		ins_equipment t where t.equipment_id=#{equipmentId}
+	</select>
+	
+	<update id="signRes" parameterType="java.util.HashMap">
+		update
+		ins_task_order_equipment_sign itoes set itoes.latitude=#{latitude},
+		itoes.longitude=#{longitude}, itoes.state=1, itoes.sign_date=sysdate
+		where itoes.equipment_id=#{equipmentId} and itoes.order_id=#{orderId}
+	</update>
+</mapper>
+
+
+
+

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.roomInspection.dao.TaskDao">
+	<sql id="listWhere">
+		<if test="queryParams.TASK_NAME != null and queryParams.TASK_NAME != ''">
+			<![CDATA[
+			AND a.TASK_NAME like '%'||#{queryParams.TASK_NAME}||'%'
+			]]>
+		</if>
+		<if test="queryParams.ROOM_TYPE_ID != null and queryParams.ROOM_TYPE_ID != ''">
+			<![CDATA[
+			AND a.ROOM_TYPE_ID  = #{queryParams.ROOM_TYPE_ID}
+			]]>
+		</if>
+		<if test="queryParams.CHECK_STAFF_ID != null and queryParams.CHECK_STAFF_ID != ''">
+			<![CDATA[
+			AND a.CHECK_STAFF_ID  = #{queryParams.CHECK_STAFF_ID}
+			]]>
+		</if>
+		<if test="queryParams.JOB_ID != null and queryParams.JOB_ID != ''">
+			<![CDATA[
+			AND a.JOB_ID  = #{queryParams.JOB_ID}
+			]]>
+		</if>
+		<if test="queryParams.START_DATE != null and queryParams.START_DATE != ''">
+			<![CDATA[
+			AND a.START_DATE = TO_DATE(#{queryParams.START_DATE}, 'yyyy-mm-dd')
+			]]>
+		</if>
+		<if test="queryParams.END_DATE != null and queryParams.END_DATE != ''">
+			<![CDATA[
+			AND a.END_DATE = TO_DATE(#{queryParams.END_DATE}, 'yyyy-mm-dd')
+			]]>
+		</if>
+	</sql>
+	<select id="getTaskList" resultType="map" parameterType="util.page.Query">
+		select a.TASK_ID,a.TASK_NAME,a.CHECK_STAFF_ID,a.JOB_ID,
+		to_char(a.START_DATE,'yyyy-mm-dd') START_DATE,
+		to_char(a.END_DATE,'yyyy-mm-dd') END_DATE,
+		to_char(a.CREATE_DATE,'yyyy-mm-dd') CREATE_DATE,
+		b.STAFF_NAME,c.job_name,d.room_type_name
+		from jfxj_task
+		a,TB_BASE_STAFF b,jfxj_job
+		c,jfxj_room_type d
+		where a.check_staff_id=b.staff_id and
+		a.job_id=c.job_id
+		and a.room_type_id=d.room_type_id
+		<include refid="listWhere" />
+		order by task_id
+	</select>
+	<select id="getTask" resultType="map" parameterType="map">
+	    select a.TASK_ID,a.TASK_NAME,a.CHECK_STAFF_ID,a.JOB_ID,
+	    to_char(a.START_DATE,'yyyy-mm-dd') START_DATE,
+	    to_char(a.END_DATE,'yyyy-mm-dd') END_DATE,
+	    to_char(a.CREATE_DATE,'yyyy-mm-dd') CREATE_DATE,
+	    b.STAFF_NAME,c.job_name,d.room_type_name
+	    from jfxj_task a
+	    inner join TB_BASE_STAFF b on a.check_staff_id=b.staff_id
+	    inner join jfxj_job c on a.job_id=c.job_id
+	    inner join jfxj_room_type d on c.room_type_id=d.room_type_id
+	    where
+	    a.check_staff_id=b.staff_id
+		and a.job_id=c.job_id
+		and a.room_type_id=d.room_type_id
+		and	a.TASK_ID=#{TASK_ID}
+	</select>
+	<select id="getTaskListCount" resultType="int" parameterType="util.page.Query">
+		select count(*) from(select a.TASK_ID,a.TASK_NAME,a.CHECK_STAFF_ID,a.JOB_ID,
+		to_char(a.START_DATE,'yyyy-mm-dd') START_DATE,
+		to_char(a.END_DATE,'yyyy-mm-dd') END_DATE,
+		to_char(a.CREATE_DATE,'yyyy-mm-dd') CREATE_DATE,
+		b.STAFF_NAME,c.job_name,d.room_type_name
+		from jfxj_task
+		a,TB_BASE_STAFF b,jfxj_job
+		c,jfxj_room_type d
+		where a.check_staff_id=b.staff_id and
+		a.job_id=c.job_id
+		and a.room_type_id=d.room_type_id
+		<include refid="listWhere" />)
+	</select>
+	<select id="getTaskDetails" resultType="map" parameterType="util.page.Query">
+		select jad.action_detail_id,jad.task_id,
+		case jad.status when 0 then '未执行' else '已执行' end status,
+		jr.room_name,jr.room_id,jr.room_type_id,jr.check_staff_id,tbs.staff_name,
+		jr.room_code,jrt.room_type_name from JFXJ_ACTION_DETAIL jad,JFXJ_ROOM jr,JFXJ_ROOM_TYPE jrt,tb_base_staff tbs
+		 where jad.room_id=jr.room_id and jr.room_type_id=jrt.room_type_id and tbs.staff_id=jr.check_staff_id
+		 and jad.task_id= #{queryParams.TASK_ID}
+		 <if test="queryParams.ROOM_NAME != null and queryParams.ROOM_NAME != ''">
+			<![CDATA[
+			AND jr.ROOM_NAME like '%'||#{queryParams.ROOM_NAME}||'%'
+			]]>
+		</if>
+		<if test="queryParams.STATUS!= null and queryParams.STATUS != ''">
+			<![CDATA[
+			AND jad.STATUS = #{queryParams.STATUS}
+			]]>
+		</if>
+	</select>
+	<select id="getDayTaskByJobId" resultType="map" parameterType="map">
+		select *
+		from jfxj_task jt
+		where jt.job_id = #{JOB_ID}
+		and
+		jt.create_date &gt;= (select TRUNC(SYSDATE) FROM dual)
+		and
+		jt.create_date &lt;= (SELECT TRUNC(SYSDATE)+1-1/86400 FROM
+		dual)
+		and jt.room_type_id=#{ROOM_TYPE_ID}
+	</select>
+	<select id="getWeekTaskByJobId" resultType="map" parameterType="map">
+		select *
+		from jfxj_task jt
+		where jt.job_id = #{JOB_ID}
+		and
+		jt.create_date &gt;= (SELECT trunc(next_day(sysdate,1))-6 FROM dual)
+		and	jt.create_date &lt;= (SELECT trunc(next_day(sysdate,1))+1-1/86400 FROM dual)
+		and jt.room_type_id=#{ROOM_TYPE_ID}
+	</select>
+	<select id="getMonthTaskByJobId" resultType="map" parameterType="map">
+		select *
+		from jfxj_task jt
+		where jt.job_id = #{JOB_ID}
+		and
+		jt.create_date &gt;= (select trunc(sysdate, 'month') from dual)
+		and	jt.create_date &lt;= (select trunc(last_day(sysdate))+1-1/86400 from dual)
+		and jt.room_type_id=#{ROOM_TYPE_ID}
+	</select>
+	<select id="getHalfYearTaskByJobId" resultType="map" parameterType="map">
+		select *
+		from jfxj_task jt
+		where jt.job_id = #{JOB_ID}
+		and
+		jt.create_date &gt;= (select case when to_char(sysdate,'mm')&lt;7 then trunc(sysdate,'YYYY')
+ 								else trunc(add_months(sysdate,-to_char(sysdate,'mm')+7),'mm') end from dual)
+		and	jt.create_date &lt;= ( select case when to_char(sysdate,'mm')&lt;7 then add_months(trunc(sysdate, 'yyyy'), 6)-1/86400
+ 									else add_months(trunc(sysdate, 'yyyy'), 12)-1/86400 end from dual)
+		and jt.room_type_id=#{ROOM_TYPE_ID}
+	</select>
+	<select id="getYearTaskByJobId" resultType="map" parameterType="map">
+		select *
+		from jfxj_task jt
+		where jt.job_id = #{JOB_ID}
+		and
+		jt.create_date &gt;= (select trunc(sysdate, 'yyyy') from dual)
+		and	jt.create_date &lt;= (select add_months(trunc(sysdate, 'yyyy'), 12)-1/86400 from dual)
+		and jt.room_type_id=#{ROOM_TYPE_ID}
+	</select>
+	<insert id="insertIntoDayTask" parameterType="map">
+		insert into jfxj_task
+		jt
+		(jt.task_id,jt.task_name,jt.check_staff_id,jt.job_id,jt.start_date,
+		jt.end_date,jt.create_date,state,room_type_id)
+		(select
+		seq_task_id.nextval,#{JOB_NAME}|| ' ' || to_char(SYSDATE,'yyyy-mm-dd'),t.check_staff_id,#{JOB_ID},(select
+		TRUNC(SYSDATE) FROM dual),(SELECT TRUNC(SYSDATE)+1-1/86400 FROM
+		dual),sysdate,0,#{ROOM_TYPE_ID} from (select distinct
+		jr.check_staff_id check_staff_id from jfxj_room jr
+		where jr.status=0 and 
+		jr.room_type_id=#{ROOM_TYPE_ID}) t)
+	</insert>	
+    <insert id="insertIntoWeekTask" parameterType="map">
+		insert into jfxj_task
+		jt
+		(jt.task_id,jt.task_name,jt.check_staff_id,jt.job_id,jt.start_date,
+		jt.end_date,jt.create_date,state,room_type_id)
+		(select
+		seq_task_id.nextval,#{JOB_NAME}|| ' ' || to_char(SYSDATE,'yyyy-mm-dd'),t.check_staff_id,#{JOB_ID},
+		(SELECT trunc(next_day(sysdate,1))-6 FROM dual),
+		(SELECT trunc(next_day(sysdate,1))+1-1/86400 FROM dual),
+        sysdate,0,#{ROOM_TYPE_ID} from (select distinct
+		jr.check_staff_id check_staff_id from jfxj_room jr
+		where jr.status=0 and 
+		jr.room_type_id=#{ROOM_TYPE_ID}) t)
+	</insert>	
+	<insert id="insertIntoMonthTask" parameterType="map">
+		insert into jfxj_task
+		jt
+		(jt.task_id,jt.task_name,jt.check_staff_id,jt.job_id,jt.start_date,
+		jt.end_date,jt.create_date,state,room_type_id)
+		(select
+		seq_task_id.nextval,#{JOB_NAME}|| ' ' || to_char(SYSDATE,'yyyy-mm-dd'),t.check_staff_id,#{JOB_ID},
+		                     (select trunc(sysdate, 'month') from dual),
+                             (select trunc(last_day(sysdate))+1-1/86400 from dual),
+        sysdate,0,#{ROOM_TYPE_ID} from (select distinct
+		jr.check_staff_id check_staff_id from jfxj_room jr
+		where jr.status=0 and 
+		jr.room_type_id=#{ROOM_TYPE_ID}) t)
+	</insert>
+	<insert id="insertIntoHalfYearTask" parameterType="map">
+		insert into jfxj_task
+		jt
+		(jt.task_id,jt.task_name,jt.check_staff_id,jt.job_id,jt.start_date,
+		jt.end_date,jt.create_date,state,room_type_id)
+		(select seq_task_id.nextval,#{JOB_NAME}|| ' ' || to_char(SYSDATE,'yyyy-mm-dd'),
+		t.check_staff_id,#{JOB_ID},
+		(select case when to_char(sysdate,'mm')&lt;7 then trunc(sysdate,'YYYY')
+ 			else trunc(add_months(sysdate,-to_char(sysdate,'mm')+7),'mm') end from dual),
+        ( select case when to_char(sysdate,'mm')&lt;7 then add_months(trunc(sysdate, 'yyyy'), 6)-1/86400
+ 			else add_months(trunc(sysdate, 'yyyy'), 12)-1/86400 end from dual),
+        sysdate,0,#{ROOM_TYPE_ID} from (select distinct
+		jr.check_staff_id check_staff_id from jfxj_room jr
+		where jr.status=0 and 
+		jr.room_type_id=#{ROOM_TYPE_ID}) t)
+	</insert>
+	<insert id="insertIntoYearTask" parameterType="map">
+		insert into jfxj_task
+		jt
+		(jt.task_id,jt.task_name,jt.check_staff_id,jt.job_id,jt.start_date,
+		jt.end_date,jt.create_date,state,room_type_id)
+		(select seq_task_id.nextval,#{JOB_NAME}|| ' ' || to_char(SYSDATE,'yyyy-mm-dd'),
+		t.check_staff_id,#{JOB_ID},
+		(select trunc(sysdate, 'yyyy') from dual),
+        (select add_months(trunc(sysdate, 'yyyy'), 12)-1/86400 from dual),
+        sysdate,0,#{ROOM_TYPE_ID} from (select distinct
+		jr.check_staff_id check_staff_id from jfxj_room jr
+		where jr.status=0 and 
+		jr.room_type_id=#{ROOM_TYPE_ID}) t)
+	</insert>
+	<insert id="insertIntoTaskDetail" parameterType="map">
+		insert into JFXJ_ACTION_DETAIL(action_detail_id,task_id,room_id,status) 
+		select SEQ_ACTION_DETAIL_ID.nextval,#{TASK_ID},room_id,0 from jfxj_room jr 
+		where  jr.status=0 and jr.room_type_id=#{ROOM_TYPE_ID} and jr.check_staff_id=#{CHECK_STAFF_ID}
+	</insert>		
+</mapper>

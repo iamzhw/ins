@@ -1,0 +1,689 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.system.dao.StaffDao">
+	<sql id="dynamicWhere">
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND F.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND F.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STATUS != null and queryParams.STATUS != ''">  
+            <![CDATA[
+	    	AND F.STATUS = #{queryParams.STATUS}
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND F.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND F.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.ORG_NAME != null and queryParams.ORG_NAME != ''">  
+            <![CDATA[
+	    	AND oz.ORG_NAME like '%'||#{queryParams.ORG_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.ID_NUMBER != null and queryParams.ID_NUMBER != ''">  
+            <![CDATA[
+	    	AND F.ID_NUMBER like '%'||#{queryParams.ID_NUMBER}||'%' 
+	    	]]>
+		</if>
+	</sql>
+	
+	<sql id="dynamicWhere_">
+		<if test="STAFF_NO != null and STAFF_NO != ''">  
+            <![CDATA[
+	    	AND F.STAFF_NO like '%'||#{STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="STAFF_NAME != null and STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND F.STAFF_NAME like '%'||#{STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="STATUS != null and STATUS != ''">  
+            <![CDATA[
+	    	AND F.STATUS = #{STATUS}
+	    	]]>
+		</if>
+		<if test="AREA_ID != null and AREA_ID != ''">  
+            <![CDATA[
+	    	AND F.AREA_ID = #{AREA_ID}
+	    	]]>
+		</if>
+		<if
+			test="SON_AREA_ID != null and SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND F.SON_AREA_ID = #{SON_AREA_ID}
+	    	]]>
+		</if>
+	</sql>
+<!--<select id="getRoleNo" parameterType="int" resultType="map">
+ select F.STAFF_ID,
+        F.STAFF_NO,
+        F.STAFF_NAME,
+        A.AREA_ID,
+        (select wm_concat(tbr.role_no)
+           from tb_base_staff_role tbsr, tb_base_role tbr
+          where #{id} = tbsr.staff_id
+            and tbsr.role_id = tbr.role_id) ROLE_NO
+   FROM TB_BASE_STAFF F, AREA A
+  WHERE F.AREA_ID = A.AREA_ID
+    AND F.STAFF_ID = #{id}
+</select>
+	-->
+	<select id="getifGly" parameterType="int" resultType="int">
+  select count(*) as ifGly
+           from tb_base_staff_role tbsr, tb_base_role tbr
+          where #{id} = tbsr.staff_id
+            and tbsr.role_id = tbr.role_id and tbr.role_no='GLY'
+</select>
+
+<select id="isHasRole" parameterType="map" resultType="int">
+ 	select count(0)
+     	from tb_base_staff_role tbsr, tb_base_role tbr
+ 	where tbsr.staff_id=#{STAFF_ID}
+        and tbsr.role_id = tbr.role_id and tbr.role_no=#{ROLE_NO}
+</select>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+	select  STAFF_ID,
+			STAFF_NO,
+			PASSWORD,
+			STAFF_NAME,
+			AREA,
+			DEPT_NAME,
+			SON_AREA,
+			TEL,
+			ID_NUMBER,
+			EMAIL,
+			role_name,
+			software_name,
+			org_name,
+			area_level,
+		    manage_level
+	from (
+	SELECT F.STAFF_ID,
+	STAFF_NO,
+	PASSWORD,
+	STAFF_NAME,
+	A.NAME AREA,
+	B.NAME SON_AREA,
+	listagg(d.dept_name,',') within group (order by d.dept_name) DEPT_NAME,
+	TEL,
+	ID_NUMBER,
+	f.EMAIL,
+	oz.org_name,
+	atul.area_level,
+    atul.manage_level,
+	DECODE(F.STATUS, 0, '正常', '停用') STATUS,
+	(select to_char(wm_concat(distinct(tbr.role_name)))
+	from tb_base_staff_role tbsr, tb_base_role tbr
+	where f.staff_id = tbsr.staff_id
+	and tbsr.role_id = tbr.role_id) role_name,
+	(select to_char(wm_concat(distinct(tbs.software_name)))
+	from tb_base_staff_soft tbss, tb_base_soft tbs
+	where f.staff_id = tbss.staff_id
+	and tbss.software_id = tbs.software_id) software_name
+	 FROM TB_BASE_STAFF F, AREA A, AREA B,AXX_T_ORGANIZATION oz,   AXX_T_USER_LEVEL   atul,TB_INS_STAFF_DEPT SD,TB_INS_DEPT D
+  WHERE F.AREA_ID = A.AREA_ID
+  AND F.SON_AREA_ID = B.AREA_ID
+  AND f.ORG_ID = oz.org_id(+)
+  AND ATUL.STAFF_ID(+) = F.STAFF_ID
+  and SD.STAFF_ID(+)=F.STAFF_ID
+  AND SD.DEPT_ID=D.DEPT_ID(+)
+  AND f.ISDELETED != 1
+	<include refid="dynamicWhere" />
+	AND (not exists (select 1 from tb_base_staff_role bsr where bsr.staff_id = f.staff_id) or
+		exists (select 1 from tb_base_staff_role sr inner join tb_base_role r on sr.role_id = r.role_id where sr.staff_id = f.staff_id
+		<trim prefix="and (" prefixOverrides="or">
+		  <if test="queryParams.hasLxxj != null and queryParams.hasLxxj == 1">
+    			or r.role_no like 'LXXJ%'
+  		  </if>
+ 		  <if test="queryParams.hasJfxj != null and queryParams.hasJfxj == 1">
+		    or r.role_no like 'JFXJ%'
+		  </if>
+		    <if test="queryParams.hasZyxj != null and queryParams.hasZyxj == 1">
+		    or r.role_no like 'ZYXJ%'
+		  </if>
+		  <if test="queryParams.hasAxx != null and queryParams.hasAxx == 1">
+		    or r.role_no like 'AXX%'
+		  </if>
+		  <if test="queryParams.hasCable != null and queryParams.hasCable == 1">
+		    or r.role_no like 'CABLE%'
+		  </if>
+		  </trim>)))
+		  group by F.STAFF_ID,
+		  STAFF_NO,
+		  PASSWORD,
+		  STAFF_NAME,
+		  A.NAME,
+		  B.NAME,
+		  TEL,
+		  ID_NUMBER,
+		  f.EMAIL,
+		  oz.org_name,
+		  atul.area_level,
+	      atul.manage_level,
+	      F.STATUS
+		)
+		<if test="queryParams.ROLE_NAME != null and queryParams.ROLE_NAME !='' ">
+	   		where role_name like '%'||#{queryParams.ROLE_NAME}||'%' 
+	 	</if>
+	 	ORDER BY STAFF_ID desc, AREA, SON_AREA
+	</select>
+
+	<select id="proveUniqueness" parameterType="map" resultType="Integer">
+		SELECT COUNT(1) FROM TB_BASE_STAFF F WHERE F.STAFF_NO = #{STAFF_NO}
+		and f.isdeleted = 0
+		<if test="NOTSTAFF_NO != null and NOTSTAFF_NO != ''">  
+		   <![CDATA[
+			AND F.STAFF_NO != #{NOTSTAFF_NO}
+			]]>
+		</if>
+	</select>
+	<update id="modifyMobileNumber" parameterType="map">
+		update TB_BASE_STAFF s set s.tel=#{mobileNumber} where s.staff_id=#{staff_id}
+	</update>
+	<update id="modifyRealName" parameterType="map">
+		update TB_BASE_STAFF s set s.real_name=#{real_name} where s.staff_id=#{staff_id}
+	</update>
+	<select id="validateIdCard" parameterType="map" resultType="Integer">
+		SELECT COUNT(1) FROM TB_BASE_STAFF F WHERE F.ID_NUMBER = #{ID_NUMBER}
+		and f.isdeleted = 0
+		<if test="NEWID_NUMBER != null and NEWID_NUMBER != ''">  
+		   <![CDATA[
+			AND F.ID_NUMBER != #{NEWID_NUMBER}
+			]]>
+		</if>
+	</select>
+	
+	<insert id="insert" parameterType="map">
+		INSERT INTO TB_BASE_STAFF
+		(STAFF_ID,
+		STAFF_NO,
+		PASSWORD,
+		PASSWORD_,
+		STAFF_NAME,
+		<if test="TEL != null and TEL != ''">  
+   <![CDATA[
+	TEL,
+	]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+   <![CDATA[
+	ID_NUMBER,
+	]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+		   <![CDATA[
+			EMAIL,
+			]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			ORG_ID,
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			MAINTOR_TYPE,
+			]]>
+		</if>
+		STATUS,
+		AREA_ID,
+		<if test="CREATE_STAFF != null and CREATE_STAFF != ''">  
+		   <![CDATA[
+			CREATE_STAFF,
+			]]>
+		</if>
+		<if test="MODIFY_STAFF != null and MODIFY_STAFF != ''">  
+		   <![CDATA[
+			MODIFY_STAFF,
+			]]>
+		</if>
+		SON_AREA_ID
+		)
+		VALUES
+		(osspad.design_order_seq.NEXTVAL,
+		#{STAFF_NO},
+		#{PASSWORD},
+		#{PASSWORD_},
+		#{STAFF_NAME},
+		<if test="TEL != null and TEL != ''">  
+   <![CDATA[
+	#{TEL},
+	]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+   <![CDATA[
+	#{ID_NUMBER},
+	]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+   <![CDATA[
+	#{EMAIL},
+	]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			#{OWN_COMPANY},
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			#{MAINTOR_TYPE},
+			]]>
+		</if>
+		#{STATUS},
+		#{AREA_ID},
+		<if test="CREATE_STAFF != null and CREATE_STAFF != ''">  
+		   <![CDATA[
+			#{CREATE_STAFF},
+			]]>
+		</if>
+		<if test="MODIFY_STAFF != null and MODIFY_STAFF != ''">  
+		   <![CDATA[
+			#{MODIFY_STAFF},
+			]]>
+		</if>
+		#{SON_AREA_ID}
+		)
+	</insert>
+	<select id="getStaff" parameterType="String" resultType="map">
+		SELECT T.*
+		FROM TB_BASE_STAFF T
+		 WHERE T.STAFF_ID = #{STAFF_ID}
+	</select>
+
+	<update id="update" parameterType="map">
+		UPDATE TB_BASE_STAFF F
+		SET F.STAFF_NO = #{STAFF_NO},
+		F.PASSWORD = #{PASSWORD},
+		F.PASSWORD_ = #{PASSWORD_},
+		F.STAFF_NAME = #{STAFF_NAME},
+		<if test="TEL != null and TEL != ''">  
+	   <![CDATA[
+		F.TEL=#{TEL},
+		]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+	   <![CDATA[
+		F.ID_NUMBER=#{ID_NUMBER},
+		]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+	   <![CDATA[
+		F.EMAIL=#{EMAIL},
+		]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			F.ORG_ID=#{OWN_COMPANY},
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			F.MAINTOR_TYPE=#{MAINTOR_TYPE},
+			]]>
+		</if>
+		F.STATUS = #{STATUS},
+		F.ISDELETED = #{STATUS},
+		F.AREA_ID = #{AREA_ID},
+		F.SON_AREA_ID = #{SON_AREA_ID},
+		F.MODIFY_STAFF = #{MODIFY_STAFF},
+		F.modify_date = SYSDATE
+		WHERE F.STAFF_ID = #{STAFF_ID}
+	</update>
+
+
+	<update id="delete" parameterType="map">
+		UPDATE TB_BASE_STAFF F
+		SET
+		F.isdeleted =1,
+		F.STATUS =1,
+		F.MODIFY_STAFF=#{MODIFY_STAFF}
+		WHERE F.STAFF_ID =
+		#{STAFF_ID}
+	</update>
+	
+	<update id="modifyPassword" parameterType="map">
+		update TB_BASE_STAFF s set s.PASSWORD=#{password},s.PASSWORD_=#{password_} where s.STAFF_NO=#{staffNo}
+	</update>
+	
+	<!-- 实名认证 -->
+	<update id="modifyIdNumber" parameterType="map">
+		update TB_BASE_STAFF s set s.ID_NUMBER=#{ID_NUMBER} 
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			,s.MAINTOR_TYPE=#{MAINTOR_TYPE}
+			]]>
+		</if>
+		where 1=1
+		<if test="staff_id != null and staff_id != ''">  
+		   <![CDATA[
+			AND  s.staff_id=#{staff_id}
+		   ]]>
+		</if>
+		<if test="STAFF_NO != null and STAFF_NO != ''">  
+		   <![CDATA[
+			AND s.staff_no=#{STAFF_NO} 
+		   ]]>
+		</if>
+			
+	</update>
+	
+	<!-- 修改老系统用户密码，如果老用户数据用户变更需要修改这里 -->
+	<update id="modifyPadPassword" parameterType="map">
+		update osspad.design_order_staff s set s.PASSWORD=#{password_} where s.STAFF_NO=#{staffNo}
+	</update>
+	
+	<select id="queryRolePermissions" parameterType="util.page.Query" resultType="map">
+select T.ROLE_ID, T.ROLE_NAME, T.ROLE_NO
+  from TB_BASE_ROLE T
+ WHERE 1=1 
+   <if test="queryParams.ROLE_NAME != null and queryParams.ROLE_NAME != ''">  
+   <![CDATA[
+	AND T.ROLE_NAME like '%'||#{queryParams.ROLE_NAME}||'%' 
+   ]]>
+   </if>
+   <if test="queryParams.ROLE_NO != null and queryParams.ROLE_NO != ''">  
+   <![CDATA[
+	AND T.ROLE_NO like '%'||#{queryParams.ROLE_NO}||'%' 
+   ]]>
+   </if>
+	</select>
+	
+	
+	<select id="querySoftPermissions" parameterType="util.page.Query" resultType="map">
+select T.SOFTWARE_ID, T.SOFTWARE_NAME, T.PACKAGE_NAME
+  from TB_BASE_SOFTWARE T
+ WHERE 1=1 
+   <if test="queryParams.SOFTWARE_NAME != null and queryParams.SOFTWARE_NAME != ''">  
+   <![CDATA[
+	AND T.SOFTWARE_NAME like '%'||#{queryParams.SOFTWARE_NAME}||'%' 
+   ]]>
+   </if>
+   
+	</select>
+	
+  <select id="queryRolePermission" parameterType="map" resultType="map">
+	 select distinct tbr.ROLE_ID,tbr.ROLE_NAME,tbr.ROLE_NO
+      from tb_base_staff_role tbsr
+      right join tb_base_role tbr on tbsr.role_id = tbr.role_id
+     where tbr.status = 0   
+     <if test="ifGly == null or ifGly == ''">
+	  <trim prefix="and (" suffix=")" prefixOverrides="or">
+         <if test="zyxj != null and zyxj != ''">
+            or tbr.role_no like #{zyxj}||'%' 
+         </if>
+        <if test="axx != null and axx != ''"> 
+		    or tbr.role_no like #{axx}||'%'
+		</if>
+	    <if test="jfxj != null and jfxj != ''">
+		    or tbr.role_no like #{jfxj}||'%'
+		</if>
+		<if test="lx != null and lx != ''">
+		    or tbr.role_no like #{lx}||'%'
+			  <choose>     
+	            <when test="lx_city_count != null and lx_city_count != '' ">     
+	                   and tbr.role_id not in(
+				         select role_id from tb_base_role where role_name like '%省%' and role_no like #{lx}||'%'
+				       )
+	            </when>     
+	            <when test="lx_area_count != null and lx_area_count != '' ">     
+	                   and tbr.role_id not in(
+				         select role_id from tb_base_role where (role_name like '%省%' or
+        					 role_name like '%市%') and role_no like #{lx}||'%'
+				       )
+	            </when>     
+	            <otherwise>     
+	                      
+	            </otherwise>     
+	        </choose>
+		</if>
+		<if test="cable != null and cable != ''">
+		    or tbr.role_no like #{cable}||'%'
+		    <choose>     
+	            <when test="cable_city_count != null and cable_city_count != '' ">     
+	                   and tbr.role_id not in(
+				         select role_id from tb_base_role where role_name like '%省%' and role_no like #{cable}||'%'
+				       )
+	            </when>     
+	            <when test="cable_area_count != null and cable_area_count != '' ">     
+	                   and tbr.role_id not in(
+				         select role_id from tb_base_role where (role_name like '%省%' or
+        					 role_name like '%市%') and role_no like #{cable}||'%'
+				       )
+	            </when>     
+	            <otherwise>     
+	                      
+	            </otherwise>     
+	        </choose>
+		</if>
+	 </trim>  
+	</if> 
+	order by tbr.role_name 
+  </select>
+	
+	
+	<select id="querySoftPermission" parameterType="map" resultType="map">
+select T.SOFTWARE_ID, T.SOFTWARE_NAME, T.PACKAGE_NAME
+  from TB_BASE_SOFT T
+ WHERE t.software_id &lt;&gt; 9 
+   <if test="SOFTWARE_NAME != null and SOFTWARE_NAME != ''">  
+   <![CDATA[
+	AND T.SOFTWARE_NAME like '%'||#{SOFTWARE_NAME}||'%' 
+   ]]>
+   </if>
+   
+	</select>
+	
+	<insert id="saveRolePermissions" parameterType="map" >
+insert into tb_base_staff_role(staff_id,role_id) values (#{STAFF_ID},#{ROLE_ID})
+	</insert>
+	<insert id="saveSoftPermissions" parameterType="map" >
+insert into tb_base_staff_soft(staff_id,software_id) values (#{STAFF_ID},#{SOFTWARE_ID})
+	</insert>
+
+	
+	<delete id="delRolePermissions" parameterType="String" >
+delete from tb_base_staff_role r where r.staff_id = #{STAFF_ID}
+    </delete>
+    <delete id="delSoftPermissions" parameterType="String" >
+delete from tb_base_staff_soft r where r.staff_id = #{STAFF_ID}
+    </delete>
+    
+    <select id="getRoles" parameterType="String" resultType="String">
+select t.role_id from tb_base_staff_role t where t.staff_id = #{STAFF_ID}
+	</select>
+	
+	<!-- 判断用户角色是否存在 -->
+	<select id="getUserRoleCount" parameterType="map" resultType="int">
+		select count(1) from tb_base_staff s join tb_base_staff_role sr on sr.staff_id = s.staff_id
+			where s.staff_no=#{staffNo} and role_id=#{roleId}
+	</select>
+	
+	
+	<select id="getSofts" parameterType="String" resultType="String">
+select t.software_id from tb_base_staff_soft t where t.staff_id = #{STAFF_ID}
+	</select>
+	
+	<select id="queryHandlerFromJYH" parameterType="util.page.Query" resultType="map">
+		SELECT DISTINCT T.USER_NAME STAFF_NAME,T.USER_USER_ID STAFF_ID,t.xj_area_name area
+		,T.USER_USER_ID STAFF_NO,t.xj_area_id son_area_id,t.grid_name
+		FROM OUTSOURCE_ORGUSER_XJ T WHERE T.XJ_AREA_ID=#{queryParams.AREA_ID}
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND T.USER_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.GRID_NAME != null and queryParams.GRID_NAME != ''">  
+            <![CDATA[
+	    	AND T.grid_name like '%'||#{queryParams.GRID_NAME}||'%' 
+	    	]]>
+		</if>
+		order by t.xj_area_id
+	</select>
+	
+	<select id="queryHandler" parameterType="util.page.Query" resultType="map">
+		SELECT s.STAFF_ID, s.STAFF_NAME, s.STAFF_NO, a.name area,d.dept_name
+        FROM TB_BASE_STAFF s, TB_BASE_STAFF_ROLE sr, TB_BASE_ROLE r, area a,tb_ins_staff_dept sd,tb_ins_dept d
+     WHERE s.STAFF_ID = sr.STAFF_ID
+         AND sr.ROLE_ID = r.ROLE_ID
+         and s.son_area_id = a.area_id
+         and sd.staff_id(+)=s.staff_id
+         and sd.dept_id=d.dept_id(+)
+        AND r.ROLE_NO = #{queryParams.ROLE_NO}
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.DEPT_NAME != null and queryParams.DEPT_NAME != ''">  
+            <![CDATA[
+	    	AND d.DEPT_NAME like '%'||#{queryParams.DEPT_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		order by s.son_area_id
+	</select>
+	
+	<select id="isRepeat" parameterType="map" resultType="int">
+	select count(0) from TB_BASE_STAFF where STAFF_NO = #{STAFF_NO}
+	</select>
+	<select id="getAuditorNameBySonAreaId" parameterType="String"
+		resultType="map">
+		SELECT s.STAFF_Name,s.tel
+		FROM TB_BASE_STAFF s, TB_BASE_STAFF_ROLE
+		sr, TB_BASE_ROLE r
+		WHERE s.SON_AREA_ID = #{SON_AREA_ID} AND r.ROLE_NO =
+		'LXXJ_AUDITOR'
+		AND s.STAFF_ID = sr.STAFF_ID AND sr.ROLE_ID = r.ROLE_ID
+		ORDER BY
+		s.STAFF_ID
+	</select>
+	
+	<select id="findPersonalInfo" parameterType="String" resultType="map">
+       
+SELECT T.*,A.NAME AREA_NAME FROM TB_BASE_STAFF T ,AREA A WHERE T.AREA_ID=A.AREA_ID AND  T.STAFF_ID=#{staffId}
+       	
+	</select>
+	
+	<select id="getStaffSoftList" parameterType="string" resultType="map">
+		select * from tb_base_staff_soft staffSoft 
+		where staffSoft.Staff_Id = #{STAFF_ID}
+	</select>
+	
+	<select id="getRoleList" parameterType="string" resultType="map">
+	     
+SELECT BR.ROLE_NO, BR.ROLE_ID, BR.ROLE_NAME
+  FROM TB_BASE_STAFF_ROLE SR, TB_BASE_ROLE BR
+ WHERE SR.ROLE_ID = BR.ROLE_ID
+   AND SR.STAFF_ID = #{user_id}
+	
+	</select>
+	<update id="updateLoginDate" parameterType="string">
+		update tb_base_staff s set s.login_date=sysdate where s.STAFF_id=#{user_id}
+	</update>
+	
+	<select id="getOutSitePermissions"  parameterType="string"  resultType="map">
+	select nvl(a.area_level,'' )area_level ,nvl(a.manage_level,'')manage_level from AXX_T_USER_LEVEL a where a.staff_id=#{staff_id}
+	</select>
+	<update id="saveAssignOutSitePermissions"  parameterType="string">
+	    update  AXX_T_USER_LEVEL  a set a.manage_level=#{MANAGE_LEVEL} , a.area_level=#{AREAL_LEVEL} where a.staff_id=#{STAFF_ID}
+	</update>
+	
+	<insert id="insertAssignOutSitePermissions" parameterType="map">
+	insert into  AXX_T_USER_LEVEL (manage_level,area_level,staff_id)values(#{MANAGE_LEVEL},#{AREAL_LEVEL},#{STAFF_ID})
+	</insert>
+	
+	<select id="queryStaffList" parameterType="map" resultType="map">
+SELECT STAFF_ID,
+       STAFF_NO,
+       PASSWORD,
+       STAFF_NAME,
+       A.NAME AREA,
+       B.NAME SON_AREA,
+       TEL,
+       ID_NUMBER,
+       EMAIL,
+       DECODE(F.STATUS, 0, '正常', '停用') STATUS,
+       (select to_char(wm_concat(tbr.role_name))
+          from tb_base_staff_role tbsr, tb_base_role tbr
+         where f.staff_id = tbsr.staff_id
+           and tbsr.role_id = tbr.role_id) role_name,
+       (select to_char(wm_concat(tbs.software_name))
+          from tb_base_staff_soft tbss, tb_base_soft tbs
+         where f.staff_id = tbss.staff_id
+           and tbss.software_id = tbs.software_id) software_name
+  FROM TB_BASE_STAFF F, AREA A, AREA B
+ WHERE F.AREA_ID = A.AREA_ID
+   AND F.SON_AREA_ID = B.AREA_ID
+<include refid="dynamicWhere_" />
+ ORDER BY F.AREA_ID, F.SON_AREA_ID
+	</select>
+	
+	<select id="selRoleByID" parameterType="map" resultType="map">
+		select tbsr.staff_id,
+		  count(case when role_name like '%省%' then 1 end) province_count,
+		  count(case when role_name like '%市%' then 1 end) city_count,
+		  count(case when role_name like '%区%' then 1 end) area_count
+		  from tb_base_staff_role tbsr
+		  join tb_base_role tbr on tbsr.role_id = tbr.role_id
+		 where tbsr.staff_id = #{staff_id} and tbr.status = 0
+		   and tbr.role_no like #{type}||'%' 
+		   group by tbsr.staff_id 
+	</select>
+	
+	<select id="ifExitsByStaffDept" parameterType="map" resultType="int">
+		SELECT COUNT(1) FROM TB_INS_STAFF_DEPT WHERE STAFF_ID=#{staff_id}
+	</select>
+	
+	<select id="findAllStaff" parameterType="map" resultType="map">
+		SELECT * FROM tb_base_staff_view1225 where id_number is not null and staff_name is not null
+	</select>
+	
+	<update id="updateDept" parameterType="map">
+		update TB_INS_STAFF_DEPT SET DEPT_ID=#{dept_id} WHERE STAFF_ID=#{staff_id}
+	</update>
+	
+	<delete id="removeStaffDept" parameterType="string">
+		DELETE FROM TB_INS_STAFF_DEPT WHERE STAFF_ID=#{staff_id}
+	</delete>
+	
+	<insert id="addStaffDept" parameterType="map">
+		INSERT INTO tb_ins_staff_dept
+		(
+		ID,
+		STAFF_ID,
+		DEPT_ID,
+		CREATE_TIME)
+		VALUES
+		(SEQ_TB_INS_STAFF_DEPT.NEXTVAL,#{staff_id},#{dept_id},SYSDATE)
+	</insert>
+</mapper>

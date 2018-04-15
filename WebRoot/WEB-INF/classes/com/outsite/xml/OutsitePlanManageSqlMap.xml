@@ -1,0 +1,710 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.outsite.dao.IOutsitePlanManageDao">
+
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.PLAN_ID != null and queryParams.PLAN_ID != ''">  
+            <![CDATA[
+	    	AND p.PLAN_ID =#{queryParams.PLAN_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.START_DATE != null and queryParams.START_DATE != ''">  
+            <![CDATA[
+	    	AND p.START_DATE >=TO_DATE(#{queryParams.START_DATE}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.END_DATE != null and queryParams.END_DATE != ''">  
+            <![CDATA[
+	    	AND p.END_DATE <TO_DATE(#{queryParams.END_DATE}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.SITE_NAME != null and queryParams.SITE_NAME != ''">  
+            <![CDATA[
+			and a.site_name like '%'||#{queryParams.SITE_NAME}||'%'
+			]]>
+		</if>
+		<if test="queryParams.OUT_SITE_ID != null and queryParams.OUT_SITE_ID != ''">  
+            <![CDATA[
+			and p.out_site_id = #{queryParams.OUT_SITE_ID}
+			]]>
+		</if>
+	</sql>
+<!-- 查询计划列表 -->
+	<select id="query_outsite" parameterType="util.page.Query" resultType="map">
+		 select p.plan_id,
+				p.plan_id  plan_id2,
+		        to_char(p.start_date,'yyyy-mm-dd') start_date,
+		        to_char(p.end_date,'yyyy-mm-dd') end_date,
+		        p.user_id,
+		        s1.staff_name,
+		        s1.staff_no,
+		        p.out_site_id,
+		        a.site_name,
+		        a.IS_ADD_ELEBAR
+		   from AXX_OUT_SITE_PLAN p
+		    inner join tb_base_staff s1 on p.user_id = s1.staff_id
+		    inner join axx_main_out_site a on p.out_site_id = a.out_site_id
+		    where p.delete_flag=1 and a.area_id=#{queryParams.area_id} 
+		    and a.delete_flag=1 
+		   <if test="queryParams.site_name != null and queryParams.site_name != ''">  
+	    	  <![CDATA[
+		    	and a.site_name  like '%'||#{queryParams.site_name}||'%'
+		    	]]>
+			</if>
+			<if test="queryParams.guard_name != null and queryParams.guard_name != ''">  
+	    	  <![CDATA[
+		    	and s1.staff_name like '%'||#{queryParams.guard_name}||'%'
+		    	]]>
+			</if>
+			<if test="queryParams.guard_no != null and queryParams.guard_no != ''">  
+	    	  <![CDATA[
+		    	and s1.staff_no like '%'||#{queryParams.guard_no}||'%'
+		    	]]>
+			</if>
+			 <if test="queryParams.start_date != null and queryParams.start_date != ''">  
+	    		and p.start_date &gt;=TO_DATE(#{queryParams.start_date}, 'yyyy-mm-dd')
+			</if>
+			 <if test="queryParams.end_date != null and queryParams.end_date != ''">  
+	    		and p.end_date &lt;=TO_DATE(#{queryParams.end_date}, 'yyyy-mm-dd')
+			</if>
+			order by p.UPDATE_TIME desc,p.plan_id desc
+	</select>
+<!--  外力点看护计划查询计划列表     详情列表-->
+<select id="query_detail_plan" parameterType="util.page.Query" resultType="map">
+select ospp.plan_id,to_char(ospp.plan_date,'yyyy-mm-dd') plan_date,ospp.status,ospp.user_id,ospp.uname,mos.site_name,ospp.delete_flag from AXX_OUT_SITE_PLAN_SUB ospp
+inner join axx_out_site_plan osp on ospp.plan_id=osp.plan_id
+inner join axx_main_out_site mos on osp.out_site_id=mos.out_site_id
+where ospp.plan_id=#{queryParams.plan_id} 
+order by ospp.plan_date desc
+</select>
+
+	<!-- 选择外力点列表 -->
+	<select id="getout_site" parameterType="map" resultType="map">
+		 select t.out_site_id, t.site_name, t.x, t.y, t.con_content
+  			from axx_main_out_site t
+  			 where t.area_id = #{area_id} and t.con_status=1 and t.delete_flag=1 
+		<if test="site_name != null and site_name != 'null'  and site_name != '' " >
+			and t.site_name like '%'||#{site_name}||'%'
+		</if>
+		 and not exists(select aosp.out_site_id from AXX_OUT_SITE_PLAN aosp where aosp.out_site_id=t.out_site_id)
+		 
+	</select>
+	<!--选择看护人员列表 -->
+	<select id="getkan_name" parameterType="map" resultType="map">
+			SELECT BS.* FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+	         WHERE BS.STAFF_ID = BSR.STAFF_ID
+	         AND BR.ROLE_ID = BSR.ROLE_ID
+	         AND BR.ROLE_NO = 'AXX_KHY'
+	         AND BS.STATUS=0
+	         AND BS.ISDELETED=0
+     		
+		<if test="localId != null and localId != 'null'  and localId != '' " >
+			and BS.AREA_ID = #{localId}
+		</if>
+		 
+	</select>
+	<!--选择巡线人员列表 -->
+	<select id="getxunxian_data" parameterType="map" resultType="map">
+		SELECT BS.* FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+   			WHERE BS.STAFF_ID = BSR.STAFF_ID
+    	 	AND BR.ROLE_ID = BSR.ROLE_ID
+     		AND BR.ROLE_NO = 'AXX_XXY'
+     		
+		<if test="localId != null and localId != 'null'  and localId != '' " >
+			and BS.AREA_ID = #{localId}
+		</if>
+		 
+	</select>
+    <!--查看看护时间 -->
+	<select id="look_time" parameterType="map" resultType="map">
+	 select  t.CREATION_TIME, t.start_time, t.end_time from AXX_OUT_SITE_PLAN_PART_TIME t
+	 where t.DELETE_FLAG=1 and t.plan_id = #{plan_id}
+	</select>
+	
+	
+	<!--测试巡线时长-->
+	<select id="get_alllist" parameterType="map" resultType="map">
+		
+	select t.user_id,
+       t.track_id,
+       to_char(t.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,
+       bs.staff_name 
+  from  AXX_AUTO_USER_TRACK t 
+    left join tb_base_staff bs on bs.staff_id = t.user_id
+  where 1=1
+  <if test="user_id != null and user_id != 'null'  and user_id != '' " >
+			and t.user_id = #{user_id}
+  </if>
+    
+  <if test="workstart != null and workstart != 'null'  and workstart != '' " >
+			and t.track_time &gt; to_date(#{workstart},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workend != null and workend != 'null'  and workend != '' " >
+			and t.track_time &lt; to_date(#{workend},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workstart2 != null and workstart2 != 'null'  and workstart2 != '' " >
+			and t.track_time &gt; to_date(#{workstart2},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workend2 != null and workend2 != 'null'  and workend2 != '' " >
+			and t.track_time &lt; to_date(#{workend2},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="line_date != null and line_date != 'null'  and line_date != '' " >
+			and substr(to_char(t.track_time,'yyyy-mm-dd hh24:mi:ss'),1,10) = #{line_date}
+  </if>
+ 
+  order by t.track_time asc
+		
+	</select>
+	<!--测试巡线时长-->
+	<select id="get_max_date" parameterType="map" resultType="string">
+		
+	select to_char(max(t.track_time),'yyyy-mm-dd hh24:mi:ss') track_time
+  from axx_auto_user_track t
+ where t.track_time &lt; to_date(#{new_date},'yyyy-mm-dd hh24:mi:ss')
+  and t.user_id = #{user_id}
+
+ 
+	</select>
+<!--测试巡线时长-->
+	<select id="test" parameterType="map" resultType="map">
+		
+	select t.user_id,
+       t.track_id,
+       to_char(t.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,
+       t.user_id,
+       d.site_name,
+       bs.staff_name,
+       d.con_label
+  from  AXX_AUTO_USER_TRACK t 
+    left join tb_base_staff bs on bs.staff_id = t.user_id
+    left join AXX_T_MACTH_SITE d on d.track_id = t.track_id
+
+   where d.track_id is not null
+  
+  <if test="user_id != null and user_id != 'null'  and user_id != '' " >
+			and t.user_id = #{user_id}
+  </if>
+		
+	</select>
+	
+	<!--测试巡线时长and a.track_time>to_date('2015-03-23 12:00:00','yyyy-MM-dd hh24:mi:ss')-->
+	<select id="test_con" parameterType="map" resultType="map">
+		
+	select t.match_id,
+       t.track_id,
+       to_char(match_time,'yyyy-mm-dd hh24:mi:ss')match_time,
+       t.site_name,
+       t.con_label,
+       y.user_id,
+       u.staff_name,
+       y.gps_flag
+  from AXX_T_MACTH_SITE t 
+  left join AXX_AUTO_USER_TRACK y on y.track_id = t.track_id
+  left join tb_base_staff u on u.staff_id = y.user_id
+   where t.track_id is not null
+  
+  <if test="user_id != null and user_id != 'null'  and user_id != '' " >
+			and y.user_id = #{user_id}
+  </if>
+  <if test="workstart != null and workstart != 'null'  and workstart != '' " >
+			and t.match_time &gt; to_date(#{workstart},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workend != null and workend != 'null'  and workend != '' " >
+			and t.match_time &lt; to_date(#{workend},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workstart2 != null and workstart2 != 'null'  and workstart2 != '' " >
+			and t.match_time &gt; to_date(#{workstart2},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workend2 != null and workend2 != 'null'  and workend2 != '' " >
+			and t.match_time &lt; to_date(#{workend2},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="line_date != null and line_date != 'null'  and line_date != '' " >
+			and substr(to_char(t.match_time,'yyyy-mm-dd hh24:mi:ss'),1,10) = #{line_date}
+  </if>
+  order by t.match_time asc
+		
+	</select>
+	
+	<!--测试巡线时长-->
+	<select id="getflag" parameterType="map" resultType="map">
+		select distinct t.con_label
+      from AXX_T_MACTH_SITE t where  t.con_label is not null
+		
+	</select>
+<!--测试巡线时长-->
+	<select id="get_para_time" parameterType="map" resultType="map">
+		select t.param_value,t.param_name,to_char(trunc(sysdate), 'yyyy-mm-dd') time
+  from AXX_T_PARAM t
+ where t.param_name in ('WorkStart', 'WorkEnd', 'WorkStart2', 'WorkEnd2')
+
+		
+	</select>
+	<!--巡线时长-->
+	<select id="get_all_people" parameterType="map" resultType="map">
+		select distinct t.user_id
+      from axx_auto_user_track t
+		
+	</select>
+	
+	<!--未匹配and t.user_id = '16697'-->
+	<select id="get_nomatch" parameterType="map" resultType="map">
+		select * from ( select  track_id,user_id,to_char(track_time,'yyyy-mm-dd hh24:mi:ss')track_time
+  from (select t.track_id, t.track_time, t.user_id
+          from axx_auto_user_track t
+         where  exists (select 1
+                  from AXX_T_MACTH_SITE ms
+                 where t.track_id = ms.track_id and ms.track_id is not null))
+   ) where 1=1
+ <if test="user_id != null and user_id != 'null'  and user_id != '' " >
+			and user_id = #{user_id}
+ </if>
+<if test="track_id != null and track_id != 'null'  and track_id != '' " >
+			and track_id = #{track_id}
+ </if>
+<if test="workstart != null and workstart != 'null'  and workstart != '' " >
+			and track_time &gt; #{workstart}
+  </if>
+  <if test="workend != null and workend != 'null'  and workend != '' " >
+			and track_time &lt; #{workend}
+  </if>
+  <if test="workstart2 != null and workstart2 != 'null'  and workstart2 != '' " >
+			and track_time &gt; #{workstart2}
+  </if>
+  <if test="workend2 != null and workend2 != 'null'  and workend2 != '' " >
+			and track_time &lt; #{workend2}
+  </if>
+  <if test="line_date != null and line_date != 'null'  and line_date != '' " >
+			and substr(track_time,1,10) = #{line_date}
+  </if>		
+	</select>
+	
+<!--在非外力施工（隐患）点的巡检点连续停留超过40分钟-->
+	<select id="get_forty_time" parameterType="map" resultType="map">
+		select sum(t.stay_time) forty_time,t.user_id
+  		from axx_t_stay t
+ 		where t.stay_type = 0 
+ <if test="user_id != null and user_id != 'null'  and user_id != '' " >
+			and t.user_id = #{user_id}
+ </if>
+
+<if test="workstart != null and workstart != 'null'  and workstart != '' " >
+			and t.start_time &gt; to_date(#{workstart},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workend != null and workend != 'null'  and workend != '' " >
+			and t.end_time &lt; to_date(#{workend},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workstart2 != null and workstart2 != 'null'  and workstart2 != '' " >
+			and t.start_time &gt; to_date(#{workstart2},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workend2 != null and workend2 != 'null'  and workend2 != '' " >
+			and t.end_time &lt; to_date(#{workend2},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="line_date != null and line_date != 'null'  and line_date != '' " >
+			and substr(to_char(t.start_time,'yyyy-mm-dd hh24:mi:ss'),1,10) = #{line_date}
+  </if>	
+  group by t.user_id	
+	</select>
+	
+<!--巡线时长-->
+	<select id="get_no_gps" parameterType="map" resultType="map">
+select distinct Minite,user_id,longitude,latitude,to_char(track_time,'yyyy-mm-dd hh24:mi:ss')track_time from (
+select round(to_number(track_time -(to_date(#{workstart},'yyyy-mm-dd hh24:mi:ss'))) * 1440) as Minite,user_id,longitude,latitude,track_time
+  from (select mt.track_time,mt.user_id,mt.longitude,mt.latitude
+          from (select a.track_id, a.track_time, a.user_id,a.longitude,a.latitude
+                  from AXX_AUTO_USER_TRACK a
+                 where not exists (select 1
+                          from AXX_AUTO_USER_TRACK b
+                         where b.user_id = a.user_id
+                           and b.track_time &lt; a.track_time)
+                 ) mt)
+UNION ALL 
+select round(to_number(to_date(#{workend},'yyyy-mm-dd hh24:mi:ss')-track_time) * 1440) as Maxtime,user_id,longitude,latitude,track_time
+  from (select mt.track_time,mt.user_id,mt.longitude,mt.latitude
+          from (select a.track_id, a.track_time, a.user_id,a.longitude,a.latitude
+                  from AXX_AUTO_USER_TRACK a
+                 where not exists (select 1
+                          from AXX_AUTO_USER_TRACK b
+                         where b.user_id = a.user_id
+                           and b.track_time &gt; a.track_time)
+                  ) mt))
+      where 1=1 
+  <if test="user_id != null and user_id != 'null'  and user_id != '' " >
+			and user_id = #{user_id}
+  </if>
+ <if test="workstart != null and workstart != 'null'  and workstart != '' " >
+			and track_time &gt; to_date(#{workstart},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+  <if test="workend != null and workend != 'null'  and workend != '' " >
+			and track_time &lt; to_date(#{workend},'yyyy-mm-dd hh24:mi:ss')
+  </if>
+ 
+  <if test="line_date != null and line_date != 'null'  and line_date != '' " >
+			and substr(to_char(track_time,'yyyy-mm-dd hh24:mi:ss'),1,10) = #{line_date}
+  </if>	
+	order by  track_time asc
+	
+	
+		
+	</select>
+	
+	<!--巡线时长-->
+	<select id="get_judge_time" parameterType="map" resultType="map">
+		select t.* from axx_t_invalid_time t
+		 where t.line_date = TO_DATE(#{judge_time},'yyyy-mm-dd')
+		 and t.user_id = to_number(#{user_id}) and t.invalid_type = to_number(#{invalid_type})
+	 <if test="start_time != null and start_time != 'null'  and start_time != '' " >
+			and t.start_time = TO_DATE(#{start_time},'yyyy-mm-dd hh24:mi:ss')
+  	 </if>
+  	 <if test="end_time != null and end_time != 'null'  and end_time != '' " >
+			and t.end_time = TO_DATE(#{end_time},'yyyy-mm-dd hh24:mi:ss')
+  	 </if>
+	</select>
+	
+<!--选择监管人员列表 -->
+	<select id="getjianguan_name" parameterType="map" resultType="map">
+		SELECT BS.* FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+   			WHERE BS.STAFF_ID = BSR.STAFF_ID
+    	 	AND BR.ROLE_ID = BSR.ROLE_ID
+     		AND BR.ROLE_NO = 'AXX_ADMIN'
+		<if test="localId != null and localId != 'null'  and localId != '' " >
+			and BS.AREA_ID = #{localId}
+		</if>
+		 
+	</select>
+	<select id="getOutsitPlanId" resultType="int">
+		select SEQ_AXX_OUT_SITE_PLAN.NEXTVAL from dual
+	</select>
+<!-- 新增外力点计划 -->
+	<insert id="insert_outsite_plan" parameterType="map">
+	INSERT INTO AXX_OUT_SITE_PLAN(
+		PLAN_ID,
+		START_DATE,
+		END_DATE,
+		USER_ID,
+		OUT_SITE_ID,
+		CREATION_TIME,
+		CREATED_BY,
+		UPDATE_TIME,
+		UPDATED_BY,
+		DELETE_FLAG
+		)
+	VALUES (
+		#{plan_id},
+		TO_DATE(#{start_date},'yyyy-mm-dd'),
+		TO_DATE(#{end_date},'yyyy-mm-dd'),
+		#{kan_name_id},
+		#{out_site_id},
+		TO_DATE(#{creation_time},'yyyy-mm-dd'),
+		#{creator},
+		TO_DATE(#{creation_time},'yyyy-mm-dd'),
+		#{update_name},
+		1)
+	</insert>
+
+<!--详情 新增外力点计划 -->
+	<insert id="insert_outsite_plan_detail" parameterType="map">
+	INSERT INTO AXX_OUT_SITE_PLAN_DETAIL(
+		PLAN_ID_DETAIL,
+		TIME_DETAIL,
+		STATE,
+		X,
+		Y,
+		KAN_NAME_ID_DETAIL,
+		KAN_NAME_DETAIL,
+		CREAT_TIME,
+		UPDATE_TIME,
+		UPDATE_NAME,
+		ISDEL
+		)
+	VALUES (
+		#{plan_id_detail},
+		TO_DATE(#{time_detail},'yyyy-mm-dd'),
+		0,
+		#{x},
+		#{y},
+		#{kan_name_id},
+		#{kan_name},
+		select TRUNC(SYSDATE) FROM dual,
+		select TRUNC(SYSDATE) FROM dual,
+		#{update_name},
+		0)
+	</insert>
+	<!-- 查询计划时间片段 -->
+	<select id="queryTimeFregment" parameterType="util.page.Query" resultType="map">
+	select t.plan_time_id,
+       t.plan_id,
+       t.part_time_id,
+       t.start_time,
+       t.end_time,
+       to_char(t.creation_time, 'yyyy-mm-dd hh24:mi:ss') creation_time
+  from AXX_OUT_SITE_PLAN_PART_TIME t
+ where (t.delete_flag is null or t.delete_flag = 0)
+   and t.plan_id = #{queryParams.PLAN_ID}
+	</select>
+	
+<!-- 修该外力点计划 -->	
+	<update id="update_outsite_plan" parameterType="map">
+		update axx_out_site_plan set  
+		start_date = to_date(#{start_date},'yyyy-mm-dd'),
+		end_date = to_date(#{end_date},'yyyy-mm-dd'),
+		user_id = #{kan_name_id},
+		out_site_id = #{out_site_id},
+		update_time = to_date(#{update_time},'yyyy-mm-dd'),
+		updated_by = #{update_name} 
+		where plan_id=#{plan_id}
+	</update>
+<!-- 向时间模板中数据修该 -->	
+	<update id="update_time_model" parameterType="map">
+		update AXX_OUT_SITE_PLAN_PART_TIME set delete_flag = 0 where plan_id=#{plan_id}
+	</update>
+
+<!-- 查询单个外力点计划 -->
+	<select id="query_outsite_single" parameterType="map" resultType="map">
+	
+	  select t.plan_id,
+       to_char(t.start_date,'yyyy-mm-dd') start_date,
+       to_char(t.end_date,'yyyy-mm-dd') end_date,
+       t.user_id kan_name_id,
+       t.out_site_id,
+       to_char(t.creation_time,'yyyy-mm-dd') creation_time,
+       t.created_by creator,
+       s1.staff_no kan_no,
+       s1.staff_name kan_name,
+       s3.site_name site_name,
+       s3.x,s3.y,
+       to_char(t.update_time,'yyyy-mm-dd') update_time,
+       t.updated_by update_name
+  from axx_out_site_plan t 
+  inner join tb_base_staff s1 on s1.staff_id = t.user_id 
+  inner join axx_main_out_site s3 on s3.out_site_id = t.out_site_id 
+  where t.plan_id =#{plan_id}
+	</select>
+
+<!-- 查询计划表最大id -->
+	<select id="getMax_id" parameterType="map" resultType="map">
+		select max(t.plan_id) plan_id from axx_out_site_plan t
+	</select>
+<!-- 修改计划（暂停和开始） -->
+	<update id="changePlan" parameterType="map">
+		  update AXX_OUT_SITE_PLAN_SUB aosps
+    set aosps.STATUS = #{flag}
+  where aosps.PLAN_ID = #{plan_id}
+    and to_char(aosps.PLAN_DATE, 'yyyy-mm-dd') = #{time_detail} 
+	</update>
+<!-- 向时间模板中插入数据 -->
+	<insert id="insert_time_model" parameterType="map">
+	INSERT INTO AXX_OUT_SITE_PLAN_PART_TIME(
+		PLAN_ID,
+		START_TIME,
+		END_TIME,
+		AREA_ID,
+		CREATION_TIME,
+		CREATED_BY,
+		UPDATE_TIME,
+		UPDATED_BY,
+		DELETE_FLAG) 
+		select #{plan_id},spm.start_time,spm.end_time,#{area_id},
+		TO_DATE(#{creation_time},'yyyy-mm-dd'),#{creator},TO_DATE(#{update_time},'yyyy-mm-dd'),#{update_name},1 from axx_out_site_part_time_model spm where spm.part_time_id in (${kanhu_shijian_id})
+	</insert>
+<!-- 查询迁移日志 -->
+	<select id="query_movelog" parameterType="util.page.Query" resultType="map">
+		 select t.move_id,
+           t.out_site_id,
+           t.old_longitude,
+           t.old_latitude,
+           t.new_longitude,
+           t.new_latitude,
+           t.user_id,
+           to_char(t.move_time,'yyyy-mm-dd hh24:mi:ss') move_time,
+           s1.staff_name,
+           s3.site_name
+        from axx_out_site_log t 
+        join tb_base_staff s1 on s1.staff_id = t.user_id 
+  		join axx_main_out_site s3 on s3.out_site_id = t.out_site_id
+  		where s3.area_id=#{queryParams.area_id} 
+  		<if test="queryParams.site_name != null and queryParams.site_name != 'null'  and queryParams.site_name != '' " >
+			and s3.site_name = #{queryParams.site_name}
+		</if>
+		<if test="queryParams.old_longitude != null and queryParams.old_longitude != 'null'  and queryParams.old_longitude != '' " >
+			and t.old_longitude = #{queryParams.old_longitude}
+		</if>
+		<if test="queryParams.old_latitude != null and queryParams.old_latitude != 'null'  and queryParams.old_latitude != '' " >
+			and t.old_latitude = #{queryParams.old_latitude}
+		</if>
+		    order by  t.move_time desc
+	</select>
+<!-- 查询单个迁移日志 -->
+	<select id="select_movelog" parameterType="map" resultType="map">
+	
+	 select t.move_id,
+           t.out_site_id,
+           t.old_longitude,
+           t.old_latitude,
+           t.new_longitude,
+           t.new_latitude,
+           t.user_id,
+           to_char(t.move_time,'yyyy-mm-dd hh24:mi:ss') move_time,
+           s1.staff_name,
+           s3.site_name
+        from axx_out_site_log t 
+        join tb_base_staff s1 on s1.staff_id = t.user_id 
+  		join axx_main_out_site s3 on s3.out_site_id = t.out_site_id 
+  
+  where t.move_id =#{move_id}
+	</select>
+<!-- 修该迁移日志 -->	
+	<update id="update_outsite_movelog" parameterType="map">
+		update axx_out_site_log set 
+		old_longitude = #{old_longitude},
+		old_latitude = #{old_latitude},
+		new_longitude = #{new_longitude},
+		new_latitude = #{new_latitude}
+		
+		where move_id=#{move_id}
+	</update>
+<!--无效时间记录-->
+	<insert id="insert_invalid_time" parameterType="map">
+	INSERT INTO AXX_T_INVALID_TIME(
+		USER_ID,
+		LINE_DATE,
+		START_TIME,
+		END_TIME,
+		INVALID_TYPE,
+		REMARK
+		)
+	VALUES (
+		to_number(#{user_id}),
+		TO_DATE(#{line_date},'yyyy-mm-dd'),
+		TO_DATE(#{start_time},'yyyy-mm-dd hh24:mi:ss'),
+		TO_DATE(#{end_time},'yyyy-mm-dd hh24:mi:ss'),
+		to_number(#{invalid_type}),
+		#{remark})
+	</insert>
+
+<!-- 查询无效时间图 -->
+	<select id="list_no_picture" parameterType="map" resultType="map">
+<!-- 	测试数据 -->
+	<!-- select t.user_id,  
+     to_char(t.line_date,'yyyy-mm-dd') line_date,
+     to_char(t.start_time,' hh24:mi:ss') start_time,
+     to_char(t.end_time,' hh24:mi:ss') end_time,
+       t.remark,
+       t.invalid_type
+  from axx_t_invalid_time t where 1=1
+      and t.line_date = TO_DATE('2015-05-18','yyyy-mm-dd')
+      and t.user_id =18037
+   order by t.start_time asc -->
+	
+	 select t.user_id,
+	   to_char(t.line_date,'yyyy-mm-dd') line_date,
+	   to_char(t.start_time,' hh24:mi:ss') start_time,
+	   to_char(t.end_time,' hh24:mi:ss') end_time,
+       t.remark,
+       t.invalid_type
+  from axx_t_invalid_time t where 1=1
+  		<if test="line_date != null and line_date != 'null'  and line_date != '' " >
+			and t.line_date = TO_DATE(#{line_date},'yyyy-mm-dd')
+		</if>
+		<if test="user_id != null and user_id != 'null'  and user_id != '' " >
+			and t.user_id = #{user_id}
+		</if>
+   order by t.start_time asc
+	</select>
+	<select id="getPartTimeList" parameterType="map" resultType="map">
+	SELECT PART_TIME_ID,
+       START_TIME,
+       END_TIME,
+       T.IS_ENABLED,
+       T.PARENT_CITY,
+       TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+       T.CREATED_BY,
+       TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS') UPDATE_TIME,
+       TO_CHAR(T.UPDATED_BY, 'YYYY-MM-DD HH24:MI:SS') UPDATED_BY,
+       T.IS_PRITERMISSION,
+       ae.name CITY_NAME
+  		FROM AXX_OUT_SITE_PART_TIME_MODEL T, area  ae
+ 		WHERE T.PARENT_CITY = ae.area_id and t.DELETE_FLAG=1 
+		<if test="area_id  != null and area_id != ''"> 
+	         <![CDATA[and t.PARENT_CITY=#{area_id}]]>
+		</if>
+		ORDER BY T.START_TIME ASC
+	</select>
+	
+	<select id="queryOutsitePlanCount" parameterType="map" resultType="int">
+	  select count(1) from AXX_OUT_SITE_PLAN osp inner join axx_main_out_site mos on osp.out_site_id=mos.out_site_id
+  		where mos.con_status=1 and mos.delete_flag=1 and osp.delete_flag=1 and osp.user_id=#{kan_name_id}
+    	and ((osp.start_date between to_date(#{start_date},'yyyy-mm-dd')and to_date(#{end_date},'yyyy-mm-dd'))
+				or (osp.end_date between to_date(#{start_date},'yyyy-mm-dd')and to_date(#{end_date},'yyyy-mm-dd'))
+        		or (to_date(#{start_date},'yyyy-mm-dd') between osp.start_date and osp.end_date)
+        		or (to_date(#{end_date},'yyyy-mm-dd') between osp.start_date and osp.end_date))  
+        <if test="plan_id  != null and plan_id != ''"> 
+	         <![CDATA[and osp.plan_id!=#{plan_id}]]>
+		</if>
+	</select>
+	
+	<!-- 查询本区域看护员 -->
+	<select id="getOutSitePlanInspector" parameterType="map" resultType="map">
+	    select bs.*
+	    from tb_base_staff bs, tb_base_role br, tb_base_staff_role bsr
+	   where bs.staff_id = bsr.staff_id
+	     and br.role_id = bsr.role_id
+	     and br.role_no = 'AXX_KHY'
+	     and bs.area_id = #{localAreaId}
+	     <if test=" staff_no  != null and staff_no  != ''"> 
+			 <![CDATA[ 
+			      and bs.staff_no like '%'||#{staff_no}||'%'
+			 ]]>
+ 		 </if>
+		 <if test=" staff_name  != null and staff_name  != ''"> 
+			 <![CDATA[ 
+			 	and bs.staff_name like '%'||#{staff_name}||'%'
+			 ]]>
+		 </if>
+	</select>
+	
+	<!-- 查询外力点轨迹  -->
+	<select id="getOutSitePlanTrack" resultType="map" parameterType="map">
+		select to_char(t.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,
+		       t.x as longitude,
+		       t.y as latitude,
+		       decode(t.is_guard,1,'是','否') as is_guard,
+		       decode(t.gps_switch,1,'是','否') as gps_switch
+		 from axx_out_site_plan_polygn t
+		 where 1 = 1
+		 <if test=" start_time  != null and start_time  != '' and end_time!=null and end_time!=''"> 
+			 <![CDATA[ 
+			       and to_char(t.track_time, 'hh24:mi') between #{start_time} and #{end_time}
+			 ]]>
+		 </if>
+		 <if test=" start_time  != null and start_time  != '' and (end_time==null or end_time=='')"> 
+			 <![CDATA[ 
+			       and to_char(t.track_time, 'hh24:mi') between #{start_time} and '23:59'
+			 ]]>
+		 </if>
+		 <if test=" (start_time  == null or start_time  == '') and end_time!=null and end_time!=''"> 
+		 	<![CDATA[ 
+		    	   and to_char(t.track_time, 'hh24:mi') between '00:00' and #{end_time}
+		 	]]>
+		 </if>
+		 and trunc(t.track_time) = to_date(#{inspact_date}, 'yyyy-mm-dd')
+		 and t.created_by = #{inspact_id} 
+		 order by t.track_time
+	</select>
+	
+	<!-- 根据看护员ID和看护日期查询看护计划ID及外力点ID -->
+	<select id="getOutSitePlanInfo" parameterType="map" resultType="map">
+		<![CDATA[
+	     select p.plan_id,m.out_site_id
+		  from axx_out_site_plan p
+		  inner join axx_main_out_site m on m.out_site_id = p.out_site_id
+		 where 1 = 1
+		   and p.user_id = #{inspact_id}
+		   and p.start_date <= to_date(#{inspact_date}, 'yyyy-mm-dd')
+		   and p.end_date >= to_date(#{inspact_date}, 'yyyy-mm-dd') 
+		   and m.CON_STATUS=1 and m.DELETE_FLAG=1 
+		]]>
+	</select>
+	
+</mapper>

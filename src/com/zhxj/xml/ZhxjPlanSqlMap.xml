@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhxj.dao.ZhxjPlanDao">
+	<select id="queryPlan" parameterType="util.page.Query" resultType="map">
+		select p.zhxj_plan_id,
+		       p.plan_id,
+		       p.plan_no,
+		       p.plan_name,
+		       to_char(p.plan_start_date,'yyyy-mm-dd hh24:mi:ss') plan_start_date,
+		       to_char(p.plan_end_date,'yyyy-mm-dd hh24:mi:ss') plan_end_date,
+		       p.plan_type,
+		       tt.type_name,
+		       p.plan_orgin,
+		       decode(p.plan_orgin, 1, '干线巡检', 2, '缆线巡检', 3, '光网助手') plan_orgin_name,
+		       p.area_id,
+		       a1.name area,
+		       p.son_area_id,
+		       a2.name son_area,
+		       p.grid_id,
+		       decode(p.plan_orgin,
+		              2,
+		              (select dept_name from tb_ins_dept where dept_id = p.grid_id)) grid_name,
+		       p.plan_inspect_staff,
+		       s.staff_name inspector,
+		       to_char(p.create_time,'yyyy-mm-dd hh24:mi:ss') create_time,
+		       s2.staff_name create_staff,
+		       decode(p.isdistributed, 0, '未分配', 1, '已分配', '') isdistributed
+		  from tb_zhxj_plan p
+		  left join tb_zhxj_task_type tt
+		    on tt.type_id = p.plan_type
+		  left join area a1
+		    on a1.area_id = p.area_id
+		  left join area a2
+		    on a2.area_id = p.son_area_id
+		  left join tb_base_staff s
+		    on s.staff_id = p.plan_inspect_staff
+		  left join tb_base_staff s2
+		    on s2.staff_id = p.create_staff
+         <if test="queryParams.PLAN_NO != null and queryParams.PLAN_NO != ''">  
+            <![CDATA[
+	    	AND P.PLAN_NO like '%'||#{queryParams.PLAN_NO}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_NAME != null and queryParams.PLAN_NAME != ''">  
+            <![CDATA[
+	    	AND P.PLAN_NAME like  '%'||#{queryParams.PLAN_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND P.AREA_ID =#{queryParams.AREA_ID} 
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND P.SON_AREA_ID =#{queryParams.SON_AREA_ID} 
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_START_TIME != null and queryParams.PLAN_START_TIME != ''">  
+            <![CDATA[
+	    	AND P.PLAN_START_date >= TO_DATE(#{queryParams.PLAN_START_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_END_TIME != null and queryParams.PLAN_END_TIME != ''">  
+            <![CDATA[
+	    	AND P.PLAN_END_date <= TO_DATE(#{queryParams.PLAN_END_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_ORGIN != null and queryParams.PLAN_ORGIN != ''">  
+            <![CDATA[
+	    	AND P.PLAN_ORGIN = #{queryParams.PLAN_ORGIN}
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_TYPE != null and queryParams.PLAN_TYPE != ''">  
+            <![CDATA[
+	    	AND P.PLAN_TYPE = #{queryParams.PLAN_TYPE}
+	    	]]>
+		</if>
+		<!--  
+		<if test="queryParams.GRID_NAME != null and queryParams.GRID_NAME != ''">  
+            <![CDATA[
+	    	AND t.GRID_ID in ( select#{queryParams.GRID_NAME})
+	    	]]>
+		</if>
+		-->
+	</select>
+		
+	<insert id="addInspectionPlan">
+		insert into tb_zhxj_plan
+		  (plan_id,
+		   plan_no,
+		   plan_name,
+		   plan_start_date,
+		   plan_end_date,
+		   plan_frequency,
+		   plan_circle,
+		   plan_type,
+		   plan_orgin,
+		   area_id,
+		   son_area_id,
+		   grid_id,
+		   plan_inspect_staff,
+		   create_time,
+		   create_staff,
+		   modify_time,
+		   modify_staff,
+		   is_delete,
+		   isdistributed,
+		   zhxj_plan_id)
+		  select p.plan_id,
+		         p.plan_no,
+		         p.plan_name,
+		         p.plan_start_time,
+		         p.plan_end_time,
+		         p.plan_frequency,
+		         p.plan_circle,
+		         decode(p.plan_kind,
+		                3,
+		                204,
+		                (select max(decode(l.line_type, 0, 201, 1, 202, 3, 203, 202))
+		                   from tb_ins_plan_detail pd, tb_ins_line l
+		                  where pd.plan_id = p.plan_id
+		                    and l.line_id = pd.inspect_object_id)),
+		         2,
+		         p.area_id,
+		         P.SON_AREA_ID， (select max(dept_id)
+		                           from tb_ins_dept d
+		                          where d.dept_no = p.dept_no),
+		         p.task_inspector,
+		         p.create_time,
+		         p.create_staff,
+		         p.modify_time,
+		         p.modify_staff,
+		         p.isdeleted,
+		         p.isdistributed,
+		         seq_tb_zhxj_plan.nextval
+		    from tb_ins_plan p
+		    <![CDATA[
+		   where p.create_time > date '2017-01-01'
+		     and p.isdeleted = 0
+		     and p.plan_end_time > sysdate
+		     ]]>
+	</insert>
+	
+	<delete id="removePlan" parameterType="string">
+			delete from tb_zhxj_plan where zhxj_plan_id=#{zhxj_plan_id}
+	</delete>
+	
+</mapper>

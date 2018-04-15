@@ -1,0 +1,1012 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.DangerOrderDao">
+
+	
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		
+
+SELECT T.CHECK_ID,
+       T.ORDER_ID,
+       DOS.STATE_NAME ORDER_STATUS,
+       BS1.STAFF_NAME CHECK_PERSON,
+       ADL.DANGER_ID,
+       ADL.DANGER_NAME,
+       ADL.DANGER_QUESTION,
+       TO_CHAR(ADL.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+       bs2.staff_name founder_name,
+       ato.org_name,
+       TO_CHAR(ADL.FOUND_TIME, 'YYYY-MM-DD HH24:MI:SS') FOUND_TIME,
+       ADL.FOUNDER_UID,
+       adl.note
+  FROM AXX_T_DANGER_ORDER     T,
+       AXX_DANGER_LIST        ADL,
+       TB_BASE_STAFF          BS1,
+       TB_BASE_STAFF          BS2,
+       AXX_DANGER_ORDER_STATE DOS,
+       axx_t_organization ato
+ WHERE T.DANGER_ID = ADL.DANGER_ID
+   AND T.ORDER_STATUS = DOS.STATE_ID
+   AND BS1.STAFF_ID(+) = T.CHECK_ID
+   AND BS2.STAFF_ID(+) = adl.founder_uid
+   and ato.org_id=bs2.org_id
+   and adl.parent_city=#{queryParams.areaId}
+  
+  
+  	
+			<if test="queryParams.order_status  != null and queryParams.order_status  != ''"> 
+      <![CDATA[ and T.ORDER_STATUS = #{queryParams.order_status } ]]>
+		</if>
+	  		<if test="queryParams.org_id  != null and queryParams.org_id  != ''"> 
+      <![CDATA[ and BS1.org_id = #{queryParams.org_id } ]]>
+		</if>
+	
+	  <if test="queryParams.danger_question  != null and queryParams.danger_question  != ''"> 
+      <![CDATA[ and ADL.DANGER_QUESTION  like '%'||#{queryParams.danger_question}||'%' ]]>
+		</if>
+		
+		 <if test="queryParams.start_time  != null and queryParams.start_time  != ''"> 
+      <![CDATA[ and ADL.CREATION_TIME > = to_date(#{queryParams.start_time},'yyyy-mm-dd') ]]>
+		</if>
+		
+		 <if test="queryParams.end_time  != null and queryParams.end_time  != ''"> 
+      <![CDATA[ and ADL.CREATION_TIME < = to_date(#{queryParams.end_time},'yyyy-mm-dd') ]]>
+		</if>
+		
+		<if test="queryParams.user_id  != null and queryParams.user_id  != ''"> 
+      <![CDATA[ and  ADL.FOUNDER_UID=#{queryParams.user_id} ]]>
+		</if>
+	
+	order by ADL.FOUND_TIME DESC 
+	</select>
+
+
+	<select id="getScopeList" parameterType="map" resultType="map">
+		select org_id,org_name from AXX_T_ORGANIZATION ato where ato.AREA_ID=#{area_id}
+	</select>
+
+
+<select id="query1" parameterType="util.page.Query" resultType="map">
+		
+
+SELECT T.CHECK_ID,
+       T.ORDER_ID,
+       
+       DOS.STATE_NAME ORDER_STATUS,
+
+       BS1.STAFF_NAME CHECK_PERSON,
+      
+       ADL.DANGER_ID,
+       ADL.DANGER_NAME,
+       ADL.DANGER_QUESTION,
+       TO_CHAR(ADL.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+        bs2.staff_name founder_name,
+       TO_CHAR(ADL.FOUND_TIME, 'YYYY-MM-DD HH24:MI:SS') FOUND_TIME,
+       ADL.FOUNDER_UID,
+       adl.note
+  FROM AXX_T_DANGER_ORDER     T,
+       AXX_DANGER_LIST        ADL,
+       TB_BASE_STAFF          BS1,
+        TB_BASE_STAFF          BS2,
+      
+       AXX_DANGER_ORDER_STATE DOS
+ WHERE T.DANGER_ID = ADL.DANGER_ID
+   AND T.ORDER_STATUS = DOS.STATE_ID
+   AND BS1.STAFF_ID(+) = T.CHECK_ID
+   AND BS2.STAFF_ID(+) = adl.founder_uid
+   and adl.parent_city=#{areaId}
+		
+		<if test="order_status  != null and order_status  != ''"> 
+      <![CDATA[ and T.ORDER_STATUS = #{order_status } ]]>
+		</if>
+	  		<if test="org_id  != null and org_id  != ''"> 
+      <![CDATA[ and BS1.org_id = #{org_id } ]]>
+		</if>
+	
+		
+	  <if test="danger_question  != null and danger_question  != ''"> 
+      <![CDATA[ and ADL.DANGER_QUESTION  like '%'||#{danger_question}||'%' ]]>
+		</if>
+		
+	
+	order by ADL.FOUND_TIME DESC 
+	</select>
+
+
+
+	<insert id="dangerOrderSave" parameterType="map">
+		INSERT INTO AXX_T_DANGER_ORDER(
+		ORDER_ID,
+		CHECK_ID,
+		DANGER_ID
+		)
+		values(
+		seq_axx_t_danger_order.nextval,
+		#{created_by},
+		
+		#{danger_id}
+		)
+	</insert>
+
+	<delete id="dangerOrderDelete" parameterType="String">
+		DELETE FROM AXX_T_DANGER_ORDER WHERE ORDER_ID=#{order_id}
+	</delete>
+	
+
+
+	<delete id="deleteDanger" parameterType="int">
+		DELETE FROM AXX_T_DANGER_ORDER WHERE ORDER_ID =#{order_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_T_DANGER_ORDER WHERE ORDER_ID=#{order_id}
+	</select>
+
+	<update id="dangerOrderUpdate" parameterType="map">
+		
+UPDATE AXX_T_DANGER_ORDER set
+<if test=" danger_id  != null and danger_id  != ''"> 
+ <![CDATA[ 
+DANGER_ID=#{danger_id},
+ ]]>
+ </if> 
+<if test=" danger_question  != null and danger_question  != ''"> 
+ <![CDATA[ 
+DANGER_QUESTION=#{danger_question},
+ ]]>
+ </if> 
+<if test=" repair_remark  != null and repair_remark  != ''"> 
+ <![CDATA[ 
+REPAIR_REMARK=#{repair_remark},
+ ]]>
+ </if> 
+<if test=" check_id  != null and check_id  != ''"> 
+ <![CDATA[ 
+CHECK_ID=#{check_id},
+ ]]>
+ </if> 
+<if test=" handle_person  != null and handle_person  != ''"> 
+ <![CDATA[ 
+HANDLE_PERSON=#{handle_person},
+ ]]>
+ </if> 
+<if test=" repair_time  != null and repair_time  != ''"> 
+ <![CDATA[ 
+REPAIR_TIME=to_date(#{repair_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+ </if> 
+
+<if test=" distribute_person  != null and distribute_person  != ''"> 
+ <![CDATA[ 
+DISTRIBUTE_PERSON=#{distribute_person},
+ ]]>
+ </if> 
+<if test=" distribute_time  != null and distribute_time  != ''"> 
+ <![CDATA[ 
+DISTRIBUTE_TIME=to_date(#{distribute_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+ </if> 
+<if test=" limit_time  != null and limit_time  != ''"> 
+ <![CDATA[ 
+LIMIT_TIME=to_date(#{limit_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+ </if> 
+<if test=" distribute_remark  != null and distribute_remark  != ''"> 
+ <![CDATA[ 
+DISTRIBUTE_REMARK=#{distribute_remark},
+ ]]>
+ </if> 
+<if test=" audit_person  != null and audit_person  != ''"> 
+ <![CDATA[ 
+AUDIT_PERSON=#{audit_person},
+ ]]>
+ </if> 
+<if test=" audit_time  != null and audit_time  != ''"> 
+ <![CDATA[ 
+AUDIT_TIME=to_date(#{audit_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+ </if> 
+<if test=" audit_remark  != null and audit_remark  != ''"> 
+ <![CDATA[ 
+AUDIT_REMARK=#{audit_remark},
+ ]]>
+ </if> 
+<if test=" order_status  != null and order_status  != ''"> 
+ <![CDATA[ 
+ORDER_STATUS=#{order_status},
+ ]]>
+ </if> 
+ORDER_ID=#{order_id}
+where ORDER_ID=#{order_id}
+		
+	</update>
+	
+	<select id="findAll" resultType="map">
+	SELECT * FROM AXX_T_DANGER_ORDER
+	</select>
+	
+	<select id="getAllDangerOrderState" resultType="map">
+	   SELECT * FROM AXX_DANGER_ORDER_STATE
+	</select>
+	
+	<select id="getDangerId" resultType="String">
+	    SELECT SEQ_AXX_T_DANGER_ORDER.NEXTVAL FROM DUAL 
+	</select>
+	
+	<insert id="saveDanger" parameterType="map">
+	   insert into AXX_DANGER_LIST(
+	    danger_id, 
+	    x,
+        y,
+         <if test="longitudegps !=null and longitudegps !=''">
+        longitudegps,
+         </if>
+         <if test="latitudegps !=null and latitudegps !=''">
+        latitudegps,
+         </if>
+	    <if test="danger_question !=null and danger_question !=''">
+			danger_question ,
+	    </if>
+		status ,        
+		 <if test="note  != null and note  != ''"> 
+      		<![CDATA[ note ]]>,
+		</if>
+	  <if test="high_risk  != null and high_risk  != ''"> 
+      		<![CDATA[high_risk]]>,
+		</if>
+		<if test="danger_type !=null and danger_type !=''">
+			danger_type,
+		</if>
+		<if test="equip_id !=null and equip_id !=''">
+			equip_id,
+		</if>
+		<if test="equip_type !=null and equip_type !=''">
+			equip_type,
+		</if>
+		creation_time,   
+		parent_city,
+		created_by ,founder_uid,found_time) values
+	   (#{danger_id},
+	   #{longitude},
+	   #{latitude},
+	    <if test="longitudegps !=null and longitudegps !=''">
+	   #{longitudegps},
+	   </if>
+	     <if test="latitudegps !=null and latitudegps !=''">
+	   #{latitudegps},
+	    </if>
+	   <if test="danger_question !=null and danger_question !=''">
+		   #{danger_question},
+	    </if>
+	   0,
+	   <if test=" note  != null and note  != ''"> 
+      		<![CDATA[ #{note} ]]>,
+		</if>
+		<if test=" high_risk  != null and high_risk  != ''"> 
+     		<![CDATA[ #{high_risk} ]]>,
+		</if>
+		<if test="danger_type !=null and danger_type !=''">
+			#{danger_type},
+		</if>
+		<if test="equip_id !=null and equip_id !=''">
+			#{equip_id},
+		</if>
+		<if test="equip_type !=null and equip_id !=''">
+			#{equip_type},
+		</if>
+	   to_date(#{creation_time},'yyyy-mm-dd hh24:mi:ss'),
+	   #{parent_city},
+	   #{created_by},
+	   #{founder_uid},
+	    to_date(#{found_time},'yyyy-mm-dd hh24:mi:ss')
+	    
+	   )
+	
+	</insert>
+	
+	
+	<select id="findHandlePerson" resultType="map">
+	    select t.* from TB_BASE_STAFF t where   1=1 <![CDATA[ and rownum<10 ]]>
+	
+	</select>
+	
+	<select id="findDetail" resultType="map" parameterType="string">
+	      
+SELECT T.CHECK_ID,
+       T.ORDER_ID,
+       DOS.STATE_NAME ORDER_STATUS,
+       ADL.DANGER_ID,
+       ADL.DANGER_NAME,
+       ADL.DANGER_QUESTION,
+       TO_CHAR(ADL.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+       BS3.STAFF_NAME HANDLE_PERSON,
+       BS4.STAFF_NAME DISTRIBUTE_PERSON,
+       BS5.STAFF_NAME AUDIT_PERSON,
+       TO_CHAR(T.DISTRIBUTE_TIME, 'YYYY-MM-DD HH24:MI:SS') DISTRIBUTE_TIME,
+       TO_CHAR(ADL.FOUND_TIME, 'YYYY-MM-DD HH24:MI:SS') FOUND_TIME,
+       T.AUDIT_REMARK,
+       TO_CHAR(T.AUDIT_TIME, 'YYYY-MM-DD HH24:MI:SS') AUDIT_TIME,
+       BS6.STAFF_NAME      FOUNDER_NAME,
+       ADL.FOUND_TIME FOUND_TIME_BAK,
+       T.DISTRIBUTE_REMARK,
+       T.REPAIR_REMARK,
+       TO_CHAR(T.REPAIR_TIME, 'YYYY-MM-DD HH24:MI:SS') REPAIR_TIME
+  FROM AXX_T_DANGER_ORDER T,
+       AXX_DANGER_LIST    ADL,
+       TB_BASE_STAFF          BS3,
+       TB_BASE_STAFF          BS4,
+       TB_BASE_STAFF          BS5,
+       TB_BASE_STAFF          BS6,
+       AXX_DANGER_ORDER_STATE DOS
+ WHERE T.DANGER_ID = ADL.DANGER_ID
+   AND T.ORDER_STATUS = DOS.STATE_ID
+   AND BS3.STAFF_ID(+) = T.HANDLE_PERSON
+   AND BS4.STAFF_ID(+) = T.DISTRIBUTE_PERSON
+   AND BS5.STAFF_ID(+) = T.AUDIT_PERSON
+   AND BS6.STAFF_ID(+) = ADL.FOUNDER_UID
+   AND T.ORDER_ID = #{order_id}
+	      
+	
+	</select>
+	
+	<select id="getDangerOrderToBeDeal" parameterType="string" resultType="map">
+	     
+	     SELECT T.ORDER_ID,
+       T.DANGER_ID,
+       dl.DANGER_QUESTION,
+       T.ORDER_STATUS,
+       T.CHECK_ID,
+       T.HANDLE_PERSON,
+       TO_CHAR(T.REPAIR_TIME, 'YYYY-MM-DD HH24:MI:SS') REPAIR_TIME,
+       T.REPAIR_REMARK,
+       T.DISTRIBUTE_PERSON,
+       TO_CHAR(T.DISTRIBUTE_TIME, 'YYYY-MM-DD HH24:MI:SS') DISTRIBUTE_TIME,
+       TO_CHAR(T.LIMIT_TIME, 'YYYY-MM-DD HH24:MI:SS') LIMIT_TIME,
+       T.DISTRIBUTE_REMARK,
+       T.AUDIT_PERSON,
+       TO_CHAR(T.AUDIT_TIME, 'YYYY-MM-DD HH24:MI:SS') AUDIT_TIME,
+       T.AUDIT_REMARK,
+       dl.DANGER_TYPE,
+       dl.EQUIP_ID,
+       dl.EQUIP_TYPE 
+  FROM AXX_T_DANGER_ORDER T, axx_danger_list dl
+ WHERE t.danger_id = dl.danger_id
+   and T.ORDER_STATUS = 1
+   and T.HANDLE_PERSON = #{userId}
+	
+	</select>
+	
+	
+	<select id="doStatistic4" parameterType="map" resultType="map">
+	      
+
+SELECT aa.STAFF_NAME FOUNDER_NAME ,aa.staff_id   FOUNDER_UID ,nvl(T.W1,0) W1 ,nvl(T.W2,0) W2,nvl(T.W3,0) W3,nvl(T.W4,0) W4
+  FROM (select a.area_id,a.staff_id, area.NAME,a.staff_name,a.is_help_patrol,c.role_id
+               from TB_BASE_STAFF a
+              inner join TB_BASE_STAFF_ROLE b
+                 on a.STAFF_ID = b.STAFF_ID
+              inner join TB_BASE_ROLE c
+                 on b.ROLE_ID = c.ROLE_ID
+              inner join area
+                 on a.AREA_ID = area.AREA_ID
+              where c.role_id = 126
+                and a.ISDELETED = 0
+                and a.STATUS = 0
+                and c.ISDELETED = 0
+                and c.STATUS = 0
+                and area.area_id=#{area_id}
+                and  a.area_id is not null
+                and a.IS_HELP_PATROL != 1
+           )aa
+
+  left join (SELECT FOUNDER_UID,
+               
+               COUNT(CASE
+                       WHEN GP = 1 THEN
+                        '1'
+                     END) W1,
+               COUNT(CASE
+                       WHEN GP = 2 THEN
+                        '1'
+                     END) W2,
+               COUNT(CASE
+                       WHEN GP = 3 THEN
+                        '1'
+                     END) W3,
+               COUNT(CASE
+                       WHEN GP = 4 THEN
+                        '1'
+                     END) W4
+          FROM (SELECT DL.FOUNDER_UID,
+                       (CASE
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                              TO_DATE(#{startDate0}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate0}, 'YYYY-MM-DD') THEN
+                          1
+                       
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                              TO_DATE(#{startDate1}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate1}, 'YYYY-MM-DD') THEN
+                          2
+                       
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                              TO_DATE(#{startDate2}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate2}, 'YYYY-MM-DD') THEN
+                          3
+                       
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                             TO_DATE(#{startDate3}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate3}, 'YYYY-MM-DD') THEN
+                          4
+                       
+                       END) GP
+                  FROM AXX_DANGER_LIST DL where dl.parent_city=#{area_id}
+                
+                 <if test=" check_person  != null and check_person  != ''"> 
+                              and  DL.FOUNDER_UID = #{check_person}
+		         </if>
+                 
+                 ) T
+         GROUP BY FOUNDER_UID) T on  aa.staff_id=T.FOUNDER_UID 
+      
+ WHERE  aa.ROLE_ID=126 and aa.IS_HELP_PATROL != 1
+	      
+	
+	</select>
+	<select id="doStatistic5" parameterType="map" resultType="map">
+	      
+SELECT aa.STAFF_NAME FOUNDER_NAME ,aa.staff_id   FOUNDER_UID ,nvl(T.W1,0) W1 ,nvl(T.W2,0) W2,nvl(T.W3,0) W3,nvl(T.W4,0) W4 ,nvl(T.W5,0) W5
+  FROM  (select a.area_id,a.staff_id, area.NAME,a.staff_name,a.is_help_patrol,c.role_id
+               from TB_BASE_STAFF a
+              inner join TB_BASE_STAFF_ROLE b
+                 on a.STAFF_ID = b.STAFF_ID
+              inner join TB_BASE_ROLE c
+                 on b.ROLE_ID = c.ROLE_ID
+              inner join area
+                 on a.AREA_ID = area.AREA_ID
+              where c.role_id = 126
+                and a.ISDELETED = 0
+                and a.STATUS = 0
+                and c.ISDELETED = 0
+                and c.STATUS = 0
+                and area.area_id=#{area_id}
+                and  a.area_id is not null
+                and a.IS_HELP_PATROL != 1
+           )aa
+  
+  left join 
+  
+   (SELECT FOUNDER_UID,
+               
+               COUNT(CASE
+                       WHEN GP = 1 THEN
+                        '1'
+                     END) W1,
+               COUNT(CASE
+                       WHEN GP = 2 THEN
+                        '1'
+                     END) W2,
+               COUNT(CASE
+                       WHEN GP = 3 THEN
+                        '1'
+                     END) W3,
+               COUNT(CASE
+                       WHEN GP = 4 THEN
+                        '1'
+                     END) W4,
+               COUNT(CASE
+                       WHEN GP = 5 THEN
+                        '1'
+                     END) W5
+          FROM (SELECT DL.FOUNDER_UID,
+                       (CASE
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                              TO_DATE(#{startDate0}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate0}, 'YYYY-MM-DD') THEN
+                          1
+                       
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                              TO_DATE(#{startDate1}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate1}, 'YYYY-MM-DD') THEN
+                          2
+                       
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                              TO_DATE(#{startDate2}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate2}, 'YYYY-MM-DD') THEN
+                          3
+                       
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                             TO_DATE(#{startDate3}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate3}, 'YYYY-MM-DD') THEN
+                          4
+                         WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                             TO_DATE(#{startDate4}, 'YYYY-MM-DD') AND
+                              TO_DATE(#{endDate4}, 'YYYY-MM-DD') THEN
+                          5
+                       
+                       END) GP
+                  FROM AXX_DANGER_LIST DL where dl.parent_city=#{area_id}
+                
+                 <if test=" check_person  != null and check_person  != ''"> 
+                              and  DL.FOUNDER_UID = #{check_person}
+		         </if>
+                 
+                 ) T
+         GROUP BY FOUNDER_UID) T on  aa.staff_id=T.FOUNDER_UID 
+      
+ WHERE  aa.ROLE_ID=126 and aa.IS_HELP_PATROL != 1
+	</select>
+	
+	
+	<select id="getDangerIdByOrder" parameterType="string" resultType="string">
+	     SELECT DO.DANGER_ID FROM AXX_T_DANGER_ORDER DO WHERE DO.ORDER_ID=#{order_id}
+	</select>
+	
+	
+	<select id="searchByAdmin4" parameterType="map" resultType="map">
+select td.parent_city,
+       nvl(td.w1,0) w1,nvl(td.w2,0) w2,nvl(td.w3,0) w3,nvl(td.w4,0) w4,nvl(td.w11,0) w11,nvl(td.w22,0) w22,nvl(td.w33,0) w33,nvl(td.w44,0) w44,
+       inspactor_count,
+	   ae.name area_name from (select ta.*,
+       tb.*,
+       tc.inspactor_count 　from (SELECT parent_city,
+                                        
+                                        COUNT(CASE
+                                                WHEN GP = 1 THEN
+                                                 '1'
+                                              END) W1,
+                                        COUNT(CASE
+                                                WHEN GP = 2 THEN
+                                                 '1'
+                                              END) W2,
+                                        COUNT(CASE
+                                                WHEN GP = 3 THEN
+                                                 '1'
+                                              END) W3,
+                                        COUNT(CASE
+                                                WHEN GP = 4 THEN
+                                                 '1'
+                                              END) W4
+                                   FROM (SELECT DL.FOUNDER_UID,
+                                                dl.parent_city,
+                                                (CASE
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate0},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate0},
+                                                               'YYYY-MM-DD') THEN
+                                                   1
+                                                
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate1},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate1},
+                                                               'YYYY-MM-DD') THEN
+                                                   2
+                                                
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate2},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate2},
+                                                               'YYYY-MM-DD') THEN
+                                                   3
+                                                
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate3},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate3},
+                                                               'YYYY-MM-DD') THEN
+                                                   4
+                                                
+                                                END) GP
+                                           FROM AXX_DANGER_LIST DL inner join tb_base_staff tbs on dl.FOUNDER_UID=tbs.STAFF_ID 
+                                          where 1 = 1
+                                          and tbs.STATUS=0 
+                                          and tbs.ISDELETED=0 
+                                           <if test=" area_id  != null and area_id  != ''"> 
+                                                   and dl.parent_city = #{area_id}
+		                                    </if>
+                                            ) t
+                                  group by parent_city) ta full join 
+       (SELECT area_id,
+               
+               COUNT(CASE
+                       WHEN GP = 1 THEN
+                        '1'
+                     END) W11,
+               COUNT(CASE
+                       WHEN GP = 2 THEN
+                        '1'
+                     END) W22,
+               COUNT(CASE
+                       WHEN GP = 3 THEN
+                        '1'
+                     END) W33,
+               COUNT(CASE
+                       WHEN GP = 4 THEN
+                        '1'
+                     END) W44
+          from (select t1.*,'1' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0  and BS.IS_HELP_PATROL != 1) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate0}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate0}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city)
+                union all
+                
+                select t1.* , '2' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0  and BS.IS_HELP_PATROL != 1) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate1}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate1}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city)
+                
+                union all
+                
+                select t1.* , '3' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0 and BS.IS_HELP_PATROL != 1) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate2}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate2}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city)
+                union all
+                
+                select t1.* , '4' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0  and BS.IS_HELP_PATROL != 1) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate3}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate3}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city))
+         group by area_id) tb on ta.parent_city = tb.area_id inner join 
+       (select count(staff_id) inspactor_count, area_id
+          from (SELECT BS.staff_id, bs.area_id
+                  FROM TB_BASE_STAFF      BS,
+                       TB_BASE_ROLE       BR,
+                       TB_BASE_STAFF_ROLE BSR
+                 WHERE BS.STAFF_ID = BSR.STAFF_ID
+                   AND BR.ROLE_ID = BSR.ROLE_ID
+                   AND BR.ROLE_NO = 'AXX_XXY'
+                   and bs.STATUS=0 and bs.ISDELETED=0
+                  AND BS.IS_HELP_PATROL != 1)
+         group by area_id) tc on ta.parent_city = tc.area_id  ) td,area ae where td.parent_city=ae.area_id
+	    
+	</select>
+	
+	
+		<select id="searchByAdmin5" parameterType="map" resultType="map">
+
+select td.parent_city,
+       nvl(td.w1,0) w1,nvl(td.w2,0) w2,nvl(td.w3,0) w3,nvl(td.w4,0) w4,nvl(td.w5,0) w5,nvl(td.w11,0) w11,nvl(td.w22,0) w22,nvl(td.w33,0) w33,nvl(td.w44,0) w44,nvl(td.w55,0) w55,
+       inspactor_count,
+       ae.name area_name from (select ta.*,
+       tb.*,
+       tc.inspactor_count 　from (SELECT parent_city,
+                                        
+                                        COUNT(CASE
+                                                WHEN GP = 1 THEN
+                                                 '1'
+                                              END) W1,
+                                        COUNT(CASE
+                                                WHEN GP = 2 THEN
+                                                 '1'
+                                              END) W2,
+                                        COUNT(CASE
+                                                WHEN GP = 3 THEN
+                                                 '1'
+                                              END) W3,
+                                        COUNT(CASE
+                                                WHEN GP = 4 THEN
+                                                 '1'
+                                              END) W4,
+                                        COUNT(CASE
+                                                WHEN GP = 5 THEN
+                                                 '1'
+                                              END) W5
+                                   FROM (SELECT DL.FOUNDER_UID,
+                                                dl.parent_city,
+                                                (CASE
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate0},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate0},
+                                                               'YYYY-MM-DD') THEN
+                                                   1
+                                                
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate1},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate1},
+                                                               'YYYY-MM-DD') THEN
+                                                   2
+                                                
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate2},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate2},
+                                                               'YYYY-MM-DD') THEN
+                                                   3
+                                                
+                                                  WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate3},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate3},
+                                                               'YYYY-MM-DD') THEN
+                                                   4
+                                                   WHEN TRUNC(DL.FOUND_TIME) BETWEEN
+                                                       TO_DATE(#{startDate4},
+                                                               'YYYY-MM-DD') AND
+                                                       TO_DATE(#{endDate4},
+                                                               'YYYY-MM-DD') THEN
+                                                   5
+                                                END) GP
+                                           FROM AXX_DANGER_LIST DL inner join tb_base_staff tbs on dl.FOUNDER_UID=tbs.STAFF_ID 
+                                          where 1 = 1
+                                           and tbs.STATUS=0 
+                                           and tbs.ISDELETED=0 
+                                           <if test=" area_id  != null and area_id  != ''"> 
+                                                   and dl.parent_city = #{area_id}
+		                                    </if>
+                                            ) t
+                                  group by parent_city) ta full join 
+       (SELECT area_id,
+               
+               COUNT(CASE
+                       WHEN GP = 1 THEN
+                        '1'
+                     END) W11,
+               COUNT(CASE
+                       WHEN GP = 2 THEN
+                        '1'
+                     END) W22,
+               COUNT(CASE
+                       WHEN GP = 3 THEN
+                        '1'
+                     END) W33,
+               COUNT(CASE
+                       WHEN GP = 4 THEN
+                        '1'
+                     END) W44,
+                 COUNT(CASE
+                       WHEN GP = 5 THEN
+                        '1'
+                     END) W55
+          from (select t1.* , '1' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                        and bs.STATUS=0 and bs.ISDELETED=0 and BS.IS_HELP_PATROL != 1) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate0}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate0}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city)
+                union all
+                
+                select t1.* , '2' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0 and BS.IS_HELP_PATROL != 1) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate1}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate1}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city)
+                
+                union all
+                
+                select t1.* , '3' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0 and BS.IS_HELP_PATROL != 1 ) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate2}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate2}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city)
+                union all
+                
+                select t1.* ,'4' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0  and BS.IS_HELP_PATROL != 1) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate3}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate3}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city)
+                           
+               union all
+                
+                select t1.* , '5' gp
+                  from (SELECT BS.staff_id, bs.area_id
+                          FROM TB_BASE_STAFF      BS,
+                               TB_BASE_ROLE       BR,
+                               TB_BASE_STAFF_ROLE BSR
+                         WHERE BS.STAFF_ID = BSR.STAFF_ID
+                           AND BR.ROLE_ID = BSR.ROLE_ID
+                           AND BR.ROLE_NO = 'AXX_XXY'
+                           and bs.STATUS=0 and bs.ISDELETED=0 and BS.IS_HELP_PATROL != 1 ) t1
+                 where not exists
+                 (select 1
+                          from (select distinct dl.founder_uid, dl.parent_city
+                                  from AXX_DANGER_LIST dl
+                                 where TRUNC(DL.FOUND_TIME) BETWEEN
+                                       TO_DATE(#{startDate4}, 'YYYY-MM-DD') AND
+                                       TO_DATE(#{endDate4}, 'YYYY-MM-DD')
+                                
+                                ) t2
+                         where t1.staff_id = t2.founder_uid
+                           and t1.area_id = t2.parent_city))
+         group by area_id) tb on ta.parent_city = tb.area_id inner join 
+       (select count(staff_id) inspactor_count, area_id
+          from (SELECT BS.staff_id, bs.area_id
+                  FROM TB_BASE_STAFF      BS,
+                       TB_BASE_ROLE       BR,
+                       TB_BASE_STAFF_ROLE BSR
+                 WHERE BS.STAFF_ID = BSR.STAFF_ID
+                   AND BR.ROLE_ID = BSR.ROLE_ID
+                   AND BR.ROLE_NO = 'AXX_XXY'
+                      AND BS.IS_HELP_PATROL != 1
+                   and bs.STATUS=0 and bs.ISDELETED=0 )
+         group by area_id) tc on ta.parent_city = tc.area_id  ) td,area ae where td.parent_city=ae.area_id 
+	    
+	</select>
+	
+	
+	
+	<select id="dataDownload"  parameterType="map" resultType="map">
+		
+
+SELECT T.CHECK_ID,
+       T.ORDER_ID,
+       DOS.STATE_NAME ORDER_STATUS,
+       BS1.STAFF_NAME CHECK_PERSON,
+       ADL.DANGER_ID,
+       ADL.DANGER_NAME,
+       ADL.DANGER_QUESTION,
+       TO_CHAR(ADL.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+       bs2.staff_name founder_name,
+       ato.org_name,
+       TO_CHAR(ADL.FOUND_TIME, 'YYYY-MM-DD HH24:MI:SS') FOUND_TIME,
+       ADL.FOUNDER_UID,
+       adl.note
+  FROM AXX_T_DANGER_ORDER     T,
+       AXX_DANGER_LIST        ADL,
+       TB_BASE_STAFF          BS1,
+       TB_BASE_STAFF          BS2,
+       AXX_DANGER_ORDER_STATE DOS,
+       axx_t_organization ato
+ WHERE T.DANGER_ID = ADL.DANGER_ID
+   AND T.ORDER_STATUS = DOS.STATE_ID
+   AND BS1.STAFF_ID(+) = T.CHECK_ID
+   AND BS2.STAFF_ID(+) = adl.founder_uid
+   and ato.org_id=bs2.org_id
+   and adl.parent_city=#{area_id}
+  
+  
+  	
+			<if test="order_status  != null and order_status  != ''"> 
+      <![CDATA[ and T.ORDER_STATUS = #{order_status } ]]>
+		</if>
+	  		<if test="org_id  != null and org_id  != ''"> 
+      <![CDATA[ and BS1.org_id = #{org_id } ]]>
+		</if>
+	
+	  <if test="danger_question  != null and danger_question  != ''"> 
+      <![CDATA[ and ADL.DANGER_QUESTION  like '%'||#{danger_question}||'%' ]]>
+		</if>
+		
+		 <if test="start_time  != null and start_time  != ''"> 
+      <![CDATA[ and ADL.CREATION_TIME > = to_date(#{start_time},'yyyy-mm-dd') ]]>
+		</if>
+		
+		 <if test="end_time  != null and end_time  != ''"> 
+      <![CDATA[ and ADL.CREATION_TIME < = to_date(#{end_time},'yyyy-mm-dd') ]]>
+		</if>
+		
+		<if test="user_id  != null and user_id  != ''"> 
+      <![CDATA[ and  ADL.FOUNDER_UID=#{user_id} ]]>
+		</if>
+	
+	order by ADL.FOUND_TIME DESC 
+	</select>
+</mapper>

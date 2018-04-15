@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+
+<title>短信模板新增</title>
+
+<script type="text/javascript">
+ 
+</script>
+
+<style type="text/css">
+
+</style>
+</head>
+<body>
+	<div style="padding:20px 0 10px 20px">
+		<form id="formAdd" method="post">
+
+			<table>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">收信人姓名</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">收信人最新位置</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">看护员姓名</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">看护员最新位置</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">看护员电话</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">外力点类型</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">外力点名称</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">外力点地址</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">原因</a></td>
+					
+				</tr>
+				<tr>
+					<td><a onclick="getItem(document.getElementById('mm_content'),this.innerHTML)">当前时间</a></td>
+					
+				</tr>
+				
+				
+
+
+
+
+			</table>
+		</form>
+		
+	</div>
+</body>
+</html>

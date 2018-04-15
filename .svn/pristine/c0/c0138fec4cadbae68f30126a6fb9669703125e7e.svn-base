@@ -1,0 +1,302 @@
+package com.cableCheck.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import util.page.Query;
+
+public interface CableMyTaskDao {
+
+	/**
+	 * 我的任务-查询
+	 * @param query
+	 * @return
+	 * @add by wangxy 20160711
+	 */
+	List<Map<String, Object>> query(Query query);
+	
+	public List<Map<String, Object>> queryEquip(Map a);
+	
+	public List<Map<String, String>> queryEqpPhoto(String taskid);
+	
+	/**
+	 * 根据taskid查设备照片
+	 * @param taskid
+	 * @return
+	 */
+	public List<Map<String, String>> queryEqpPhoto1(String taskId);
+	
+	public List<Map<String, String>> queryPortPhoto(Map map);
+	
+	public List<Map<String, Object>> queryPort(Map map);
+	
+	public List<Map<String, Object>> getStatusIdsByTaskId(String ids);
+	
+	public List<Map<String, Object>> getUserList(Map<String, String> params);
+	
+	public List<Map<String, Object>> getRecordByTaskId(Map map);
+	
+	public void updateTaskHandle(Map<String, Object> params);
+	
+	public void updateTaskStatus(Map<String, Object> params);
+	
+	public List<Map<String, Object>> getStaff(Query query);
+	 
+	 /**
+	  * 设备信息
+	  * @param params
+	  * @return
+	  */
+	public List<Map<String,Object>> getMyTaskEqpPhoto(Map<String, Object> params);
+	 /**
+	  * 更新审核人
+	  */
+	public void updateAuditor(Map<String, Object> params);
+	 
+	 /**
+	  * 查询任务来源
+	  * @param map
+	  * @return
+	  */
+	public Map<String,Object> getTaskByTaskId(String taskId);
+	 
+	 /**
+	  * 设备信息(周期性检查)
+	  * @param params
+	  * @return
+	  */
+	 public List<Map<String,Object>> getMyTaskEqpPhotoForZq(Map<String, Object> map);
+	 /**
+	  * 查设备图片(周期性检查)
+	  * @param map
+	  * @return
+	  */
+	 public List<Map<String,Object>> getEqpPhoto(Map<String,Object> map);
+	 /**
+	  * 根据设备id查询端子信息
+	  * @param eqpId
+	  * @return
+	  */
+	public List<Map<String, Object>> queryPortDetailForZq(Map<String, Object> map);
+	 
+	 /**
+	  * 根据工单id查询工单进入审核页面
+	  * @param taskId
+	  * @return
+	  */
+	public List<Map<String, Object>> queryTaskDetailForAudit(String taskId);
+	 
+	 /**
+	  * 审核
+	  * @param map
+	  */
+	public void updateTaskStatusByAudit(Map<String, Object> map);
+	
+	/**
+	 * 查询工单流程
+	 * @param map
+	 * @return
+	 */
+	public List<Map<String, Object>> queryProcess(Map<String, Object> map);
+	
+	/**
+	 * 查询工单流程
+	 * @param map
+	 * @return
+	 */
+	public List<Map<String, Object>> queryProcessInfo(Map<String, Object> map);
+	/**
+	 * 获取当前用户的角色
+	 * @param map
+	 * @return
+	 */
+	public List<Map<String,Object>> getStaffRole(Map<String,Object> map);
+	/**
+	 * 根据taskId查areaId,SonAreaId
+	 * @param map
+	 * @return
+	 */
+	public List<Map<String, Object>> getAreaSonAreaByTaskId(Map<String,Object> map);
+	
+	public List<Map<String, Object>>  getRole(String staffId);
+	
+	public List<Map<String, Object>> getStaffCity(Query query);
+	public String getson_area_id(String staffId);
+	public String getwhwg(String staffId);
+
+	List<Map<String, Object>> getStaffCity1(Query query);
+
+	List<Map<String, Object>> getStaff1(Query query);
+
+	void updateTaskHandle1(Map<String, Object> params);
+
+	List<Map<String, Object>> queryDown(Map<String, Object> paras);
+
+	/**
+	 * 获取oss实时光路
+	 * @param map
+	 * @return
+	 */
+	public List<Map> getOssGlList(Map portMap);
+
+	String getTaskAreaId(String TASK_ID);
+	//工单归档
+	public void intoFinish(Map paras);
+	 /**
+	  * 获取审核人员的区域信息
+	  * @param map
+	  * @return
+	  */
+	public Map<String,Object> getAreaByUser(String userId);
+
+	List<Map<String, Object>> getReformOrder(Query query);
+
+	List<Map<String, Object>> queryByTYJDG(Query query);
+
+	List<Map<String, Object>> queryBySHY(Query query);
+
+	List<Map<String, Object>> getAShyStaff(Query query);
+	
+	List<Map<String, Object>> getBShyStaff(Query query);
+
+	void updateAuditorByTy(Map<String, Object> params);
+
+	Map<String, Object> getTaskAuditorlist(String taskId);
+
+	void updateAuditorAndStautus(String taskId);
+
+	List<Map<String, Object>> getNjZgStaff(Query query);
+
+	List<Map<String, Object>> queryTroubleTaskPort(Map<String, Object> map);
+
+
+	List<Map<String, Object>> getPortMessage(Query query);
+
+
+	List<Map<String, Object>> getNjZhuangZgStaff(Query query);
+
+	List<Map<String, Object>> getNjZongZgStaff(Query query);
+
+	void revokeOrder(String id);
+
+
+	List<Map<String, Object>> terminalQuery(String id);
+
+	void updateDtsj(Map<String, Object> dzMap);
+
+	void insertDeleteTask(String id);
+
+	void insertDeleteTaskdetail(String id);
+
+	void revokeOrderDetail(String id);
+
+	List<Map<String, Object>> querySecondTask(Query query);
+
+	List<Map<String, Object>> getAShyStaff1(Query query);
+
+	List<Map<String, Object>> getNjWangZgStaff(Query query);
+
+	List<Map<String, Object>> getWangShyStaff(Query query);
+
+	List<Map<String, Object>> getNjGongZgStaff(Query query);
+
+	List<Map<String, Object>> getGongShyStaff(Query query);
+
+	List<Map<String, Object>> getNjZhengZgStaff(Query query);
+
+	List<Map<String, Object>> getZhengShyStaff(Query query);
+
+	List<Map<String, Object>> getNjWuZgStaff(Query query);
+
+	List<Map<String, Object>> getWuShyStaff(Query query);
+
+	void updateDz(Map<String, Object> params);
+
+	List<Map<String, Object>> getwhyStaff(Query query);
+	
+	//部门审核员退单给统一接单岗
+	public void cancel(Map  ids);
+	
+	//部门审核员退单部门审核员
+	public void cancelZg(Map  ids);
+	
+	//部门审核员退单给维护员
+	public void cancelWhy(Map  ids);
+	
+	//先获取部门审核员审核不通过的端子
+	public List<Map<String, Object>> getDisagrementPorts(String str);
+	
+	//部门审核员审核不通过改变端子状态(整改端子状态)
+	public void update_zgdz_status(Map  ids);
+	
+	//searchStaff_SHY  查询不同部门审核员
+	List<Map<String, Object>> searchStaff_SHY(Query query);
+	
+	//审核员退单，检查员检查错误,删除上报上来的任务
+	public void deleteCheckTasks(String id);
+	
+	//审核员退单，检查员检查错误,删除上报上来的任务
+	public void updateCheckTasks(Map map);
+	
+	//通过old_task_id查询出周期性任务检查人
+	public String queryInspectorByOldTaskId(String oldTaskId);
+	
+	//删除检查记录表中的数据
+	public void deleteRecords(String id);
+	
+	String getOldTaskId(String id);
+	//删除记录表中的数据
+	public void deleteCheckRecords(String id);
+	
+	//删除任务详情中的数据
+	public void deleteCheckTaskDetails(String id);
+	
+	//删除任务详情中检查记录
+	public void deleteCheckTaskDetails_records(String id);
+	
+	//删除流程详情的数据（周期性检查）
+	public void deleteCheckProcess(String id);
+	
+	//删除流程详情的数据（问题上报任务检查）
+	public void deleteProcesss(String id);
+	
+	//周期性任务任务详情表
+	public void updateCheckTaskDetail(String id);
+	
+	//周期性任务任务详情表
+	public void deleteCheckTaskDetail(String id);
+	
+
+	void updateAuditor_A(Map<String, Object> params);
+
+	void updateAuditor_B(Map<String, Object> params);
+
+	List<Map<String, Object>> downByTYJDG(Map<String, Object> paras);
+
+	List<Map<String, Object>> downBySHY(Map<String, Object> paras);
+	
+	 public List<Map<String,Object>> getOperStaffRole(String staffId);
+	 
+	 /**
+	 * 获取oldtaskid
+	 */
+	public String getOldTaskId_pro(Map map);
+	
+	 /**
+	  * 通过taskid获取维护员
+	 */
+	public String getMaintorByTaskId(String taskId);
+	
+	/**
+	 * 周期性检查任务详情（待办任务）
+	 */
+	public List<Map<String, Object>> getOrderDetail(Map param);
+	
+	List<Map<String, Object>> queryTroubleTaskOrder(Map<String, Object> map);
+	
+	public List<Map<String, Object>> queryDouDi(Query query);
+	
+	public List<Map<String, Object>> queryWhy(Query query);
+	
+	public void updateTaskNew(Map param);
+}

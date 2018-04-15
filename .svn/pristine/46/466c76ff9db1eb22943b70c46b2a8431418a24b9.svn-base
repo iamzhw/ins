@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhxj.dao.ZhxjTaskDao">
+	<select id="queryTask" parameterType="util.page.Query" resultType="map">
+		SELECT TIT.TASK_ID,
+		       TIT.PLAN_ID,
+		       TIT.TASK_NO,
+		       TIT.TASK_NAME,
+		       DECODE(TIT.TASK_STATUS, 1, '未开始', 2, '进行中', 3, '已结束', '') TASK_STATUS,
+		       to_char(TIT.TASK_START_TIME,'yyyy-mm-dd hh24:mi:ss') TASK_START_TIME,
+		       to_char(TIT.TASK_END_TIME,'yyyy-mm-dd hh24:mi:ss') TASK_END_TIME,
+		       to_char(TIT.COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') COMPLETE_TIME,
+		       TIT.TASK_ORGIN TASK_ORGIN_ID,
+		       TIT.TASK_TYPE,
+		       TT.TYPE_NAME,
+		       DECODE(TIT.TASK_ORGIN,
+		              1,
+		              '干线巡检',
+		              2,
+		              '缆线巡检',
+		              3,
+		              '光网助手',
+		              '') TASK_ORGIN_NAME,
+		       TIT.AREA_ID,
+		       TIT.SON_AREA_ID,
+		       A1.NAME AREA,
+		       A2.NAME SON_AREA,
+		       TIT.GRID_ID,
+		       DECODE(TIT.TASK_ORGIN,
+		              2,
+		              (SELECT D.DEPT_NAME
+		                 FROM TB_INS_DEPT D
+		                WHERE D.DEPT_ID = TIT.GRID_ID),
+		              '') GRID_NAME,
+		       TIT.TASK_INSPECT_STAFF,
+		       S1.STAFF_NAME TASK_INSPECT_NAME,
+		       to_char(TIT.CREATE_DATE,'yyyy-mm-dd hh24:mi:ss') CREATE_DATE,
+		       TIT.CREATE_STAFF,
+		       S2.STAFF_NAME CREATE_STAFF_NAME,
+		       to_char(TIT.MODIFY_DATE,'yyyy-mm-dd hh24:mi:ss') MODIFY_DATE,
+		       TIT.MODIFY_STAFF,
+		       TIT.IS_ENABLE,
+		       TIT.REMARK,
+		       TIT.ZHXJ_TASK_ID
+		  FROM TB_ZHXJ_TASK      TIT,
+		       AREA              A1,
+		       AREA              A2,
+		       TB_BASE_STAFF     S1,
+		       TB_BASE_STAFF     S2,
+		       TB_ZHXJ_TASK_TYPE TT
+		 WHERE A1.AREA_ID = TIT.AREA_ID
+		   AND A2.AREA_ID = TIT.SON_AREA_ID
+		   AND TIT.TASK_INSPECT_STAFF = S1.STAFF_ID(+)
+		   AND TIT.CREATE_STAFF = S2.STAFF_ID(+)
+		   AND TT.TYPE_ID = TIT.TASK_TYPE
+		   <![CDATA[
+		   AND TIT.TASK_START_TIME<SYSDATE
+		   AND TIT.TASK_END_TIME>SYSDATE
+		   ]]>
+         <if test="queryParams.TASK_NO != null and queryParams.TASK_NO != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_NO like '%'||#{queryParams.TASK_NO}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_NAME != null and queryParams.TASK_NAME != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_NAME like  '%'||#{queryParams.TASK_NAME}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND TIT.AREA_ID =#{queryParams.AREA_ID} 
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND TIT.SON_AREA_ID =#{queryParams.SON_AREA_ID} 
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_START_TIME != null and queryParams.TASK_START_TIME != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_START_TIME >= TO_DATE(#{queryParams.TASK_START_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_END_TIME != null and queryParams.TASK_END_TIME != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_END_TIME <= TO_DATE(#{queryParams.TASK_END_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_ORGIN != null and queryParams.TASK_ORGIN != ''">  
+            <![CDATA[
+	    	AND TIT.TASK_ORGIN = #{queryParams.TASK_ORGIN}
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_TYPE != null and queryParams.TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND TIT.task_type = #{queryParams.TASK_TYPE}
+	    	]]>
+		</if>
+		<!--  
+		<if test="queryParams.GRID_NAME != null and queryParams.GRID_NAME != ''">  
+            <![CDATA[
+	    	AND t.GRID_ID in ( select#{queryParams.GRID_NAME})
+	    	]]>
+		</if>
+		-->
+	</select>
+		
+	<insert id="addInspectionTask">
+		insert into tb_zhxj_task
+		  (task_id,
+		   plan_id,
+		   task_no,
+		   task_name,
+		   task_status,
+		   task_start_time,
+		   task_end_time,
+		   complete_time,
+		   task_type,
+		   task_orgin,
+		   area_id,
+		   son_area_id,
+		   grid_id,
+		   task_inspect_staff,
+		   create_date,
+		   create_staff,
+		   is_enable,
+		   zhxj_task_id)
+		  select t.task_id,
+		         t.plan_id,
+		         t.task_no,
+		         t.task_name,
+		         t.status_id,
+		         t.start_time,
+		         t.complete_time,
+		         t.actual_complete_time,
+		         201,
+		         2,
+		         t.area_id,
+		         t.son_area_id,
+		         d.dept_id,
+		         t.inspector,
+		         t.create_time,
+		         t.create_staff,
+		         t.enabled,
+		         seq_tb_zhxj_task.nextval
+		    from tb_ins_task t, tb_ins_plan p, tb_ins_dept d
+		    <![CDATA[
+		   where t.complete_time < add_months(trunc(sysdate, 'month'), 1)
+		     and t.start_time >= trunc(sysdate, 'month')
+		     ]]>
+		     and p.plan_id = t.plan_id
+		     and d.dept_no(+) = p.dept_no
+		     and not exists
+		   (select 1 from tb_zhxj_task zht where zht.task_id = t.task_id)		
+	</insert>
+	
+	<select id="getButton"  resultType="map">
+		select tb.task_type_id, b.button_id,tb.function, b.button_name
+		  from tb_zhxj_button b, tb_zhxj_task_button tb
+		 where b.button_id = tb.button_id
+	</select>
+	
+	<select id="getTaskType" resultType="map">
+		select type_id, type_name from tb_zhxj_task_type order by type_id
+	</select>
+	
+	<delete id="removeTask" parameterType="string">
+		delete from tb_zhxj_task t where t.task_id=#{task_id}	
+	</delete>
+	
+	<update id="editTaskType" parameterType="map">
+		update tb_zhxj_task set task_status=#{status} where zhxj_task_id=#{zhxj_id}
+	</update>
+	
+	<update id="editTaskTypeForlxxj" parameterType="string">
+		update tb_zhxj_task set task_status=3 where task_id=#{task_id} and task_type in (
+		201,202,203,204
+		)
+	</update>
+</mapper>

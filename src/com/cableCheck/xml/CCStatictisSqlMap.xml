@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.CCStatictisDao">
+	<!-- <select id="statictis" resultType="map">
+	select t.*,
+	(select a.name from area a where a.area_id = t.area_id) areaName,
+	(select a.name from area a where a.area_id = t.son_area_id) sonAreaName,
+	(CASE (nvl(t.markOne,0)+nvl(t.markTwo,0)+nvl(t.markThree,0)+nvl(t.markFour,0))
+	      WHEN 0 THEN 0
+	      ELSE (nvl(t.zcou,0)/(nvl(t.markOne,0)+nvl(t.markTwo,0)+nvl(t.markThree,0)+nvl(t.markFour,0))) END) rate
+ 	from  (
+	select area_id,son_area_id,
+    team_id,team_name,sum(markone) markone,sum(marktwo) marktwo,sum(markthree) markthree,
+    sum(markfour) markfour,sum(zcou) zcou ,nvl(sum(totalcount),0) totalcount
+    from t_sync_calorder q where
+	q.statetime between to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+	and to_date(#{queryParams.endDate},'yyyy-mm-dd')
+	<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+        <![CDATA[
+    	AND q.area_id = #{queryParams.area_id}
+    	]]>
+  	</if>
+  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+        <![CDATA[
+    	AND q.son_area_id = #{queryParams.son_area_id}
+    	]]>
+  	</if>
+  	group by q.team_id,q.area_id,q.son_area_id,q.team_name
+  	) t order by t.son_area_id,t.team_id
+	</select> -->
+	
+	<select id="statictis" resultType="map">
+		select * from (
+		select t.*,
+		(select bz.team_name from tb_base_staff_zw_banzu bz where bz.team_id = t.team_id) team_name,
+		(select ar.name from area ar where ar.area_id = t.area_id) areaName,
+		(select are.name from area are where are.area_id = t.son_area_id) sonAreaName
+		from (
+		select b.team_id,b.son_area_id,b.area_id,sum(totalcount) totalcount,sum(zcou) zcou from ((
+		select  o.team_id,o.son_area_id,o.area_id,count(distinct o.order_id) totalcount,0 zcou from tb_cablecheck_order o ,tb_cablecheck_dtsj j 
+		where o.btsj_id = j.id  and j.bdsj  between 
+		to_date(#{queryParams.startDate},'yyyy-mm-dd hh24:mi:ss') and 
+		to_date(#{queryParams.endDate},'yyyy-mm-dd hh24:mi:ss') 
+		
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		and o.area_id = #{queryParams.area_id}
+	    	]]>
+	  	</if>
+		<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		and o.son_area_id = #{queryParams.son_area_id}
+	    	]]>
+	  	</if>
+	  	
+		group by o.team_id,o.son_area_id,o.area_id ) 
+		union
+		(select   o.team_id,o.son_area_id,o.area_id,0 totalcount,count(distinct o.order_id) zcou from tb_cablecheck_order o ,tb_cablecheck_dtsj j 
+		where  o.order_check_time  between 
+		to_date(#{queryParams.checkStartDate},'yyyy-mm-dd hh24:mi:ss') and 
+		to_date(#{queryParams.checkEndDate},'yyyy-mm-dd hh24:mi:ss') 
+		and o.btsj_id = j.id  and j.bdsj  between 
+		to_date(#{queryParams.startDate},'yyyy-mm-dd hh24:mi:ss') and 
+		to_date(#{queryParams.endDate},'yyyy-mm-dd hh24:mi:ss') 
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		and o.area_id = #{queryParams.area_id}
+	    	]]>
+	  	</if>
+		<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		and o.son_area_id = #{queryParams.son_area_id}
+	    	]]>
+	  	</if>
+		group by o.team_id,o.son_area_id,o.area_id)) b
+		group by b.team_id,b.son_area_id,b.area_id) t 
+		order by t.son_area_id
+		) zz where zz.team_name is not null
+	</select>
+	
+	
+	<select id="sumTotalCount" resultType="map">
+		select sum(totalcount) totalcount from 
+		(select o.team_id, o.son_area_id,o.area_id,count(distinct o.order_id) totalcount
+		 from tb_cablecheck_order o,tb_cablecheck_dtsj  j<!-- ,tb_base_staff_zw_banzu bz -->
+		 where o.btsj_id = j.id
+		 and j.bdsj between
+		 to_date(#{startDate},'yyyy-mm-dd hh24:mi:ss') and 
+		 to_date(#{endDate},'yyyy-mm-dd hh24:mi:ss') 
+		 <if test="area_id != null and area_id != ''">  
+	        <![CDATA[
+	    		and o.area_id = #{area_id}
+	    	]]>
+	  	 </if>
+		 <if test="son_area_id != null and son_area_id != ''">  
+	        <![CDATA[
+	    		and o.son_area_id = #{son_area_id}
+	    	]]>
+	  	 </if>
+		  <!-- and bz.team_id = o.team_id
+		  and bz.team_name is not null -->
+		  group by o.team_id,o.son_area_id,o.area_id)
+	</select>
+	
+	<select id="sumZCount" resultType="map">
+		 select sum(zcou) zcou from 
+         (select o.team_id,o.son_area_id,o.area_id,count(distinct o.order_id ) zcou
+       	 from tb_cablecheck_order o,
+           tb_cablecheck_dtsj  j<!-- ,
+      		tb_base_staff_zw_banzu bz -->
+     		where o.order_check_time between
+           to_date(#{checkStartDate},'yyyy-mm-dd hh24:mi:ss') and 
+		 to_date(#{checkEndDate},'yyyy-mm-dd hh24:mi:ss') 
+        and o.btsj_id = j.id
+        and j.bdsj between
+           to_date(#{startDate},'yyyy-mm-dd hh24:mi:ss') and 
+		 to_date(#{endDate},'yyyy-mm-dd hh24:mi:ss') 
+         <if test="area_id != null and area_id != ''">  
+	        <![CDATA[
+	    		and o.area_id = #{area_id}
+	    	]]>
+	  	 </if>
+		 <if test="son_area_id != null and son_area_id != ''">  
+	        <![CDATA[
+	    		and o.son_area_id = #{son_area_id}
+	    	]]>
+	  	 </if>
+<!--         and bz.team_id = o.team_id
+        and bz.team_name is not null -->
+      	group by o.team_id,
+               o.son_area_id,
+               o.area_id)
+	</select>
+	
+	
+	
+	
+	<select id="showStatictisOrder" parameterType="map" resultType="map">
+		<!-- select o.order_no,o.phy_port_spec_no,o.opt_code,
+		(select b.team_name from tb_base_staff_zw_banzu b where b.team_id = o.team_id) teamName,
+		(select a.name from area a where a.area_id = o.area_id) areaName,
+		(select a.name from area a where a.area_id = o.son_area_id) sonAreaName
+		from tb_cablecheck_order o 
+		
+		<if test="queryParams.order_type != null and queryParams.order_type != ''">  
+	        <![CDATA[
+	    		left join app_csv_opt_daily csv on csv.work_order_id=o.order_id
+	    	]]>
+	  	</if>
+		
+		where 1=1
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		AND o.area_id = #{queryParams.area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		AND o.son_area_id = #{queryParams.son_area_id}
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.order_type != null and queryParams.order_type != ''">  
+	        <![CDATA[
+	    		AND csv.work_order_type=#{queryParams.order_type} and o.mark = 1 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.is_move_order != null and queryParams.is_move_order != ''">  
+	        <![CDATA[
+	    		AND o.order_opr_action = #{queryParams.is_move_order}
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.team_id != null and queryParams.team_id != ''">  
+	        <![CDATA[
+	    		AND o.team_id = #{queryParams.team_id}
+	    	]]>
+	  	</if>
+		<if test="queryParams.type != null and queryParams.type != ''">  
+	        <![CDATA[
+	    		AND o.order_check_time between to_date(#{queryParams.startDate},'yyyy-MM-dd HH24:mi:ss') 
+	    		and to_date(#{queryParams.endDate},'yyyy-MM-dd HH24:mi:ss')
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.type == null or queryParams.type == ''">  
+	        <![CDATA[
+	    		AND o.archive_time between to_date(#{queryParams.startDate},'yyyy-MM-dd HH24:mi:ss') 
+		and to_date(#{queryParams.endDate},'yyyy-MM-dd HH24:mi:ss') 
+	    	]]>
+	  	</if> -->
+	  	
+	  	select   o.order_no,o.phy_port_spec_no,o.opt_code,
+	  	(select b.team_name from tb_base_staff_zw_banzu b where b.team_id = o.team_id) teamName,
+		(select a.name from area a where a.area_id = o.area_id) areaName,
+		(select a.name from area a where a.area_id = o.son_area_id) sonAreaName
+		from tb_cablecheck_order o ,tb_cablecheck_dtsj j 
+		where  o.order_check_time  between 
+		to_date(#{queryParams.checkStartDate},'yyyy-mm-dd hh24:mi:ss') and 
+		to_date(#{queryParams.checkEndDate},'yyyy-mm-dd hh24:mi:ss') 
+		and o.btsj_id = j.id(+)  and j.bdsj  between 
+		to_date(#{queryParams.startDate},'yyyy-mm-dd hh24:mi:ss') and 
+		to_date(#{queryParams.endDate},'yyyy-mm-dd hh24:mi:ss') 
+	  	<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		AND o.area_id = #{queryParams.area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		AND o.son_area_id = #{queryParams.son_area_id}
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.team_id != null and queryParams.team_id != ''">  
+	        <![CDATA[
+	    		AND o.team_id = #{queryParams.team_id}
+	    	]]>
+	  	</if>
+	  	
+	</select>
+	
+	
+	<select id="orderChangeStatictis" resultType="map">
+		select * from  (select a.*,
+		(select g.grid_name from tb_cablecheck_grid g where a.grid_id = g.grid_id) grid_name,
+		(select ar.name from area ar where ar.area_id = g.area_id) area_name,
+        (select ar.name from area ar where ar.area_id = g.son_area_id) son_area_name,
+		(CASE (nvl(a.order_num,0)) WHEN 0 THEN 0 ELSE (nvl(a.change_num,0)/nvl(a.order_num,0)) END) rate
+		from (
+		select o.grid_id,sum(o.order_num) order_num,sum(o.change_num) change_num
+		from tb_cablecheck_orderchange o 
+		where 1=1
+		<if test="queryParams.startDate != null and queryParams.startDate != '' and queryParams.endDate != null or queryParams.endDate != ''">  
+	        <![CDATA[
+	    		AND o.state_date between to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+	    		and to_date(#{queryParams.endDate},'yyyy-mm-dd')  
+	    	]]>
+	  	</if>
+		group by o.grid_id) a 
+		left join tb_cablecheck_grid g on g.grid_id = a.grid_id
+		where 1=1
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		AND g.area_id = #{queryParams.area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		AND g.son_area_id = #{queryParams.son_area_id}
+	    	]]>
+	  	</if>
+		order by a.grid_id) where grid_name is not null
+	</select>
+	
+	<select id="checkErrorStatictis" resultType="map">
+		select * from (
+		
+		select b.*,
+		<!-- nvl(b.team_name,'无') team_name, -->
+		nvl(c.company_name,'无') company_name,
+		(select e.name from area e where e.area_id = b.area_id) area_name,
+		(select e.name from area e where e.area_id = b.son_area_id) son_area_name,
+		(CASE (nvl(b.check_num,0)) 
+		WHEN 0 THEN 0 
+		  ELSE ((nvl(b.check_num,0)-nvl(b.error_num,0))/nvl(b.check_num,0)) END) rate
+		 from 
+		(select  r.staff_id,z.staff_name,bz.area_id,bz.son_area_id,bz.team_id,bz.team_name,sum(r.check_num) check_num,sum(r.error_num) error_num,
+		    sum(r.error_one) error_one,sum(r.error_two) error_two,
+		    sum(r.error_three) error_three,sum(r.error_four) error_four,
+		    sum(r.error_five) error_five,sum(r.error_six) error_six,
+		    sum(r.error_seven) error_seven,sum(r.error_eight) error_eight,sum(r.error_nine) error_nine
+		from tb_cablecheck_error r,tb_base_staff_zw z ,tb_base_staff_zw_banzu bz
+		where z.id = to_char(r.staff_id)
+		and bz.team_id = z.team_id
+	<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		AND bz.area_id=#{queryParams.area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		AND bz.son_area_id=#{queryParams.son_area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.startDate != null and queryParams.startDate != '' and queryParams.endDate != null or queryParams.endDate != ''">  
+	        <![CDATA[
+	    		and r.state_date between to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+				and to_date(#{queryParams.endDate},'yyyy-mm-dd') 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.staffName != null and queryParams.staffName != ''">  
+	        <![CDATA[
+	    		AND z.staff_name like '%'||#{queryParams.staffName}||'%' 
+	    	]]>
+	  	</if>
+		group by r.staff_id,z.staff_name,bz.area_id,bz.son_area_id,bz.team_id,bz.team_name) b
+		left join tb_base_company_banzu_relation br on br.banzu_id = b.team_id 
+		left join tb_base_maintain_company c on c.company_id = br.company_id
+		where 1=1
+		<if test="queryParams.teamName != null and queryParams.teamName != ''">  
+	        <![CDATA[
+	    		and b.team_name like '%'||#{queryParams.teamName}||'%' 
+	    	]]>
+	  	</if>
+        <if test="queryParams.companyName != null and queryParams.companyName != ''">  
+	        <![CDATA[
+	    		and c.company_name like '%'||#{queryParams.companyName}||'%' 
+	    	]]>
+	  	</if>
+	  	) where son_area_name is not null and area_name is not null 
+	  	
+	  	
+		<!-- select b.*,
+		nvl(bz.team_name,'无') team_name,
+        nvl(c.company_name,'无') company_name,
+		(select e.name from area e where e.area_id = b.area_id) area_name,
+		(select e.name from area e where e.area_id = b.son_area_id) son_area_name,
+		(CASE (nvl(b.check_num,0)) WHEN 0 THEN 0 ELSE ((nvl(b.check_num,0)-nvl(b.error_num,0))/nvl(b.check_num,0)) END) rate
+		from (
+		select a.*,bs.staff_no,bs.id_number,bs.staff_name,bs.area_id,bs.son_area_id
+		from (
+		select r.staff_id,sum(r.check_num) check_num,sum(r.error_num) error_num,
+		sum(r.error_one) error_one,sum(r.error_two) error_two,
+		sum(r.error_three) error_three,sum(r.error_four) error_four,
+		sum(r.error_five) error_five,sum(r.error_six) error_six,
+		sum(r.error_seven) error_seven,sum(r.error_eight) error_eight,sum(r.error_nine) error_nine
+		from tb_cablecheck_error r,tb_base_staff f  
+		where f.staff_id = r.staff_id
+		<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		AND f.area_id=#{queryParams.area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		AND f.son_area_id=#{queryParams.son_area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.startDate != null and queryParams.startDate != '' and queryParams.endDate != null or queryParams.endDate != ''">  
+	        <![CDATA[
+	    		and r.state_date between to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+				and to_date(#{queryParams.endDate},'yyyy-mm-dd') 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.staffName != null and queryParams.staffName != ''">  
+	        <![CDATA[
+	    		AND f.staff_name like '%'||#{queryParams.staffName}||'%' 
+	    	]]>
+	  	</if>
+		group by r.staff_id) a ,tb_base_staff bs where bs.staff_id = a.staff_id )b 
+		left join tb_base_staff_zw zw on zw.staff_no=b.staff_no and zw.id_number = b.id_number
+        left join tb_base_staff_zw_banzu bz on bz.team_id = zw.team_id
+        left join tb_base_company_banzu_relation br on br.banzu_id = bz.team_id 
+        left join tb_base_maintain_company c on c.company_id = br.company_id
+        where 1=1
+        <if test="queryParams.teamName != null and queryParams.teamName != ''">  
+	        <![CDATA[
+	    		and bz.team_name like '%'||#{queryParams.teamName}||'%' 
+	    	]]>
+	  	</if>
+        <if test="queryParams.companyName != null and queryParams.companyName != ''">  
+	        <![CDATA[
+	    		and c.company_name like '%'||#{queryParams.companyName}||'%' 
+	    	]]>
+	  	</if>
+		order by b.son_area_id desc -->
+	</select>
+	
+	<select id="teamOrderStatictis" resultType="map">
+		select a.*,zu.team_name,ar.name sonAreaName,
+		(select are.name from area are where are.area_id = zu.area_id) areaName
+		from (select o.team_id,
+		sum(o.num_411) num_411, 
+		sum(o.num_414) num_414,
+		sum(o.num_703) num_703,
+		sum(o.num_704) num_704,
+		sum(o.num_2530) num_2530,
+		(sum(o.num_411)+sum(o.num_414)+sum(o.num_703)+sum(o.num_704)+sum(o.num_2530)) num_all 
+		from tb_cablecheck_teamorder o 
+		where o.state_date between to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+		and to_date(#{queryParams.endDate},'yyyy-mm-dd') 
+		group by o.team_id) a,tb_base_staff_zw_banzu zu ,area ar
+		where a.team_id = zu.team_id and ar.area_id=zu.son_area_id 
+		<if test="queryParams.teamName != null and queryParams.teamName != ''">  
+	        <![CDATA[
+	    		AND  zu.team_name like '%'||#{queryParams.teamName}||'%' 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		AND zu.area_id=#{queryParams.area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		AND zu.son_area_id=#{queryParams.son_area_id} 
+	    	]]>
+	  	</if>
+		order by num_all desc
+	</select>
+	
+	<select id="gridOrderStatictis" resultType="map">
+		select a.*,g.grid_name,g.area_id,g.son_area_id,
+	    (select ar.name from area ar where ar.area_id = g.son_area_id) sonAreaName,
+	    (select ar.name from area ar where ar.area_id = g.area_id) areaName
+	    from (select o.grid_id,
+	    sum(o.num_411) num_411,sum(o.num_414) num_414,
+	    sum(o.num_703) num_703,sum(o.num_704) num_704,
+	    sum(o.num_2530) num_2530,
+	    (sum(o.num_411)+sum(o.num_414)+sum(o.num_703)+sum(o.num_704)+sum(o.num_2530)) num_all 
+	    from tb_cablecheck_gridorder o 
+	    where o.state_date between to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+	    and to_date(#{queryParams.endDate},'yyyy-mm-dd') 
+	    group by o.grid_id) a 
+	    left join tb_cablecheck_grid g on g.grid_id = a.grid_id 
+	    where g.grid_name is not null 
+	    <if test="queryParams.teamName != null and queryParams.teamName != ''">  
+	        <![CDATA[
+	    		and g.grid_name like '%'||#{queryParams.teamName}||'%' 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	        <![CDATA[
+	    		AND g.area_id=#{queryParams.area_id} 
+	    	]]>
+	  	</if>
+	  	<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	        <![CDATA[
+	    		AND g.son_area_id=#{queryParams.son_area_id} 
+	    	]]>
+	  	</if>
+	    order by num_all desc
+	</select>
+	
+	
+	
+	
+	<select id="showElseErrorOrder" parameterType="map" resultType="map">
+			select r.*,
+	       (select a.name
+	          from area a
+	         where a.area_id = r.area_id) area_name,
+	       (select ar.name
+	          from area ar
+	         where ar.area_id = r.son_area_id) son_area_name,
+	       (select task_no
+	          from tb_cablecheck_task t
+	         where t.task_id = r.task_id) task_no,
+	       (select task_name
+	          from tb_cablecheck_task t
+	         where t.task_id = r.task_id) task_name
+	         
+			  from tb_cablecheck_order o ,tb_cablecheck_record r 
+			where o.other_system_staff_id=#{queryParams.staffId} and r.ischeckok = 1
+			and o.order_id(+) = r.order_id 
+		   and r.create_time between
+		       to_date(#{queryParams.startDate},'yyyy-MM-dd HH24:mi:ss') 
+	    	  and to_date(#{queryParams.endDate},'yyyy-MM-dd HH24:mi:ss')
+		minus
+		select r.*,
+		       (select a.name
+		          from area a
+		         where a.area_id = r.area_id) area_name,
+		       (select ar.name
+		          from area ar
+		         where ar.area_id = r.son_area_id) son_area_name,
+		       (select task_no
+		          from tb_cablecheck_task t
+		         where t.task_id = r.task_id) task_no,
+		       (select task_name
+		          from tb_cablecheck_task t
+		         where t.task_id = r.task_id) task_name
+		         
+		  from tb_cablecheck_order o ,tb_cablecheck_record r 
+		where o.other_system_staff_id=#{queryParams.staffId} and r.ischeckok = 1
+		and o.order_id(+) = r.order_id 
+		   and r.create_time between
+		      to_date(#{queryParams.startDate},'yyyy-MM-dd HH24:mi:ss') 
+	    	  and to_date(#{queryParams.endDate},'yyyy-MM-dd HH24:mi:ss')
+		   and (
+		   r.descript not like '%'||#{queryParams.ERROR_ONE}||'%' 
+		   or r.descript not like '%'||#{queryParams.ERROR_TWO}||'%' 
+		   or r.descript not like '%'||#{queryParams.ERROR_THREE}||'%' 
+		   or r.descript not like '%'||#{queryParams.ERROR_FOUR}||'%' 
+		   or r.descript not like '%'||#{queryParams.ERROR_FIVE}||'%' 
+		   or r.descript not like '%'||#{queryParams.ERROR_SIX}||'%' 
+		   or r.descript not like '%'||#{queryParams.ERROR_SEVEN}||'%' 
+		   or r.descript not like '%'||#{queryParams.ERROR_EIGHT}||'%' 
+		   )	
+	</select>
+	
+	<select id="showCheckErrorOrder" parameterType="map" resultType="map">
+		<!-- select r.*,
+		(select a.name from area a where a.area_id = r.area_id) area_name,
+		(select ar.name from area ar where ar.area_id = r.son_area_id) son_area_name,
+		(select task_no from tb_cablecheck_task t where t.task_id = r.task_id) task_no,
+        (select task_name from tb_cablecheck_task t where t.task_id = r.task_id) task_name
+		from tb_cablecheck_record r
+		where r.create_staff = #{queryParams.staffId} and r.ischeckok = 1
+		
+		<if test="queryParams.row_name != null and queryParams.row_name != '其他'">  
+	        <![CDATA[
+	    		and r.descript like '%'||#{queryParams.row_name}||'%' 
+	    	]]>
+	  	</if>
+		
+		and r.create_time between to_date(#{queryParams.startDate},'yyyy-MM-dd HH24:mi:ss') 
+	    and to_date(#{queryParams.endDate},'yyyy-MM-dd HH24:mi:ss') order by r.son_area_id -->
+	    
+	    
+	    
+	    select distinct r.record_id,r.eqp_no,r.eqp_name,r.eqpaddress,r.port_no,r.descript,r.son_area_id,
+	    (select a.name from area a where a.area_id = r.area_id) area_name,
+		(select ar.name from area ar where ar.area_id = r.son_area_id) son_area_name,
+		(select task_no from tb_cablecheck_task t where t.task_id = r.task_id) task_no,
+        (select task_name from tb_cablecheck_task t where t.task_id = r.task_id) task_name
+	    from tb_cablecheck_order o ,tb_cablecheck_record r 
+		where o.other_system_staff_id=#{queryParams.staffId} and r.ischeckok = 1
+		and o.order_id(+) = r.order_id 
+		<if test="queryParams.row_name != null and queryParams.row_name != '其他'">  
+	        <![CDATA[
+	    		and r.descript like '%'||#{queryParams.row_name}||'%' 
+	    	]]>
+	  	</if>
+		and r.create_time between to_date(#{queryParams.startDate},'yyyy-MM-dd HH24:mi:ss') 
+		and to_date(#{queryParams.endDate},'yyyy-MM-dd HH24:mi:ss') order by r.son_area_id
+	    
+	</select>
+	
+</mapper> 

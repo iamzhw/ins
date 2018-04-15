@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inspecthelper.dao.InsTaskDao">
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.taskId != null and queryParams.taskId != ''">  
+            <![CDATA[
+	    	AND it.task_id = trim(#{queryParams.taskId})
+	    	]]>
+		</if>
+		<if test="queryParams.taskCode != null and queryParams.taskCode != ''">  
+            <![CDATA[
+	    	AND it.task_code = trim(#{queryParams.taskCode})
+	    	]]>
+		</if>
+		<if test="queryParams.staffName != null and queryParams.staffName != ''">  
+            <![CDATA[
+	    	AND s.staff_name like '%'||#{queryParams.staffName}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.staffNo != null and queryParams.staffNo != ''">  
+            <![CDATA[
+	    	AND s.staff_no like '%'||#{queryParams.staffNo}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.ownCompany != null and queryParams.ownCompany != ''">  
+            <![CDATA[
+	    	AND s.own_company = #{queryParams.ownCompany}
+	    	]]>
+		</if>
+		<if test="queryParams.areaId != null and queryParams.areaId != ''">  
+            <![CDATA[
+	    	AND s.area_id = #{queryParams.areaId}
+	    	]]>
+		</if>
+		<if test="queryParams.equCode != null and queryParams.equCode != ''">  
+            <![CDATA[
+	    	AND ie.equipment_code = trim(#{queryParams.equCode})
+	    	]]>
+		</if>
+		<choose>
+			<when test="queryParams.areaName != null and queryParams.areaName != ''">
+			AND ie.area = #{queryParams.areaName}
+			</when>
+			<otherwise>
+			AND ie.area is null
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="queryParams.stateId == '0'.toString()">
+				AND it.end_date &lt;= sysdate 
+			</when>
+			<when test="queryParams.stateId == '1'.toString()">
+				AND it.start_date &lt;=sysdate and it.end_date &gt;=sysdate
+			</when>
+			<when test="queryParams.stateId == '2'.toString()">
+				AND it.start_date &gt;=sysdate
+			</when>
+		</choose>		
+	</sql>
+	<select id="query" resultType="map" parameterType="util.page.Query">
+		select distinct it.task_id,it.task_id detail_task_id,
+		concat(ic.cycle_name, it.frequency)||'次' cycle,
+		ic.cycle_name,
+		it.frequency,
+		it.task_code,
+		bb.count,
+		s.staff_name,
+		s.own_company,
+		it.check_staff_id,
+		it.group_id,
+		to_char(it.start_date, 'yyyy-mm-dd') start_date,
+		to_char(it.end_date, 'yyyy-mm-dd') end_date,
+		it.cycle_id,
+		it.create_date,
+		case when it.start_date &gt; sysdate then '0'
+		when it.start_date &lt; sysdate then '1'
+		end as state,
+		case
+		  when it.end_date &gt;= sysdate then '进行中' 
+		  when it.end_date &lt;= sysdate then '已完成'
+		end  as taskstate
+		from ins_task it
+		left join  (select count(1) count,ite.task_id
+		from ins_task_equ ite where ite.state_id = 1    group by ite.task_id) bb
+        on bb.task_id =it.task_id
+		join ins_cycle ic on it.cycle_id = ic.cycle_id
+		left join tb_base_staff s on s.staff_id = it.check_staff_id
+		left join ins_task_equ ite on ite.task_id = it.task_id
+		join ins_equipment ie on ie.equipment_id = ite.equipment_id
+		where ite.state_id = 1 and it.delete_date is null
+		and upper(it.task_code) not like '%512%'  
+		<include refid="dynamicWhere" />
+		order by it.create_date desc
+	</select>
+	<select id="getTaskById" resultType="map" parameterType="map">
+		select distinct it.task_id,
+		ic.cycle_name,
+		it.frequency,
+		it.task_code,
+		bb.count,
+		s.staff_name,
+		s.own_company,
+		it.check_staff_id,
+		it.group_id,
+		to_char(it.start_date, 'yyyy-mm-dd') start_date,
+		to_char(it.end_date, 'yyyy-mm-dd') end_date,
+		it.cycle_id,
+		it.create_date
+		from ins_task it
+		left join  (select count(1) count,ite.task_id
+		from ins_task_equ ite where ite.state_id = 1    group by ite.task_id) bb
+        on bb.task_id =it.task_id
+		join ins_cycle ic on it.cycle_id = ic.cycle_id
+		left join tb_base_staff s on s.staff_id = it.check_staff_id
+		left join ins_task_equ ite on ite.task_id = it.task_id
+		join ins_equipment ie on ie.equipment_id = ite.equipment_id
+		where it.task_id = #{taskId}
+	</select>
+	<select id="getTaskId" resultType="int">
+		select SEQ_INS_TASK_ID.NEXTVAL from DUAL
+	</select>
+	<select id="getTaskOrderId" resultType="int">
+		select SEQ_INS_ORDER_ID.NEXTVAL from DUAL
+	</select>
+	<select id="getTaskDetailList" resultType="map" parameterType="util.page.Query">
+		select
+		ie.equipment_code,ie.equipment_name,ie.res_type,ie.address,ie.area,
+		ie.account_type,ie.manage_type,ie.equp_address,ie.manage_area,
+		TO_CHAR(ie.create_date,'yyyy-mm-dd') create_date
+		from ins_task_equ ite
+		join ins_equipment ie on ite.equipment_id = ie.equipment_id
+		where ite.task_id=#{queryParams.taskId}
+		<if test="queryParams.equipment_code != null and queryParams.equipment_code != ''">  
+            <![CDATA[
+	    	AND ie.equipment_code like '%'||#{queryParams.equipment_code}||'%'
+	    	]]>
+		</if>
+		<if test="queryParams.equipment_name != null and queryParams.equipment_name!= ''">  
+            <![CDATA[
+	    	AND ie.equipment_name like '%'||#{queryParams.equipment_name}||'%'
+	    	]]>
+		</if>
+	</select>
+	<insert id="saveTaskEqu" parameterType="map">
+		insert into
+		ins_task_equ(task_id,equipment_id,state_id)
+		values(#{taskId},#{equipment_id},1)
+	</insert>
+	<insert id="saveTask" parameterType="map">
+		insert into
+		ins_task(task_id,check_staff_id,state_id,group_id,create_date,start_date,end_date,frequency,task_code,cycle_id)
+		values(#{taskId},#{staffId},1,#{taskId},sysdate,TO_DATE(#{startDate},'yyyy-mm-dd'),
+		TRUNC(TO_DATE(#{endDate}, 'yyyy-mm-dd'))+1-1/86400,#{frequency},#{taskCode},#{cycle})
+	</insert>
+	<insert id="createTaskOrder" parameterType="map">
+		insert into
+		ins_task_order
+		(order_id, task_id, start_date, end_date, eqp_num, check_eqp_num, state)
+		values
+		(#{orderId},
+		#{taskId},
+		TO_DATE(#{startDate}, 'yyyy-mm-dd hh24:mi:ss'),
+		TO_DATE(#{endDate}, 'yyyy-mm-dd hh24:mi:ss'),
+		(select count(1) from ins_task_equ ite where ite.task_id = #{taskId}),
+		0,
+		3)
+	</insert>
+	<update id="deleteTask" parameterType="map">
+		update ins_task it set
+		it.state_id=0, it.delete_date = sysdate
+		where it.task_id in (${taskId})
+	</update>
+	<update id="updateTaskEqu" parameterType="map">
+		update ins_task_equ ite set ite.task_id=#{newTaskId} where
+		ite.task_id=#{taskId}
+	</update>	
+	<update id="deleteTaskEqu" parameterType="map">
+		update ins_task_equ ite set ite.state_id=0 where ite.task_id in (${taskId})
+	</update>
+	<update id="updateTaskOrder" parameterType="map">
+		update ins_task_order t set t.task_id=#{newTaskId} where t.task_id=#{taskId}
+		and t.state in ('0','1','3')
+	</update>
+	
+	<update id="updateTaskOrderActiveState" parameterType="map">
+		update ins_task_order set state='0'
+		  <![CDATA[ where state = '3' and (to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') <= to_char(end_date,'yyyy-mm-dd hh24:mi:ss') and to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') >= to_char(START_DATE,'yyyy-mm-dd hh24:mi:ss'))  ]]>
+	</update>
+	<update id="updateTaskOrderOverdueState" parameterType="map">
+		update ins_task_order set state='4'
+		  <![CDATA[ where state in('0','1','3') and to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') > to_char(end_date,'yyyy-mm-dd hh24:mi:ss')  ]]>
+	</update>
+	<update id="updateTaskOverdueState" parameterType="map">
+		update ins_task set state_id='0'
+		  <![CDATA[ where state_id = '1' and to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') > to_char(end_date,'yyyy-mm-dd hh24:mi:ss')  ]]>
+	</update>
+	
+	<delete id="deleteTaskOrder" parameterType="map">
+		delete from ins_task_order where task_id=#{taskId} and state in(3,0)
+	</delete>
+	
+</mapper>
+
+

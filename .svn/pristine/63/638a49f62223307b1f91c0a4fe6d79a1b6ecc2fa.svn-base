@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.system.dao.AreaDao">
+	
+	<select id="getAllArea" resultType="map">
+	     SELECT * FROM AREA T WHERE T.PARENT_AREA_ID=2
+	</select>
+	
+	<select id="getSonArea" resultType="map" parameterType="string">
+	     SELECT * FROM AREA T WHERE T.PARENT_AREA_ID=#{areaId}
+	</select>
+	<select id="getSonAreaId" resultType="string" parameterType="map">
+	     SELECT AREA_ID FROM AREA T WHERE T.NAME=#{son_zone} and  t.parent_area_id=#{area_id} and rownum=1
+	</select>
+	
+</mapper>

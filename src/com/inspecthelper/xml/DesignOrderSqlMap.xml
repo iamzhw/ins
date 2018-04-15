@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inspecthelper.dao.DesignOrderDaoImpl">
+
+<select id="getPadPanelProcedure" statementType="CALLABLE" parameterType="java.util.Map">
+	{call FAN_PAD_PANEL.GETPHYEQUIPMENTPANEL(#{AREACODE,mode=IN,jdbcType=VARCHAR},#{RESCODE,mode=IN,jdbcType=VARCHAR},#{RESSPECID,mode=IN,jdbcType=VARCHAR})}
+</select>
+	<select id="getPhyEqpUnitList" parameterType="java.util.Map" statementType="STATEMENT"
+		resultType="java.util.HashMap">
+		select *
+    from (select peu.sequence as uNo,
+    peu.sequence as pno,
+    ptp.unit_id as unitId,
+    min(ptp.seq_in_unit) || '-' || max(ptp.seq_in_unit) as uPort,
+    pp.b as cableId,
+    pp.c || '[' || pp.d || ']' as cableName,
+    min(pp.e) || '-' || max(pp.e) as qPort,
+    pe1.name as opphyeqpname,
+    to_char(peu1.sequence) as opuNo,
+    min(ptp1.seq_in_unit) || '-' || max(ptp1.seq_in_unit) as opPort
+    from odf_pad_panel pp,
+    ${DBLINKUSERNAME}.phy_eqp_unit peu,
+    ${DBLINKUSERNAME}.phy_term_port ptp,
+    ${DBLINKUSERNAME}.phy_equipment pe,
+    ${DBLINKUSERNAME}.phy_eqp_unit peu1,
+    ${DBLINKUSERNAME}.phy_term_port ptp1,
+    ${DBLINKUSERNAME}.phy_equipment pe1
+    where ptp.phy_port_id = pp.a
+    and ptp.unit_id = peu.unit_id(+)
+    and ptp.phy_eqp_id = pe.phy_eqp_id(+)
+    and ptp1.phy_port_id=pp.g
+    and ptp1.unit_id = peu1.unit_id(+)
+    and ptp1.phy_eqp_id = pe1.phy_eqp_id(+)
+    and pe.no ='${RESCODE}'
+    group by ptp.unit_id,
+    peu.sequence,
+    pp.c || '[' || pp.d || ']',
+    pp.b,
+    peu1.sequence,
+    pe1.name
+    union all
+    select peu2.sequence as uNo,
+    peu2.sequence as pno,
+    peu.unit_id as unitId,
+    '1' || - (select count(*)
+    from ${DBLINKUSERNAME}.phy_term_port ptp
+    where ptp.phy_eqp_id = pe2.phy_eqp_id
+    and ptp.res_spec_id = '1132') as uPort,
+    pe2.phy_eqp_id as cableId,
+    pe2.no as cableName,
+    '' as qPort,
+    pe2.no as opphyeqpname,
+    pe2.no as opuNo,
+    '' as opPort
+    from ${DBLINKUSERNAME}.phy_eqp_unit peu2,
+    ${DBLINKUSERNAME}.phy_equipment pe2,
+    ${DBLINKUSERNAME}.phy_eqp_unit peu,
+    ${DBLINKUSERNAME}.phy_equipment pe1
+    where peu2.phy_eqp_id = pe2.phy_eqp_id
+    and pe2.res_spec_id = '2530'
+    and peu.unit_id = pe2.install_unit_id
+    and pe1.phy_eqp_id = peu.phy_eqp_id
+    and pe1.no ='${RESCODE}')
+    order by to_number(pno), uPort
+	</select>
+	
+		
+<select id="getCblSectionInfo" parameterType="java.util.HashMap" statementType="STATEMENT"
+	resultType="java.util.HashMap">
+	select cs.cbl_sect_id as resId,
+	cs.res_spec_id as resSpecId,
+	prs.name as resSpecName,
+	cs.no as resNo,
+	cs.name as resName,
+	cs.length as
+	length,
+	cs.capacity as capacity,
+	pm.name as resModel,
+	cs.create_date as
+	createTime,
+	ps1.name as resOprState,
+	ps2.name as resMntState,
+	cs.address
+	as addressName,
+	sa.name as areaName,
+	pp2.name as creator,
+	pp1.name as
+	modifyPerson,
+	cs.modify_date as modityTime,
+	cs.wo_id as workOrderId
+	from
+	${dblinkUsername}.pub_party pp2,
+	${dblinkUsername}.pub_party pp1,
+	${dblinkUsername}.pub_model pm,
+	${dblinkUsername}.spc_area sa,
+	${dblinkUsername}.pub_status ps2,
+	${dblinkUsername}.pub_status ps1,
+	${dblinkUsername}.pub_resource_spec prs,
+	${dblinkUsername}.cbl_section cs
+	where cs.create_op=pp2.party_id(+)
+	and cs.mnt_org_id = pp1.party_id(+)
+	and cs.model_id = pm.model_id(+)
+	and cs.area_id = sa.area_id(+)
+	and
+	cs.mnt_state_id = ps2.state_id(+)
+	and cs.opr_state_id = ps1.state_id(+)
+	and cs.res_spec_id=prs.res_spec_id
+	and cs.res_spec_id=${resSpecId}
+	and
+	cs.no ='${resCode}'
+		</select>
+		
+		
+		<select id="getPhyEqpInfo" parameterType="java.util.HashMap" statementType="STATEMENT"
+	resultType="java.util.HashMap">
+		select pe.phy_eqp_id  as resId,
+       pe.name        as resName,
+       prs.name       as resSpecName,
+       pe.no          as resNo,
+       pe.res_spec_id as resSpecId,
+       to_char( pe.create_date,'YYYY-MM-DD hh24:mi:ss') as createTime,
+       to_char(pe.modify_date,'YYYY-MM-DD hh24:mi:ss') as modifyTime,
+       pe.wo_id       as workOrderId,
+       ps1.name       as resOprState,
+       ps2.name       as resMntState,
+       st.name        as tmlName,
+       psf1.staff_nbr as creator,
+       psf2.staff_nbr as modifyPerson,
+       pm.name        as resModel,
+       sa.name        as areaName,
+       pe.address     as addressName
+  from ${dblinkUsername}.spc_area                sa,
+       ${dblinkUsername}.pub_model               pm,
+       ${dblinkUsername}.pub_staff               psf2,
+       ${dblinkUsername}.pub_staff               psf1,
+       ${dblinkUsername}.spc_tml                 st,
+       ${dblinkUsername}.pub_status              ps1,
+       ${dblinkUsername}.pub_status              ps2,
+       ${dblinkUsername}.pub_resource_spec prs,
+       ${dblinkUsername}.phy_equipment           pe
+ where pe.area_id = sa.area_id
+   and pe.model_id = pm.model_id(+)
+   and pe.modify_op = psf2.staff_id(+)
+   and pe.create_op = psf1.staff_id(+)
+   and pe.tml_id = st.tml_id(+)
+   and pe.opr_state_id = ps1.state_id(+)
+   and pe.mnt_state_id = ps2.state_id(+)
+   and pe.res_spec_id = prs.res_spec_id
+   and pe.res_spec_id=${resSpecId}
+   and ( pe.no like '%${resCode}%' OR pe.name like '%${resCode}%')
+   and rownum &lt;=30
+    order by pe.no 
+		</select>
+</mapper>

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.TeamCheckStatictisDao">
+
+	<!-- 一开始的统计方式，后来发现查询条件过滤存在问题，故而不在使用 -->
+	<select id="statictis_old" resultType="map" parameterType="map">
+		select * from (
+			select (select a.name from area a where a.area_id = b.area_id) area_name,
+			(select a.name from area a where a.area_id = b.son_area_id) son_area_name,n.* 
+			,(select to_char(wm_concat(distinct c.company_name)) from tb_base_maintain_company c left join tb_base_company_banzu_relation r on r.company_id = c.company_id where r.banzu_id = n.team_id) company_name
+			, b.team_name ,zg.cou ZG_READY_NUM from 
+			  
+			  <!-- 这sql是根据传递的时间参数，对tb_team_check_error_num进行汇总统计 -->
+			  (select au.*,(check_right_num/check_all_num)*100 check_rate from 
+			  (select nu.team_id,
+			  	  
+			  	  <!-- <include refid="dynamicColum_statictis"/>	 -->
+			  	  
+			  	  sum(nu.check_all_num) check_all_num,
+			      sum(nu.error_no_append_order_num) error_no_append_order_num,
+			      sum(nu.error_road_no_destory_num) error_road_no_destory_num,
+			      sum(nu.error_no_tag_num) error_no_tag_num,
+			      sum(nu.error_count) error_count,
+			      sum(nu.error_eqp_num) error_eqp_num,
+			      sum(nu.check_error_num) check_error_num,
+			      sum(nu.check_right_num) check_right_num,
+			      sum(nu.zg_num) zg_num
+		      	 from tb_team_check_error_num nu
+		         where nu.state_date between to_date(#{queryParams.startDate},'yyyy-mm-dd hh24:mi:ss') 
+		         and to_date(#{queryParams.endDate},'yyyy-mm-dd hh24:mi:ss') 
+		      group by nu.team_id) au ) n
+		     
+		    <!-- 关联班组，是为了查询班组名称，以及根据班组的area_id获取地市区县信息，并且根据此信息筛选  --> 
+			inner join  tb_base_staff_zw_banzu b on b.team_id = n.team_id
+			
+			<!-- 下面的sql是查询给定时间段内的已整改的数量 -->
+			left join (
+			
+				select count(distinct re.record_id) cou,o.team_id from tb_cablecheck_record re 
+				inner join (
+				select distinct r.* from tb_cablecheck_record r
+				inner join  tb_cablecheck_task k on k.task_id = r.task_id
+				where k.is_need_zg =1 and k.task_type in (1,2,3)
+				and k.start_time between to_date(#{queryParams.startDate},'yyyy-mm-dd hh24:mi:ss') 
+				and to_date(#{queryParams.endDate},'yyyy-mm-dd hh24:mi:ss')
+				and r.record_type !=2  and r.ischeckok=1 
+				and r.port_id is not null and r.order_no is not null) a 
+				inner join tb_cablecheck_order o on o.order_no = a.order_no
+				on re.task_id = a.task_id and re.port_id = a.port_id
+				where re.record_type=2 and re.port_id is not null 
+				and re.create_time &lt; to_date(#{queryParams.endDate_expand},'yyyy-mm-dd hh24:mi:ss')
+				
+				<if test="queryParams.action_type != null and queryParams.action_type != ''">  
+		            <![CDATA[
+		    			and a.action_type = #{queryParams.action_type}
+		    		]]>
+		  		</if>
+		  		<if test="queryParams.mark != null and queryParams.mark != ''">  
+		            <![CDATA[
+		    			and o.mark = #{queryParams.mark}
+		    		]]>
+		  		</if>
+				
+				group by o.team_id 
+			
+			
+			<!-- select team_id,count(distinct re.record_id) cou from tb_cablecheck_record re 
+			inner join (select distinct r.task_id,z.team_id,z.team_name from tb_cablecheck_record r
+			
+			inner join tb_cablecheck_task k on k.task_id = r.task_id 
+			inner join tb_base_staff f on f.staff_id = k.maintor
+			
+			inner join tb_base_staff_zw z on z.id_number = f.id_number
+			inner join tb_cablecheck_task t on r.task_id = t.task_id
+			where z.status = 0 and  r.record_type !=2 and t.task_type in(1,2,3) and r.ischeckok=1 and t.is_need_zg=1
+			and r.port_id is not null  and r.create_time between to_date(#{queryParams.startDate},'yyyy-mm-dd hh24:mi:ss') 
+			and to_date(#{queryParams.endDate},'yyyy-mm-dd hh24:mi:ss')) a on a.task_id = re.task_id 
+			where re.create_time &lt; to_date(#{queryParams.endDate_expand},'yyyy-mm-dd hh24:mi:ss') and re.record_type=2 
+			and re.port_id is not null group by a.team_id		 -->	
+			
+			)zg on zg.team_id = n.team_id
+			
+			where 1=1 
+			
+			<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+	            <![CDATA[
+	    			AND b.area_id = #{queryParams.area_id}
+	    		]]>
+	  		</if>
+	  		<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+	            <![CDATA[
+	    			AND b.son_area_id = #{queryParams.son_area_id}
+	    		]]>
+	  		</if>
+		)
+		where team_name is not null 
+		
+		<if test="queryParams.rate_start != null and queryParams.rate_start!= ''">  
+            <![CDATA[
+    			and check_rate >= #{queryParams.rate_start}
+    		]]>
+  		</if>
+  		<if test="queryParams.rate_end != null and queryParams.rate_end != ''">  
+            <![CDATA[
+    			and check_rate <= #{queryParams.rate_end}
+    		]]>
+  		</if>
+  		
+  		<if test="queryParams.team_name != null and queryParams.team_name != ''">  
+            <![CDATA[
+    			and team_name like  '%'|| #{queryParams.team_name} ||'%'
+    		]]>
+  		</if>
+  		<if test="queryParams.company != null and queryParams.company != ''">  
+            <![CDATA[
+    			and company_name like  '%'|| #{queryParams.company} ||'%'
+    		]]>
+  		</if>
+		order by team_id desc
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<select id="statictis" resultType="map" parameterType="map">
+		select ar.*,(ar.check_rate||'%') check_rate_new  from (
+			select 
+				  (select a.name from area a where a.area_id = b.area_id) area_name,
+			      (select a.name from area a where a.area_id = b.son_area_id) son_area_name,
+			      (select to_char(wm_concat(distinct c.company_name)) from tb_base_maintain_company c 
+			      left join tb_base_company_banzu_relation r on r.company_id = c.company_id 
+			      where r.banzu_id = jc.team_id) company_name, b.team_name,
+			      jc.*,zg.zg_cou zg_num,yz.zg_cou_ready ZG_READY_NUM,
+			      ((CHECK_RIGHT_NUM/CHECK_ALL_NUM)*100) check_rate
+				from (
+				
+				<!-- 班组和检查数量 -->
+				select cz.team_id,count(cz.record_id) CHECK_ALL_NUM,
+				count(case when cz.ischeckok=1 then 1 end) CHECK_ERROR_NUM,
+				count(case when cz.ischeckok=0 then 1 end) CHECK_RIGHT_NUM,
+				
+				count(case when cz.descript like '%光路无标签或标签手写%' then 1 end) error_no_tag_num,
+				count(case when cz.descript like '%现场有跳纤，系统无光路%' then 1 end) error_road_no_destory_num,
+				count(case when (cz.DESCRIPT like '%[新增]现场与系统标签不一致%'
+				            or cz.DESCRIPT like '%[存量]现场与系统标签不一致%'
+				            or cz.DESCRIPT like '%现场无跳纤，系统有光路%'
+				            or cz.DESCRIPT like '%检查人员已将现场问题整改%' ) then 1 end) error_no_append_order_num,
+				count(case when (cz.DESCRIPT like '%光设施无标签或标签手写%'
+				            or cz.DESCRIPT like '%子框无标签或标签手写%') then 1 end) error_eqp_num
+				from tb_team_check_zg cz where cz.statictis_type =1 
+				<include refid="dynamicWhere_time" />	
+				group by cz.team_id
+				) jc 
+				
+				left join (
+				<!-- 班组和需整改数 -->
+				select cz.team_id,count(cz.record_id) zg_cou from tb_team_check_zg cz 
+				where cz.statictis_type =2 
+				<include refid="dynamicWhere_time" />	
+				group by cz.team_id
+				) zg on zg.team_id = jc.team_id
+				
+				left join (
+				<!-- 班组与已整改数 -->
+				select count(distinct re.record_id) zg_cou_ready,a.team_id from tb_cablecheck_record re 
+				inner join (select distinct cz.* from tb_team_check_zg cz where cz.statictis_type=2 
+				<include refid="dynamicWhere_time" />	
+				) a 
+				on a.task_id = re.task_id and a.port_id = re.port_id
+				where re.record_type=2 and re.port_id is not null 
+				and re.create_time &lt; to_date(#{queryParams.endDate_expand},'yyyy-mm-dd hh24:mi:ss')
+				group by a.team_id) yz on yz.team_id = zg.team_id
+				
+				<!-- 装维班组-->
+				left join tb_base_staff_zw_banzu b on b.team_id = jc.team_id
+				
+				where 1=1
+				<if test="queryParams.area_id != null and queryParams.area_id != ''">  
+		            <![CDATA[
+		    			AND b.area_id = #{queryParams.area_id}
+		    		]]>
+		  		</if>
+		  		<if test="queryParams.son_area_id != null and queryParams.son_area_id != ''">  
+		            <![CDATA[
+		    			AND b.son_area_id = #{queryParams.son_area_id}
+		    		]]>
+		  		</if>
+		    ) ar
+		where team_name is not null 
+		
+		<if test="queryParams.rate_start != null and queryParams.rate_start!= ''">  
+            <![CDATA[
+    			and check_rate >= #{queryParams.rate_start}
+    		]]>
+  		</if>
+  		<if test="queryParams.rate_end != null and queryParams.rate_end != ''">  
+            <![CDATA[
+    			and check_rate <= #{queryParams.rate_end}
+    		]]>
+  		</if>
+  		
+  		<if test="queryParams.team_name != null and queryParams.team_name != ''">  
+            <![CDATA[
+    			and team_name like  '%'|| #{queryParams.team_name} ||'%'
+    		]]>
+  		</if>
+  		<if test="queryParams.company != null and queryParams.company != ''">  
+            <![CDATA[
+    			and company_name like  '%'|| #{queryParams.company} ||'%'
+    		]]>
+  		</if>
+		order by team_id desc
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	<sql id="dynamicWhere_time">
+		<if test="queryParams.startDate != null and queryParams.startDate != ''">  
+            <![CDATA[
+	    		AND cz.state_date >= to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+	    	]]>
+		</if>
+		<if test="queryParams.endDate != null and queryParams.endDate != ''">  
+            <![CDATA[
+	    		AND cz.state_date <= to_date( #{queryParams.endDate},'yyyy-mm-dd')  
+	    	]]>
+		</if>
+		<if test="queryParams.action_type != null and queryParams.action_type != ''">  
+            <![CDATA[
+    			and cz.action_type = #{queryParams.action_type}
+    		]]>
+  		</if>
+  		<if test="queryParams.mark != null and queryParams.mark != ''">  
+            <![CDATA[
+    			and cz.mark = #{queryParams.mark}
+    		]]>
+  		</if>
+	</sql>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper> 

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.TroubleReportDao">
+
+<sql id="dynamicWhere_time">
+		<if test="queryParams.start_time != null and queryParams.start_time!= ''">  
+            <![CDATA[
+             and to_date(tib.create_time) >=TO_DATE(#{queryParams.start_time}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.end_time != null and queryParams.end_time != ''">  
+            <![CDATA[
+	    	 and to_date(tib.create_time) <=TO_DATE(#{queryParams.end_time}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		
+	</sql>
+	
+	<sql id="dynamicWhere">
+		<if test="start_time != null and start_time!= ''">  
+            <![CDATA[
+             and  to_date(tib.create_time) >=TO_DATE(#{start_time}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="end_time != null and end_time != ''">  
+            <![CDATA[
+	    	 and to_date(tib.create_time) <=TO_DATE(#{end_time}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		
+	</sql>
+	<select id="query" parameterType="util.page.Query"
+		resultType="map">
+		SELECT c.name AREA_NAME,
+       nvl(a.spectors, 0) SUM0,nvl(d.sum1,0) SUM1,
+       nvl(e.sum2,0) SUM2,nvl(f.sum3,0) SUM3,nvl(g.sum4,0) SUM4,
+       nvl(h.NOTRETURNBILLCOUNT,0) NOTRETURNBILLCOUNT,
+       nvl(i.NOTAUDITBILLCOUNT,0) NOTAUDITBILLCOUNT,
+       nvl(a.spectors, 0) - nvl(b.inspector, 0) SUM5
+  FROM (SELECT tbs.area_id, count(distinct(tbs.staff_id)) as spectors
+	  FROM tb_base_staff tbs, tb_base_staff_role tbsr
+	 where tbs.staff_id = tbsr.staff_id
+	   and tbs.status = 0
+	   and exists (SELECT 0
+	          FROM tb_base_role tbr
+	         where tbsr.role_id = tbr.role_id
+	           and tbr.role_no = 'LXXJ_INSPECTOR')
+	 group by tbs.area_id) a,
+       (SELECT tib.area_id, count(distinct(tib.inspector)) as inspector
+          FROM tb_ins_bill tib where 1=1 
+        <include refid="dynamicWhere_time" />  
+         group by tib.area_id) b,
+       (SELECT * FROM area where area_level = 3) c,
+       (SELECT tib.area_id,count(*) as sum1  FROM tb_ins_bill tib where 1=1 
+       <include refid="dynamicWhere_time" />  
+        group by tib.area_id) d,
+       (SELECT tib.area_id,count(*) as sum2 FROM tb_ins_bill tib where  tib.status_id=4 
+       <include refid="dynamicWhere_time" />  
+       group by tib.area_id) e,
+       (SELECT tib.area_id,count(*) as sum3 FROM tb_ins_bill tib where tib.status_id in(5) 
+       <include refid="dynamicWhere_time" />  
+       group by tib.area_id) f,
+       (SELECT tib.area_id,count(*) as sum4  FROM tb_ins_bill tib where tib.status_id=1 
+       <include refid="dynamicWhere_time" />  
+       group by tib.area_id) g,
+              (SELECT tib.area_id,count(*) as NOTRETURNBILLCOUNT  FROM tb_ins_bill tib where tib.status_id=2
+       <include refid="dynamicWhere_time" />  
+       group by tib.area_id) h,
+              (SELECT tib.area_id,count(*) as NOTAUDITBILLCOUNT  FROM tb_ins_bill tib where tib.status_id=3
+       <include refid="dynamicWhere_time" />  
+       group by tib.area_id) i
+ where a.area_id(+) = c.area_id
+   and b.area_id(+) = c.area_id
+   and d.area_id(+) = c.area_id
+   and e.area_id(+) = c.area_id
+   and f.area_id(+) = c.area_id
+   and g.area_id(+) = c.area_id
+   and h.area_id(+) = c.area_id
+   and i.area_id(+) = c.area_id
+   order by c.area_id
+	</select>
+	
+	<select id="queryExl" parameterType="map"
+		resultType="map">
+		SELECT c.name AREA_NAME,
+       nvl(a.spectors, 0) SUM0,nvl(d.sum1,0) SUM1,
+       nvl(e.sum2,0) SUM2,nvl(f.sum3,0) SUM3,nvl(g.sum4,0) SUM4,
+       nvl(a.spectors, 0) - nvl(b.inspector, 0) SUM5
+  FROM (SELECT tbs.area_id, count(distinct(tbs.staff_id)) as spectors
+	  FROM tb_base_staff tbs, tb_base_staff_role tbsr
+	 where tbs.staff_id = tbsr.staff_id
+	   and tbs.status = 0
+	   and exists (SELECT 0
+	          FROM tb_base_role tbr
+	         where tbsr.role_id = tbr.role_id
+	           and tbr.role_no = 'LXXJ_INSPECTOR')
+	 group by tbs.area_id) a,
+       (SELECT tib.area_id, count(distinct(tib.inspector)) as inspector
+          FROM tb_ins_bill tib where 1=1 
+        <include refid="dynamicWhere" />  
+         group by tib.area_id) b,
+       (SELECT * FROM area where area_level = 3) c,
+       (SELECT tib.area_id,count(*) as sum1  FROM tb_ins_bill tib where 1=1 
+       <include refid="dynamicWhere" />  
+        group by tib.area_id) d,
+       (SELECT tib.area_id,count(*) as sum2 FROM tb_ins_bill tib where  tib.status_id=4 
+       <include refid="dynamicWhere" />  
+       group by tib.area_id) e,
+       (SELECT tib.area_id,count(*) as sum3 FROM tb_ins_bill tib where tib.status_id in(2,3,5) 
+       <include refid="dynamicWhere" />  
+       group by tib.area_id) f,
+       (SELECT tib.area_id,count(*) as sum4  FROM tb_ins_bill tib where tib.status_id=1 
+       <include refid="dynamicWhere" />  
+       group by tib.area_id) g
+ where a.area_id(+) = c.area_id
+   and b.area_id(+) = c.area_id
+   and d.area_id(+) = c.area_id
+   and e.area_id(+) = c.area_id
+   and f.area_id(+) = c.area_id
+   and g.area_id(+) = c.area_id
+   order by c.area_id	
+	</select>
+	
+
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.system.dao.TaskInterfaceDao">
+
+	<!-- 获取任务列表 -->
+	<select id="getAllTask" resultType="map" parameterType="map" >
+	    select 
+	    jt.task_id,
+	    jt.task_name,
+	    jt.check_staff_id,
+	    jt.job_id,
+	    TO_CHAR(jt.start_date,'yyyy-mm-dd hh24:mi:ss') start_date,
+	    TO_CHAR(jt.end_date,'yyyy-mm-dd hh24:mi:ss') end_date,
+	    jt.create_date,
+	    jt.start_date 
+	    from jfxj_task jt  
+		where jt.end_date >=(select TRUNC(SYSDATE) FROM dual) and jt.state=0 and jt.check_staff_id=#{staffId} 
+	</select>
+	
+	<!-- 获取机房列表 -->
+	<select id="getRoomsByTaskId" resultType="map" parameterType="map" >
+		select jr.*,jtr.status from
+		jfxj_task jt
+		inner join jfxj_action_detail jtr on jt.task_id=jtr.task_id
+		inner join jfxj_room jr on jtr.room_id=jr.room_id
+		where
+		jtr.task_id=#{taskId} and jtr.status=0
+	</select>
+	
+	<!-- 获取任务机房总数 -->
+	<select id="getRoomsCountByTaskId" resultType="int" parameterType="map" >
+		select count(1)
+		from jfxj_task jt
+		inner join jfxj_action_detail jtr on
+		jt.task_id=jtr.task_id
+		inner join jfxj_room jr on
+		jtr.room_id=jr.room_id
+		where jtr.task_id=#{taskId}
+	</select>
+	
+	<!-- 获取任务检查项列表 -->
+	<select id="getCheckItemByTaskId" resultType="map" parameterType="map" >
+		select jci.* from
+		jfxj_task jt
+		inner join jfxj_check_item jci on jt.room_type_id=jci.room_type_id
+		where jci.status=0 and jt.task_id=#{taskId}
+	</select>
+	
+		<!-- 获取检查项 -->
+	<select id="getcheckItemByItemId" resultType="map" parameterType="int" >
+		select jci.* from JFXJ_CHECK_ITEM jci where jci.check_item_id=#{itemId} 
+	</select>
+	
+		<!-- 获取检查项隐患类型列表 -->
+	<select id="getTroubleTypeByCheckItemId" resultType="map" parameterType="map" >
+		select jtt.* from JFXJ_TROUBLE_TYPE jtt where jtt.status=0 and jtt.check_item_id=#{item_id}
+	</select>
+	<select id="getActionIdByTaskIdAndRoomId" resultType="int" parameterType="map">
+		select jad.action_detail_id from JFXJ_ACTION_DETAIL jad where jad.task_id=#{taskId} and jad.room_id=#{roomId}
+	</select>
+	<select id="getPicId" resultType="int">
+		select SEQ_PIC_ID.NEXTVAL from DUAL
+	</select>
+	<update id="updateActionDetail" parameterType="map">
+		update JFXJ_ACTION_DETAIL set status=1 where task_id=#{taskId} and room_id=#{roomId}
+	</update>
+	<update id="closeTaskbyTaskId">
+		update jfxj_task jt set jt.state=1 where jt.task_id=#{taskId}
+	</update>
+	<insert id="insertPic" parameterType="map">
+	insert into CHECK_DETAIL_2_PIC
+		(PIC_ID,
+		PIC_PATH,
+		MICRO_PIC_PATH,
+		CHECK_STAFF,
+		CHECK_ITEM_ID,
+		TROUBLE_TYPE_ID,
+		TASK_ID,
+		ROOM_ID,
+		SN)
+		values (#{PIC_ID},#{PIC_PATH},#{MICRO_PIC_PATH},#{CHECK_STAFF_ID},#{ITEM_ID},#{TROUBLE_ID,jdbcType=NUMERIC},#{TASK_ID},#{ROOM_ID},#{SN})
+	</insert>
+	<insert id="createCheckDetailPic" parameterType="map">
+		insert into CHECK_DETAIL_PIC (PIC_ID,CHECK_DETAIL_ID)
+		(select cp.pic_id,jcd.check_detail_id from CHECK_DETAIL_2_PIC cp,
+			jfxj_action_detail jad,jfxj_check_detail jcd where 
+	    cp.task_id=jad.task_id and cp.room_id = jad.room_id 
+			and jad.action_detail_id = jcd.action_id and jcd.check_item_id=cp.check_item_id
+     	and cp.pic_id in (${PIC_ID}))
+	</insert>
+	<delete id="deleteCheckPic" parameterType="map">
+		delete from CHECK_DETAIL_2_PIC where PIC_ID IN (${PIC_ID})
+	</delete>
+	<insert id="saveTrouble" parameterType="map">
+		insert into JFXJ_CHECK_DETAIL
+		(CHECK_DETAIL_ID,
+		ACTION_ID,
+		BEGIN_TIME,
+		END_TIME,
+		IS_TEMP,
+		CHECK_ITEM_ID,
+		CHECK_ITEM_TYPE,
+		CHECK_STAFF_ID,
+		TROUBLE_TYPE_ID,
+		DESCRIPTION,
+		CREATE_DATE,
+		CHECK_RESULT)
+		values(
+		SEQ_CHECK_DETAIL_ID.Nextval,
+		#{actionId},
+		to_date(#{beginTime},'yyyy-mm-dd hh24:mi:ss'),
+		to_date(#{endTime},'yyyy-mm-dd hh24:mi:ss'),
+		#{isTemp},
+		#{itemId},
+		#{itemType},
+		#{staffId},
+		#{troubleId},
+		#{description},
+		sysdate,
+		#{checkResult}
+		)
+	</insert>
+</mapper>

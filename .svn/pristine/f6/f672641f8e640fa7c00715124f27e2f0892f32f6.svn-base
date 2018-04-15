@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.system.dao.MmsModelDao">
+	<sql id="dynamicWhere">
+		<if
+			test="queryParams.p_mss_name  != null and queryParams.p_mss_name  != ''"
+		> 
+<![CDATA[ and  T.mss_name  like '%'||#{queryParams.p_mss_name }||'%'    ]]>
+		</if>
+
+		<if
+			test="queryParams.p_mms_type  != null and queryParams.p_mms_type  != ''"
+		> 
+<![CDATA[  and  T.mms_type  =#{queryParams.p_mms_type }   ]]>
+		</if>
+	</sql>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select t.MMS_ID, t.MSS_NAME, t.mm_CONTENT, mt.type_name
+		from AXX_T_MMS_MODEL t, AXX_T_MMS_TYPE mt
+		where t.mms_type = mt.type_id 
+		<include refid="dynamicWhere" />
+	</select>
+
+	<insert id="mmsModelSave" parameterType="map">
+		insert into AXX_T_MMS_MODEL
+		(MMS_ID,
+		MSS_NAME,
+		MM_CONTENT,
+		MMS_TYPE,
+		CREATOR,
+		CREATE_TIME)
+		values
+		(seq_AXX_T_MMS_MODEL.nextval,
+		#{mss_name,
+		jdbcType=VARCHAR},
+		#{mm_content,
+		jdbcType=VARCHAR},
+		#{mms_type,
+		jdbcType=NUMERIC},
+		#{creator,
+		jdbcType=NUMERIC},
+		to_date(#{create_time, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'))
+
+	</insert>
+
+
+
+	<delete id="mmsModelDelete" parameterType="String">
+		DELETE FROM AXX_T_MMS_MODEL WHERE MMS_ID=#{mms_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		SELECT * FROM AXX_T_MMS_MODEL WHERE MMS_ID=#{mms_id}
+	</select>
+
+	<update id="mmsModelUpdate" parameterType="map">
+		UPDATE AXX_T_MMS_MODEL set
+		<if test=" mss_name  != null and mss_name  != ''"> 
+ <![CDATA[ 
+MSS_NAME=#{mss_name},
+ ]]>
+		</if>
+		<if test=" mm_content  != null and mm_content  != ''"> 
+ <![CDATA[ 
+MM_CONTENT=#{mm_content},
+ ]]>
+		</if>
+		<if test=" mms_type  != null and mms_type  != ''"> 
+ <![CDATA[ 
+MMS_TYPE=#{mms_type},
+ ]]>
+		</if>
+		<if test=" creator  != null and creator  != ''"> 
+ <![CDATA[ 
+CREATOR=#{creator},
+ ]]>
+		</if>
+		<if test=" create_time  != null and create_time  != ''"> 
+ <![CDATA[ 
+CREATE_TIME=to_date(#{create_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME=to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		MMS_ID=#{mms_id}
+		where MMS_ID=#{mms_id}
+	</update>
+
+
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_T_MMS_MODEL
+	</select>
+
+	<select id="getModalTypeList" resultType="map">
+		SELECT * FROM AXX_T_MMS_TYPE
+	</select>
+	
+	<!--本地看护员  -->
+	<select id="getLocalKhy"  parameterType="string" resultType="map">
+		 SELECT BS.*
+    FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+   WHERE BS.STAFF_ID = BSR.STAFF_ID
+     AND BR.ROLE_ID = BSR.ROLE_ID
+     AND BR.ROLE_NO = 'AXX_KHY'
+     AND BS.AREA_ID = #{areaId}
+	</select>
+	
+	<delete id="deleteOldMessageAlarm" parameterType="map">
+	   DELETE FROM AXX_T_MMS_SET T WHERE T.USER_ID in (${khyId})
+	</delete>
+	
+	
+	<insert id="saveShortMessageAlarm" parameterType="map">
+	    insert into AXX_T_MMS_SET
+  (MMS_SET_ID, MMS_ID, SEND_TYPE, SEND_USER, SET_DATE, USER_ID)
+values
+  (SEQ_AXX_T_MMS_SET.NEXTVAL,
+   #{mms_id,
+   jdbcType=NUMERIC},
+   #{send_type,
+   jdbcType=NUMERIC},
+   #{send_user,
+   jdbcType=NUMERIC},
+   to_date(#{set_date, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+   #{user_id,
+   jdbcType=NUMERIC})
+	 
+	</insert>
+
+
+<select id="getSettings" parameterType="string" resultType="map">
+   SELECT T.*, MM.MM_CONTENT
+  FROM AXX_T_MMS_SET T, AXX_T_MMS_MODEL MM
+ WHERE T.MMS_ID = MM.MMS_ID
+   AND T.USER_ID = #{staffId}
+   
+</select>
+
+
+</mapper>

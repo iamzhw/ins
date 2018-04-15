@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableInspection.dao.TaskCreateDao">
+	
+	<select id="getPlansForCreate" parameterType="map" resultType="map" statementType="STATEMENT">
+		<![CDATA[
+		select PLAN_ID, 
+			PLAN_NO, 
+			PLAN_NAME, 
+			PLAN_TYPE,
+			PLAN_START_TIME, 
+			PLAN_END_TIME,
+			PLAN_CIRCLE, 
+			PLAN_FREQUENCY, 
+			PLAN_KIND,
+			AREA_ID, 
+			SON_AREA_ID,
+			TASK_INSPECTOR,
+			TASK_CREATOR,
+			CUSTOM_TIME
+		from TB_INS_PLAN 
+		where PLAN_START_TIME < to_date('${MAX_BEGIN_DATE}', 'yyyy-mm-dd')
+			and PLAN_END_TIME >= to_date('${MIN_END_DATE}', 'yyyy-mm-dd')
+			and ISDISTRIBUTED = 1
+			and ISDELETED = 0
+		]]>
+		<if test="type == 2">
+			and PLAN_CIRCLE = 3
+		</if>
+		<if test="type == 1">
+			and (PLAN_CIRCLE is null or PLAN_CIRCLE = 1 or PLAN_CIRCLE = 2)
+		</if>
+	</select>
+	
+	<select id="getCablePlanDetail" parameterType="string" resultType="map">
+		select t.inspect_object_id from TB_INS_PLAN_DETAIL t where t.plan_id = #{planId}
+	</select>
+	
+</mapper>

@@ -1,0 +1,2822 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.PatrolPlanDao">
+
+	<sql id="dynamicWhere_plan">
+		<if test="queryParams.PLAN_NO != null and queryParams.PLAN_NO != ''">  
+            <![CDATA[
+	    	AND PLAN_NO like '%'||#{queryParams.PLAN_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_NAME != null and queryParams.PLAN_NAME != ''">  
+            <![CDATA[
+	    	AND PLAN_NAME like '%'||#{queryParams.PLAN_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_START_TIME != null and queryParams.PLAN_START_TIME != ''">  
+            <![CDATA[
+	    	AND PLAN_START_TIME >= TO_DATE(#{queryParams.PLAN_START_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_END_TIME != null and queryParams.PLAN_END_TIME != ''">  
+            <![CDATA[
+	    	AND PLAN_END_TIME <= TO_DATE(#{queryParams.PLAN_END_TIME}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND Patrol_PLAN.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<!-- <if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND Patrol_PLAN.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if> -->
+		<if test="queryParams.PLAN_TYPE != null and queryParams.PLAN_TYPE != ''">  
+            <![CDATA[
+	    	AND Patrol_PLAN.PLAN_TYPE = #{queryParams.PLAN_TYPE}
+	    	]]>
+		</if>
+		<!-- <if test="queryParams.CONTRACTOR != null and queryParams.CONTRACTOR != ''">  
+            <![CDATA[
+	    	AND Patrol_PLAN.CONTRACTOR = #{queryParams.CONTRACTOR}
+	    	]]>
+		</if> -->
+	</sql>
+	
+	<sql id="dynamicWhere">
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+	</sql>
+	
+	<select id="planQuery" parameterType="util.page.Query" resultType="map">
+		SELECT Patrol_Plan.PLAN_ID,
+	    Patrol_Plan.PLAN_ID as PLANID,
+	    Patrol_Plan.PLAN_NO,
+	    Patrol_Plan.PLAN_NAME,
+<!-- 	    DECODE(PLAN_TYPE, 0, '周期性', 1, '临时性') AS PLAN_TYPE, -->
+		Patrol_Plan.PLAN_TYPE,
+	    TO_CHAR(PLAN_START_TIME, 'yyyy-mm-dd') AS PLAN_START_TIME,
+	    TO_CHAR(PLAN_END_TIME, 'yyyy-mm-dd') AS PLAN_END_TIME,
+	    DECODE(PLAN_CIRCLE, 1, '日', 2, '周', 3, '月', 4, '年',5,'半月') AS PLAN_CIRCLE,
+	    PLAN_FREQUENCY,
+	    A.NAME AS AREA_NAME,
+	    <!-- B.NAME AS SON_AREA_NAME, -->
+	    TO_CHAR(Patrol_Plan.CREATE_TIME, 'yyyy-mm-dd') AS CREATE_TIME,
+	    TBS.STAFF_NAME,
+	    case  when 
+	      INSPECTOR_TYPE = 1
+	      then 
+	       (select dp.dept_name from tb_ins_dept dp where dp.dept_id=TASK_INSPECTOR)
+	      else
+	      (select s.STAFF_NAME from tb_base_staff s where s.staff_id=TASK_INSPECTOR)
+	      end INSPECTOR,
+	    CUSTOM_TIME,
+	    decode(ISDISTRIBUTED ,1,'已分配' ,'未分配') as ISDISTRIBUTED,
+	    TYPE,
+	    
+	    (select count(distinct t.task_id) from tb_cablecheck_task t where 
+      t.task_type in (0,11) and t.area_id=3 and t.status_id in (5,6)
+      and t.patrol_plan_id = Patrol_Plan.plan_id ) plan_nocheck_count, 
+	    
+	    (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id) as plan_task_count,
+
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 0) as plan_task_count0,
+      
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 1) as plan_task_count1,
+      
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 2) as plan_task_count2,
+      
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 4) as plan_task_count4,
+      
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 5) as plan_task_count5,
+      
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 6) as plan_task_count6,
+      
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 7) as plan_task_count7,
+      
+      (select count(task.task_id) from tb_cablecheck_task task where task.patrol_plan_id = Patrol_Plan.plan_id and task.status_id = 8) as plan_task_count8
+	    
+	    FROM Patrol_Plan, AREA A, <!-- AREA B, --> TB_BASE_STAFF TBS
+	      WHERE Patrol_Plan.PLAN_KIND = 1
+	      AND Patrol_Plan.ISDELETED = 0
+	      AND A.AREA_ID(+) = Patrol_Plan.AREA_ID
+	      <!-- AND B.AREA_ID(+) = Patrol_Plan.SON_AREA_ID -->
+	      AND TBS.STAFF_ID(+) = Patrol_Plan.CREATE_STAFF
+		<include refid="dynamicWhere_plan" />
+		ORDER BY CREATE_TIME DESC
+	</select>
+
+	<delete id="deletePlan" parameterType="map" statementType="STATEMENT">
+		UPDATE Patrol_Plan SET
+		MODIFY_TIME = SYSDATE,
+		MODIFY_STAFF = ${MODIFY_STAFF},
+		ISDELETED = 1
+		WHERE
+		PLAN_ID IN (${PLAN_ID})
+	</delete>
+
+	<select id="getPlan" parameterType="map" resultType="map">
+		SELECT
+			PLAN_ID, PLAN_NO, PLAN_NAME, PLAN_TYPE,DISTRIBUTION_AMOUNT,
+			TO_CHAR(PLAN_START_TIME,'yyyy-mm-dd') AS PLAN_START_TIME,
+			TO_CHAR(PLAN_END_TIME,'yyyy-mm-dd') AS PLAN_END_TIME,
+			PLAN_CIRCLE, PLAN_FREQUENCY,AREA_ID,SON_AREA_ID,CUSTOM_TIME,
+			WHWG,CHECK_STAFF,CREATE_STAFF
+		FROM Patrol_Plan WHERE PLAN_ID = #{PLAN_ID}
+	</select>
+
+	<update id="updatePlanIsDistributed" parameterType="map">
+		UPDATE Patrol_Plan SET
+		ISDISTRIBUTED = #{ISDISTRIBUTED},
+		TASK_INSPECTOR = #{TASK_INSPECTOR}, 
+		INSPECTOR_TYPE = #{INSPECTOR_TYPE}, 
+		TASK_CREATOR = #{TASK_CREATOR} 
+		WHERE
+		PLAN_ID = #{PLAN_ID}
+	</update>
+	
+	<select id="getSpectors" parameterType="util.page.Query"
+		resultType="map">
+		SELECT s.STAFF_ID, s.STAFF_NO, s.STAFF_NAME ,0 as STAFF_type,'个人' as STAFF_TYPE_NAME
+		FROM TB_BASE_STAFF s, TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr 
+		WHERE s.ISDELETED = 0 
+			and s.STATUS = 0 
+			and s.STAFF_ID = sr.STAFF_ID
+			and r.ROLE_ID = sr.ROLE_ID
+			and r.ROLE_NO = 'LXXJ_INSPECTOR'
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		union
+		select dept.dept_id,dept.dept_no,dept.dept_name,1 as dept_type,'班组' as STAFF_TYPE_NAME from tb_ins_dept dept
+		where 1=1
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND dept.dept_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND dept.dept_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND dept.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</select>
+
+	<insert id="saveTask" parameterType="map">
+		insert into
+	    tb_cablecheck_task(
+			TASK_ID,
+			TASK_NO,
+			TASK_NAME,
+			TASK_TYPE,
+			STATUS_ID,
+			INSPECTOR,
+			CREATE_STAFF,
+			CREATE_TIME,
+			START_TIME,
+			LAST_UPDATE_TIME,
+			AREA_ID,
+			SON_AREA_ID,
+			ENABLE,
+			REMARK,
+			INFO,
+			SBID,
+			AUDITOR,
+			OLD_TASK_ID,
+			PATROL_PLAN_ID)
+			values
+			(#{TASK_ID},
+			#{TASK_NO},
+			#{TASK_NAME},
+			#{TASK_TYPE},
+			#{STATUS_ID},
+			#{INSPECTOR},
+			#{CREATE_STAFF},
+			sysdate,
+			sysdate,
+			sysdate,
+			#{AREA_ID},
+			#{SON_AREA_ID},
+			#{ENABLE},
+			#{REMARK},
+			#{INFO},
+			#{SBID},
+			#{AUDITOR},
+			#{OLD_TASK_ID},
+			#{PATROL_PLAN_ID}
+			)
+			<selectKey resultType="java.lang.Integer" order="AFTER"
+				keyProperty="TASK_ID">
+				SELECT SQP_TB_CABLECHECK_TASK.CURRVAL FROM DUAL
+			</selectKey>
+	</insert>
+	
+	<!-- 查询计划名称是否存在-->
+    <select id="getPatrolPlanByName" parameterType="map" resultType="map">
+    	select * from Patrol_Plan plan where plan.isdeleted=0 and plan.plan_name = #{plan_name}
+	</select>
+	
+	<!--  根绝计划id查询巡检计划-->
+    <select id="getPatrolPlanById" parameterType="map" resultType="map">
+    	select tip.plan_id,
+	       tip.plan_no,
+	       tip.plan_name,
+	       tip.plan_type,
+	       to_char(tip.plan_start_time, 'yyyy-mm-dd') plan_start_time,
+	       to_char(tip.plan_end_time, 'yyyy-mm-dd') plan_end_time,
+	       tip.plan_circle,
+	       tip.plan_frequency,
+	       tip.area_id,
+	       tip.son_area_id,
+	       tip.contractor,
+	       tip.distribution_amount,
+	       tip.whwg,
+           tip.check_staff
+	  from Patrol_Plan tip
+	 where tip.plan_id =  #{plan_id}
+	</select>
+	
+	<!-- 添加计划 -->
+	<insert id="insertPatrolPlan" parameterType="map">
+		INSERT INTO Patrol_PLAN
+		   (
+			   PLAN_ID,
+			   PLAN_NO,
+			   PLAN_NAME,
+			   PLAN_TYPE,
+			   PLAN_START_TIME,
+			   PLAN_END_TIME,
+			   PLAN_CIRCLE,
+			   PLAN_FREQUENCY,
+			   CREATE_TIME,
+			   CREATE_STAFF,
+			   PLAN_KIND,
+			   ISDELETED,
+			   AREA_ID,
+			   SON_AREA_ID,
+			   CUSTOM_TIME,
+			   TYPE,
+			   WHWG,
+			   CHECK_STAFF
+		   )
+		VALUES
+		 (
+		 	   #{plan_id},
+			   #{plan_name},
+			   #{plan_name},
+			   #{plan_type},
+			   TO_DATE(#{plan_start_time}, 'yyyy-mm-dd'),
+			   TO_DATE(#{plan_end_time}, 'yyyy-mm-dd'),
+			   #{plan_circle},
+			   #{plan_frequency},
+			   SYSDATE,
+			   #{CREATE_STAFF},
+			   1,
+			   0,
+			   #{areaId},
+			   #{sonAreaId},
+			   null,
+			   3,
+			   #{whwg},
+			   #{staffId}
+		 )
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="planId">
+			SELECT SEQ_TB_INS_PLAN.CURRVAL FROM DUAL 
+		</selectKey>
+	</insert>
+	
+	<!-- 查询编辑的关键点名称是否已存在-->
+    <select id="getEditPatrolPlanByName" parameterType="map" resultType="map">
+        select * from patrol_plan plan where plan.isdeleted=0 and plan.plan_name = #{plan_name} and plan.plan_id !=  #{plan_id}
+	</select>
+
+	<!-- 修改关键点计划-->
+	<update id="updatePatrolPlan"  parameterType="map" >
+		   update Patrol_plan
+		   set PLAN_NO         = #{plan_name},
+		       PLAN_NAME       = #{plan_name},
+		       PLAN_TYPE       = #{plan_type},
+		       PLAN_START_TIME = TO_DATE(#{plan_start_time}, 'yyyy-mm-dd'),
+		       PLAN_END_TIME   = TO_DATE(#{plan_end_time}, 'yyyy-mm-dd'),
+		       PLAN_CIRCLE     = #{plan_circle},
+		       PLAN_FREQUENCY  = #{plan_frequency},
+		       CREATE_TIME     = SYSDATE,
+			   CREATE_STAFF	   = #{CREATE_STAFF},
+		       AREA_ID         = #{areaId},
+		       SON_AREA_ID     = #{sonAreaId},
+			   WHWG			   = #{whwg},
+			   CHECK_STAFF     = #{staffId}
+		 	   where PLAN_ID =#{plan_id}
+			  
+	</update>
+	
+	<update id="saveEditPatrolPlanRule" parameterType="Map">
+			update Patrol_plan
+		   set PLAN_NO         = #{plan_name},
+		       PLAN_NAME       = #{plan_name},
+		       PLAN_TYPE       = #{plan_type},
+		       PLAN_START_TIME = TO_DATE(#{plan_start_time}, 'yyyy-mm-dd'),
+		       PLAN_END_TIME   = TO_DATE(#{plan_end_time}, 'yyyy-mm-dd'),
+		       PLAN_CIRCLE     = #{plan_circle},
+		       PLAN_FREQUENCY  = #{plan_frequency},
+		       MODIFY_TIME     = sysdate,
+		       MODIFY_STAFF    = #{staffId},
+		       AREA_ID         = #{areaId},
+		       <!-- SON_AREA_ID     = #{son_area_id}, -->
+		       distribution_amount = #{distribution_amount},
+		       FIRST_AB_CYCLE = #{FIRST_AB_CYCLE},
+		       FIRST_CD_CYCLE = #{FIRST_CD_CYCLE},
+		       FIRST_OTHER_CYCLE = #{FIRST_OTHER_CYCLE}
+		       
+		 	   where PLAN_ID =#{plan_id}
+	</update>
+	
+	<select id="getContractorListBySonAreaId" parameterType="String" resultType="map">
+		select count(distinct tbce.IDENTIFYID) as persionCount,tbce.CONTRACT_PERSION_NAME,tbce.CONTRACT_PERSION_NO,tbce.IDENTIFYID 
+		from tb_base_contract_equipment tbce 
+		where tbce.son_area_id = #{SON_AREA_ID}
+		group by tbce.CONTRACT_PERSION_NAME,tbce.CONTRACT_PERSION_NO,tbce.IDENTIFYID
+	</select>
+	
+	<select id="getContractorListByAreaId" parameterType="String" resultType="map">
+		select count(distinct tbce.IDENTIFYID) as persionCount,tbce.CONTRACT_PERSION_NAME,tbce.CONTRACT_PERSION_NO,tbce.IDENTIFYID ,staff.staff_id,
+		(select baseStaff.Son_Area_Id from tb_base_staff baseStaff where baseStaff.staff_id = staff.staff_id) as SON_AREA_ID
+	    from tb_base_contract_equipment tbce ,tb_base_staff staff
+	    where tbce.area_id = #{AREA_ID} and staff.staff_no = tbce.CONTRACT_PERSION_NO
+	    group by tbce.CONTRACT_PERSION_NAME,tbce.CONTRACT_PERSION_NO,tbce.IDENTIFYID,staff.staff_id
+	</select>
+	
+	<select id="getThirdContractorListByAreaId" parameterType="String" resultType="Map">
+	     <![CDATA[
+		     SELECT * FROM (
+			       SELECT COUNT(DISTINCT TBCE.IDENTIFYID) AS PERSIONCOUNT,
+			           TBCE.CONTRACT_PERSION_NAME,
+			           TBCE.CONTRACT_PERSION_NO,
+			           TBCE.IDENTIFYID,
+			           STAFF.STAFF_ID,
+			           (SELECT BASESTAFF.SON_AREA_ID
+			              FROM TB_BASE_STAFF BASESTAFF
+			             WHERE BASESTAFF.STAFF_ID = STAFF.STAFF_ID) AS SON_AREA_ID,
+			            (SELECT COUNT(DISTINCT tbce.identifyid ) FROM TB_BASE_CONTRACT_EQUIPMENT TBCE, TB_BASE_STAFF STAFF
+			             WHERE TBCE.AREA_ID = #{AREA_ID}
+			             AND STAFF.STAFF_NO = TBCE.CONTRACT_PERSION_NO) contractCount
+			      FROM TB_BASE_CONTRACT_EQUIPMENT TBCE, TB_BASE_STAFF STAFF
+			     WHERE TBCE.AREA_ID = #{AREA_ID}
+			       AND TBCE.CONTRACT_PERSION_NO = STAFF.STAFF_NO
+			     GROUP BY TBCE.CONTRACT_PERSION_NAME,
+			              TBCE.CONTRACT_PERSION_NO,
+			              TBCE.IDENTIFYID,
+			              STAFF.STAFF_ID
+			) WHERE ROWNUM <= contractCount * 1/3
+		]]>
+	</select>
+	
+	<select id="getGridListByAreaId" parameterType="Map" resultType="Map">
+		select * from tb_cablecheck_grid grid where grid.area_id = #{AREA_ID} order by grid.son_area_id
+	</select>
+	
+	<select id="getUseFullEquipmentByPlanInfo"  parameterType="Map" resultType="Map">
+	    	 select * from (
+			      select distinct tce.equipment_id, tce.equipment_code, tce.equipment_name,(select count(distinct tce.equipment_id)
+			  from tb_base_contract_equipment tbce,
+			       tb_cablecheck_equipment    tce,
+			       tb_cablecheck_dtsj         tcd
+			 where to_char(tcd.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm') 
+			   and tbce.equipment_id = tce.equipment_id
+			   and tcd.install_sbid = tce.equipment_id
+			   and tcd.sfpf = 0
+			   and tbce.contract_persion_no = #{CONTRACTOR}) as eqpCount
+			  from tb_base_contract_equipment tbce,
+			       tb_cablecheck_equipment    tce,
+			       tb_cablecheck_dtsj         tcd
+			 where to_char(tcd.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm')
+               and tbce.equipment_id = tce.equipment_id
+			   and tcd.install_sbid = tce.equipment_id
+			   and tcd.sfpf = 0
+			   and tbce.contract_persion_no = #{CONTRACTOR}
+			)  where 
+			<![CDATA[
+			  rownum <  eqpCount * #{DISTRIBUTION_AMOUNT}/100
+	    	]]>
+	</select>
+	
+	<select id="getUseFullEquipmentForTaskByPlanMap"  parameterType="Map" resultType="Map">
+			 <![CDATA[
+			  select *
+			  from (select distinct tce.equipment_id,
+			                        sqrt(power(tce.longitude - equipment.longitude, 2) +
+			                             power(tce.latitude - equipment.latitude, 2)),
+			                        tce.equipment_code,
+			                        tce.equipment_name,
+			                        count(distinct tce.equipment_id) over ( partition by tbce.contract_persion_no) eqpCount
+			          from tb_cablecheck_equipment tce,
+			               tb_base_contract_equipment tbce,
+			               tb_cablecheck_dtsj tcd,
+			               (select *
+			                  from tb_cablecheck_equipment tce
+			                 where tce.equipment_id =
+			                       (select equipmentId
+			                          from (select count(tcd.dzid) DZNUM,
+			                                       tcd.install_sbid equipmentId
+			                                  from tb_cablecheck_dtsj tcd
+			                                 where tcd.install_sbid in
+			                                       (select distinct tbce.equipment_id
+			                                          from tb_base_contract_equipment tbce
+			                                         where tbce.contract_persion_no =
+			                                               #{CONTRACTOR})
+			                                 group by tcd.install_sbid
+			                                 order by count(tcd.dzid) desc)
+			                         where rownum = 1)
+			                ) equipment
+			         where to_char(tcd.bdsj,'yyyymm') = to_char(add_months(sysdate,-1),'yyyymm')
+			           and tbce.equipment_id = tce.equipment_id
+			           and tcd.install_sbid = tce.equipment_id
+			           --AND tce.room_level_id IN (1,2)
+                       AND tce.res_type_id = 411
+			           and tcd.sfpf = 0
+			           and tbce.contract_persion_no = #{CONTRACTOR}
+			           and not exists (select 1 from tb_cablecheck_task task where task.sbid = tce.equipment_id AND to_char(task.create_time,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm'))
+			         order by sqrt(power(tce.longitude - equipment.longitude, 2) + power(tce.latitude - equipment.latitude, 2))
+			      )
+			 where rownum < eqpCount / 6
+			 
+			 union
+			 
+			 select *
+			  from (select distinct tce.equipment_id,
+			                        sqrt(power(tce.longitude - equipment.longitude, 2) +
+			                             power(tce.latitude - equipment.latitude, 2)),
+			                        tce.equipment_code,
+			                        tce.equipment_name,
+			                        count(distinct tce.equipment_id) over ( partition by tbce.contract_persion_no) eqpCount
+			          from tb_cablecheck_equipment tce,
+			               tb_base_contract_equipment tbce,
+			               tb_cablecheck_dtsj tcd,
+			               (select *
+			                  from tb_cablecheck_equipment tce
+			                 where tce.equipment_id =
+			                       (select equipmentId
+			                          from (select count(tcd.dzid) DZNUM,
+			                                       tcd.install_sbid equipmentId
+			                                  from tb_cablecheck_dtsj tcd
+			                                 where tcd.install_sbid in
+			                                       (select distinct tbce.equipment_id
+			                                          from tb_base_contract_equipment tbce
+			                                         where tbce.contract_persion_no =
+			                                               #{CONTRACTOR})
+			                                 group by tcd.install_sbid
+			                                 order by count(tcd.dzid) desc)
+			                         where rownum = 1)
+			                ) equipment
+			         where to_char(tcd.bdsj,'yyyymm') = to_char(add_months(sysdate,-1),'yyyymm')
+			           and tbce.equipment_id = tce.equipment_id
+			           and tcd.install_sbid = tce.equipment_id
+			           --AND tce.room_level_id IN (3,4)
+                       AND tce.res_type_id IN(411,703)
+			           and tcd.sfpf = 0
+			           and tbce.contract_persion_no = #{CONTRACTOR}
+			           and not exists (select 1 from tb_cablecheck_task task where task.sbid = tce.equipment_id AND to_char(task.create_time,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm'))
+			         order by sqrt(power(tce.longitude - equipment.longitude, 2) + power(tce.latitude - equipment.latitude, 2))
+			      )
+			 where rownum < eqpCount / 12
+			 
+			 union
+			 
+			 select *
+			  from (select distinct tce.equipment_id,
+			                        sqrt(power(tce.longitude - equipment.longitude, 2) +
+			                             power(tce.latitude - equipment.latitude, 2)),
+			                        tce.equipment_code,
+			                        tce.equipment_name,
+			                        count(distinct tce.equipment_id) over ( partition by tbce.contract_persion_no) eqpCount
+			          from tb_cablecheck_equipment tce,
+			               tb_base_contract_equipment tbce,
+			               tb_cablecheck_dtsj tcd,
+			               (select *
+			                  from tb_cablecheck_equipment tce
+			                 where tce.equipment_id =
+			                       (select equipmentId
+			                          from (select count(tcd.dzid) DZNUM,
+			                                       tcd.install_sbid equipmentId
+			                                  from tb_cablecheck_dtsj tcd
+			                                 where tcd.install_sbid in
+			                                       (select distinct tbce.equipment_id
+			                                          from tb_base_contract_equipment tbce
+			                                         where tbce.contract_persion_no =
+			                                               #{CONTRACTOR})
+			                                 group by tcd.install_sbid
+			                                 order by count(tcd.dzid) desc)
+			                         where rownum = 1)
+			                ) equipment
+			         where to_char(tcd.bdsj,'yyyymm') = to_char(add_months(sysdate,-1),'yyyymm')
+			           and tbce.equipment_id = tce.equipment_id
+			           and tcd.install_sbid = tce.equipment_id
+			           --AND tce.room_level_id NOT IN (1,2,3,4)
+                       AND tce.res_type_id IN(704,414)
+			           and tcd.sfpf = 0
+			           and tbce.contract_persion_no = #{CONTRACTOR}
+			           and not exists (select 1 from tb_cablecheck_task task where task.sbid = tce.equipment_id AND to_char(task.create_time,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm'))
+			         order by sqrt(power(tce.longitude - equipment.longitude, 2) + power(tce.latitude - equipment.latitude, 2))
+			      )
+			 where rownum < eqpCount / 24
+	    	]]>
+	</select>
+	
+	<select id="getUseFullEquipmentForTaskByPlanInfo"  parameterType="Map" resultType="Map">
+			 <![CDATA[
+			  select *
+			  from (select distinct tce.equipment_id,
+			                        sqrt(power(tce.longitude - equipment.longitude, 2) +
+			                             power(tce.latitude - equipment.latitude, 2)),
+			                        tce.equipment_code,
+			                        tce.equipment_name,
+			                        count(distinct tce.equipment_id) over ( partition by tbce.contract_persion_no) eqpCount
+			          from tb_cablecheck_equipment tce,
+			               tb_base_contract_equipment tbce,
+			               tb_cablecheck_dtsj tcd,
+			               (select *
+			                  from tb_cablecheck_equipment tce
+			                 where tce.equipment_id =
+			                       (select equipmentId
+			                          from (select count(tcd.dzid) DZNUM,
+			                                       tcd.install_sbid equipmentId
+			                                  from tb_cablecheck_dtsj tcd
+			                                 where tcd.install_sbid in
+			                                       (select distinct tbce.equipment_id
+			                                          from tb_base_contract_equipment tbce
+			                                         where tbce.contract_persion_no =
+			                                               #{CONTRACTOR})
+			                                 group by tcd.install_sbid
+			                                 order by count(tcd.dzid) desc)
+			                         where rownum = 1)
+			                ) equipment
+			         where to_char(tcd.bdsj,'yyyymm') = to_char(add_months(sysdate,-1),'yyyymm')
+			           and tbce.equipment_id = tce.equipment_id
+			           and tcd.install_sbid = tce.equipment_id
+			           and tcd.sfpf = 0
+			           and tbce.contract_persion_no = #{CONTRACTOR}
+			           and not exists (select 1 from tb_cablecheck_task task where task.sbid = tce.equipment_id AND to_char(task.create_time,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm'))
+			         order by sqrt(power(tce.longitude - equipment.longitude, 2) + power(tce.latitude - equipment.latitude, 2))
+			      )
+			 where rownum < eqpCount / 6
+	    	]]>
+	</select>
+	
+	<select id="getContractorListByGridId" parameterType="String" resultType="map">
+		<![CDATA[
+			     
+		SELECT * FROM (
+		  SELECT STAFF_NAME,
+		       STAFF_NO,
+		       ID_NUM,
+		       STAFF_ID,
+		       AREA_ID,
+		       COUNT(DISTINCT STAFF_ID) OVER(PARTITION BY AREA_ID) AS STAFF_COUNT
+		  FROM (SELECT COUNT(DISTINCT TBCE.IDENTIFYID) AS PERSIONCOUNT,
+		               TBCE.CONTRACT_PERSION_NAME AS STAFF_NAME,
+		               TBCE.CONTRACT_PERSION_NO AS STAFF_NO,
+		               TBCE.IDENTIFYID AS ID_NUM,
+		               STAFF.STAFF_ID,
+		               STAFF.AREA_ID
+		          FROM TB_CABLECHECK_EQUIPMENT    TCE,
+		               TB_CABLECHECK_GRID         GRID,
+		               TB_BASE_CONTRACT_EQUIPMENT TBCE,
+		               TB_BASE_STAFF              STAFF
+		         WHERE GRID.GRID_ID = TCE.GRID_ID
+		           AND TBCE.EQUIPMENT_ID = TCE.EQUIPMENT_ID
+		           AND GRID.GRID_ID = #{GRID_ID}
+		           --AND GRID.AREA_ID = 3
+		           AND STAFF.STAFF_NO = TBCE.CONTRACT_PERSION_NO
+		         GROUP BY TBCE.CONTRACT_PERSION_NAME,
+		                  TBCE.CONTRACT_PERSION_NO,
+		                  TBCE.IDENTIFYID,
+		                  STAFF.STAFF_ID,
+		                  STAFF.AREA_ID)
+		 GROUP BY STAFF_NAME, STAFF_NO, ID_NUM, STAFF_ID, AREA_ID
+		 order by trunc(dbms_random.value(1,3))
+		) WHERE rownum <= staff_count/3
+	   ]]>
+	</select>
+	
+	<select id="getGridEquipmentForTaskByContractor"  parameterType="Map" resultType="Map">
+			 <![CDATA[
+				SELECT * FROM tb_cablecheck_equipment tc_equipment 
+				 WHERE tc_equipment.equipment_id IN (
+				 (SELECT DISTINCT tce.equipment_id FROM tb_cablecheck_dtsj tcd,tb_base_contract_equipment tbce,tb_cablecheck_equipment tce  
+				    WHERE to_char(tcd.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm') 
+				    AND tcd.install_sbid = tbce.equipment_id AND tce.equipment_id = tcd.install_sbid
+				    AND tbce.contract_persion_no =  #{CONTRACTOR} AND tcd.sfpf = 0  AND tce.res_type_id = 703 AND ROWNUM = 1),
+				   
+				 (SELECT DISTINCT tce.equipment_id  FROM tb_cablecheck_dtsj tcd,tb_base_contract_equipment tbce,tb_cablecheck_equipment tce  
+				     WHERE to_char(tcd.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm') AND tcd.install_sbid = tbce.equipment_id AND tce.equipment_id = tcd.install_sbid
+				     AND tbce.contract_persion_no =  #{CONTRACTOR} AND tcd.sfpf = 0  AND tce.res_type_id = 411 AND ROWNUM = 1),
+				     
+				 (SELECT DISTINCT tce.equipment_id FROM tb_cablecheck_dtsj tcd,tb_base_contract_equipment tbce,tb_cablecheck_equipment tce  
+				     WHERE tcd.install_sbid = tce.equipment_id AND tce.equipment_id = tbce.equipment_id
+				     AND tbce.contract_persion_no =  #{CONTRACTOR} AND tce.res_type_id = 703 AND tce.isdeal = 1 AND tcd.sfpf = 0 AND ROWNUM = 1),
+				     
+				 (SELECT DISTINCT tce.equipment_id  FROM tb_cablecheck_dtsj tcd,tb_base_contract_equipment tbce,tb_cablecheck_equipment tce  
+				     WHERE tcd.install_sbid = tce.equipment_id AND tce.equipment_id = tbce.equipment_id
+				     AND tbce.contract_persion_no =  #{CONTRACTOR} AND tce.res_type_id = 411 AND tce.isdeal = 1 AND tcd.sfpf = 0 AND ROWNUM = 1),
+				 
+				 (SELECT DISTINCT tce.equipment_id FROM tb_base_contract_equipment tbce,tb_cablecheck_equipment tce  
+				    WHERE  tce.equipment_id = tbce.equipment_id 
+				    AND NOT EXISTS (
+				        SELECT 1 FROM tb_cablecheck_dtsj tcd WHERE to_char(tcd.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm') 
+				        AND tcd.install_sbid = tce.equipment_id AND tcd.sfpf = 0 AND tbce.contract_persion_no =  #{CONTRACTOR}
+				    )
+				    AND tbce.contract_persion_no =  #{CONTRACTOR} AND tce.res_type_id = 703 AND ROWNUM = 1),
+				  
+				 (SELECT DISTINCT tce.equipment_id FROM tb_base_contract_equipment tbce,tb_cablecheck_equipment tce  
+				    WHERE  tce.equipment_id = tbce.equipment_id 
+				    AND NOT EXISTS (
+				        SELECT 1 FROM tb_cablecheck_dtsj tcd WHERE to_char(tcd.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm') 
+				        AND tcd.install_sbid = tce.equipment_id AND tcd.sfpf = 0 AND tbce.contract_persion_no =  #{CONTRACTOR}
+				    )
+				    AND tbce.contract_persion_no =  #{CONTRACTOR} AND tce.res_type_id = 411 AND ROWNUM = 1)
+				)
+				AND not exists (select 1 from tb_cablecheck_task task where task.sbid = tc_equipment.equipment_id AND to_char(task.create_time,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm')) 
+				union
+				SELECT * FROM tb_cablecheck_equipment tc_equipment 
+				   WHERE tc_equipment.equipment_id IN (
+				    SELECT DISTINCT tce.equipment_id FROM tb_base_contract_equipment tbce,tb_cablecheck_equipment tce  
+				    WHERE  tce.equipment_id = tbce.equipment_id 
+				    AND NOT EXISTS (
+				        SELECT 1 FROM tb_cablecheck_dtsj tcd WHERE to_char(tcd.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm') 
+				        AND tcd.install_sbid = tce.equipment_id AND tcd.sfpf = 0 AND tbce.contract_persion_no = #{CONTRACTOR}
+				    )
+				    AND not exists (select 1 from tb_cablecheck_task task where task.sbid = tce.equipment_id AND to_char(task.create_time,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm')) 
+				    AND tbce.contract_persion_no = #{CONTRACTOR} AND tce.res_type_id = 704 AND ROWNUM <= 3
+				)
+	    	]]>
+	</select>
+	
+	
+	<select id="getContractorSonAreaIDListByAreaId"  parameterType="String" resultType="Map">
+		SELECT DISTINCT staff.son_area_id FROM TB_BASE_CONTRACT_EQUIPMENT TBCE,tb_base_staff staff  
+		WHERE staff.staff_no = tbce.contract_persion_no
+		AND staff.AREA_ID = #{AREA_ID} AND staff.son_area_id IS NOT NULL
+	</select>
+	
+	<select id="getOneEquipmentOfOneContractorOfSonAreaBySonAreaId" parameterType="String" resultType="Map">
+			<![CDATA[
+			     
+			     SELECT * FROM (
+				      SELECT tb_ce.*,contractor.staff_id FROM TB_BASE_CONTRACT_EQUIPMENT tb_ce  ,
+				             (
+				                  SELECT * FROM (
+				                      SELECT TBCE.CONTRACT_PERSION_NAME,
+				                           TBCE.CONTRACT_PERSION_NO,
+				                           TBCE.IDENTIFYID,
+				                           staff.son_area_id,
+				                           staff.staff_id
+				                           FROM TB_BASE_CONTRACT_EQUIPMENT TBCE ,tb_base_staff staff
+				                    WHERE staff.staff_no = tbce.contract_persion_no 
+				                    AND staff.son_area_id = #{contractorSonAreaId}
+				                    GROUP BY TBCE.CONTRACT_PERSION_NAME,
+				                           TBCE.CONTRACT_PERSION_NO,
+				                           TBCE.IDENTIFYID,
+				                           staff.son_area_id,
+				                           staff.staff_id
+				                           ORDER BY DBMS_RANDOM.random
+				                  )
+				                  WHERE ROWNUM = 1
+				            ) contractor
+				    WHERE tb_ce.contract_persion_no = contractor.CONTRACT_PERSION_NO
+				    ORDER BY DBMS_RANDOM.random
+				) WHERE ROWNUM = 1
+			     
+			]]>
+	</select>
+	
+	<select id="getSonAreaIDListByAreaId" parameterType="String" resultType="Map">
+        SELECT * FROM area WHERE area.parent_area_id = #{AREA_ID}
+	</select>
+	
+	<select id="getCheckedEquipmentBySonAreaId" parameterType="String" resultType="Map">
+	        <![CDATA[
+	         --最近一个月检查过的2个光交
+			SELECT *
+			  FROM TB_CABLECHECK_EQUIPMENT TCE, TB_CABLECHECK_TASK TASK
+			 WHERE TASK.SBID = TCE.EQUIPMENT_ID
+			   AND TO_CHAR(TASK.CREATE_TIME, 'yyyymm') = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'yyyymm')
+			   AND tce.res_type_id = 703
+			   AND TCE.Area_Id = #{SON_AREA_ID}
+			   AND ROWNUM <= 2
+			 UNION
+			--最近一个月检查过的2个ODF
+			SELECT *
+			  FROM TB_CABLECHECK_EQUIPMENT TCE, TB_CABLECHECK_TASK TASK
+			 WHERE TASK.SBID = TCE.EQUIPMENT_ID
+			   AND TO_CHAR(TASK.CREATE_TIME, 'yyyymm') = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'yyyymm')
+			   AND tce.res_type_id = 411
+			   AND TCE.Area_Id = #{SON_AREA_ID}
+			   AND ROWNUM <= 2
+			  ]]>
+	</select>
+	
+	<select id="getFourthInspectorByAreaId" parameterType="String" resultType="Map">
+			SELECT staff.* FROM tb_base_staff staff ,tb_cablecheck_unit_2_staff relation
+			WHERE staff.staff_id = relation.staff_id 
+			AND relation.unit_id = 4 
+			AND staff.area_id = #{AREA_ID}
+			AND relation.is_order = 1
+			AND ROWNUM = 1
+	</select>
+	
+	<select id="getInspectorsByMap" parameterType="Map" resultType="Map">
+		 SELECT PARENTAREA.NAME  AS PARENT_AREA_NAME,
+		        SONAREA.NAME     AS SON_AREA_NAME,
+		        GRID.GRID_ID,
+		        GRID.GRID_NO,
+		        GRID.GRID_NAME,
+		        STAFF.STAFF_ID,
+		        STAFF.STAFF_NO,
+		        STAFF.STAFF_NAME,
+		        STAFF.TEL,
+		        STAFF.ID_NUMBER,
+		        TCDR.CHECK_TYPE,
+		        TCDR.IS_ORDER
+		   FROM TB_BASE_STAFF                  STAFF,
+		        TB_CABLECHECK_DIPATCH_RELATION TCDR,
+		        TB_CABLECHECK_GRID             GRID,
+		        AREA                           PARENTAREA,
+		        AREA                           SONAREA
+		  WHERE STAFF.STAFF_ID = TCDR.STAFF_ID
+		    AND STAFF.SON_AREA_ID = SONAREA.AREA_ID
+		    AND STAFF.AREA_ID = PARENTAREA.AREA_ID
+		    AND TCDR.IS_ORDER = 1
+            AND TCDR.IS_DELETED = 0
+            AND TCDR.CHECK_TYPE = #{CHECK_TYPE}
+		      <if test="CHECK_TYPE == 2 ">  
+		            <![CDATA[
+		             AND TCDR.GRID_ID = GRID.GRID_ID
+			    	 AND TCDR.GRID_ID = #{GRID_ID}
+			    	]]>
+			   </if>
+			   
+			   <if test="CHECK_TYPE == 3 ">  
+		            <![CDATA[
+		             AND TCDR.GRID_ID = GRID.GRID_ID(+)
+			    	 AND PARENTAREA.AREA_ID = #{AREA_ID}
+			    	]]>
+			   </if>
+			  
+			   <if test="CHECK_TYPE == 4 ">  
+	            <![CDATA[
+	               AND TCDR.GRID_ID = GRID.GRID_ID(+)
+		    	   AND PARENTAREA.AREA_ID = #{AREA_ID}
+		    	]]>
+		    </if>
+            AND ROWNUM = 1
+		  ORDER BY TCDR.CHECK_TYPE, TCDR.IS_ORDER
+	</select>
+	
+	<select id="getSecondInspectorByGridId" parameterType="String" resultType="Map">
+	    SELECT staff.* FROM tb_base_staff staff ,tb_cablecheck_unit_2_staff relation
+		WHERE staff.staff_id = relation.staff_id 
+		AND relation.unit_id = 2 
+		AND relation.is_order = 1
+		AND relation.object_id = #{GRID_ID}
+		AND ROWNUM = 1
+	</select>
+	
+	<select id="getStaffListByWHWGId" parameterType="String" resultType="Map">
+		SELECT
+           STAFF.STAFF_ID,
+           STAFF.STAFF_NO,
+           STAFF.STAFF_NAME,
+           STAFF.TEL,
+           STAFF.ID_NUMBER
+      FROM TB_BASE_STAFF                  STAFF,
+           TB_CABLECHECK_DIPATCH_RELATION TCDR,
+           TB_CABLECHECK_GRID             GRID
+     WHERE STAFF.STAFF_ID = TCDR.STAFF_ID
+       AND TCDR.GRID_ID = GRID.GRID_ID
+       AND GRID.GRID_ID = #{whwgId}
+	</select>
+	
+	<select id="getRule" parameterType="Map" resultType="Map">
+		SELECT A.PLAN_ID,A.KEY_NO, A.KEY_VALUE, A.KEY_NAME,A.PLAN_TYPE
+  		FROM TB_CHECKCABLE_PLAN_DICTIONARY A
+ 		WHERE A.PLAN_TYPE = #{PLAN_TYPE}
+		   AND A.AREA = #{AREA_ID}
+		   AND A.SON_AREA = #{SON_AREA_ID}
+		ORDER BY A.KEY_NO ASC
+	</select>
+	
+	<select id="getRuleByPlanId" parameterType="String" resultType="Map">
+		SELECT D.PLAN_ID,
+	       D.PLAN_NAME,
+	       D.KEY_NO,
+	       D.KEY_NAME,
+	       D.KEY_VALUE,
+	       D.AREA,
+	       D.SON_AREA,
+	       D.PLAN_TYPE,
+	       P.CHECK_STAFF,
+	       P.AREA_ID,
+      	   P.SON_AREA_ID,
+       	   P.WHWG
+	  	FROM PATROL_PLAN P, TB_CHECKCABLE_PLAN_DICTIONARY D
+		WHERE D.AREA = P.AREA_ID
+		   AND D.SON_AREA = P.SON_AREA_ID
+		   AND D.PLAN_TYPE = P.PLAN_TYPE
+		   AND P.PLAN_ID = #{plan_id}
+	</select>
+	
+	<!-- 承包人检查 -->
+	<select id="geteqListByContactorRule" parameterType="Map" resultType="Map">
+		select distinct p.equipment_id,p.equipment_code,p.equipment_name,p.area_id,p.parent_area_id,p.grid_id,p.wljb,p.identify from (
+		  select  te1.equipment_id,te1.equipment_code,te1.equipment_name,te1.area_id,te1.parent_area_id,te1.grid_id,te1.wljb,te1.identify from (
+			select te.*,ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{LONGITUDE},#{LATITUDE},0),NULL,NULL),
+			  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(te.longitude_inspect, te.longitude),nvl(te.latitude_inspect,te.latitude),0),NULL,NULL),1),2)  DIS 
+			  from tb_cablecheck_equipment  te where (te.res_type_id=411 and   te.room_level_id in (1,2)) and   
+			  te.area_id=#{SON_AREA_ID} and te.parent_area_id=#{AREA_ID} 
+			  and te.grid_id =#{WHWG}  
+			  and ( te.longitude is not null ) 
+			  ) te1
+			  where DIS &lt; #{1001}  and rownum &lt;=(select  count(equipment_id)/#{1002} as num from (
+			select te.*,ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{LONGITUDE},#{LATITUDE},0),NULL,NULL),
+			  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(te.longitude_inspect, te.longitude),nvl(te.latitude_inspect,te.latitude),0),NULL,NULL),1),2)  DIS 
+			  from tb_cablecheck_equipment  te where (te.res_type_id=411 and   te.room_level_id in (1,2)) and   
+			   te.area_id=#{SON_AREA_ID} and te.parent_area_id=#{AREA_ID} 
+			   and te.grid_id =#{WHWG}  
+			   and ( te.longitude is not null ) 
+			  )   
+			  where DIS &lt; #{1001}
+			  )
+			  
+			  union
+			select te2.equipment_id,te2.equipment_code,te2.equipment_name,te2.area_id,te2.parent_area_id,te2.grid_id,te2.wljb,te2.identify from (
+			select te.*,ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{LONGITUDE},#{LATITUDE},0),NULL,NULL),
+			  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(te.longitude_inspect, te.longitude),nvl(te.latitude_inspect,te.latitude),0),NULL,NULL),1),2)  DIS 
+			  from tb_cablecheck_equipment  te where ((te.res_type_id=411 and   te.room_level_id in (3,4) ) or  te.res_type_id=703) and   
+			   te.area_id=#{SON_AREA_ID} and te.parent_area_id=#{AREA_ID} 
+			   and te.grid_id =#{WHWG}  
+			   and ( te.longitude is not null ) 
+			  ) te2
+			  where DIS &lt; #{1001}  and rownum &lt;= (select count(equipment_id)/#{1003} as num from (
+			select te.*,ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{LONGITUDE},#{LATITUDE},0),NULL,NULL),
+			  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(te.longitude_inspect, te.longitude),nvl(te.latitude_inspect,te.latitude),0),NULL,NULL),1),2)  DIS 
+			  from tb_cablecheck_equipment  te where ((te.res_type_id=411 and   te.room_level_id in (3,4) ) or  te.res_type_id=703) and   
+			   te.area_id=#{SON_AREA_ID} and te.parent_area_id=#{AREA_ID} 
+			   and te.grid_id =#{WHWG}  
+			   and ( te.longitude is not null ) 
+			  )   
+			  where DIS &lt; #{1001}  )
+			    
+			  union
+			   select te3.equipment_id,te3.equipment_code,te3.equipment_name,te3.area_id,te3.parent_area_id,te3.grid_id,te3.wljb,te3.identify from (
+			select te.*,ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{LONGITUDE},#{LATITUDE},0),NULL,NULL),
+			  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(te.longitude_inspect, te.longitude),nvl(te.latitude_inspect,te.latitude),0),NULL,NULL),1),2)  DIS 
+			  from tb_cablecheck_equipment  te where (te.res_type_id=414  or te.res_type_id=704)  and   
+			   te.area_id=#{SON_AREA_ID} and te.parent_area_id=#{AREA_ID} 
+			   and te.grid_id =#{WHWG}  
+			   and ( te.longitude is not null ) 
+			  )  te3
+			  where DIS &lt; #{1001}  and rownum &lt; =(select  count(equipment_id)/#{1004} as num from (
+			select te.*,ROUND(SDO_GEOM.SDO_DISTANCE(MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(#{LONGITUDE},#{LATITUDE},0),NULL,NULL),
+			  MDSYS.SDO_GEOMETRY(2001,8307,MDSYS.SDO_POINT_TYPE(nvl(te.longitude_inspect, te.longitude),nvl(te.latitude_inspect,te.latitude),0),NULL,NULL),1),2)  DIS 
+			  from tb_cablecheck_equipment  te where (te.res_type_id=414  or te.res_type_id=704)  and   
+			   te.area_id=#{SON_AREA_ID} and te.parent_area_id=#{AREA_ID} 
+			   and te.grid_id =#{WHWG}  
+			   and ( te.longitude is not null ) 
+			  )   
+			  where DIS &lt; #{1001}
+			  )
+  			) p inner join Tb_Cablecheck_Dtsj td on td.install_sbid = p.equipment_id
+  			where  to_char(td.bdsj, 'yyyymm') =to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+	</select>
+	
+	
+	<select id="geteqListDead" parameterType="Map" resultType="Map">
+	
+	   select * from (
+	   
+	   	   select * from (
+		   select e.*,rownum rn from plan_equipment_new e where  
+				P_View_Param.set_area(#{AREA_ID})=0 and P_View_Param.set_son_area(#{SON_AREA_ID})=0
+				and p_view_param.set_plan_type(#{PLAN_TYPE})=0  
+		   ) where rn &lt;= ((select count(*) from plan_equipment_new where P_View_Param.set_area(#{AREA_ID})=0 
+		   and P_View_Param.set_son_area(#{SON_AREA_ID})=0
+		   and p_view_param.set_plan_type(#{PLAN_TYPE})=0)*
+		   (select distinct key_value from TB_CHECKCABLE_PLAN_DICTIONARY A where A.key_no = 2001 and 
+	       A.PLAN_TYPE = #{PLAN_TYPE} AND A.AREA = #{AREA_ID} AND A.SON_AREA = #{SON_AREA_ID})/100 + 1)
+	   
+		   <!-- select * from (
+		   select e.*,rownum rn from plan_equipment_new e where  
+				P_View_Param.set_area(#{AREA_ID})=0 and P_View_Param.set_son_area(#{SON_AREA_ID})=0
+				and p_view_param.set_plan_type(#{PLAN_TYPE})=0 and  e.wljb = '80000302'  接入层
+		   ) where rn &lt;= ((select count(*) from plan_equipment_new where P_View_Param.set_area(#{AREA_ID})=0 
+		   and P_View_Param.set_son_area(#{SON_AREA_ID})=0
+		   and p_view_param.set_plan_type(#{PLAN_TYPE})=0)*
+		   (select distinct key_value from TB_CHECKCABLE_PLAN_DICTIONARY A where A.key_no = 2001 and 
+	       A.PLAN_TYPE = #{PLAN_TYPE} AND A.AREA = #{AREA_ID} AND A.SON_AREA = #{SON_AREA_ID})/100 
+		   *0.5 + 1)
+	   union 
+		   select * from (
+			   select e.*,rownum rn from plan_equipment_new e where P_View_Param.set_area(#{AREA_ID})=0 and P_View_Param.set_son_area(#{SON_AREA_ID})=0
+			   and p_view_param.set_plan_type(#{PLAN_TYPE})=0 and e.wljb = '81538172'  网络层
+		   ) where rn &lt;= ((select count(*) from plan_equipment_new where P_View_Param.set_area(#{AREA_ID})=0 
+		   and P_View_Param.set_son_area(#{SON_AREA_ID})=0
+		   and p_view_param.set_plan_type(#{PLAN_TYPE})=0)*
+		   (select distinct key_value from TB_CHECKCABLE_PLAN_DICTIONARY A where A.key_no = 2001 and 
+	       A.PLAN_TYPE = #{PLAN_TYPE} AND A.AREA = #{AREA_ID} AND A.SON_AREA = #{SON_AREA_ID})/100 
+		   *0.5 + 1) -->
+	   ) where grid_id in 
+	   <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			#{grid.GRID_ID}
+		</foreach> 
+	
+	
+		<!-- select * from (
+		select tb.equipment_id,tb.equipment_code,tb.equipment_name,
+		tb.area_id,tb.parent_area_id,tb.grid_id,tb.wljb,tb.res_type_id from tb_cablecheck_equipment tb,
+		(select a.*,rownum rn  from (
+		select distinct te.equipment_id
+		from tb_cablecheck_equipment te
+		left join tb_cablecheck_dtsj j on j.install_sbid = te.equipment_id
+		where j.bdsj 
+		between to_date('2017-09-01 00:00:00','yyyy-MM-dd hh24:mi:ss')
+		and to_date('2017-09-30 23:59:59','yyyy-MM-dd hh24:mi:ss') 
+		and j.xz in (17,18)
+		and te.res_type_id&lt;&gt;2530
+		and te.grid_id = 10099) a) b where b.rn &lt; 9 and tb.equipment_id = b.equipment_id
+		
+		union 
+		
+		select tb.equipment_id,tb.equipment_code,tb.equipment_name,
+		tb.area_id,tb.parent_area_id,tb.grid_id,tb.wljb,tb.res_type_id from tb_cablecheck_equipment tb,
+		(select a.*,rownum rn  from (
+		select distinct te.equipment_id
+		from tb_cablecheck_equipment te
+		left join tb_cablecheck_dtsj j on j.install_sbid = te.equipment_id
+		where j.bdsj 
+		between to_date('2017-09-01 00:00:00','yyyy-MM-dd hh24:mi:ss')
+		and to_date('2017-09-30 23:59:59','yyyy-MM-dd hh24:mi:ss') 
+		and j.xz in (17,18)
+		and te.res_type_id&lt;&gt;2530
+		and te.grid_id = 10103) a) b where b.rn &lt; 5 and tb.equipment_id = b.equipment_id
+		
+		union
+		
+		select tb.equipment_id,tb.equipment_code,tb.equipment_name,
+		tb.area_id,tb.parent_area_id,tb.grid_id,tb.wljb,tb.res_type_id from tb_cablecheck_equipment tb,
+		(select a.*,rownum rn  from (
+		select distinct te.equipment_id
+		from tb_cablecheck_equipment te
+		left join tb_cablecheck_dtsj j on j.install_sbid = te.equipment_id
+		where j.bdsj 
+		between to_date('2017-09-01 00:00:00','yyyy-MM-dd hh24:mi:ss')
+		and to_date('2017-09-30 23:59:59','yyyy-MM-dd hh24:mi:ss') 
+		and j.xz in (17,18)
+		and te.res_type_id&lt;&gt;2530
+		and te.grid_id = 10126) a) b where b.rn &lt; 5 and tb.equipment_id = b.equipment_id
+		
+		union
+		
+		select tb.equipment_id,tb.equipment_code,tb.equipment_name,
+		tb.area_id,tb.parent_area_id,tb.grid_id,tb.wljb,tb.res_type_id from tb_cablecheck_equipment tb,
+		(select a.*,rownum rn  from (
+		select distinct te.equipment_id
+		from tb_cablecheck_equipment te
+		left join tb_cablecheck_dtsj j on j.install_sbid = te.equipment_id
+		where j.bdsj 
+		between to_date('2017-09-01 00:00:00','yyyy-MM-dd hh24:mi:ss')
+		and to_date('2017-09-30 23:59:59','yyyy-MM-dd hh24:mi:ss') 
+		and j.xz in (17,18)
+		and te.res_type_id&lt;&gt;2530
+		and te.grid_id = 10124) a) b where b.rn &lt; 6 and tb.equipment_id = b.equipment_id
+		
+		union
+		
+		select tb.equipment_id,tb.equipment_code,tb.equipment_name,
+		tb.area_id,tb.parent_area_id,tb.grid_id,tb.wljb,tb.res_type_id from tb_cablecheck_equipment tb,
+		(select a.*,rownum rn  from (
+		select distinct te.equipment_id
+		from tb_cablecheck_equipment te
+		left join tb_cablecheck_dtsj j on j.install_sbid = te.equipment_id
+		where j.bdsj 
+		between to_date('2017-09-01 00:00:00','yyyy-MM-dd hh24:mi:ss')
+		and to_date('2017-09-30 23:59:59','yyyy-MM-dd hh24:mi:ss') 
+		and j.xz in (17,18)
+		and te.res_type_id&lt;&gt;2530
+		and te.grid_id = 10123) a) b where b.rn &lt; 7 and tb.equipment_id = b.equipment_id
+	)  a where a.equipment_code not like '%250A%'  order by a.equipment_code -->
+	</select>
+	
+	
+	<!-- 网格检查 -->
+	<select id="geteqListByGridRule" parameterType="Map" resultType="Map">
+		<!-- 已整治 -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		         inner join tb_cablecheck_task ts
+		            on ts.sbid = tb.equipment_id
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		        <!-- 设备端子变动量下限 -->
+		         inner join (select tb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		         where tb.isdeal is not null
+		              <!-- 最近一个月自己是否检查过 -->
+		             <!--  and ts.inspector = #{CHECK_STAFF}
+		              and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格     -->
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           
+		          <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+		           
+		       <!--  上个月已整治  -->
+		        <!-- and to_char(tb.deal_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') -->
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		<!-- 未整治 -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id， count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		         inner join tb_cablecheck_task ts
+		            on ts.sbid = tb.equipment_id
+		       <!--历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		        <!-- 设备端子变动量下限 -->
+		         inner join (select tb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		         where tb.isdeal is null
+		              <!-- 最近一个月自己是否检查过 -->
+		              <!-- and ts.inspector = #{CHECK_STAFF}
+		              and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格 -->   
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb，tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 已整治光交 -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		         inner join tb_cablecheck_task ts
+		            on ts.sbid = tb.equipment_id
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		        <!-- 设备端子变动量下限 -->
+		         inner join (select tb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		         where tb.isdeal is not null
+		              <!-- 最近一个月自己是否检查过 -->
+		              <!-- and ts.inspector = #{CHECK_STAFF}
+		              and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!--地市-->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!--区县-->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!--网格-->    
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+		              <!--光交-->
+		           and tb.res_type_id = 703
+		        <!-- 上个月已整治 --> 
+		        <!-- and to_char(tb.deal_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') -->
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 已整治ODF -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		         inner join tb_cablecheck_task ts
+		            on ts.sbid = tb.equipment_id
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		        <!-- 设备端子变动量下限 -->
+		         inner join (select tb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		         where tb.isdeal is not null
+		              <!-- 最近一个月自己是否检查过 -->
+		              <!--  and ts.inspector = #{CHECK_STAFF}
+		               and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格 -->    
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+		              <!-- ODF -->
+		           and tb.res_type_id = 411
+		        <!-- 上个月已整治 --> 
+		        <!-- and to_char(tb.deal_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') -->
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 有变动资源的光交 -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		         inner join Tb_Cablecheck_Dtsj SJ
+		            ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt;#{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		        <!-- 设备端子变动量下限 -->
+		         inner join (select tb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		         where tb.res_type_id = 703
+		              <!-- 最近一个月自己是否检查过 -->
+		              <!--  and ts.inspector = #{CHECK_STAFF}
+		               and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格 -->    
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+		           
+		           and to_char(sj.bdsj, 'yyyymm') =
+		               to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 有变动资源的ODF -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		         inner join Tb_Cablecheck_Dtsj SJ
+		            ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		        <!-- 设备端子变动量下限 -->
+		         inner join (select tb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		         where tb.res_type_id = 411
+		              <!-- 最近一个月自己是否检查过 -->
+		               <!-- and ts.inspector = #{CHECK_STAFF}
+		               and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格     -->
+		           and tb.grid_id in<!--  = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+		           
+		           and to_char(sj.bdsj, 'yyyymm') =
+		               to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 未变动资源的光交（存量） -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		          left join Tb_Cablecheck_Dtsj SJ
+		            ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		         where tb.res_type_id = 703
+		              <!-- 最近一个月自己是否检查过 -->
+		               <!-- and ts.inspector = #{CHECK_STAFF}
+		               and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格     -->
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+			
+		           and SJ.Install_Sbid is null
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 未变动资源的ODF -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		          left join Tb_Cablecheck_Dtsj SJ
+		            ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		         where tb.res_type_id = 703
+		              <!-- 最近一个月自己是否检查过 -->
+		              <!--  and ts.inspector = #{CHECK_STAFF}
+		               and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格 -->    
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+			
+		           and SJ.Install_Sbid is null
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 分纤箱 -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		        <!-- 历史检查准确率 -->
+		         inner join (select p.equipment_id
+		                      from (select tb.equipment_id,
+		                                   tb.equipment_code,
+		                                   tb.check_port_num,
+		                                   tb.rigth_port_num,
+		                                   DECODE(SIGN(ROUND((NVL(tb.rigth_port_num,
+		                                                          0) /
+		                                                     tb.check_port_num),
+		                                                     0) * 100 - 100),
+		                                          -1,
+		                                          ROUND((NVL(tb.rigth_port_num, 0) /
+		                                                tb.check_port_num),
+		                                                0) * 100,
+		                                          100) score
+		                              from tb_cablecheck_equipment tb,
+		                                   tb_cablecheck_task      ts
+		                             where tb.equipment_id = ts.sbid
+		                               and tb.check_port_num is not null
+		                               and tb.check_port_num != 0
+		                               and to_char(ts.actual_complete_time, 'yyyymm') =
+		                                   to_char(add_months(trunc(sysdate), -1),
+		                                           'yyyymm')) p
+		                     where p.score &gt; #{2006}) tp
+		            on tb.equipment_id = tp.equipment_id
+		        <!-- 设备端子变动量下限 -->
+		         inner join (select tb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = TB.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		         where tb.res_type_id = 704
+		              <!-- 最近一个月自己是否检查过 -->
+		               <!-- and ts.inspector = #{CHECK_STAFF}
+		               and to_char(ts.actual_complete_time, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm') -->
+		              <!-- 地市 -->
+		           and tb.parent_area_id = #{AREA_ID}
+		              <!-- 区县 -->
+		           and tb.area_id = #{SON_AREA_ID}
+		              <!-- 网格     -->
+		           and tb.grid_id in<!-- = #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+		        
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * #{2001} / 100
+		
+		union
+		
+		<!-- 抽检1/3未被检查的承包设备数量 -->
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.wljb,
+		       tb.res_type_id
+		  from (select distinct tb.equipment_id,
+		                        tb.equipment_code,
+		                        tb.equipment_name,
+		                        tb.area_id,
+		                        tb.parent_area_id,
+		                        tb.grid_id,
+		                        tb.wljb,
+		                        tb.res_type_id,
+		                        count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count
+		          from tb_cablecheck_equipment tb
+		        <!-- 设备端子变动数量下限 -->
+		         inner join (select tbb.equipment_id, count(sj.dzid)
+		                      from tb_cablecheck_equipment tbb
+		                     inner join Tb_Cablecheck_Dtsj SJ
+		                        ON SJ.INSTALL_SBID = tbb.EQUIPMENT_ID
+		                     where to_char(sj.bdsj, 'yyyymm') =
+		                           to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                     group by tbb.equipment_id
+		                    having count(sj.dzid) &gt;= #{2007}) tsb
+		            on tsb.equipment_id = tb.equipment_id
+		          left join tb_cablecheck_task ts
+		            on ts.sbid = tb.equipment_id
+		         where tb.parent_area_id = #{AREA_ID}
+		           and tb.area_id = #{SON_AREA_ID}
+		           and tb.grid_id in <!-- #{WHWG} -->
+		           <foreach collection="gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			　　　　</foreach>
+			
+		           and ts.sbid is null
+		           and tb.identify is not null
+		         group by tb.equipment_id,
+		                  tb.equipment_code,
+		                  tb.equipment_name,
+		                  tb.area_id,
+		                  tb.parent_area_id,
+		                  tb.grid_id,
+		                  tb.wljb,
+		                  tb.res_type_id) tb
+		 where rownum &lt;= eq_count * 1 / 3 * #{2001} / 100
+
+	</select>
+	
+	<!-- 市县公司专业检查 -->
+	<select id="geteqListByCountiesRule" parameterType="Map" resultType="Map">
+		<!-- 已整治 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+			             tb.equipment_name,
+			             tb.area_id,
+			             tb.parent_area_id,
+			             tb.grid_id,
+			             tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 检查准确率大于90 -->
+			inner join 
+			(select p.equipment_id from (
+			select tb.equipment_id,
+			       tb.equipment_code,
+			       tb.check_port_num,
+			       tb.rigth_port_num,
+			       DECODE(SIGN(ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100 - 100),
+			                -1,
+			                ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100,
+			                100) score
+			  from tb_cablecheck_equipment tb,tb_cablecheck_task ts
+			 where tb.equipment_id=ts.sbid
+			 and tb.check_port_num is not null and tb.check_port_num != 0
+			 and to_char(ts.actual_complete_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm')  
+			 ) p where p.score &gt; #{3007} ) rate on rate.equipment_id = tb.equipment_id
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=TB.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tb.equipment_id
+			having count(sj.dzid) &gt;= #{3008}) tsb on tsb.equipment_id = tb.equipment_id
+			where tb.isdeal is not null
+			and  to_char(tb.deal_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			and tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID}   and tb.grid_id = #{WHWG}
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb
+			             ) tb
+			where rownum &lt;= eq_count*#{3001}/100
+			union 
+			
+			<!-- 未整治 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 检查准确率大于90 -->
+			inner join 
+			(select distinct tb.equipment_id from tb_cablecheck_equipment tb 
+			inner join (select p.equipment_id from (
+			select tb.equipment_id,
+			       tb.equipment_code,
+			       tb.check_port_num,
+			       tb.rigth_port_num,
+			       DECODE(SIGN(ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100 - 100),
+			                -1,
+			                ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100,
+			                100) score
+			  from tb_cablecheck_equipment tb,tb_cablecheck_task ts
+			 where tb.equipment_id=ts.sbid
+			 and tb.check_port_num is not null and tb.check_port_num != 0
+			 and to_char(ts.actual_complete_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm')  
+			 ) p where p.score &gt;#{3007}) tp on tb.equipment_id=tp.equipment_id
+			) rate on rate.equipment_id = tb.equipment_id
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=TB.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tb.equipment_id
+			having count(sj.dzid) &gt;= #{3008}) tsb on tsb.equipment_id = tb.equipment_id
+			where tb.isdeal is null 
+			and tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID} and tb.grid_id = #{WHWG}
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb
+			             ) tb
+			where rownum &lt;= eq_count*#{3001}/100
+			union 
+			
+			<!-- 已检查数量 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 检查准确率大于90 -->
+			inner join 
+			(select p.equipment_id from (
+			select tb.equipment_id,
+			       tb.equipment_code,
+			       tb.check_port_num,
+			       tb.rigth_port_num,
+			       DECODE(SIGN(ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100 - 100),
+			                -1,
+			                ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100,
+			                100) score
+			  from tb_cablecheck_equipment tb,tb_cablecheck_task ts
+			 where tb.equipment_id=ts.sbid
+			 and tb.check_port_num is not null and tb.check_port_num != 0
+			 and to_char(ts.actual_complete_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm')  
+			 ) p where p.score &gt;#{3007}) rate on rate.equipment_id = tb.equipment_id
+			
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tbb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tbb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=tbb.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tbb.equipment_id
+			having count(sj.dzid) &gt;= #{3008}) tsb on tsb.equipment_id = tb.equipment_id
+			where to_char(tb.check_complete_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			and tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID} and tb.grid_id = #{WHWG}
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb
+			             ) tb
+			where rownum &lt;= eq_count*#{3001}/100
+			union
+			
+			<!-- 未检查数量 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tbb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tbb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=tbb.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tbb.equipment_id
+			having count(sj.dzid) &gt;= #{3008}) tsb on tsb.equipment_id = tb.equipment_id
+			left join tb_cablecheck_task ts on ts.sbid=tb.equipment_id
+			where tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID} and tb.grid_id = #{WHWG}
+			and ts.sbid is null
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb
+			             ) tb
+			where rownum &lt;= eq_count*#{3001}/100
+			union
+			
+			<!-- 抽检1/3未被检查的承包设备数量 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tbb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tbb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=tbb.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tbb.equipment_id
+			having count(sj.dzid) &gt;= #{3008}) tsb on tsb.equipment_id = tb.equipment_id
+			left join tb_cablecheck_task ts on ts.sbid=tb.equipment_id
+			where tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID} and tb.grid_id = #{WHWG}
+			and ts.sbid is  null
+			and tb.identify is not null
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb) tb
+			where rownum &lt;= eq_count*1/3*${3001}/100
+					
+	</select>
+	
+	<!-- 市公司资源中心检查 -->
+	<select id="geteqListByCityRule" parameterType="Map" resultType="Map">
+		<!-- 已整治 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+			             tb.equipment_name,
+			             tb.area_id,
+			             tb.parent_area_id,
+			             tb.grid_id,
+			             tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 检查准确率大于90 -->
+			inner join 
+			(select p.equipment_id from (
+			select tb.equipment_id,
+			       tb.equipment_code,
+			       tb.check_port_num,
+			       tb.rigth_port_num,
+			       DECODE(SIGN(ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100 - 100),
+			                -1,
+			                ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100,
+			                100) score
+			  from tb_cablecheck_equipment tb,tb_cablecheck_task ts
+			 where tb.equipment_id=ts.sbid
+			 and tb.check_port_num is not null and tb.check_port_num != 0
+			 and to_char(ts.actual_complete_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm')  
+			 ) p where p.score &gt; #{4007} ) rate on rate.equipment_id = tb.equipment_id
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=TB.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tb.equipment_id
+			having count(sj.dzid) &gt;= #{4008}) tsb on tsb.equipment_id = tb.equipment_id
+			where tb.isdeal is not null
+			and  to_char(tb.deal_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			and tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID}   and tb.grid_id = #{WHWG}
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb
+			             ) tb
+			where rownum &lt;= eq_count*#{4001}/100
+			union 
+			
+			<!-- 未整治 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 检查准确率大于90 -->
+			inner join 
+			(select distinct tb.equipment_id from tb_cablecheck_equipment tb 
+			inner join (select p.equipment_id from (
+			select tb.equipment_id,
+			       tb.equipment_code,
+			       tb.check_port_num,
+			       tb.rigth_port_num,
+			       DECODE(SIGN(ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100 - 100),
+			                -1,
+			                ROUND((NVL(tb.rigth_port_num, 0) / tb.check_port_num), 0) * 100,
+			                100) score
+			  from tb_cablecheck_equipment tb,tb_cablecheck_task ts
+			 where tb.equipment_id=ts.sbid
+			 and tb.check_port_num is not null and tb.check_port_num != 0
+			 and to_char(ts.actual_complete_time,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm')  
+			 ) p where p.score &gt;#{4007}) tp on tb.equipment_id=tp.equipment_id
+			) rate on rate.equipment_id = tb.equipment_id
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=TB.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tb.equipment_id
+			having count(sj.dzid) &gt;= #{4008}) tsb on tsb.equipment_id = tb.equipment_id
+			where tb.isdeal is null
+			and tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID} and tb.grid_id = #{WHWG}
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb
+			             ) tb
+			where rownum &lt;= eq_count*#{4001}/100
+			
+			union
+			
+			<!-- 抽检1/3未被检查的承包设备数量 -->
+			select tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb from (
+			select distinct tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb,count(tb.equipment_id) OVER(PARTITION BY grid_id) AS eq_count from tb_cablecheck_equipment tb 
+			<!-- 设备端子变动数量下限 -->
+			inner join (select tbb.equipment_id,count(sj.dzid) from tb_cablecheck_equipment tbb 
+			inner join Tb_Cablecheck_Dtsj SJ ON SJ.INSTALL_SBID=tbb.EQUIPMENT_ID
+			where to_char(sj.bdsj,'yyyymm') = to_char(add_months(trunc(sysdate),-1),'yyyymm') 
+			group by tbb.equipment_id
+			having count(sj.dzid) &gt;= #{4008}) tsb on tsb.equipment_id = tb.equipment_id
+			left join tb_cablecheck_task ts on ts.sbid=tb.equipment_id
+			where tb.parent_area_id=#{AREA_ID} and tb.area_id=#{SON_AREA_ID} and tb.grid_id = #{WHWG}
+			and ts.sbid is  null
+			and tb.identify is not null
+			group by tb.equipment_id,
+						       tb.equipment_code,
+						       tb.equipment_name,
+						       tb.area_id,
+						       tb.parent_area_id,
+						       tb.grid_id,
+						       tb.wljb) tb
+			where rownum &lt;= eq_count*1/3*${4001}/100
+	</select>
+	
+	<delete id="deleteForPlanByRule" parameterType="String">
+		delete from tb_cablecheck_plan_rule a where a.plan_id= #{plan_id}
+	</delete>
+	
+	<insert id="inserteqForPlanByRule" parameterType="Map">
+		insert into tb_cablecheck_plan_rule
+		  (
+			   id,
+			   <if test="EQUIPMENT_ID !=null and EQUIPMENT_ID !=''">
+			   		eq_id,
+			   </if>
+			   <if test="EQUIPMENT_NAME !=null and EQUIPMENT_NAME !=''">
+			    	eq_name,
+			   </if>
+			   <if test="EQUIPMENT_CODE !=null and EQUIPMENT_CODE !=''">
+			    	eq_code,
+			   </if>
+			   <if test="PARENT_AREA_ID !=null and PARENT_AREA_ID !=''">
+			    	area_id,
+			   </if>
+			   <if test="AREA_ID !=null and AREA_ID !=''">
+			     	son_area_id,
+			   </if>
+			   <if test="GRID_ID !=null and GRID_ID !=''">
+			     	grid_id,
+			   </if>
+			   <if test="WLJB !=null and WLJB !=''">
+			   		wljb,
+			   </if>
+			   <if test="PLAN_ID !=null and PLAN_ID !=''">
+			    	plan_id,
+			   </if>
+			   <if test="CHECK_STAFF !=null and CHECK_STAFF !=''">
+			    	check_staff,
+			   </if>
+			   create_date,
+			   <if test="PLAN_TYPE !=null and PLAN_TYPE !=''">
+			    	plan_type,
+			   </if>
+			   state
+		  )
+		values
+		  (
+		  	   seq_plan_rule.nextval,
+		  	   <if test="EQUIPMENT_ID !=null and EQUIPMENT_ID !=''">
+			   		 #{EQUIPMENT_ID},
+			   </if>
+			   <if test="EQUIPMENT_NAME !=null and EQUIPMENT_NAME !=''">
+			    	 #{EQUIPMENT_NAME},
+			   </if>
+			   <if test="EQUIPMENT_CODE !=null and EQUIPMENT_CODE !=''">
+			    	 #{EQUIPMENT_CODE},
+			   </if>
+			   <if test="PARENT_AREA_ID !=null and PARENT_AREA_ID !=''">
+			    	 #{PARENT_AREA_ID},
+			   </if>
+			   <if test="AREA_ID !=null and AREA_ID !=''">
+			     	#{AREA_ID},
+			   </if>
+			   <if test="GRID_ID !=null and GRID_ID !=''">
+			     	#{GRID_ID},
+			   </if>
+			   <if test="WLJB !=null and WLJB !=''">
+			   		 #{WLJB},
+			   </if>
+			   <if test="PLAN_ID !=null and PLAN_ID !=''">
+			    	#{PLAN_ID},
+			   </if>
+			   <if test="CHECK_STAFF !=null and CHECK_STAFF !=''">
+			    	#{CHECK_STAFF},
+			   </if>
+			   sysdate,
+			   <if test="PLAN_TYPE !=null and PLAN_TYPE !=''">
+			    	 #{PLAN_TYPE},
+			   </if>
+		  	   0
+		  )
+		
+	</insert>
+	
+	<select id="getEqByPlanAndRuleForNewTask" parameterType="String" resultType="Map">
+		select distinct case
+		         when p.plan_type = 1 then
+		          '承包人检查'
+		         when p.plan_type = 2 then
+		          '网格质量检查'
+		         when p.plan_type = 3 then
+		          '市县公司专业检查'
+		         when p.plan_type = 4 then
+		          '市公司资源检查'
+		       end plan_name,
+		       a.name as area_name,
+		       c.name as son_area_name,
+		      <!--  g.grid_id,
+		       g.grid_name, -->
+		       to_char(p.plan_start_time, 'yyyy-mm') plan_start_time,
+		       to_char(p.plan_end_time, 'yyyy-mm') plan_end_time,
+		      <!--  ts.staff_name, -->
+		       to_char(sysdate, 'mm') as month,
+		       to_char(sysdate, 'yyyy-mm') as xq_end_time,
+		       (select count(1)
+		          from tb_cablecheck_plan_rule ts
+		         where ts.plan_id = p.plan_id) as epnum,
+		       p.plan_id,
+		       p.check_staff,		   
+		       tr.state
+		  from Patrol_PLAN             p,
+		       area                    c,
+		       area                    a,
+		       <!-- tb_cablecheck_grid      g,
+		       TB_BASE_STAFF           ts, -->
+		       tb_cablecheck_plan_rule tr
+		 where p.area_id = a.area_id
+		   and p.plan_id = tr.plan_id
+		   and p.son_area_id = c.area_id
+		   <!-- and p.whwg = g.grid_id
+		   and ts.staff_id = p.check_staff -->
+		   and p.plan_id = #{queryParams.PLAN_ID}
+		 order by p.check_staff
+	</select>
+	
+	<select id="getStaffName"  parameterType="Map" resultType="String">
+		select to_char(wm_concat(f.staff_name)) from tb_base_staff f where f.staff_id in 
+		( ${staffList} )
+	</select>
+	
+	
+	<select id="getGridName" parameterType="Map" resultType="String">
+		  select to_char(wm_concat(distinct g.grid_name)) from 
+		  tb_cablecheck_dipatch_relation r,
+		  tb_cablecheck_grid g
+		  where  g.grid_id = r.grid_id and staff_id in  
+			( ${staffList} )
+	</select>
+	
+	<select id="getStaffId" parameterType="Map" resultType="String">
+		select to_char(wm_concat(distinct check_staff)) from tb_cablecheck_plan_rule r where r.plan_id=#{planId}
+		
+	</select>
+	
+	
+	<select id="getEqByPlanAndRuleForNewTask2" parameterType="String" resultType="Map">
+		select case
+		         when p.plan_type = 1 then
+		          '承包人检查'
+		         when p.plan_type = 2 then
+		          '网格质量检查'
+		         when p.plan_type = 3 then
+		          '市县公司专业检查'
+		         when p.plan_type = 4 then
+		          '市公司资源检查'
+		       end plan_name,
+		       a.name as area_name,
+		       c.name as son_area_name,
+		       g.grid_id,
+		       g.grid_name,
+		       to_char(p.plan_start_time, 'yyyy-mm') plan_start_time,
+		       to_char(p.plan_end_time, 'yyyy-mm') plan_end_time,
+		       ts.staff_name,
+		       to_char(sysdate, 'mm') as month,
+		       to_char(sysdate, 'yyyy-mm') as xq_end_time,
+		       te.identify,
+		       count(1) as epnum,
+		       tr.check_staff,
+		       p.plan_id,
+		       tr.state
+		  from Patrol_PLAN             p,
+		       city                    c,
+		       area                    a,
+		       tb_cablecheck_grid      g,
+		       TB_BASE_STAFF           ts,
+		       tb_cablecheck_plan_rule tr,
+		       tb_cablecheck_equipment te
+		 where p.area_id = a.area_id
+		   and tr.plan_id = p.plan_id
+		   and p.son_area_id = c.area_id
+		   and p.whwg = g.grid_id
+		   and ts.id_number = te.identify
+		   and tr.eq_id = te.equipment_id
+		   and p.plan_id = #{queryParams.PLAN_ID}
+		 group by te.identify,
+		          p.plan_type,
+		          a.name,
+		          c.name,
+		          g.grid_id,
+		          g.grid_name,
+		          p.plan_start_time,
+		          p.plan_end_time,
+		          ts.staff_name,
+		          sysdate,
+		          tr.check_staff,
+		          p.plan_id,
+		          tr.state
+		   order by tr.check_staff
+	</select>
+	
+	<select id="queryTaskByPlanId" parameterType="String" resultType="Map">
+		select tt.* from tb_cablecheck_task tt where tt.patrol_plan_id = #{plan_id}
+	</select>
+	
+	<select id="queryEqListByPlanId" parameterType="Map" resultType="Map">
+		SELECT TR.EQ_ID,
+		       TR.EQ_NAME,
+		       TR.EQ_CODE,
+		       TR.AREA_ID,
+		       TR.SON_AREA_ID,
+		       TR.GRID_ID,
+		       TR.CHECK_STAFF
+		  FROM TB_CABLECHECK_PLAN_RULE TR
+ 		WHERE TR.PLAN_ID = #{PLAN_ID}
+ 		<if test="CHECK_STAFF != null and CHECK_STAFF != ''">
+ 			<!-- AND TR.CHECK_STAFF = #{CHECK_STAFF} -->
+ 			
+ 			<!-- 由于人是可以多选的，所以需要like -->
+ 			AND TR.CHECK_STAFF like '%'||#{CHECK_STAFF}||'%' 
+ 		</if>
+	</select>
+	
+	<select id="getStaffIdByIdentify" parameterType="String" resultType="Map">
+		select ts.staff_id from TB_BASE_STAFF ts where ts.id_number=#{identify}
+	</select>
+	
+	<update id="updateEqState" parameterType="Map">
+		update tb_cablecheck_plan_rule set state=1 where eq_id = #{EQ_ID} and check_staff = #{CHECK_STAFF} 
+	</update>
+	
+	<select id="queryEq" parameterType="Map" resultType="Map">
+		SELECT 
+			   TR.ID,
+			   TR.EQ_ID,
+		       TR.EQ_NAME,
+		       TR.EQ_CODE,
+		       TR.AREA_ID,
+		       TR.SON_AREA_ID,
+		       TR.GRID_ID,
+		       TR.CHECK_STAFF
+		  FROM TB_CABLECHECK_PLAN_RULE TR
+ 		WHERE TR.PLAN_ID = #{queryParams.PLAN_ID}
+ 		<!-- AND TR.CHECK_STAFF = #{queryParams.CHECK_STAFF} -->
+ 		
+	</select>
+	
+	<delete id="deleteEq" parameterType="Map">
+		delete from TB_CABLECHECK_PLAN_RULE where id in (${ids})
+	</delete>
+	
+	<select id="queryMaxBDNum" parameterType="Map" resultType="Map">
+		select tb.equipment_id,
+		       tb.equipment_code,
+		       tb.equipment_name,
+		       tb.area_id,
+		       tb.parent_area_id,
+		       tb.grid_id,
+		       tb.longitude,
+		       tb.latitude,
+		       tb.longitude_inspect,
+		       tb.latitude_inspect
+		  from tb_cablecheck_equipment tb
+		 where tb.equipment_id =
+		       (select t.equipment_id
+		          from (select tb.equipment_id, tb.equipment_code, count(sj.dzid) gg
+		                  from tb_cablecheck_equipment tb
+		                 inner join Tb_Cablecheck_Dtsj sj
+		                    on sj.install_sbid = tb.equipment_id
+		                 where tb.area_id = #{SON_AREA_ID}
+		                   and tb.parent_area_id = #{AREA_ID}
+		                   and tb.grid_id = #{WHWG}
+		                   and to_char(sj.bdsj, 'yyyymm') =
+		                       to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		                   and tb.longitude is not null
+		                   and tb.latitude is not null
+		                 group by tb.equipment_id, tb.equipment_code
+		                 order by gg desc) t
+		         where rownum = 1)
+ 
+	</select>
+	
+	<insert id="inserteqForPlanByRuleTem" parameterType="Map">
+		insert into tb_cablecheck_plan_rule_tem
+		  (
+			   id,
+			   <if test="EQUIPMENT_ID !=null and EQUIPMENT_ID !=''">
+			   		eq_id,
+			   </if>
+			   <if test="EQUIPMENT_NAME !=null and EQUIPMENT_NAME !=''">
+			    	eq_name,
+			   </if>
+			   <if test="EQUIPMENT_CODE !=null and EQUIPMENT_CODE !=''">
+			    	eq_code,
+			   </if>
+			   <if test="PARENT_AREA_ID !=null and PARENT_AREA_ID !=''">
+			    	area_id,
+			   </if>
+			   <if test="AREA_ID !=null and AREA_ID !=''">
+			     	son_area_id,
+			   </if>
+			   <if test="GRID_ID !=null and GRID_ID !=''">
+			     	grid_id,
+			   </if>
+			   <if test="WLJB !=null and WLJB !=''">
+			   		wljb,
+			   </if>
+			   <if test="PLAN_ID !=null and PLAN_ID !=''">
+			    	plan_id,
+			   </if>
+			   <if test="CHECK_STAFF !=null and CHECK_STAFF !=''">
+			    	check_staff,
+			   </if>
+			   create_date,
+			   <if test="PLAN_TYPE !=null and PLAN_TYPE !=''">
+			    	plan_type,
+			   </if>
+			    <if test="CREATE_STAFF !=null and CREATE_STAFF !=''">
+			    	create_staff,
+			   </if>
+			   state
+		  )
+		values
+		  (
+		  	   seq_plan_rule.nextval,
+		  	   <if test="EQUIPMENT_ID !=null and EQUIPMENT_ID !=''">
+			   		 #{EQUIPMENT_ID},
+			   </if>
+			   <if test="EQUIPMENT_NAME !=null and EQUIPMENT_NAME !=''">
+			    	 #{EQUIPMENT_NAME},
+			   </if>
+			   <if test="EQUIPMENT_CODE !=null and EQUIPMENT_CODE !=''">
+			    	 #{EQUIPMENT_CODE},
+			   </if>
+			   <if test="PARENT_AREA_ID !=null and PARENT_AREA_ID !=''">
+			    	 #{PARENT_AREA_ID},
+			   </if>
+			   <if test="AREA_ID !=null and AREA_ID !=''">
+			     	#{AREA_ID},
+			   </if>
+			   <if test="GRID_ID !=null and GRID_ID !=''">
+			     	#{GRID_ID},
+			   </if>
+			   <if test="WLJB !=null and WLJB !=''">
+			   		 #{WLJB},
+			   </if>
+			   <if test="PLAN_ID !=null and PLAN_ID !=''">
+			    	#{PLAN_ID},
+			   </if>
+			   <if test="CHECK_STAFF !=null and CHECK_STAFF !=''">
+			    	#{CHECK_STAFF},
+			   </if>
+			   sysdate,
+			   <if test="PLAN_TYPE !=null and PLAN_TYPE !=''">
+			    	 #{PLAN_TYPE},
+			   </if>
+			   <if test="CREATE_STAFF !=null and CREATE_STAFF !=''">
+			    	#{CREATE_STAFF},
+			   </if>
+		  	   0
+		  )
+	</insert>
+	
+	<select id="getGridNum" resultType="Map" parameterType="Map">
+		select a.*,round((a.selectcount/allcount),4)*100||'%' COUNTRATE,g.grid_name from (
+		select t.grid_id,count(*) SELECTCOUNT,
+		(select count(distinct e.equipment_id) from tb_cablecheck_equipment e,tb_cablecheck_dtsj d
+		where e.equipment_id=d.install_sbid(+)
+		and to_char(d.bdsj, 'yyyymm') = to_char(add_months(trunc(sysdate), -1), 'yyyymm')
+		and e.grid_id=t.grid_id ) ALLCOUNT
+		from tb_cablecheck_plan_rule_tem t where t.create_staff = #{queryParams.CREATE_STAFF}
+		group by t.grid_id) a,tb_cablecheck_grid g where a.grid_id = g.grid_id
+	</select>
+	
+	
+	<select id="queryEqByPlanRuleTem" resultType="Map" parameterType="Map">
+
+	select  <!-- tmp.id,tmp.eq_id,tmp.eq_name,tmp.eq_code,tmp.area_name,tmp.son_area_name,tmp.grid_name, -->
+	tmep.id,tmep.eq_id,tmep.eq_name,tmep.eq_code,tmep.area_name,tmep.son_area_name, tmep.grid_id,tmep.grid_name,
+	to_char(wm_concat(tmep.checkname)) checkName 
+	<!-- to_char(substr(wm_concat(tmep.checkname),1,4000)) checkName -->
+	<!-- tmep.checkname checkName  -->
+	from (
+		select t.id,
+		       t.eq_id,
+		       t.eq_name,
+		       t.eq_code,
+		       a.name      as area_name,
+		       b.name      as son_area_name,
+		       g.grid_id,
+		       g.grid_name,
+		       f.staff_name checkName
+		  from tb_cablecheck_plan_rule_tem t, area a, area b, tb_cablecheck_grid g,
+		  tb_cablecheck_dipatch_relation r,tb_base_staff f
+		 where t.create_staff = #{queryParams.CREATE_STAFF}
+		   and a.area_id = t.area_id
+		   and b.area_id = t.son_area_id
+		   and g.grid_id = t.grid_id
+		   and f.staff_id = r.staff_id
+       	   and r.grid_id(+) = t.grid_id
+       	   and r.check_type=2 and r.IS_DELETED = 0
+       	   ) tmep group by tmep.id,tmep.eq_id,tmep.eq_name,tmep.eq_code,tmep.area_name,tmep.son_area_name, tmep.grid_id,tmep.grid_name order by tmep.grid_id
+	</select>
+	
+	<delete id="deleteEqTem" parameterType="Map">
+		delete from tb_cablecheck_plan_rule_tem where create_staff = #{CREATE_STAFF}
+	</delete>
+	
+	<delete id="deleteEqForPreview" parameterType="Map">
+		delete from tb_cablecheck_plan_rule_tem where id in (${ids})
+	</delete>
+	
+	<delete id="addSureSelect" parameterType="Map">
+		delete from tb_cablecheck_plan_rule_tem where id not in (${ids})
+	</delete>
+	
+	<select id="queryEqForPreview" resultType="Map" parameterType="Map">
+		select ce.equipment_id,
+	         ce.equipment_code,
+	         ce.equipment_name,
+	         ce.area_id,
+	         ce.address,
+	         ce.res_type_id,
+	         ce.res_type
+	    from tb_cablecheck_equipment ce,tb_cablecheck_dtsj j
+	   where ce.area_id = #{queryParams.SON_AREA_ID}
+	     and ce.parent_area_id = #{queryParams.AREA_ID}
+	     <!-- and ce.grid_id = #{queryParams.WHWG}  -->
+		   <!-- and ce.grid_id in (10099,10123,10124,10126,10103) -->
+		   and ce.grid_id in 
+		  <foreach collection="queryParams.gridListAll" item="grid" index="index" open="(" close=")" separator=",">
+			　　　　　　#{grid.GRID_ID}
+			</foreach> 
+		   
+	       and ce.equipment_id = j.install_sbid
+	       
+	       and to_char(j.bdsj,'yyyymm')=to_char(add_months(sysdate,-1),'yyyymm')
+	       
+	      <!--  and j.bdsj between to_date('2017-09-01 00:00:00','yyyy-MM-dd hh24:mi:ss')
+	       and to_date('2017-09-30 23:59:59','yyyy-MM-dd hh24:mi:ss') -->
+	       
+	       and j.xz in (17,18)
+	     and not exists (select a.eq_id
+	            from tb_cablecheck_plan_rule_tem a
+	           where a.create_staff = #{queryParams.CREATE_STAFF}
+	             and ce.equipment_id = a.eq_id)
+	      <if test="queryParams.RES_TYPE_ID !=null and queryParams.RES_TYPE_ID !=''">
+			    and ce.res_type_id=#{queryParams.RES_TYPE_ID}
+		  </if>
+		  <if test="queryParams.EQ_NAME !=null and queryParams.EQ_NAME !=''">
+			    and ce.equipment_name like '%'||#{queryParams.EQ_NAME}||'%' 
+		  </if>
+		  <if test="queryParams.EQ_CODE !=null and queryParams.EQ_CODE !=''">
+			    and ce.equipment_code like '%'||#{queryParams.EQ_CODE}||'%'
+		  </if>
+	</select>
+	
+	<insert id="addEqForPreview" parameterType="Map">
+		insert into tb_cablecheck_plan_rule_tem
+		  (id,
+		   eq_id,
+		   eq_name,
+		   eq_code,
+		   area_id,
+		   son_area_id,
+		   grid_id,
+		   wljb,
+		   create_date,
+		   plan_type,
+		   state,
+		   create_staff)
+		  select seq_plan_rule.nextval,
+		         a.equipment_id,
+		         a.equipment_name,
+		         a.equipment_code,
+		         a.parent_area_id,
+		         a.area_id,
+		         a.grid_id,
+		         a.wljb,
+		         sysdate,
+		         #{PLAN_TYPE},
+		         0,
+		         #{CREATE_STAFF}
+		    from tb_cablecheck_equipment a
+		   where a.equipment_id in (${ids})
+		
+	</insert>
+	
+	<select id="queryPlanId" resultType="String">
+		select  SEQ_TB_INS_PLAN.NEXTVAL as plan_id from dual
+	</select>
+	
+	<insert id="insertRuleByTem" parameterType="Map">
+		 insert into tb_cablecheck_plan_rule
+		    (id,
+		     eq_id,
+		     eq_name,
+		     eq_code,
+		     area_id,
+		     son_area_id,
+		     grid_id,
+		     wljb,
+		     plan_type,
+		     state,
+		     plan_id,
+		     check_staff,
+		     create_date)
+		    select id,
+		           eq_id,
+		           eq_name, 
+		           eq_code,
+		           area_id,
+		           son_area_id,
+		           grid_id,
+		           wljb,
+		           plan_type,
+		           state,
+		           #{plan_id},
+		           <!-- #{staffId}, -->
+		           (select to_char(wm_concat(r.staff_id)) from tb_cablecheck_dipatch_relation r 
+		           where r.grid_id = t.grid_id and r.check_type = #{plan_type} and r.is_deleted=0),
+		           sysdate
+		      from tb_cablecheck_plan_rule_tem t
+		     where create_staff = #{CREATE_STAFF}
+	</insert>
+	
+	<select id="queryRule" resultType="Map" parameterType="Map">
+		select td.plan_id,
+		       td.plan_name,
+		       td.key_no,
+		       td.key_value,
+		       td.key_name,
+		       a.name       area_name,
+		       b.name       son_area_name,
+		       ts.staff_name,
+		       TO_CHAR(td.create_date, 'yyyy-mm-dd') AS create_time
+		  from tb_checkcable_plan_dictionary td
+		  left join area a
+		    on a.area_id = td.area
+		  left join area b
+		    on b.area_id = td.son_area
+		  left join tb_base_staff ts
+		    on td.create_staff=ts.staff_id
+		 where 1=1
+		  <if test="queryParams.PLAN_TYPE !=null and queryParams.PLAN_TYPE !=''">
+			    and td.plan_type = #{queryParams.PLAN_TYPE}
+		  </if>
+		   <if test="queryParams.AREA_ID !=null and queryParams.AREA_ID !=''">
+			    and td.area = #{queryParams.AREA_ID}
+		  </if>
+		   <if test="queryParams.SON_AREA_ID !=null and queryParams.SON_AREA_ID !=''">
+			    and td.son_area = #{queryParams.SON_AREA_ID}
+		  </if>
+		  order by td.area,td.son_area asc
+	</select>
+	
+	<select id="getRuleForAdd" parameterType="Map" resultType="Map">
+		select tk.key,tk.value,tk.plan_type from tb_checkcable_keyvalue tk where tk.plan_type= #{PLAN_TYPE}
+	</select>
+	
+	<update id="updateRule" parameterType="Map">
+		update TB_CHECKCABLE_PLAN_DICTIONARY 
+			set key_value=#{KEY_VALUE},
+			create_staff = #{CREATE_STAFF},
+			create_date = sysdate
+			where plan_id = #{PLAN_ID}
+	</update>
+	
+	<select id="queryTaskId" resultType="String">
+		select  SQP_TB_CABLECHECK_TASK.nextVAL as task_id from dual
+	</select>
+	
+	
+	<select id="queryEqpGroupGrid" parameterType="map" resultType="map">
+		select a.*,g.grid_name from (
+		select e.grid_id,count(e.equipment_id) eqpnum from 
+		tb_cablecheck_equipment e 
+		where e.create_date 
+		between to_date(#{queryParams.startTime},'yyyy-mm-dd hh24:mi:ss')
+		and to_date(#{queryParams.endTime},'yyyy-mm-dd hh24:mi:ss')
+		and grid_id is not null
+		and e.area_id = #{queryParams.areaId} 
+		group by e.grid_id ) a,tb_cablecheck_grid g 
+		where a.grid_id = g.grid_id(+)
+	</select>
+	
+	<select id="getGridIdByRelation" parameterType="map" resultType="map">
+		<!-- select distinct r.grid_id from  tb_cablecheck_dipatch_relation r,
+		tb_cablecheck_grid g  
+		where r.check_type=#{PLAN_TYPE} 
+		and r.area_id = #{AREA_ID} 
+		and g.grid_id(+) = r.grid_id 
+		and g.son_area_id = #{SON_AREA_ID} -->
+		
+	  SELECT  distinct TCDR.GRID_ID
+      FROM TB_BASE_STAFF                  STAFF,
+           TB_CABLECHECK_DIPATCH_RELATION TCDR,
+           TB_CABLECHECK_GRID             GRID,
+           AREA                           PARENTAREA,
+           AREA                           SONAREA
+      WHERE STAFF.STAFF_ID = TCDR.STAFF_ID
+       AND STAFF.SON_AREA_ID = SONAREA.AREA_ID
+       AND STAFF.AREA_ID = PARENTAREA.AREA_ID
+       AND TCDR.GRID_ID = GRID.GRID_ID(+)
+           AND TCDR.IS_DELETED = 0
+           AND SONAREA.AREA_ID = #{SON_AREA_ID}
+           AND PARENTAREA.AREA_ID = #{AREA_ID}
+	</select>
+	
+	<select id="getStaffIdByRelation" parameterType="map" resultType="String">
+		select to_char(wm_concat(distinct r.staff_id)) staffId from  tb_cablecheck_dipatch_relation r,
+		tb_cablecheck_grid g  ,  tb_cablecheck_plan_rule_tem t
+		where r.check_type=#{PLAN_TYPE} 
+		and r.area_id = #{AREA_ID} 
+		and g.grid_id(+) = r.grid_id 
+		and r.grid_id = t.grid_id
+		and g.son_area_id = #{SON_AREA_ID}
+	</select>
+	
+	
+	
+</mapper>

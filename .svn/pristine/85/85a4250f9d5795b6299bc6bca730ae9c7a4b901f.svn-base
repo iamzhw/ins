@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.SyncOssDataTaskDao">
+
+	<select id="syncEqpNoOBDLess24" parameterType="java.util.Map">
+	   <![CDATA[ 
+			call p_sysc_no_obd_less_24(#{jndi,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	
+	<select id="queryEqpNoOBDLess24" resultType="map">
+		select f.phy_eqp_id, f.no phy_eqp_no, f.area_id son_area_id from tmp_phy_equipment_final f
+	</select>
+	
+	<insert id="insertEqpNoOBDLess24" parameterType="map">
+		insert into tb_eqp_no_obd_less_24(
+		       phy_eqp_id, 
+		       phy_eqp_no, 
+		       son_area_id, 
+		       update_time)
+		values(
+		       #{PHY_EQP_ID,jdbcType=VARCHAR},
+		       <![CDATA[
+					#{PHY_EQP_NO,jdbcType=VARCHAR},
+		       ]]>
+		       #{SON_AREA_ID,jdbcType=NUMERIC},
+		       sysdate)
+	</insert>
+	
+	<select id="queryEqpNoOBDLess24ByNo" parameterType="String" resultType="map">
+		select * from tb_eqp_no_obd_less_24 where phy_eqp_no=#{phy_eqp_no}
+	</select>
+	
+	<delete id="deleteEqpNoOBDLess24">
+		delete from tb_cablecheck_equipment e
+		 where e.res_type_id = 704
+		   and e.equipment_code in
+		       (select ol.phy_eqp_no from TB_EQP_NO_OBD_LESS_24 ol)
+	</delete>
+	
+	<delete id="deleteDTSJEqpNoOBDLess24">
+		delete from tb_cablecheck_dtsj d
+		 where d.sblx = 704
+		   and d.sbbm in
+		       (select ol.phy_eqp_no from TB_EQP_NO_OBD_LESS_24 ol)
+	</delete>
+	
+ 
+</mapper>

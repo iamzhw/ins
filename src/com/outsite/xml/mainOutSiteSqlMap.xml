@@ -1,0 +1,1702 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.outsite.dao.MainOutSiteDao">
+	<sql id="dynamicWhere">
+		<if test="queryParams.p_con_address  != null and queryParams.p_con_address  != ''"> 
+			<![CDATA[ and  T.con_address  like '%'||#{queryParams.p_con_address }||'%'    ]]>
+		</if>
+		<if test="queryParams.p_site_name  != null and queryParams.p_site_name  != ''"> 
+			<![CDATA[ and  T.site_name  like '%'||#{queryParams.p_site_name }||'%'    ]]>
+		</if>
+		<if test="queryParams.p_con_status  != null and queryParams.p_con_status  != ''"> 
+			<![CDATA[ and  T.con_status  =#{queryParams.p_con_status }   ]]>
+		</if>
+		<if test="queryParams.area_id !=null and queryParams.area_id !=''">
+	    	AND T.AREA_ID=#{queryParams.area_id}
+	    </if>
+	    <if test="queryParams.org_id !=null and queryParams.org_id !=''">
+	    	and ato.org_id=#{queryParams.org_id}
+	    </if>
+	   	<if test="queryParams.p_end_time !=null and queryParams.p_end_time !=''">
+	    	and trunc(T.CREATION_TIME) &lt;=to_date(#{queryParams.p_end_time},'yyyy-mm-dd')
+	    </if>
+	   	<if test="queryParams.p_start_time !=null and queryParams.p_start_time !=''">
+	    	and trunc(T.CREATION_TIME) &gt;=to_date(#{queryParams.p_start_time},'yyyy-mm-dd')
+	    </if>
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+
+		SELECT
+		T.USER_ID,
+		T.IMAGE_NAME,
+		T.IMAGE_PATH,
+		T.CON_STATUS,
+		T.INFO_SOURCE,
+		tc.cable_name AFFECTED_FIBER,
+		T.RELAY_PART,
+		T.FIBER_LEVEL,
+		T.LINE_PART,
+		T.LANDMARKNO,
+		T.CON_COMPANY,
+		T.CON_ADDRESS,
+		T.CON_CONTENT,
+		T.IS_AGREEMENT,
+		T.SITE_DANGER_LEVEL,
+		TO_CHAR(T.CON_STARTDATE,
+		'YYYY-MM-DD') CON_STARTDATE,
+		TO_CHAR(T.PRE_ENDDATE, 'YYYY-MM-DD')
+		PRE_ENDDATE,
+		T.CON_REPONSIBLE_BY,
+		T.CON_REPONSIBLE_BY_TEL,
+		T.GUARDIAN,
+		T.GUARDIAN_TEL,
+		T.SCENE_MEASURE,
+		T.FIBER_EPONSIBLE_BY,
+		T.FIBER_EPONSIBLE_TEL,
+		T.FIBER_UID,
+		STAY_TIME_PART,
+		T.IS_PLAN,
+		T.AREA_ID,
+		TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+		T.CREATED_BY,
+		TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS')
+		UPDATE_TIME,
+		UPDATED_BY,
+		T.DELETE_FLAG,
+		T.OUT_SITE_ID,
+		T.SITE_NAME,
+		T.X,
+		T.Y,
+		BS.STAFF_NAME USER_NAME,
+		T.FLOW_STATUS,
+		T.IS_ADD_ELEBAR
+		FROM AXX_MAIN_OUT_SITE
+		T,TB_BASE_STAFF BS,axx_t_cable tc ,
+	    AXX_T_ORGANIZATION ato 
+	    WHERE
+	    T.Fiber_Eponsible_By=BS.STAFF_ID(+) 
+	    and bs.org_id=ato.org_id
+	    AND T.DELETE_FLAG=1 
+	    and t.affected_fiber=tc.cable_id
+		<include refid="dynamicWhere" />
+		order by T.CREATION_TIME desc
+	</select>
+	
+	
+	
+	<select id="queryDown" parameterType="map" resultType="map">
+
+		SELECT
+		T.USER_ID,
+		T.IMAGE_NAME,
+		T.IMAGE_PATH,
+		decode(T.CON_STATUS,1,'施工中',2,'施工结束')   CON_STATUS,
+		T.INFO_SOURCE,
+		tc.cable_name AFFECTED_FIBER,
+		T.RELAY_PART,
+		decode(T.FIBER_LEVEL,1,'一级',2,'二级')  FIBER_LEVEL,
+		T.LINE_PART,
+		T.LANDMARKNO,
+		T.CON_COMPANY,
+		T.CON_ADDRESS,
+		T.CON_CONTENT,
+		T.IS_AGREEMENT,
+		decode( T.SITE_DANGER_LEVEL,1,'Ⅰ',2,'Ⅱ',3,'Ⅲ','隐患') SITE_DANGER_LEVEL,
+		TO_CHAR(T.CON_STARTDATE,
+		'YYYY-MM-DD') CON_STARTDATE,
+		TO_CHAR(T.PRE_ENDDATE, 'YYYY-MM-DD')
+		PRE_ENDDATE,
+		T.CON_REPONSIBLE_BY,
+		T.CON_REPONSIBLE_BY_TEL,
+		T.GUARDIAN,
+		T.GUARDIAN_TEL,
+		T.SCENE_MEASURE,
+		T.FIBER_EPONSIBLE_BY,
+		T.FIBER_EPONSIBLE_TEL,
+		T.FIBER_UID,
+		STAY_TIME_PART,
+		T.IS_PLAN,
+		T.AREA_ID,
+		TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+		T.CREATED_BY,
+		TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS')
+		UPDATE_TIME,
+		UPDATED_BY,
+		T.DELETE_FLAG,
+		T.OUT_SITE_ID,
+		T.SITE_NAME,
+		T.X,
+		T.Y,
+		BS.STAFF_NAME USER_NAME,
+		decode (T.FLOW_STATUS,1,'待班组长确认',2,'待县分管领导确认',3,'待市分管领导确认',4,'待县主要管理和技术人员确认',5,'待市主要管理和技术人员确认','确认完成') FLOW_STATUS
+		FROM AXX_MAIN_OUT_SITE
+		T,TB_BASE_STAFF BS,axx_t_cable tc ,
+	    AXX_T_ORGANIZATION ato 
+	    WHERE
+	    T.Fiber_Eponsible_By=BS.STAFF_ID(+) 
+	    and bs.org_id=ato.org_id
+	    AND T.DELETE_FLAG=1 
+	    and t.affected_fiber=tc.cable_id
+		<if test="p_site_name  != null and p_site_name  != ''"> 
+			<![CDATA[ and  T.site_name  like '%'||#{p_site_name }||'%'    ]]>
+		</if>
+		<if test="p_con_status  != null and p_con_status  != ''"> 
+			<![CDATA[ and  T.con_status  =#{p_con_status }   ]]>
+		</if>
+		<if test="area_id !=null and area_id !=''">
+	    	AND T.AREA_ID=#{area_id}
+	    </if>
+	    <if test="org_id !=null and org_id !=''">
+	    	and ato.org_id=#{org_id}
+	    </if>
+	   	<if test="p_end_time !=null and p_end_time !=''">
+	    	and trunc(T.CREATION_TIME) &lt;=to_date(#{p_end_time},'yyyy-mm-dd')
+	    </if>
+	   	<if test="p_start_time !=null and p_start_time !=''">
+	    	and trunc(T.CREATION_TIME) &gt;=to_date(#{p_start_time},'yyyy-mm-dd')
+	    </if>
+		order by T.CREATION_TIME desc
+	</select>
+	
+	
+
+	<insert id="mainOutSiteSave" parameterType="map">
+		insert into
+		AXX_MAIN_OUT_SITE
+		(OUT_SITE_ID,
+		USER_ID,
+		IMAGE_NAME,
+		IMAGE_PATH,
+		CON_STATUS,
+		INFO_SOURCE,
+		AFFECTED_FIBER,
+		RELAY_PART,
+		FIBER_LEVEL,
+		LINE_PART,
+		LANDMARKNO,
+		CON_COMPANY,
+		CON_ADDRESS,
+		CON_CONTENT,
+		IS_AGREEMENT,
+		SITE_DANGER_LEVEL,
+		CON_STARTDATE,
+		PRE_ENDDATE,
+		CON_REPONSIBLE_BY,
+		CON_REPONSIBLE_BY_TEL,
+		GUARDIAN,
+		GUARDIAN_TEL,
+		SCENE_MEASURE,
+		FIBER_EPONSIBLE_BY,
+		FIBER_EPONSIBLE_TEL,
+		FIBER_UID,
+		STAY_TIME_PART,
+		IS_PLAN,
+		AREA_ID,
+		CREATION_TIME,
+		CREATED_BY,
+		UPDATE_TIME,
+		UPDATED_BY,
+		FLOW_STATUS,
+		SITE_NAME,
+		X,
+		Y,
+		IS_MACHAINE,
+		MACHAINE_NAME,
+		RESIDUAL_CABLE,
+		EFFECT_SERVICE)
+		values
+		(#{out_site_id},
+		#{user_id,jdbcType=VARCHAR},
+		#{image_name,jdbcType=VARCHAR},
+		#{image_path,jdbcType=VARCHAR},
+		1,
+		#{info_source,jdbcType=VARCHAR},
+		#{affected_fiber,jdbcType=VARCHAR},
+		#{relay_part,jdbcType=VARCHAR},
+		#{fiber_level,jdbcType=VARCHAR},
+		#{line_part,jdbcType=VARCHAR},
+		#{landmarkno,jdbcType=VARCHAR},
+		#{con_company,jdbcType=VARCHAR},
+		#{con_address,jdbcType=VARCHAR},
+		#{con_content,jdbcType=VARCHAR},
+		#{is_agreement,jdbcType=NUMERIC},
+		#{site_danger_level,jdbcType=VARCHAR},
+		to_date(#{con_startdate, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		to_date(#{pre_enddate, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{con_reponsible_by,jdbcType=VARCHAR},
+		#{con_reponsible_by_tel,jdbcType=VARCHAR},
+		#{guardian,jdbcType=VARCHAR},
+		#{guardian_tel,jdbcType=VARCHAR},
+		#{scene_measure,jdbcType=VARCHAR},
+		#{fiber_eponsible_by,jdbcType=VARCHAR},
+		#{fiber_eponsible_tel,jdbcType=VARCHAR},
+		#{fiber_uid,jdbcType=VARCHAR},
+		#{stay_time_part,jdbcType=VARCHAR},
+		#{is_plan,jdbcType=NUMERIC},
+		#{area_id,jdbcType=NUMERIC},
+		to_date(#{creation_time, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{created_by,jdbcType=VARCHAR},
+		to_date(#{update_time,jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{updated_by,jdbcType=VARCHAR},
+		#{flow_status,jdbcType=NUMERIC},
+		#{site_name,jdbcType=VARCHAR},
+		#{x,jdbcType=NUMERIC},
+		#{y,jdbcType=NUMERIC},
+		#{is_machaine},
+		#{machaine_name,jdbcType=VARCHAR},
+		#{residual_cable},
+		#{effect_service})
+
+
+	</insert>
+
+	<delete id="mainOutSiteDelete" parameterType="String">
+
+		UPDATE
+		AXX_MAIN_OUT_SITE T SET T.DELETE_FLAG=0 WHERE
+		T.OUT_SITE_ID=#{out_site_id}
+	</delete>
+
+	<select id="findById" parameterType="int" resultType="map">
+		<!-- SELECT *
+		FROM AXX_MAIN_OUT_SITE WHERE OUT_SITE_ID=#{out_site_id} -->
+		<!-- 孙敏2016/3/14修改过后的增加了一个中继段名称 -->
+		 SELECT s.*,r.relay_name FROM AXX_MAIN_OUT_SITE s , AXX_T_RELAY r WHERE OUT_SITE_ID=
+		 #{out_site_id} and s.RELAY_PART=r.relay_id(+)
+	</select>
+
+	<update id="mainOutSiteUpdate" parameterType="map">
+		UPDATE AXX_MAIN_OUT_SITE set
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+USER_ID=#{user_id},
+ ]]>
+		</if>
+		<if test=" image_name  != null and image_name  != ''"> 
+ <![CDATA[ 
+IMAGE_NAME=#{image_name},
+ ]]>
+		</if>
+		<if test=" image_path  != null and image_path  != ''"> 
+ <![CDATA[ 
+IMAGE_PATH=#{image_path},
+ ]]>
+		</if>
+		<if test=" con_status  != null and con_status  != ''"> 
+ <![CDATA[ 
+CON_STATUS=#{con_status},
+ ]]>
+		</if>
+		<if test=" info_source  != null and info_source  != ''"> 
+ <![CDATA[ 
+INFO_SOURCE=#{info_source},
+ ]]>
+		</if>
+		<if test=" affected_fiber  != null and affected_fiber  != ''"> 
+ <![CDATA[ 
+AFFECTED_FIBER=#{affected_fiber},
+ ]]>
+		</if>
+		<if test=" relay_part  != null and relay_part  != ''"> 
+ <![CDATA[ 
+RELAY_PART=#{relay_part},
+ ]]>
+		</if>
+		<if test=" fiber_level  != null and fiber_level  != ''"> 
+ <![CDATA[ 
+FIBER_LEVEL=#{fiber_level},
+ ]]>
+		</if>
+		<if test=" line_part  != null and line_part  != ''"> 
+ <![CDATA[ 
+LINE_PART=#{line_part},
+ ]]>
+		</if>
+		<if test=" landmarkno  != null and landmarkno  != ''"> 
+ <![CDATA[ 
+LANDMARKNO=#{landmarkno},
+ ]]>
+		</if>
+		<if test=" con_company  != null and con_company  != ''"> 
+ <![CDATA[ 
+CON_COMPANY=#{con_company},
+ ]]>
+		</if>
+		<if test=" con_address  != null and con_address  != ''"> 
+ <![CDATA[ 
+CON_ADDRESS=#{con_address},
+ ]]>
+		</if>
+		<if test=" con_content  != null and con_content  != ''"> 
+ <![CDATA[ 
+CON_CONTENT=#{con_content},
+ ]]>
+		</if>
+		<if test=" is_agreement  != null and is_agreement  != ''"> 
+ <![CDATA[ 
+IS_AGREEMENT=#{is_agreement},
+ ]]>
+		</if>
+		<if test=" site_danger_level  != null and site_danger_level  != ''"> 
+ <![CDATA[ 
+SITE_DANGER_LEVEL=#{site_danger_level},
+ ]]>
+		</if>
+		<if test=" con_startdate  != null and con_startdate  != ''"> 
+ <![CDATA[ 
+CON_STARTDATE=to_date(#{con_startdate},'yyyy-mm-dd'),
+ ]]>
+		</if>
+		<if test=" pre_enddate  != null and pre_enddate  != ''"> 
+ <![CDATA[ 
+PRE_ENDDATE=to_date(#{pre_enddate},'yyyy-mm-dd'),
+ ]]>
+		</if>
+		<if test=" con_reponsible_by  != null and con_reponsible_by  != ''"> 
+ <![CDATA[ 
+CON_REPONSIBLE_BY=#{con_reponsible_by},
+ ]]>
+		</if>
+		<if test=" con_reponsible_by_tel  != null and con_reponsible_by_tel  != ''"> 
+ <![CDATA[ 
+CON_REPONSIBLE_BY_TEL=#{con_reponsible_by_tel},
+ ]]>
+		</if>
+		<if test=" guardian  != null and guardian  != ''"> 
+ <![CDATA[ 
+GUARDIAN=#{guardian},
+ ]]>
+		</if>
+		<if test=" guardian_tel  != null and guardian_tel  != ''"> 
+ <![CDATA[ 
+GUARDIAN_TEL=#{guardian_tel},
+ ]]>
+		</if>
+		<if test=" scene_measure  != null and scene_measure  != ''"> 
+ <![CDATA[ 
+SCENE_MEASURE=#{scene_measure},
+ ]]>
+		</if>
+		<if test=" fiber_eponsible_by  != null and fiber_eponsible_by  != ''"> 
+ <![CDATA[ 
+FIBER_EPONSIBLE_BY=#{fiber_eponsible_by},
+ ]]>
+		</if>
+		<if test=" fiber_eponsible_tel  != null and fiber_eponsible_tel  != ''"> 
+ <![CDATA[ 
+FIBER_EPONSIBLE_TEL=#{fiber_eponsible_tel},
+ ]]>
+		</if>
+		<if test=" fiber_uid  != null and fiber_uid  != ''"> 
+ <![CDATA[ 
+FIBER_UID=#{fiber_uid},
+ ]]>
+		</if>
+		<if test=" stay_time_part  != null and stay_time_part  != ''"> 
+ <![CDATA[ 
+STAY_TIME_PART=#{stay_time_part},
+ ]]>
+		</if>
+		<if test=" is_plan  != null and is_plan  != ''"> 
+ <![CDATA[ 
+IS_PLAN=#{is_plan},
+ ]]>
+		</if>
+		<if test=" area_id  != null and area_id  != ''"> 
+ <![CDATA[ 
+AREA_ID=#{area_id},
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+CREATION_TIME=to_date(#{creation_time},'yyyy-mm-dd'),
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+CREATED_BY=#{created_by},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME=to_date(#{update_time},'yyyy-mm-dd'),
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+UPDATED_BY=#{updated_by},
+ ]]>
+		</if>
+		<if test=" delete_flag  != null and delete_flag  != ''"> 
+ <![CDATA[ 
+DELETE_FLAG=#{delete_flag},
+ ]]>
+		</if>
+		<if test=" site_name  != null and site_name  != ''"> 
+ <![CDATA[ 
+SITE_NAME=#{site_name},
+ ]]>
+		</if>
+		<if test=" x  != null and x  != ''"> 
+ <![CDATA[ 
+X=#{x},
+ ]]>
+		</if>
+		<if test=" y  != null and y  != ''"> 
+ <![CDATA[ 
+Y=#{y},
+ ]]>
+		</if>
+		<if test=" ebLength  != null and ebLength  != ''"> 
+ <![CDATA[ 
+ELEBAR_LENGTH=#{ebLength},
+ ]]>
+		</if>
+		<if test=" ebWidth  != null and ebWidth  != ''"> 
+ <![CDATA[ 
+ELEBAR_WIDTH=#{ebWidth},
+ ]]>
+		</if>
+
+		<if test=" is_add_elebar  != null and is_add_elebar  != ''"> 
+ <![CDATA[ 
+IS_ADD_ELEBAR=#{is_add_elebar},
+ ]]>
+		</if>
+		<if test=" ts_res  != null and ts_res  != ''"> 
+ <![CDATA[ 
+TS_RES=#{ts_res},
+ ]]>
+		</if>
+	<if test=" flow_status  != null and flow_status  != ''"> 
+	 	<![CDATA[ 
+			FLOW_STATUS=#{flow_status},
+	 	]]>
+	</if>
+		<if test=" is_machaine  != null and is_machaine  != ''"> 
+	 	<![CDATA[ 
+			IS_MACHAINE=#{is_machaine},
+	 	]]>
+	</if>
+		<if test=" machaine_name  != null and machaine_name  != ''"> 
+	 	<![CDATA[ 
+			MACHAINE_NAME=#{machaine_name},
+	 	]]>
+	</if>
+		<if test=" residual_cable  != null and residual_cable  != ''"> 
+	 	<![CDATA[ 
+			RESIDUAL_CABLE=#{residual_cable},
+	 	]]>
+	</if>
+		<if test=" effect_service  != null and effect_service  != ''"> 
+	 	<![CDATA[ 
+			EFFECT_SERVICE=#{effect_service},
+	 	]]>
+	</if>
+
+		OUT_SITE_ID=#{out_site_id}
+		where OUT_SITE_ID=#{out_site_id}
+	</update>
+	<select id="findAll" resultType="map">
+		SELECT * FROM AXX_MAIN_OUT_SITE
+		t where t.DELETE_FLAG=1
+	</select>
+	<!-- 1 连表查询空值情况 2 日期类型格式转换 -->
+
+	<select id="getCzs" parameterType="map" resultType="map">
+
+		select
+		t.OPERATOR_ID,
+		t.OUT_SITE_ID,
+		t.OPERATOR_NAME,
+		t.CAR_NO,
+		t.CAR_TYPE,
+		t.MOBILE,
+		t.TEL1,
+		t.TEL2,
+		t.INFO,
+		to_char(t.UPLOAD_TIME, 'yyyy-mm-dd
+		hh24:mi:ss') UPLOAD_TIME,
+		t.USER_ID
+		from AXX_T_OPERATOR_INFO t
+		where
+		t.out_site_id=#{out_site_id}
+
+	</select>
+
+	<update id="jxsUpdate" parameterType="map">
+
+		UPDATE AXX_T_OPERATOR_INFO set
+		<if test=" out_site_id  != null and out_site_id  != ''"> 
+ <![CDATA[ 
+OUT_SITE_ID=#{out_site_id},
+ ]]>
+		</if>
+		<if test=" operator_name  != null and operator_name  != ''"> 
+ <![CDATA[ 
+OPERATOR_NAME=#{operator_name},
+ ]]>
+		</if>
+		<if test=" car_no  != null and car_no  != ''"> 
+ <![CDATA[ 
+CAR_NO=#{car_no},
+ ]]>
+		</if>
+		<if test=" car_type  != null and car_type  != ''"> 
+ <![CDATA[ 
+CAR_TYPE=#{car_type},
+ ]]>
+		</if>
+		<if test=" mobile  != null and mobile  != ''"> 
+ <![CDATA[ 
+MOBILE=#{mobile},
+ ]]>
+		</if>
+		<if test=" tel1  != null and tel1  != ''"> 
+ <![CDATA[ 
+TEL1=#{tel1},
+ ]]>
+		</if>
+		<if test=" tel2  != null and tel2  != ''"> 
+ <![CDATA[ 
+TEL2=#{tel2},
+ ]]>
+		</if>
+		<if test=" info  != null and info  != ''"> 
+ <![CDATA[ 
+INFO=#{info},
+ ]]>
+		</if>
+		<if test=" upload_time  != null and upload_time  != ''"> 
+ <![CDATA[ 
+UPLOAD_TIME=to_date(#{upload_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+USER_ID=#{user_id},
+ ]]>
+		</if>
+		OPERATOR_ID=#{operator_id}
+		where OPERATOR_ID=#{operator_id}
+
+	</update>
+
+	<select id="findJxsByid" parameterType="map" resultType="map">
+		select
+		t.OPERATOR_ID,
+		t.OUT_SITE_ID,
+		t.OPERATOR_NAME,
+		t.CAR_NO,
+		t.CAR_TYPE,
+		t.MOBILE,
+		t.TEL1,
+		t.TEL2,
+		t.INFO,
+		to_char(t.UPLOAD_TIME, 'yyyy-mm-dd
+		hh24:mi:ss') UPLOAD_TIME,
+		t.USER_ID,
+		bs.staff_name user_name
+		from
+		AXX_T_OPERATOR_INFO t,tb_base_staff bs
+		where t.user_id=bs.staff_id and
+		t.OPERATOR_ID = #{operator_id}
+
+	</select>
+
+
+	<select id="getCheckRecord" parameterType="map" resultType="map">
+	SELECT t.OUT_RECORD_ID,
+	t.USER_ID,
+	t.OUT_SITE_ID,
+	t.OUT_SITE_NAME,
+	to_char(t.CREATION_TIME, 'yyyy-mm-dd hh24:mi:ss') CHECK_TIME,
+	t.IS_ON_OUT,
+	t.IS_CONSTRUCTION,
+	t.IS_COMPLETE_EQUIP,
+	t.IS_COMPLETE_LOOK,
+	t.IS_KNOW_CON,
+	t.IS_SINGLE,
+	t.IS_SEND_INFO,
+	t.IS_KNOW,
+	t.PROBLEM_MES,
+	t.SIDE_PROGRESS,
+	t.RECTIFICATION,
+	t.ASSESS,
+	t.SUB_COMPARY_NO,
+	t.AREA_ID,
+	to_char(t.CREATION_TIME, 'yyyy-mm-dd hh24:mi:ss') CREATION_TIME,
+	t.CREATED_BY,
+	to_char(t.UPDATE_TIME, 'yyyy-mm-dd hh24:mi:ss')
+	UPDATE_TIME,
+	t.UPDATED_BY,
+
+
+	BS1.STAFF_NAME CREATE_PERSON,
+	BS2.STAFF_NAME
+	UPDTATE_PERSON,
+	A.NAME AREA_NAME
+	FROM AXX_OUT_SITE_CHECK_RECORD T,
+	TB_BASE_STAFF BS1,
+	TB_BASE_STAFF BS2,
+	AREA A
+
+	WHERE T.CREATED_BY =
+	BS1.STAFF_ID(+)
+	AND T.UPDATED_BY = BS2.STAFF_ID(+)
+	AND T.AREA_ID =
+	A.AREA_ID(+)
+
+	AND T.OUT_SITE_ID = #{out_site_id}
+	ORDER BY T.CREATION_TIME
+
+
+
+
+
+	</select>
+<select id="query_recordindex" parameterType="map" resultType="map">
+ SELECT t.OUT_RECORD_ID,
+		t.USER_ID,
+		t.OUT_SITE_ID,
+		t.OUT_SITE_NAME,
+		to_char(t.CHECK_TIME, 'yyyy-mm-dd') CHECK_TIME,
+		t.PROBLEM_MES,
+		t.AREA_ID,
+		BS1.STAFF_NAME,
+    	BS1.ORG_ID,
+		A.NAME AREA_NAME,
+    	ATO.ORG_NAME
+		FROM AXX_OUT_SITE_CHECK_RECORD T,
+		TB_BASE_STAFF BS1,
+		AREA A,
+    	AXX_T_ORGANIZATION ATO
+		WHERE T.USER_ID =
+		BS1.STAFF_ID(+)
+		AND BS1.ORG_ID = ATO.ORG_ID(+)
+		AND T.AREA_ID =
+		A.AREA_ID(+)
+		<if test="queryParams.area_id !=null and queryParams.area_id !=''">
+	    	AND T.AREA_ID=#{queryParams.area_id}
+	    </if>
+		<if test="queryParams.org_id !=null and queryParams.org_id !=''">
+	    	AND BS1.ORG_ID=#{queryParams.org_id}
+	    </if>
+	    <if test="queryParams.p_start_time !=null and queryParams.p_start_time !=''">
+	    	and trunc(T.CHECK_TIME) &gt;=to_date(#{queryParams.p_start_time},'yyyy-mm-dd')
+	    </if>
+	    <if test="queryParams.p_end_time !=null and queryParams.p_end_time !=''">
+	    	and trunc(T.CHECK_TIME) &lt;=to_date(#{queryParams.p_end_time},'yyyy-mm-dd')
+	    </if>
+	    <if test="queryParams.p_check_name !=null and queryParams.p_check_name !=''">
+	    	AND BS1.STAFF_NAME like '%'||#{queryParams.p_check_name}||'%'
+	    </if>
+	    <if test="queryParams.p_site_name !=null and queryParams.p_site_name !=''">
+	    	AND T.OUT_SITE_NAME like '%'||#{queryParams.p_site_name}||'%'
+	    </if>
+		ORDER BY T.CREATION_TIME desc
+</select>
+
+
+<select id="query_recordindexDown" parameterType="map" resultType="map">
+ SELECT t.OUT_RECORD_ID,
+		t.USER_ID,
+		t.OUT_SITE_ID,
+		t.OUT_SITE_NAME,
+		to_char(t.CHECK_TIME, 'yyyy-mm-dd') CHECK_TIME,
+		t.PROBLEM_MES,
+		t.AREA_ID,
+		BS1.STAFF_NAME,
+    	BS1.ORG_ID,
+		A.NAME AREA_NAME,
+    	ATO.ORG_NAME
+		FROM AXX_OUT_SITE_CHECK_RECORD T,
+		TB_BASE_STAFF BS1,
+		AREA A,
+    	AXX_T_ORGANIZATION ATO
+		WHERE T.USER_ID =
+		BS1.STAFF_ID(+)
+		AND BS1.ORG_ID = ATO.ORG_ID(+)
+		AND T.AREA_ID =
+		A.AREA_ID(+)
+		<if test="area_id !=null and area_id !=''">
+	    	AND T.AREA_ID=#{area_id}
+	    </if>
+		<if test="org_id !=null and org_id !=''">
+	    	AND BS1.ORG_ID=#{org_id}
+	    </if>
+	    <if test="p_start_time !=null and p_start_time !=''">
+	    	and trunc(T.CHECK_TIME) &gt;=to_date(#{p_start_time},'yyyy-mm-dd')
+	    </if>
+	    <if test="p_end_time !=null and p_end_time !=''">
+	    	and trunc(T.CHECK_TIME) &lt;=to_date(#{p_end_time},'yyyy-mm-dd')
+	    </if>
+	    <if test="p_check_name !=null and p_check_name !=''">
+	    	AND BS1.STAFF_NAME like '%'||#{p_check_name}||'%'
+	    </if>
+	    <if test="p_site_name !=null and p_site_name !=''">
+	    	AND T.OUT_SITE_NAME like '%'||#{p_site_name}||'%'
+	    </if>
+		ORDER BY T.CREATION_TIME desc
+</select>
+	<select id="getSignInfo_bak" parameterType="map" resultType="map">
+	
+		SELECT MS.SITE_DISTANCE, BS.STAFF_NAME,
+		TO_CHAR(US.SIGN_TIME,'YYYY-MM-DD HH24:MI:SS') SIGN_TIME
+		FROM
+		AXX_T_MACTH_SITE MS, AXX_T_USER_SIGN US, TB_BASE_STAFF BS
+		WHERE
+		MS.sign_id = US.SIGN_ID
+		AND US.USER_ID = BS.STAFF_ID
+		AND MS.SITE_ID =
+		#{out_site_id} AND MS.SITE_TYPE=3
+		<if
+			test=" start_time  != null and start_time  != '' and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and us.sign_time between  to_date(#{start_time},'yyyy-mm-dd hh24:mi:ss')  and to_date(#{end_time},'yyyy-mm-dd hh24:mi:ss')
+ ]]>
+		</if>
+		<if
+			test=" start_time  != null and start_time  != '' and (end_time  == null or end_time  == '')"> 
+ <![CDATA[ 
+     and us.sign_time > to_date(#{start_time},'yyyy-mm-dd hh24:mi:ss') 
+ ]]>
+		</if>
+		<if
+			test=" (start_time  == null or start_time  == '') and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and us.sign_time < to_date(#{end_time},'yyyy-mm-dd hh24:mi:ss')
+ ]]>
+		</if>
+		order by us.sign_time
+	</select>
+<select id="getSignInfo" parameterType="map" resultType="map">
+SELECT TO_CHAR(a.match_time, 'YYYY-MM-DD HH24:MI:SS') SIGN_TIME,
+       c.staff_name,
+       a.site_distance
+  from AXX_T_MACTH_SITE a
+  left join AXX_AUTO_USER_TRACK b
+    on a.track_id = b.track_id
+  left join tb_base_staff c
+    on b.user_id = c.staff_id
+  where a.site_id = #{out_site_id} AND a.SITE_TYPE=3
+		<if
+			test=" start_time  != null and start_time  != '' and end_time  != null and end_time  != ''"> 
+     and a.match_time between  to_date(#{start_time},'yyyy-mm-dd hh24:mi:ss')  and to_date(#{end_time},'yyyy-mm-dd hh24:mi:ss')
+		</if>
+		<if
+			test=" start_time  != null and start_time  != '' and (end_time  == null or end_time  == '')"> 
+ <![CDATA[ 
+     and a.match_time > to_date(#{start_time},'yyyy-mm-dd hh24:mi:ss') 
+ ]]>
+		</if>
+		<if
+			test=" (start_time  == null or start_time  == '') and end_time  != null and end_time  != ''"> 
+ <![CDATA[ 
+     and a.match_time < to_date(#{end_time},'yyyy-mm-dd hh24:mi:ss')
+ ]]>
+		</if>
+		<if test="start_time ==null or start_time =='' and (end_time==null or end_time=='')">
+			and a.match_time = trunc(SYSDATE)  
+		</if>
+		order by a.match_time desc
+	</select>
+	<select id="getStayInfo" parameterType="map" resultType="map">
+		select distinct user_id,
+                staff_name,
+                site_id,
+                task_id,
+                area_id,
+                inspect_date,
+                to_char(min(track_time),'yyyy-mm-dd hh24:mi:ss') MIN_SIGN_TIME,
+                to_char(max(track_time),'yyyy-mm-dd hh24:mi:ss') MAX_SIGN_TIME,
+                con_label,
+                round((max(track_time) - min(track_time)) * 24 * 60, 2) STAY_TIME
+  from (select tms.con_label,
+               tms.site_id,
+               tms.site_name,
+               tms.site_type,
+               tms.task_id,
+               aut.user_id,
+               tbs.STAFF_NAME,
+               aut.track_time,
+               mos.area_id,
+               atto.inspect_date
+          from axx_t_macth_site tms
+         inner join axx_auto_user_track aut
+            on tms.track_id = aut.track_id
+         inner join axx_main_out_site mos
+            on mos.out_site_id = tms.site_id
+         inner join AXX_T_TASK_OUTSITE atto
+            on tms.TASK_ID = atto.TASK_ID
+         inner join AXX_T_TASK att
+            on atto.TASK_ID = att.TASK_ID
+         inner join tb_base_staff tbs
+            on tbs.STAFF_ID = att.INSPECT_ID
+         where 1 = 1
+           and att.STATUS = 0
+           and tms.site_type = 3
+           <if test="out_site_id !=null and out_site_id !=''">
+		       and mos.OUT_SITE_ID=#{out_site_id}
+           </if>
+           <if test="start_time !=null and start_time !=''">
+	           and trunc(aut.track_time) >= to_date(#{start_time}, 'yyyy-mm-dd') 
+           </if>
+           <if test="end_time !=null and end_time !=''">
+	           and trunc(aut.track_time) &lt;= to_date(#{end_time}, 'yyyy-mm-dd')
+           </if>
+           <if test="start_time !=null and start_time !=''">
+           	   and trunc(atto.inspect_date) >= to_date(#{start_time}, 'yyyy-mm-dd') 
+           </if>
+           <if test="end_time !=null and end_time !=''">
+           	   and trunc(atto.inspect_date) &lt;=to_date(#{end_time}, 'yyyy-mm-dd')
+           </if>
+           <if test="start_time ==null or start_time =='' and (end_time ==null or end_time =='')">
+           	   and trunc(aut.track_time) = trunc(SYSDATE) and trunc(atto.inspect_date) = trunc(SYSDATE) 
+           </if>
+           ) t
+ group by con_label,
+          user_id,
+          staff_name,
+          site_id,
+          task_id,
+          area_id,
+          inspect_date
+          <if test="over_time !=null and over_time !=''">
+ having  round((max(track_time) - min(track_time)) * 24 * 60, 2) >=#{over_time}
+          </if>
+ order by inspect_date desc
+		
+
+		
+	</select>
+
+
+	<select id="getMstwInfo" parameterType="map" resultType="map">
+		SELECT
+		T.PROBE_ID,
+		T.OUT_SITE_ID,
+		T.MARKSTONE,
+		TO_CHAR(T.UPLOAD_TIME,
+		'YYYY-MM-DD HH24:MI:SS') UPLOAD_TIME,
+		T.MSTW_DEPTH,
+		T.USER_ID,
+		T.LONGITUDE,
+		T.LATITUDE,
+		T.REMARK,
+		BS.STAFF_NAME USER_NAME
+		FROM
+		AXX_T_DEPTH_PROBE T,TB_BASE_STAFF BS
+		WHERE T.USER_ID=BS.STAFF_ID AND
+		T.OUT_SITE_ID=#{out_site_id}
+
+	</select>
+
+	<update id="mstwUpdate" parameterType="map">
+		UPDATE AXX_T_DEPTH_PROBE set
+		<if test=" out_site_id  != null and out_site_id  != ''"> 
+			 <![CDATA[ 
+			OUT_SITE_ID=#{out_site_id},
+			 ]]>
+		</if>
+		<if test=" markstone  != null and markstone  != ''"> 
+			 <![CDATA[ 
+			MARKSTONE=#{markstone},
+			 ]]>
+		</if>
+		<if test=" upload_time  != null and upload_time  != ''"> 
+			 <![CDATA[ 
+			UPLOAD_TIME=to_date(#{upload_time},'yyyy-mm-dd hh24:mi:ss'),
+			 ]]>
+		</if>
+		<if test=" mstw_depth  != null and mstw_depth  != ''"> 
+			 <![CDATA[ 
+			MSTW_DEPTH=#{mstw_depth},
+			 ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+			 <![CDATA[ 
+			USER_ID=#{user_id},
+			 ]]>
+		</if>
+		<if test=" longitude  != null and longitude  != ''"> 
+			 <![CDATA[ 
+			LONGITUDE=#{longitude},
+			 ]]>
+		</if>
+		<if test=" latitude  != null and latitude  != ''"> 
+			 <![CDATA[ 
+			LATITUDE=#{latitude},
+			 ]]>
+		</if>
+		<if test=" remark  != null and remark  != ''"> 
+			 <![CDATA[ 
+			REMARK=#{remark},
+			 ]]>
+		</if>
+		PROBE_ID=#{probe_id}
+		where PROBE_ID=#{probe_id}
+
+	</update>
+
+
+	<select id="findMstwByid" parameterType="map" resultType="map">
+		SELECT
+		T.PROBE_ID,
+		T.OUT_SITE_ID,
+		T.MARKSTONE,
+		TO_CHAR(T.UPLOAD_TIME,
+		'YYYY-MM-DD HH24:MI:SS') UPLOAD_TIME,
+		T.MSTW_DEPTH,
+		T.USER_ID,
+		T.LONGITUDE,
+		T.LATITUDE,
+		T.REMARK,
+		BS.STAFF_NAME USER_NAME
+		FROM
+		AXX_T_DEPTH_PROBE T,TB_BASE_STAFF BS
+		WHERE T.USER_ID=BS.STAFF_ID AND
+		T.PROBE_ID=#{probe_id}
+	</select>
+
+
+	<select id="getId" resultType="string">
+		SELECT
+		SEQ_AXX_MAIN_OUT_SITE.NEXTVAL FROM DUAL
+
+	</select>
+
+	<insert id="saveJxs" parameterType="map">
+
+		insert into
+		AXX_T_OPERATOR_INFO
+		(OPERATOR_ID,
+		OUT_SITE_ID,
+		OPERATOR_NAME,
+		CAR_NO,
+		CAR_TYPE,
+		MOBILE,
+		TEL1,
+		TEL2,
+		INFO,
+		UPLOAD_TIME,
+		USER_ID)
+		values
+		(SEQ_AXX_T_OPERATOR_INFO.NEXTVAL,
+		#{out_site_id,jdbcType=VARCHAR},
+		#{operator_name,jdbcType=VARCHAR},
+		#{car_no,jdbcType=VARCHAR},
+		#{car_type,jdbcType=VARCHAR},
+		#{mobile,jdbcType=VARCHAR},
+		#{tel1,jdbcType=VARCHAR},
+		#{tel2,jdbcType=VARCHAR},
+		#{info,jdbcType=VARCHAR},
+		to_date(#{upload_time, jdbcType=DATE},
+		'yyyy-mm-dd hh24:mi:ss'),
+		#{user_id,jdbcType=NUMERIC})
+	</insert>
+
+	<insert id="saveOsMaintainScheme" parameterType="map">
+
+		insert into
+		AXX_OUT_SITE_MAINTAIN_SCHEME
+		(SCHEME_ID,
+		SCHEME_NAME,
+		OUT_SITE_ID,
+		OUT_SITE_TYPE,
+		MS_CONTENT,
+		USER_ID,
+		IS_TIMEOUT,
+		AREA_ID,
+		CREATION_TIME,
+		CREATED_BY
+		)
+		values
+		(SEQ_AXX_os_MAINTAIN_SCHEME.NEXTVAL,
+		#{scheme_name,
+		jdbcType=VARCHAR},
+		#{out_site_id,
+		jdbcType=NUMERIC},
+		#{out_site_type,
+		jdbcType=VARCHAR},
+		#{ms_content,
+		jdbcType=VARCHAR},
+		#{user_id,
+		jdbcType=VARCHAR},
+
+
+		#{is_timeout,
+		jdbcType=NUMERIC},
+		#{area_id,
+		jdbcType=NUMERIC},
+		to_date(#{creation_time, jdbcType=DATE}, 'yyyy-mm-dd
+		hh24:mi:ss'),
+		#{created_by,
+		jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<update id="makesureScheme" parameterType="map">
+		UPDATE AXX_OUT_SITE_MAINTAIN_SCHEME set
+
+		<if test=" commit_uid  != null and commit_uid  != ''"> 
+ <![CDATA[ 
+COMMIT_UID=#{commit_uid},
+ ]]>
+		</if>
+		<if test=" commit_x  != null and commit_x  != ''"> 
+ <![CDATA[ 
+COMMIT_X=#{commit_x},
+ ]]>
+		</if>
+		<if test=" commit_y  != null and commit_y  != ''"> 
+ <![CDATA[ 
+COMMIT_Y=#{commit_y},
+ ]]>
+		</if>
+		<if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+STATUS=#{status},
+ ]]>
+		</if>
+		<if test=" commit_date  != null and commit_date  != ''"> 
+ <![CDATA[ 
+COMMIT_DATE=to_date(#{commit_date},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" is_timeout  != null and is_timeout  != ''"> 
+ <![CDATA[ 
+IS_TIMEOUT=#{is_timeout},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME=to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		SCHEME_ID=#{scheme_id}
+		where SCHEME_ID=#{scheme_id}
+
+	</update>
+
+	<insert id="saveOsInputPoints" parameterType="map">
+
+		insert into
+		AXX_OUT_SITE_INPUT_POINTS
+		(
+		PLAN_ID,
+
+		X,
+		Y,
+		INPUT_USERID,
+		INPUT_TIME,
+		PARENT_CITY,
+		CREATION_TIME,
+		CREATED_BY,
+		UPDATE_TIME,
+		UPDATED_BY,
+		DELETE_FLAG,SITE_ORDER)
+		values
+		(
+		#{plan_id,
+		jdbcType=VARCHAR},
+
+		#{x,
+		jdbcType=NUMERIC},
+		#{y,
+		jdbcType=NUMERIC},
+		#{input_userid,
+		jdbcType=NUMERIC},
+		to_date(#{input_time, jdbcType=DATE}, 'yyyy-mm-dd
+		hh24:mi:ss'),
+		#{parent_city,
+		jdbcType=VARCHAR},
+		to_date(#{creation_time,
+		jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{created_by,
+		jdbcType=VARCHAR},
+		to_date(#{update_time, jdbcType=DATE}, 'yyyy-mm-dd
+		hh24:mi:ss'),
+		#{updated_by,
+		jdbcType=VARCHAR},
+		#{delete_flag,
+		jdbcType=VARCHAR},
+		#{site_order,
+		jdbcType=NUMERIC})
+
+	</insert>
+
+	<insert id="saveDepthProbe" parameterType="map">
+
+		insert into
+		AXX_T_DEPTH_PROBE
+		(PROBE_ID,
+		OUT_SITE_ID,
+		MARKSTONE,
+		UPLOAD_TIME,
+		MSTW_DEPTH,
+		USER_ID,
+		LONGITUDE,
+		LATITUDE,
+		REMARK)
+		values
+		(SEQ_AXX_T_DEPTH_PROBE.NEXTVAL,
+		#{out_site_id,
+		jdbcType=NUMERIC},
+		#{markstone,
+		jdbcType=VARCHAR},
+		to_date(#{upload_time, jdbcType=DATE},
+		'yyyy-mm-dd hh24:mi:ss'),
+		#{mstw_depth,
+		jdbcType=NUMERIC},
+		#{user_id,
+		jdbcType=NUMERIC},
+		#{longitude,
+		jdbcType=NUMERIC},
+		#{latitude,
+		jdbcType=NUMERIC},
+		#{remark,
+		jdbcType=VARCHAR})
+
+
+	</insert>
+
+
+	<select id="getDepthProbe" parameterType="map" resultType="map">
+		SELECT * FROM AXX_T_DEPTH_PROBE T WHERE T.OUT_SITE_ID=#{out_site_id}
+
+	</select>
+
+	<select id="getOscheckRecordId" resultType="string">
+		SELECT
+		SEQ_AXX_OUT_SITE_CHECK_RECORD.NEXTVAL FROM DUAL
+	</select>
+
+	<insert id="saveOsCheckRecord" parameterType="map">
+
+
+		insert into
+		AXX_OUT_SITE_CHECK_RECORD
+		(OUT_RECORD_ID,
+		USER_ID,
+		OUT_SITE_ID,
+		OUT_SITE_NAME,
+		CHECK_TIME,
+		IS_ON_OUT,
+		IS_CONSTRUCTION,
+		IS_COMPLETE_EQUIP,
+		IS_COMPLETE_LOOK,
+		IS_KNOW_CON,
+		IS_SINGLE,
+		IS_SEND_INFO,
+		IS_KNOW,
+		PROBLEM_MES,
+		SIDE_PROGRESS,
+		RECTIFICATION,
+		ASSESS,
+		SUB_COMPARY_NO,
+		AREA_ID,
+		CREATION_TIME,
+		CREATED_BY
+		)
+		values
+		(#{out_record_id},
+		#{user_id,
+		jdbcType=NUMERIC},
+		#{out_site_id,
+		jdbcType=NUMERIC},
+		#{out_site_name,
+		jdbcType=VARCHAR},
+		to_date(#{check_time, jdbcType=DATE}, 'yyyy-mm-dd
+		hh24:mi:ss'),
+		#{is_on_out,
+		jdbcType=VARCHAR},
+		#{is_construction,
+		jdbcType=VARCHAR},
+		#{is_complete_equip,
+		jdbcType=VARCHAR},
+		#{is_complete_look,
+		jdbcType=VARCHAR},
+		#{is_know_con,
+		jdbcType=VARCHAR},
+		#{is_single,
+		jdbcType=VARCHAR},
+		#{is_send_info,
+		jdbcType=VARCHAR},
+		#{is_know,
+		jdbcType=VARCHAR},
+		#{problem_mes,
+		jdbcType=VARCHAR},
+		#{side_progress,
+		jdbcType=VARCHAR},
+		#{rectification,
+		jdbcType=VARCHAR},
+		#{assess,
+		jdbcType=VARCHAR},
+		#{sub_compary_no,
+		jdbcType=VARCHAR},
+		#{area_id,
+		jdbcType=NUMERIC},
+		to_date(#{creation_time, jdbcType=DATE},
+		'yyyy-mm-dd hh24:mi:ss'),
+		#{created_by,
+		jdbcType=VARCHAR}
+		)
+
+
+
+	</insert>
+
+	<select id="getOsProtectTaskList" parameterType="map"
+		resultType="map">
+		select t.PLAN_ID,
+		to_char(t.START_DATE, 'yyyy-mm-dd hh24:mi:ss')
+		START_DATE,
+		to_char(t.END_DATE, 'yyyy-mm-dd hh24:mi:ss') END_DATE,
+		t.USER_ID,
+		t.OUT_SITE_ID,
+		t.OUT_SITE_TYPE,
+		t.RELATION_UID,
+		to_char(t.PLAN_CREATE_DATE, 'yyyy-mm-dd hh24:mi:ss') PLAN_CREATE_DATE,
+		to_char(t.CREATION_TIME, 'yyyy-mm-dd hh24:mi:ss') CREATION_TIME,
+		t.CREATED_BY,
+		t.RELATION_NAME,
+		t.USER_ROLE_ID,
+		mos.site_name
+		from
+		AXX_OUT_SITE_PLAN t,
+		axx_main_out_site mos
+
+		where t.out_site_id =
+		mos.out_site_id
+
+		and t.delete_flag = '0'
+		and t.user_id = #{userId}
+<![CDATA[ 
+    and trunc(t.start_date)<=trunc(sysdate) and trunc(t.end_date)>=trunc(sysdate)
+ ]]>
+
+	</select>
+
+	<insert id="saveOsProtectCoordinate" parameterType="map">
+		insert into
+		AXX_OUT_SITE_PLAN_POLYGN
+		(POLYGN_ID,
+		PLAN_ID,
+		X,
+		Y,
+		TRACK_TIME,
+		PLAN_TIME,
+		IS_GUARD,
+		PARENT_CITY,
+		CREATION_TIME,
+		CREATED_BY,
+		IS_GPS,
+		GPS_SWITCH
+		)
+		values
+		(SEQ_AXX_OUT_SITE_PLAN_POLYGN.NEXTVAL,
+		#{plan_id,
+		jdbcType=NUMERIC},
+		#{x,
+		jdbcType=NUMERIC},
+		#{y,
+		jdbcType=NUMERIC},
+		to_date(#{track_time,
+		jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		to_date(#{plan_time,
+		jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{is_guard,
+		jdbcType=NUMERIC},
+		#{parent_city,
+		jdbcType=VARCHAR},
+		to_date(#{creation_time, jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{created_by,
+		jdbcType=VARCHAR},
+		#{is_gps},
+		#{gps_switch}
+		)
+	</insert>
+
+
+	<select id="getSequence" parameterType="string" resultType="int">
+		SELECT MAX(T.PP_SEQUENCE) FROM AXX_OUT_SITE_PLAN_POLYGN T WHERE
+		T.PLAN_ID=#{plan_id}
+	</select>
+
+	<select id="getOutSitesByAreaId" parameterType="string" resultType="map">
+		SELECT T.OUT_SITE_ID, T.SITE_NAME, T.X, T.Y, '1' is_add_scheme
+			FROM AXX_MAIN_OUT_SITE T
+			WHERE T.AREA_ID = #{areaId} and T.con_status=1 and T.delete_flag=1 
+			and exists (select 1 from AXX_OUT_SITE_MAINTAIN_SCHEME ms where ms.out_site_id = T.out_site_id)
+			union all
+			SELECT T.OUT_SITE_ID, T.SITE_NAME, T.X, T.Y,'0' is_add_scheme
+			FROM AXX_MAIN_OUT_SITE T
+			WHERE T.AREA_ID = #{areaId} and T.con_status=1 and T.delete_flag=1 
+			and not exists (select 1 from AXX_OUT_SITE_MAINTAIN_SCHEME ms where ms.out_site_id = T.out_site_id)
+	</select>
+
+	<!-- 外力点 -->
+	<insert id="saveOutSiteMoveInfo" parameterType="map">
+
+		insert into
+		AXX_OUT_SITE_LOG
+		(MOVE_ID,
+		OUT_SITE_ID,
+		OLD_LONGITUDE,
+		OLD_LATITUDE,
+		NEW_LONGITUDE,
+		NEW_LATITUDE,
+		USER_ID,
+		MOVE_TIME,
+		ISDEL)
+		values
+		(SEQ_AXX_OUT_SITE_LOG.NEXTVAL,
+		#{out_site_id,jdbcType=NUMERIC},
+		#{old_longitude,jdbcType=NUMERIC},
+		#{old_latitude,jdbcType=NUMERIC},
+		#{new_longitude, jdbcType=NUMERIC},
+		#{new_latitude,jdbcType=NUMERIC},
+		#{user_id,jdbcType=VARCHAR},
+		to_date(#{move_time, jdbcType=DATE},
+		'yyyy-mm-dd hh24:mi:ss'),
+		0)
+
+	</insert>
+
+
+
+	<select id="getOutSchemes" parameterType="string" resultType="map">
+		SELECT * FROM AXX_OUT_SITE_MAINTAIN_SCHEME T WHERE
+		T.COMMIT_UID=#{userId}
+
+
+	</select>
+
+
+	<select id="getOutSchemesByJsyId" parameterType="string"
+		resultType="map">
+
+		SELECT ms.*,
+		ams.site_name,
+		bs.staff_name upload_name,
+		to_char(ams.creation_time, 'yyyy-mm-dd hh24:mi:ss') creation_time
+		FROM
+		AXX_OUT_SITE_MAINTAIN_SCHEME MS,
+		axx_main_out_site ams,
+		tb_base_staff bs
+		WHERE MS.USER_ID IN
+		(SELECT BS.STAFF_ID
+		FROM TB_BASE_STAFF BS,
+		TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+		WHERE BS.STAFF_ID =
+		BSR.STAFF_ID
+		AND BR.ROLE_ID = BSR.ROLE_ID
+		AND BR.ROLE_NO in ('AXX_DZ')
+		AND BS.ORG_ID = (SELECT T.ORG_ID
+		FROM TB_BASE_STAFF T
+		WHERE T.STAFF_ID =
+		#{userId})
+
+		)
+		and ms.out_site_id = ams.out_site_id
+		and ams.user_id =
+		bs.staff_id
+		and ms.commit_uid is null
+
+
+	</select>
+
+
+	<select id="getElebar" parameterType="string" resultType="map">
+		SELECT
+		T.X,T.Y,T.SITE_ORDER FROM AXX_OUT_SITE_INPUT_POINTS T WHERE
+		T.PLAN_ID=#{plan_id} ORDER BY T.SITE_ORDER
+	</select>
+
+
+	<delete id="delOldElebar" parameterType="string">
+		DELETE FROM
+		AXX_OUT_SITE_INPUT_POINTS T WHERE T.plan_id=#{plan_id}
+
+	</delete>
+
+
+	<select id="getOutSitesNotConfirmed" parameterType="string"
+		resultType="map">
+
+
+		SELECT
+		T.IMAGE_NAME,
+		T.IMAGE_PATH,
+		T.CON_STATUS,
+		T.INFO_SOURCE,
+		T.AFFECTED_FIBER,
+		T.RELAY_PART,
+		T.FIBER_LEVEL,
+		T.LINE_PART,
+		T.LANDMARKNO,
+		T.CON_COMPANY,
+		T.CON_ADDRESS,
+		T.CON_CONTENT,
+		T.IS_AGREEMENT,
+		T.SITE_DANGER_LEVEL,
+		TO_CHAR(T.CON_STARTDATE,
+		'YYYY-MM-DD HH24:MI:SS') CON_STARTDATE,
+		TO_CHAR(T.PRE_ENDDATE,
+		'YYYY-MM-DD HH24:MI:SS') PRE_ENDDATE,
+		T.CON_REPONSIBLE_BY,
+		T.CON_REPONSIBLE_BY_TEL,
+		T.GUARDIAN,
+		T.GUARDIAN_TEL,
+		T.SCENE_MEASURE,
+		BS1.STAFF_NAME FIBER_EPONSIBLE_BY,
+		T.FIBER_EPONSIBLE_TEL,
+		T.FIBER_UID,
+		STAY_TIME_PART,
+		T.IS_PLAN,
+		T.AREA_ID,
+		TO_CHAR(T.CREATION_TIME,
+		'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+		T.CREATED_BY,
+		TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS') UPDATE_TIME,
+		UPDATED_BY,
+		T.DELETE_FLAG,
+		T.OUT_SITE_ID,
+		T.SITE_NAME,
+		T.X,
+		T.Y,
+		BS.STAFF_NAME USER_ID,
+		T.FLOW_STATUS
+		FROM AXX_MAIN_OUT_SITE T,
+		TB_BASE_STAFF BS,TB_BASE_STAFF BS1
+		WHERE T.USER_ID = BS.STAFF_ID(+) and
+		T.FIBER_EPONSIBLE_BY=BS1.STAFF_ID(+)
+		AND T.DELETE_FLAG = 1
+		AND
+		T.AREA_ID=#{areaId}
+		and not exists (select 1 from
+		AXX_MAIN_OUT_SITE_SERVICE oss where
+		t.out_site_id=oss.out_site_id)
+	</select>
+	<select id="getFlowDetail" resultType="map" parameterType="map">
+		select tof.flow_id,tof.out_site_id,tbs.staff_name
+		REVIEW_STAFF,tof.opinon,to_char(tof.review_time,'yyyy-mm-dd
+		hh24:mi:ss') review_time,
+		tof.is_scence,tof.review_status,tof.flow_status from
+		axx_t_outsite_flow tof
+		inner join tb_base_staff tbs on
+		tof.review_staff=tbs.staff_id
+		where tof.out_site_id=#{out_site_id}
+		order by tof.flow_id
+	</select>
+
+
+	<select id="findConfirmTbl" resultType="map" parameterType="string">
+		    select test2.*,tbs.staff_name confirmname from (
+   select test1.*,tbs.staff_name SCHEMEcreator from (
+        select amos.SITE_NAME   ,amos.SITE_DANGER_LEVEL ,amos.AFFECTED_FIBER ,atc.cable_name,atr.PROTECT_GRADE ,amos.RELAY_PART ,atr.relay_name,
+                 amos.LINE_PART ,tbs.staff_name FIBER_EPONSIBLE_BY , to_char(amos.CREATION_TIME,'yyyy-mm-dd')  TIMETUP,amos.CON_COMPANY ,amos.CON_REPONSIBLE_BY,amos.CON_REPONSIBLE_BY_TEL  , amos.CON_CONTENT ,
+                 amos.SCENE_MEASURE , amos.IS_MACHAINE,amos.RESIDUAL_CABLE,amos.EFFECT_SERVICE,
+                 aosms.SCHEME_NAME ,aosms.CREATED_BY , to_char(aosms.CREATION_TIME,'yyyy-mm-dd hh24:mi:ss') CREATION_TIME  ,aosms.MS_CONTENT,
+                 atof.review_staff,to_char(atof.review_time,'yyyy-mm-dd hh24:mi:ss') review_time,atof.opinon,atof.is_scence,atof.review_status,atof.flow_status
+            from 
+            AXX_MAIN_OUT_SITE amos 
+                                   inner join AXX_OUT_SITE_MAINTAIN_SCHEME aosms on amos.out_site_id=aosms.out_site_id 
+                                   inner join AXX_T_OUTSITE_FLOW atof on aosms.out_site_id=atof.out_site_id 
+                                   inner join axx_t_cable atc on amos.affected_fiber=atc.cable_id 
+                                   inner join axx_t_relay atr on amos.relay_part=atr.relay_id 
+                                   left join TB_BASE_STAFF tbs on atof.REVIEW_STAFF=tbs.STAFF_ID  
+
+            where 1=1  
+            <if test=" _parameter  != null and _parameter  != ''"> 
+			and	amos.out_site_id=#{_parameter}
+			</if>
+            <!-- and (atof.FLOW_STATUS=2 or atof.FLOW_STATUS=3 or atof.FLOW_STATUS=4 or atof.FLOW_STATUS=5)  -->
+            order by atof.review_time
+   ) test1 
+     left join TB_BASE_STAFF tbs on CREATED_BY=tbs.STAFF_ID
+   ) test2
+     left join TB_BASE_STAFF tbs on REVIEW_STAFF=tbs.STAFF_ID
+	</select>
+
+<!-- 	通过orgId查询orgName -->
+	<select id="selOrgName" parameterType="object" resultType="string">
+		select ORG_NAME from TB_BASE_STAFF tbs inner join AXX_T_ORGANIZATION ato on tbs.ORG_ID = ato.ORG_ID
+			where STAFF_ID=#{_parameter}
+	</select>
+
+<!-- 	外力点到位率 -->
+	<select id="queryOutSiteRate" parameterType="map" resultType="map">
+
+SELECT MODELA.*,MODELB.*,#{start_time} ||'至'||#{end_time} start_date FROM
+(  
+  select inspect_id,staff_name,area_id,"NAME" , org_id,org_name,
+  DECODE(sum(status)-(trunc(to_date(#{end_time},'yyyy-mm-dd'))-trunc(to_date(#{start_time},'yyyy-mm-dd'))+1),0,'-',sum(test.out_site_id)) out_site_id,
+  DECODE(sum(status)-(trunc(to_date(#{end_time},'yyyy-mm-dd'))-trunc(to_date(#{start_time},'yyyy-mm-dd'))+1),0,'-',sum(actual_count)) actual_count,
+  DECODE(sum(status)-(trunc(to_date(#{end_time},'yyyy-mm-dd'))-trunc(to_date(#{start_time},'yyyy-mm-dd'))+1),0,'-',round(avg(site_rate),2)||'%')    site_rate 
+from (  
+select model01.*,nvl(model02.actual_count,0) actual_count,area.name,tbs.staff_name,round(nvl(actual_count,0)/model01.out_site_id,2)*100 site_rate ,ato.ORG_ID,ato.ORG_NAME from 
+(
+
+select tto.task_id,
+case  
+  when tt.STATUS=0 then count(tto.out_site_id) 
+end out_site_id,
+tt.inspect_id,tt.area_id,tt.STATUS from  AXX_T_TASK_OUTSITE tto inner join axx_t_task tt
+on tto.task_id=tt.task_id
+where 1=1 and ( trunc(tto.inspect_date) between to_date(#{start_time},'yyyy-mm-dd') and to_date(#{end_time},'yyyy-mm-dd') )
+           
+           and tt.area_id= #{areaId}
+           
+group by tto.task_id,tt.inspect_id,tt.area_id,tt.STATUS
+
+) model01 left join
+(
+
+ select count(site_id) actual_count,user_id,task_id,area_id from 
+      (select distinct user_id,site_id ,task_id,area_id,inspect_date 
+       from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time,mos.area_id,atto.inspect_date 
+              from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+              inner join axx_main_out_site mos on mos.out_site_id=tms.site_id 
+              inner join AXX_T_TASK_OUTSITE atto on tms.TASK_ID=atto.TASK_ID 
+              inner join AXX_T_TASK att on atto.TASK_ID=att.TASK_ID 
+              where 1=1 
+              and att.STATUS=0
+              and tms.site_type =3 
+              and mos.site_danger_level !=4
+
+                  and (trunc(aut.track_time) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(aut.track_time) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  and (trunc(atto.inspect_date) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(atto.inspect_date) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  )t
+
+       group by con_label,user_id,site_id,task_id,area_id,inspect_date having (max(track_time)-min(track_time))*1440 > #{OutSiteStay}
+       union all
+         select distinct user_id,site_id,task_id,area_id,inspect_date 
+       from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time,mos.area_id,atto.inspect_date 
+              from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+              inner join axx_main_out_site mos on mos.out_site_id=tms.site_id 
+              inner join AXX_T_TASK_OUTSITE atto on tms.TASK_ID=atto.TASK_ID 
+              inner join AXX_T_TASK att on atto.TASK_ID=att.TASK_ID 
+              where 1=1 
+              and att.STATUS=0 
+              and tms.site_type =3 
+              and mos.site_danger_level =4
+
+                  and (trunc(aut.track_time) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(aut.track_time) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  and (trunc(atto.inspect_date) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(atto.inspect_date) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  )t
+
+       group by con_label,user_id,site_id,task_id,area_id,inspect_date having (max(track_time)-min(track_time))*1440 > #{UnSafeOutSiteStay})   
+       group by user_id,task_id,area_id
+       
+ ) model02 on model01.task_id = model02.task_id      
+ inner join   area on model01.area_id=area.area_id   
+ inner join   tb_base_staff tbs on model01.inspect_id = tbs.staff_id
+ inner join AXX_T_ORGANIZATION ato on tbs.ORG_ID=ato.ORG_ID
+ where 1=1 
+<if test="inspect_id != null and inspect_id != ''">
+      and tbs.staff_id=#{inspect_id}             
+           </if>
+<if test="org_id !=null and org_id !=''">
+	and ato.org_id = #{org_id} 
+</if>           
+           
+ ) test
+group by inspect_id,staff_name,area_id,"NAME",org_id,org_name
+) MODELA
+
+INNER JOIN
+(
+
+select area_id,ROUND(AVG(SITE_RATE),2)||'%' AVG_SITE_RATE  FROM (
+       select area_id,"NAME" , avg(site_rate) site_rate
+from (  
+  select model01.*,nvl(model02.actual_count,0) actual_count,area.name,tbs.staff_name,round(nvl(actual_count,0)/model01.out_site_id,2)*100 site_rate from 
+(
+
+select tto.task_id,count(tto.out_site_id) out_site_id,tt.inspect_id,tt.area_id from  AXX_T_TASK_OUTSITE tto inner join axx_t_task tt
+on tto.task_id=tt.task_id
+where 1=1 and ( trunc(tto.inspect_date) between to_date(#{start_time},'yyyy-mm-dd') and to_date(#{end_time},'yyyy-mm-dd') )
+           and tt.area_id= #{areaId}
+           and tt.STATUS=0
+group by tto.task_id,tt.inspect_id,tt.area_id
+
+) model01 left join
+(
+ select count(site_id) actual_count,user_id,task_id,area_id from 
+      (select distinct user_id,site_id ,task_id,area_id,inspect_date 
+       from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time,mos.area_id,atto.inspect_date 
+              from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+              inner join axx_main_out_site mos on mos.out_site_id=tms.site_id 
+              inner join AXX_T_TASK_OUTSITE atto on tms.TASK_ID=atto.TASK_ID 
+              where 1=1 
+              and tms.site_type =3 
+              and mos.site_danger_level !=4
+
+                  and (trunc(aut.track_time) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(aut.track_time) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  and (trunc(atto.inspect_date) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(atto.inspect_date) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  )t
+
+       group by con_label,user_id,site_id,task_id,area_id,inspect_date having (max(track_time)-min(track_time))*1440 > #{OutSiteStay}
+       union all
+         select distinct user_id,site_id,task_id,area_id,inspect_date 
+       from (select tms.con_label,tms.site_id,tms.site_name, tms.site_type,tms.task_id,aut.user_id,aut.track_time,mos.area_id,atto.inspect_date 
+              from axx_t_macth_site tms inner join axx_auto_user_track aut on tms.track_id=aut.track_id
+              inner join axx_main_out_site mos on mos.out_site_id=tms.site_id 
+              inner join AXX_T_TASK_OUTSITE atto on tms.TASK_ID=atto.TASK_ID 
+              where 1=1 
+              and tms.site_type =3 
+              and mos.site_danger_level =4
+
+                  and (trunc(aut.track_time) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(aut.track_time) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  and (trunc(atto.inspect_date) >= to_date(#{start_time}, 'yyyy-mm-dd') and trunc(atto.inspect_date) &lt;= to_date(#{end_time}, 'yyyy-mm-dd'))
+                  )t
+
+       group by con_label,user_id,site_id,task_id,area_id,inspect_date having (max(track_time)-min(track_time))*1440 > #{UnSafeOutSiteStay})   
+       group by user_id,task_id,area_id
+ ) model02 on model01.task_id = model02.task_id      
+ inner join   area on model01.area_id=area.area_id   
+ inner join   tb_base_staff tbs on model01.inspect_id = tbs.staff_id
+ ) test
+group by inspect_id,staff_name,area_id,"NAME"
+) GROUP BY AREA_ID
+) MODELB
+ON MODELA.AREA_ID=MODELB.AREA_ID
+	</select>
+
+<!-- 通过父级area_id查找子集区域信息 -->
+<select id="getAllGroup" parameterType="string" resultType="map">
+	select * from AXX_T_ORGANIZATION where area_id = #{_parameter} 
+</select>
+
+<select id="depthProbeQuery" parameterType="map" resultType="map"> 
+	select amos.OUT_SITE_ID,
+       amos.SITE_NAME,
+       to_char(amos.CREATION_TIME,'yyyy-mm-dd hh24:mi:ss') CREATION_TIME,
+       to_char(atdp.UPLOAD_TIME,'yyyy-mm-dd hh24:mi:ss') UPLOAD_TIME,
+       atdp.PROBE_ID,
+       atdp.MSTW_DEPTH,
+        decode(sign((atdp.UPLOAD_TIME-amos.CREATION_TIME)*24-72),-1,'是',0,'是',1,'否') is_hurry
+  from AXX_MAIN_OUT_SITE amos
+  left join AXX_T_DEPTH_PROBE atdp
+    on amos.OUT_SITE_ID = atdp.OUT_SITE_ID
+ where amos.DELETE_FLAG = 1
+   and amos.CON_STATUS = 1
+   and amos.AREA_ID=#{area_id}
+   and trunc(amos.CREATION_TIME) between
+       to_date(#{start_time}, 'yyyy-mm-dd') and
+       to_date(#{end_time}, 'yyyy-mm-dd')
+ order by amos.CREATION_TIME
+</select>
+
+<!-- 外力点地图上的位置 -->
+<select   id="getOuteSiteLocation" parameterType="map" resultType="map" >
+	select * from  AXX_MAIN_OUT_SITE where  out_site_id= #{out_site_id}
+</select>
+
+<insert id="intoRecordTable" parameterType="String">
+    insert into site_input_points_temp values(#{records},sysdate)
+</insert>
+
+</mapper>

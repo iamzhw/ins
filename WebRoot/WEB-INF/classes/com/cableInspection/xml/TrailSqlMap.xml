@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableInspection.dao.TrailDao">
+	<select id="queryPoints" resultType="map" parameterType="map">
+		select *
+		from tb_ins_upload_point
+		where upload_staff = #{staff_id}
+		<!--  and to_date(upload_time) = to_date('${query_time}', 'yyyy-mm-dd')-->
+		<![CDATA[
+		and upload_time >= to_date('${begin_time}', 'yyyy-mm-dd hh24:mi:ss')
+		and upload_time <= to_date('${end_time}', 'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		and LONGITUDE!='4.9E-324' and LATITUDE!='4.9E-324'
+		order by upload_time ASC
+	</select>
+	
+	<select id="getTaskCables" parameterType="map" resultType="map">
+	<![CDATA[
+		select l.line_id, l.line_no, l.line_name, l.line_level,
+		l.create_time, 
+		l.create_staff, 
+		l.modify_time, 
+		l.modify_staff, 
+		l.road_name, 
+		l.area_id, 
+		l.son_area_id, 
+		l.line_level, 
+		l.line_type, 
+		l.parent_line_id
+  		from tb_ins_task_detail td, tb_ins_plan p, tb_ins_task t, tb_ins_line l
+ 		where td. inspect_object_id = l.line_id
+ 			and td.task_id = t.task_id
+   			and t.plan_id = p.plan_id
+   			and p.plan_kind = 1 
+   			and t.inspector = #{staff_id}
+   			and t.start_time <= to_date(#{query_time}, 'yyyy-mm-dd') 
+   			and t.complete_time >= to_date(#{query_time}, 'yyyy-mm-dd')
+   	]]>
+	</select>
+	
+	<select id="queryLinePoints" parameterType="map" resultType="map">
+		select
+	</select>
+</mapper>

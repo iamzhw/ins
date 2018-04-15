@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util-2.0.xsd">
+	<import resource="datasource-jndi.xml" />
+	<util:map id="dataSources">
+		<!-- <entry key="smart" value-ref="smart" /> -->
+		<entry key="pn" value-ref="pn" /><!-- 爱运维 -->
+		
+		<entry key="local" value-ref="local" />
+		<entry key="remote" value-ref="remote" />
+		<entry key="ressz" value-ref="ressz" />
+		<entry key="radio" value-ref="radio" />
+		<entry key="resnj" value-ref="resnj" />
+		
+		
+		<entry key="rescz" value-ref="rescz" />
+		<entry key="resha" value-ref="resha" />
+		<entry key="reslyg" value-ref="reslyg" />
+		<entry key="resnt" value-ref="resnt" />
+		<entry key="ressq" value-ref="ressq" />
+		<entry key="restz" value-ref="restz" />
+		<entry key="resxz" value-ref="resxz" />
+		<entry key="resyc" value-ref="resyc" />
+		<entry key="resyz" value-ref="resyz" />
+		<entry key="reszj" value-ref="reszj" />
+		<entry key="reswx" value-ref="reswx" />
+		<entry key="ossgxl" value-ref="ossgxl" />
+		<entry key="cpf83" value-ref="cpf83" />
+		<entry key="orcl153" value-ref="orcl153" />
+	</util:map>
+	
+	<bean id="dataSourceLookup" class="org.springframework.jdbc.datasource.lookup.MapDataSourceLookup">
+		<constructor-arg>
+			<ref bean="dataSources" />
+		</constructor-arg>
+	</bean>
+	
+	<bean id="dataSource_center" class="util.dataSource.DynamicDataSource">
+		<property name="targetDataSources" ref="dataSources" />
+		<property name="dataSourceLookup" ref="dataSourceLookup" />
+		<!-- 综合巡检 -->
+		<property name="defaultTargetDataSource" ref="local" />
+		<!-- 智能井盖 -->
+		<!-- <property name="defaultTargetDataSource" ref="smart" /> -->
+		<!-- 测试库 -->
+		<!-- <property name="defaultTargetDataSource" ref="remote" /> -->
+	</bean>
+</beans>

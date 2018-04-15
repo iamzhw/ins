@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webservice.unifiedno.dao.UnifiedNoDao">
+
+	<insert id="insertAccount" parameterType="map">
+		INSERT INTO TB_BASE_STAFF
+		(STAFF_ID,
+		STAFF_NO,
+		STAFF_NAME,
+		<if test="TEL != null and TEL != ''">  
+		   <![CDATA[
+			TEL,
+			]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+		   <![CDATA[
+			ID_NUMBER,
+			]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+		   <![CDATA[
+			EMAIL,
+			]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			ORG_ID,
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			MAINTOR_TYPE,
+			]]>
+		</if>
+		STATUS,
+		AREA_ID,
+		SON_AREA_ID)
+		VALUES
+		(osspad.design_order_seq.NEXTVAL,
+		#{staff_id},
+		#{name},
+		<if test="TEL != null and TEL != ''">  
+		   <![CDATA[
+			#{telephone},
+			]]>
+		</if>
+		<if test="ID_NUMBER != null and ID_NUMBER != ''">  
+		   <![CDATA[
+			#{idcard},
+			]]>
+		</if>
+		<if test="EMAIL != null and EMAIL != ''">  
+		   <![CDATA[
+			#{email},
+			]]>
+		</if>
+		<if test="OWN_COMPANY != null and OWN_COMPANY != ''">  
+		   <![CDATA[
+			#{org_id},
+			]]>
+		</if>
+		<if test="MAINTOR_TYPE != null and MAINTOR_TYPE != ''">  
+		   <![CDATA[
+			#{MAINTOR_TYPE},
+			]]>
+		</if>
+		#{status},
+		#{city},
+		#{area_code})
+	</insert>
+	<update id="updateAccount" parameterType="map">
+		update tb_base_staff t
+		   set t.staff_name  = #{name},
+		       t.tel         = #{telephone},
+		       t.id_number   = #{idcard},
+		       t.email       = #{email},
+		       t.modify_date = sysdate
+		 where t.staff_id = #{staff_id}
+	</update>
+
+	<update id="deleteAccount" parameterType="map">
+		update tb_base_staff t set t.isdeleted=1 where t.staff_id=#{staff_id}
+	</update>
+
+	<update id="suspendAccount" parameterType="map">
+		update tb_base_staff t set t.status=1 where t.staff_id=#{staff_id}
+	</update>
+	
+	<update id="thawAccount" parameterType="map">
+		update tb_base_staff t set t.status=0 where t.staff_id=#{staff_id}
+	</update>
+	
+	<select id="findAccount" parameterType="String">
+		select * from tb_base_staff t where t.staff_id=#{staff_id}
+	</select>
+	
+	<insert id="saveRecord" parameterType="map">
+		insert into tb_base_staff_record
+		  (signature,
+		   sn,
+		   sys_flag,
+		   city,
+		   opt_type,
+		   opt_time,
+		   staff_id,
+		   create_time)
+		values
+		  (#{signature},
+		   #{sn},
+		   #{sys_flag},
+		   #{city},
+		   #{opt_type},
+		   #{time},
+		   #{staff_id},
+		   sysdate)
+	</insert>
+
+</mapper>

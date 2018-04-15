@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions targetNamespace="http://132.228.165.151/Axisl/ElectronArchivesService.jws" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://132.228.165.151/Axisl/ElectronArchivesService.jws" xmlns:intf="http://132.228.165.151/Axisl/ElectronArchivesService.jws" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<!--WSDL created by Apache Axis version: 1.4
+Built on Apr 22, 2006 (06:55:48 PDT)-->
+
+   <wsdl:message name="queryEqpInfoRequest">
+
+      <wsdl:part name="jParam" type="xsd:string"/>
+
+   </wsdl:message>
+
+   <wsdl:message name="queryPhotoDetailResponse">
+
+      <wsdl:part name="queryPhotoDetailReturn" type="xsd:string"/>
+
+   </wsdl:message>
+
+   <wsdl:message name="queryEqpInfoResponse">
+
+      <wsdl:part name="queryEqpInfoReturn" type="xsd:string"/>
+
+   </wsdl:message>
+
+   <wsdl:message name="queryPhotoDetailRequest">
+
+      <wsdl:part name="jParam" type="xsd:string"/>
+
+   </wsdl:message>
+
+   <wsdl:portType name="ElectronArchivesService">
+
+      <wsdl:operation name="queryPhotoDetail" parameterOrder="jParam">
+
+         <wsdl:input message="impl:queryPhotoDetailRequest" name="queryPhotoDetailRequest"/>
+
+         <wsdl:output message="impl:queryPhotoDetailResponse" name="queryPhotoDetailResponse"/>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="queryEqpInfo" parameterOrder="jParam">
+
+         <wsdl:input message="impl:queryEqpInfoRequest" name="queryEqpInfoRequest"/>
+
+         <wsdl:output message="impl:queryEqpInfoResponse" name="queryEqpInfoResponse"/>
+
+      </wsdl:operation>
+
+   </wsdl:portType>
+
+   <wsdl:binding name="ElectronArchivesServiceSoapBinding" type="impl:ElectronArchivesService">
+
+      <wsdlsoap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+      <wsdl:operation name="queryPhotoDetail">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="queryPhotoDetailRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="http://DefaultNamespace" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="queryPhotoDetailResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="http://132.228.165.151/Axisl/ElectronArchivesService.jws" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="queryEqpInfo">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="queryEqpInfoRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="http://DefaultNamespace" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="queryEqpInfoResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="http://132.228.165.151/Axisl/ElectronArchivesService.jws" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+   </wsdl:binding>
+
+   <wsdl:service name="ElectronArchivesServiceService">
+
+      <wsdl:port binding="impl:ElectronArchivesServiceSoapBinding" name="ElectronArchivesService">
+
+         <wsdlsoap:address location="http://132.228.165.151/Axisl/ElectronArchivesService.jws"/>
+
+      </wsdl:port>
+
+   </wsdl:service>
+
+</wsdl:definitions>

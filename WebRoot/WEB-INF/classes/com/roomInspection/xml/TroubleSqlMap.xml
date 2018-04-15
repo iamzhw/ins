@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.roomInspection.dao.JfxjTroubleDao">
+
+
+	<sql id="dynamicWhere">
+		<if
+			test="queryParams.ROOM_NAME != null and queryParams.ROOM_NAME != ''">  
+            <![CDATA[
+	    	AND c.ROOM_NAME like '%'||#{queryParams.ROOM_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.CHECK_STAFF_NAME != null and queryParams.CHECK_STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND d.STAFF_NAME like '%'||#{queryParams.CHECK_STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_NAME != null and queryParams.TASK_NAME != ''">  
+            <![CDATA[
+	    	AND f.TASK_NAME like '%'||#{queryParams.TASK_NAME}||'%'
+	    	]]>
+		</if>
+	</sql>
+
+
+
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+	select a.check_detail_id,f.task_name,
+		case a.is_temp when 1 then '临时填报' else '非临时填报' end is_temp_str,
+		to_char(a.create_date,'yyyy-MM-dd') create_date_str,
+		e.check_item_name,d.staff_name,c.room_name from 
+		JFXJ_CHECK_DETAIL a,JFXJ_ACTION_DETAIL b,JFXJ_ROOM c,TB_BASE_STAFF d,JFXJ_CHECK_ITEM e,JFXJ_TASK f 
+	 	where a.action_id=b.action_detail_id and c.room_id = b.room_id 
+	 	and a.check_item_id=e.check_item_id and b.task_id=f.task_id
+	 	and c.check_staff_id=d.staff_id 
+		<include refid="dynamicWhere" />
+		ORDER BY a.check_detail_id
+	</select>
+	
+	<select id="queryDetail" parameterType="int" resultType="map">
+		select a.check_detail_id,f.task_name,
+				case a.is_temp when 1 then '临时填报' else '非临时填报' end is_temp_str,
+				to_char(a.begin_time,'yyyy-MM-dd hh24:mi:ss') begin_time_str,
+				to_char(a.end_time,'yyyy-MM-dd hh24:mi:ss') end_time_str,
+				to_char(a.create_date,'yyyy-MM-dd') create_date_str,
+		    a.description,a.check_result,e.check_item_name,e.check_type,
+		    d.staff_name,c.room_name,g.trouble_type_name from 
+				JFXJ_CHECK_DETAIL a,JFXJ_ACTION_DETAIL b,JFXJ_ROOM c,
+		    TB_BASE_STAFF d,JFXJ_CHECK_ITEM e,JFXJ_TASK f,jfxj_trouble_type g
+			 	where a.action_id=b.action_detail_id and c.room_id = b.room_id 
+			 	and a.check_item_id=e.check_item_id and b.task_id=f.task_id 
+		    and a.trouble_type_id=g.trouble_type_id and c.check_staff_id=d.staff_id
+		    and a.check_detail_id=#{checkDetailId}
+	</select>
+	<select id="queryPicByDetailId" parameterType="int" resultType="map">
+		select cdp.pic_id,cdp.pic_path,cdp.micro_pic_path,cdp.check_staff,cdp.check_item_id 
+		from check_detail_2_pic cdp,check_detail_pic cp
+		where cdp.pic_id=cp.pic_id and cp.check_detail_id=#{checkDetailId}
+	</select>
+
+</mapper>

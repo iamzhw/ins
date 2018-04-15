@@ -1,0 +1,1149 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.cableCheck.dao.CheckOrderDao">
+	<!--插入dtsj表 -->
+	<insert id="insertEqpAndPort" parameterType="map">
+		insert into
+		TB_CABLECHECK_DTSJ
+		(ID, SBID, SBBM, SBMC, BDSJ, DZID, DZBM)
+		values
+		(SEQ_CABLECHECK_DTSJ.nextval,
+		#{eqpId},
+		#{eqpNo},
+		#{eqpName},
+		#{portId},
+		#{portNo})
+	</insert>
+	<!-- 设备地址和名称 -->
+	<insert id="insertEquipment" parameterType="map">
+		insert into
+		TB_CABLECHECK_EQUIPMENT
+		(ID, equipment_id, address, res_type)
+		values
+		(EQUIPMENT_SEQ_ID.nextval, #{eqpId}, {#{eqpAddress}, #{eqpName})
+	</insert>
+
+	<!--经纬度 -->
+	<insert id="insertEqpoint" parameterType="map">
+		insert into
+		tb_ins_point
+		(ID,longitude,latitude,equipment_id)values
+		(SEQ_TB_INS_POINT.nextval,#{longitude},#{latitude},#{equipment_id})
+	</insert>
+	<!--设备记录 -->
+	<insert id="insertEqpRecord" parameterType="map">
+		insert into
+		tb_cablecheck_record
+		(RECORD_ID,
+		EQP_ID,
+		EQP_NO,
+		EQP_NAME,
+		LONGITUDE,
+		LATITUDE,
+		COMMENTS,
+		EQPADDRESS,
+		REMARK,
+		INFO,
+		port_id,
+		CREATE_TIME,
+		CREATE_STAFF,
+		port_no,
+		port_name,
+		descript,
+		record_type,
+		area_id,
+		son_area_id,
+		isCheckOK,
+		TASK_ID,
+		DETAIL_ID,
+		port_info,
+		ISH,
+		COMPANY,ORDER_ID,ORDER_NO,IS_FROM)
+		values
+		(#{recordId},
+		#{eqpId,jdbcType=VARCHAR},
+		#{eqpNo,jdbcType=VARCHAR},
+		#{eqpName,jdbcType=VARCHAR},
+		#{longitude,jdbcType=VARCHAR},
+		#{latitude,jdbcType=VARCHAR},
+		#{comments,jdbcType=VARCHAR},
+		#{eqpAddress,jdbcType=VARCHAR},
+		#{remarks,jdbcType=VARCHAR},
+		#{info,jdbcType=VARCHAR},
+		#{port_id,jdbcType=VARCHAR},
+		sysdate,
+		#{staffId},
+		#{port_no,jdbcType=VARCHAR},
+		#{port_name,jdbcType=VARCHAR},
+		#{descript,jdbcType=VARCHAR},
+		#{record_type,jdbcType=VARCHAR},
+		#{area_id},
+		#{son_area_id},
+		#{isCheckOK,jdbcType=VARCHAR},
+		#{task_id,jdbcType=VARCHAR},
+		#{detail_id,jdbcType=VARCHAR},
+		#{port_info,jdbcType=VARCHAR},
+		#{isH,jdbcType=VARCHAR},
+		#{type,jdbcType=VARCHAR},
+		<choose>
+        <when test="orderId !=null and orderId != ''">
+           #{orderId,jdbcType=NUMERIC},
+        </when>
+        <otherwise>
+            #{null,jdbcType=NUMERIC},
+        </otherwise>
+         </choose>
+		<choose>
+        <when test="OrderNo !=null and OrderNo != ''">
+           #{OrderNo,jdbcType=VARCHAR},
+        </when>
+        <otherwise>
+            #{null,jdbcType=VARCHAR},
+        </otherwise>
+         </choose>
+		<choose>
+        <when test="isFrom !=null and isFrom != ''">
+           #{isFrom,jdbcType=VARCHAR}
+        </when>
+        <otherwise>
+           #{null,jdbcType=VARCHAR}
+        </otherwise>
+         </choose>
+		)
+	</insert>
+	
+	<insert id="insertEqpRecordNew" parameterType="map">
+		insert into
+		tb_cablecheck_record
+		(RECORD_ID,
+		EQP_ID,
+		EQP_NO,
+		EQP_NAME,
+		LONGITUDE,
+		LATITUDE,
+		COMMENTS,
+		EQPADDRESS,
+		REMARK,
+		INFO,
+		port_id,
+		CREATE_TIME,
+		CREATE_STAFF,
+		port_no,
+		port_name,
+		descript,
+		record_type,
+		area_id,
+		son_area_id,
+		isCheckOK,
+		TASK_ID,
+		DETAIL_ID,
+		port_info,
+		ISH,
+		COMPANY,ORDER_ID,ORDER_NO,IS_FROM,eqpno_new,eqpid_new,portrightposition,portidrightposition,
+		changeportid,changeportno,changeeqpid,changeeqpno
+		)
+		values
+		(#{recordId},
+		#{eqpId,jdbcType=VARCHAR},
+		#{eqpNo,jdbcType=VARCHAR},
+		#{eqpName,jdbcType=VARCHAR},
+		#{longitude,jdbcType=VARCHAR},
+		#{latitude,jdbcType=VARCHAR},
+		#{comments,jdbcType=VARCHAR},
+		#{eqpAddress,jdbcType=VARCHAR},
+		#{remarks,jdbcType=VARCHAR},
+		#{info,jdbcType=VARCHAR},
+		#{port_id,jdbcType=VARCHAR},
+		sysdate,
+		#{staffId},
+		#{port_no,jdbcType=VARCHAR},
+		#{port_name,jdbcType=VARCHAR},
+		#{descript,jdbcType=VARCHAR},
+		#{record_type,jdbcType=VARCHAR},
+		#{area_id},
+		#{son_area_id},
+		#{isCheckOK,jdbcType=VARCHAR},
+		#{task_id,jdbcType=VARCHAR},
+		#{detail_id,jdbcType=VARCHAR},
+		#{port_info,jdbcType=VARCHAR},
+		#{isH,jdbcType=VARCHAR},
+		#{type,jdbcType=VARCHAR},
+		<choose>
+        <when test="orderId !=null and orderId != ''">
+           #{orderId,jdbcType=NUMERIC},
+        </when>
+        <otherwise>
+            #{null,jdbcType=NUMERIC},
+        </otherwise>
+         </choose>
+		<choose>
+        <when test="OrderNo !=null and OrderNo != ''">
+           #{OrderNo,jdbcType=VARCHAR},
+        </when>
+        <otherwise>
+            #{null,jdbcType=VARCHAR},
+        </otherwise>
+         </choose>
+		<choose>
+        <when test="isFrom !=null and isFrom != ''">
+           #{isFrom,jdbcType=VARCHAR},
+        </when>
+        <otherwise>
+           #{null,jdbcType=VARCHAR},
+        </otherwise>
+         </choose>
+         #{rightEqpNo,jdbcType=VARCHAR},
+         #{rightEqpId,jdbcType=VARCHAR},
+         #{truePortNo,jdbcType=VARCHAR},
+         #{truePortId,jdbcType=VARCHAR},
+         #{changedPortId,jdbcType=VARCHAR},
+         #{changedPortNo,jdbcType=VARCHAR},
+         #{changedEqpId,jdbcType=VARCHAR},
+         #{changedEqpNo,jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<insert id="insertEqpRecord_new" parameterType="map">
+		insert into
+		tb_cablecheck_record
+		(RECORD_ID,EQP_ID,EQP_NO,EQP_NAME,EQPADDRESS,INFO,descript,port_id,
+		CREATE_TIME,CREATE_STAFF,port_no,port_name,record_type,
+		area_id,son_area_id,isCheckOK,TASK_ID,DETAIL_ID,ISH,portrightposition,portidrightposition
+		<!-- COMPANY,ORDER_ID,ORDER_NO,IS_FROM -->)
+		values
+		(#{recordId},
+		#{eqpId,jdbcType=VARCHAR},
+		#{eqpNo,jdbcType=VARCHAR},
+		#{eqpName,jdbcType=VARCHAR},
+		#{eqpAddress,jdbcType=VARCHAR},
+		#{info,jdbcType=VARCHAR},
+	    #{reason,jdbcType=VARCHAR},
+		#{port_id,jdbcType=VARCHAR},
+		sysdate,
+		#{staffId},
+		#{port_no,jdbcType=VARCHAR},
+		#{port_name,jdbcType=VARCHAR},
+		#{record_type,jdbcType=VARCHAR},
+		#{area_id},
+		#{son_area_id},
+		#{isCheckOK,jdbcType=VARCHAR},
+		#{taskId,jdbcType=VARCHAR},
+		#{detail_id,jdbcType=VARCHAR},
+		#{isH,jdbcType=VARCHAR},
+		#{CorrectPortNo,jdbcType=VARCHAR},
+		#{CorrectPortId,jdbcType=VARCHAR}
+
+		)
+	</insert>
+	<insert id="saveTroubleTask" parameterType="map">
+		insert into
+		tb_cablecheck_task(
+		TASK_ID,
+		TASK_NO,
+		TASK_NAME,
+		TASK_TYPE,
+		STATUS_ID,
+		INSPECTOR,
+		MAINTOR,
+		CREATE_STAFF,
+		CREATE_TIME,
+		START_TIME,
+		LAST_UPDATE_TIME,
+		SON_AREA_ID,
+		AREA_ID,
+		ENABLE,
+		REMARK,
+		INFO,
+		NO_EQPNO_FLAG,
+		IS_NEED_ZG,
+		OLD_TASK_ID,
+		SBID)
+		values
+		(SQP_TB_CABLECHECK_TASK.nextVAL,
+		#{TASK_NO},
+		#{TASK_NAME},
+		#{TASK_TYPE},
+		#{STATUS_ID},
+		#{INSPECTOR},
+		<choose>
+        <when test="MAINTOR !=null and MAINTOR != ''">
+           #{MAINTOR,jdbcType=VARCHAR},
+        </when>
+        <otherwise>
+           #{null,jdbcType=VARCHAR},
+        </otherwise>
+         </choose>
+		#{CREATE_STAFF},
+		sysdate,
+		sysdate,
+		sysdate,
+		#{SON_AREA_ID},
+		#{AREA_ID},
+		#{ENABLE},
+		#{REMARK},
+		#{INFO},
+		#{NO_EQPNO_FLAG},
+		#{IS_NEED_ZG},
+		#{OLD_TASK_ID},
+		#{SBID})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="TASK_ID">
+			SELECT SQP_TB_CABLECHECK_TASK.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+
+	<insert id="saveTroubleTaskDetail" parameterType="map">
+		insert into
+		tb_cablecheck_taskdetail(
+		DETAIL_ID,
+		TASK_ID,
+		INSPECT_OBJECT_ID,
+		INSPECT_OBJECT_TYPE,
+		INSPECT_OBJECT_NO,
+		CHECK_FLAG,
+		PORT_ID,
+		DTSJ_ID,
+		GLBM,
+		GLMC,sbid,sbbm,sbmc,orderno,mark,action_type,archive_time)
+		values
+		(SQP_TB_CABLECHECK_TASK_DETAIL.nextVAL,
+		#{TASK_ID},
+		#{INSPECT_OBJECT_ID},
+		#{INSPECT_OBJECT_TYPE},
+		#{INSPECT_OBJECT_NO},
+		#{CHECK_FLAG},
+		#{PORT_ID},
+		#{dtsj_id},
+		#{GLBM},
+		#{GLMC},#{eqpId_port},#{eqpNo_port},#{eqpName_port},#{orderNo},#{orderMark},#{actionType},
+		<choose>
+	        <when test="archive_time !=null and archive_time != ''">
+	          to_date(#{archive_time},'yyyy-mm-dd hh24:mi:ss')
+	        </when>
+	        <otherwise>
+	          ''
+	        </otherwise>
+         </choose>
+		
+		
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="DETAIL_ID">
+			SELECT SQP_TB_CABLECHECK_TASK_DETAIL.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	<select id="queryAreaByStaffId" parameterType="int" resultType="map">
+		select * from tb_base_staff s
+		where s.staff_id = #{staffId}
+		and
+		s.isdeleted=0
+		and s.status=0
+	</select>
+	<select id="queryTaskByTaskId" parameterType="map" resultType="map">
+		select * from TB_CABLECHECK_TASK t
+		where t.task_id = #{task_id}
+	</select>
+	<insert id="insertPhotoRel" parameterType="map">
+		insert into
+		Tb_cablecheck_photo_rel(
+		ID,
+		TASK_ID,
+		DETAIL_ID,
+		OBJECT_ID,
+		OBJECT_TYPE,
+		PHOTO_ID,
+		REMARKS,
+		CREATE_TIME,
+		RECORD_ID
+		)
+		values
+		(
+		SQP_Tb_cablecheck_photo_rel.nextVAL,
+		#{TASK_ID},
+		#{DETAIL_ID},
+		#{OBJECT_ID},
+		#{OBJECT_TYPE},
+		#{PHOTO_ID},
+		#{REMARKS},
+		SYSDATE,
+		#{RECORD_ID}
+		)
+	</insert>
+	<!-- <insert id="insertEquipmentRecord" parameterType="map" > insert into 
+		tb_cablecheck_eqprecord (RECORD_ID, EQP_ID, EQP_NO, EQP_NAME, LONGITUDE, 
+		LATITUDE, COMMENTS, EQPADDRESS, CREATE_STAFF, CREATE_TIME, REMARK, INFO )values 
+		(EQUIPMENT_SEQ_ID.nextval, #{eqpId}, #{eqpNo}, #{eqpName}, #{longitude}, 
+		#{latitude}, #{comments}, #{eqpAddress}, #{staffId}, sysdate, #{remark}, 
+		#{info} ) </insert> -->
+	<select id="getRecordId" resultType="int">
+		select
+		SEQ_TB_EQPRECORD.NEXTVAL from DUAL
+	</select>
+	<update id="updateState" parameterType="map">
+		update tb_cablecheck_task
+		set STATUS_ID = 7 where task_id = #{task_id}
+	</update>
+	<update id="updateTask" parameterType="map">
+		update tb_cablecheck_task
+		set modify_staff = #{staffId},
+		modify_time = sysdate,
+		remark =
+		#{remarks},
+		is_need_zg = #{is_need_zg}
+		where task_id = #{task_id}
+	</update>
+	<!-- 一次性更新任务表 -->
+	<update id="updateTask_once" parameterType="map">
+		update
+		tb_cablecheck_task
+		set modify_staff = #{staffId},
+		modify_time = sysdate,
+		remark = #{remarks},
+		is_need_zg = #{is_need_zg},
+		actual_complete_time =
+		sysdate,
+		LAST_UPDATE_TIME = sysdate,
+		STATUS_ID = #{statusId}
+		where
+		task_id = #{task_id}
+	</update>
+	
+	<update id="updateTaskOrder" parameterType="map">
+		update
+		tb_cablecheck_task
+		set modify_staff = #{staffId},
+		modify_time = sysdate,
+		remark = #{remarks},
+		is_need_zg = #{is_need_zg},
+		actual_complete_time =sysdate,
+		LAST_UPDATE_TIME = sysdate,
+		STATUS_ID = #{statusId},
+		check_way=#{checkWay}
+		where
+		task_id = #{task_id}
+	</update>
+
+	<update id="updateTaskTime" parameterType="map">
+		update
+		tb_cablecheck_task
+		set actual_complete_time = sysdate
+		where task_id =
+		#{task_id}
+	</update>
+	<update id="updateLastUpdateTime" parameterType="map">
+		update
+		tb_cablecheck_task
+		set LAST_UPDATE_TIME = sysdate
+		where task_id =
+		#{task_id}
+	</update>
+	<update id="updateTaskBack" parameterType="map">
+		update
+		tb_cablecheck_task
+		set modify_staff = #{staffId},
+		modify_time = sysdate,
+		actual_complete_time = sysdate,
+		LAST_UPDATE_TIME = sysdate,
+		status_id = #{statusId}
+		where task_id =
+		#{task_id}
+	</update>
+	<update id="updateTaskMaintor_status" parameterType="map">
+		update
+		tb_cablecheck_task
+		set modify_staff = #{staffId},
+		modify_time = sysdate,
+		actual_complete_time = sysdate,
+		LAST_UPDATE_TIME = sysdate,
+		status_id = #{statusId},
+		maintor = #{maintor}
+		where task_id =	#{task_id}
+	</update>
+	<update id="updateRemarks" parameterType="map">
+		update
+		TB_CABLECHECK_TASK set remark = #{remarks} where task_id = #{task_id}
+	</update>
+	<update id="updateStatus" parameterType="map">
+		update
+		tb_cablecheck_task set STATUS_ID = #{statusId} where task_id =
+		#{task_id}
+	</update>
+	<update id="cancelBill" parameterType="map">
+		update tb_cablecheck_task
+		set STATUS_ID = 5, MAINTOR=null,LAST_UPDATE_TIME=sysdate where task_id
+		= #{taskId}
+	</update>
+	<update id="forwardBill" parameterType="map">
+		update tb_cablecheck_task
+		set INSPECTOR=#{forwarStaffId},LAST_UPDATE_TIME=sysdate where task_id
+		= #{taskId}
+	</update>
+	<update id="forwardzgBill" parameterType="map">
+		update
+		tb_cablecheck_task set
+		MAINTOR=#{forwarStaffId},LAST_UPDATE_TIME=sysdate where task_id =
+		#{taskId}
+	</update>
+	<update id="updateDtdz" parameterType="map">
+		update tb_cablecheck_dtsj
+		set JCSJ = sysdate where DZID = #{port_id}
+	</update>
+	<select id="queryAreaByeqpId" parameterType="map" resultType="map">
+		select
+		e.area_id,e.parent_area_id,e.longitude,e.latitude,e.longitude_inspect,e.latitude_inspect
+		from TB_CABLECHECK_EQUIPMENT e where e.equipment_id = #{eqpId} and
+		e.equipment_code = #{eqpNo}
+	</select>
+	<select id="getTaskCompany" parameterType="String" resultType="String">
+		select task.company from tb_cablecheck_task task where task.task_id =
+		#{taskId}
+	</select>
+	<update id="updateLongLati" parameterType="map">
+		update
+		tb_cablecheck_equipment set
+		longitude_inspect =
+		#{eqpLongitude_inspect},
+		latitude_inspect= #{eqpLatitude_inspect},
+		staffid_inspector=#{staffID_inspect}
+		where parent_area_id=#{areaId}
+		AND
+		equipment_id = #{eqpID}
+		AND equipment_code = #{eqpNo}
+	</update>
+	<update id="updateLongLatiTimes" parameterType="map">
+		update
+		tb_cablecheck_equipment set
+		long_lati_times= #{times}
+		where
+		parent_area_id=#{areaId}
+		AND equipment_id = #{eqpID}
+		AND equipment_code
+		= #{eqpNo}
+	</update>
+	<select id="getLongLatiTimes" parameterType="map" resultType="String">
+		select long_lati_times from tb_cablecheck_equipment
+		where equipment_id
+		= #{eqpID}
+		AND equipment_code = #{eqpNo}
+	</select>
+	<update id="updateCheckCompleteTime" parameterType="map">
+		update
+		tb_cablecheck_equipment set
+		check_complete_time= sysdate
+		where
+		parent_area_id=#{areaId}
+		AND equipment_id = #{eqpId}
+		AND equipment_code
+		= #{eqpNo}
+	</update>
+	<update id="updateEquipPortNUM" parameterType="map">
+		update
+		tb_cablecheck_equipment set
+		CHECK_PORT_NUM= #{allcount},
+		RIGTH_PORT_NUM
+		= #{truecount}
+		where parent_area_id=#{areaId}
+		AND equipment_id =
+		#{eqpId}
+		AND equipment_code = #{eqpNo}
+	</update>
+	<update id="updateLongLati_times" parameterType="map">
+		update
+		tb_cablecheck_equipment set
+		longitude_inspect =
+		#{eqpLongitude_inspect},
+		latitude_inspect= #{eqpLatitude_inspect},
+		long_lati_times= #{times},
+		staffid_inspector=#{staffID_inspect},
+		staff_long_lati_time=sysdate
+		where equipment_id = #{eqpID}
+		AND
+		equipment_code = #{eqpNo}
+	</update>
+
+
+	<insert id="insertEqpAddress" parameterType="map">
+		insert into PHY_EQP_SPC_ADDRESS
+		(id,
+		phy_eqp_id,
+		phy_eqp_no,
+		install_eqp_id,
+
+		location_id,
+		address_id,
+		address_name,
+		is_check_ok,
+		<if test="error_reason != null and error_reason != ''">  
+	   <![CDATA[
+		error_reason, 
+		]]>
+		</if>
+		task_id,
+		create_staff,
+		create_time,
+		parent_area_id,
+		area_id
+		)
+		values
+		(#{id},
+		#{phy_eqp_id},
+		#{phy_eqp_no,jdbcType=VARCHAR},
+		#{install_eqp_id},
+		#{location_id},
+		#{address_id},
+		#{address_name,jdbcType=VARCHAR},
+		#{is_check_ok,jdbcType=VARCHAR},
+		<if test="error_reason != null and error_reason != ''">  
+	   <![CDATA[
+	   #{error_reason,jdbcType=VARCHAR},
+	   ]]>
+		</if>
+		#{task_id},
+		#{create_staff,jdbcType=VARCHAR},
+		sysdate,
+		#{area_id},
+		#{son_area_id}
+		)
+	</insert>
+
+
+	<select id="geteqpAddressId" resultType="int">
+		select
+		SEQ_PHY_EQP_SPC_ADDRESS.NEXTVAL from DUAL
+	</select>
+
+	<select id="getStaffRole" parameterType="string" resultType="string">
+		select tbsr.role_id from tb_base_staff_role tbsr where tbsr.staff_id =
+		#{staffId} and tbsr.role_id = 286
+	</select>
+
+	<select id="getEqpType" parameterType="map" resultType="string">
+		select
+		tb.res_type_id from tb_cablecheck_equipment tb
+		where
+		tb.equipment_id=#{eqpId} and tb.equipment_code=#{eqpNo}
+	</select>
+
+	<select id="getEqp" parameterType="map" resultType="map">
+		select
+		tbc.equipment_id,tbc.equipment_code,tbc.equipment_name,tbc.res_type_id,tbc.res_type
+		from tb_cablecheck_equipment tbc
+		inner join
+		(select
+		tb.install_sbid,tb.install_sbbm from tb_cablecheck_equipment tb where
+		tb.equipment_id=#{eqpId} and tb.equipment_code=#{eqpNo}) c
+		on
+		tbc.equipment_id=c.install_sbid and tbc.equipment_code=c.install_sbbm
+	</select>
+
+	<insert id="insertCheckEqpRecord" parameterType="map">
+		insert into
+		TB_CABLECHECK_REVIEW (
+		eqpno,eqpname,eqpid,sblx,dzid,dzno,glbh,checkstaff,checktime,check_ischeckok,reviewstaff,reviewtime,
+		review_ischeckok,check_review_result,review_remark,check_descript,ossglbm
+		)
+		values
+		(
+		#{eqpNo},
+		#{eqpName},
+		#{eqpId},
+		#{res_type_id},
+		#{port_id},
+		#{port_no},
+		#{glbm},
+		#{checkstaff},
+		to_date(#{create_time,
+		jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{check_ischeckok},
+		#{reviewStaff},
+		sysdate,
+		#{review_ischeckok},
+		#{check_review_result},
+		#{review_remark},
+		#{descript},
+		#{ossGlbm}
+		)
+	</insert>
+	<insert id="insertReviewRecord" parameterType="map">
+		insert into
+		TB_CABLECHECK_REVIEW(
+		eqpno,eqpname,eqpid,sblx,dzid,dzno,glbh,checkstaff,checktime,check_ischeckok,reviewstaff,reviewtime,review_ischeckok,
+		check_review_result,obdid,obdno,obdname,obdsblx,review_remark,check_descript,ossglbm
+		)
+		values
+		(
+		#{eqpNo},
+		#{eqpName},
+		#{eqpId},
+		#{res_type_id},
+		#{port_id},
+		#{port_no},
+		#{glbm},
+		#{checkstaff},
+		to_date(#{create_time,
+		jdbcType=DATE}, 'yyyy-mm-dd hh24:mi:ss'),
+		#{check_ischeckok},
+		#{reviewStaff},
+		sysdate,
+		#{review_ischeckok},
+		#{check_review_result},
+		#{obdId},
+		#{obdNo},
+		#{obdName},
+		#{obd_type_id},
+		#{review_remark},
+		#{descript},
+		#{ossGlbm}
+		)
+	</insert>
+
+	<update id="insertEqpMark" parameterType="map">
+		update
+		tb_cablecheck_equipment set wljb = #{eqpMark} where
+		equipment_id=#{eqpId} and equipment_code=#{eqpNo}
+	</update>
+
+	<select id="queryByStaffId" parameterType="map" resultType="map">
+		select * from tb_base_staff s
+		where s.staff_id = #{staffId}
+		and
+		s.isdeleted=0
+		and s.status=0
+	</select>
+
+	<insert id="insertEqpLongLati" parameterType="map">
+		insert into
+		tb_cablecheck_longlati values
+		(#{eqpID},#{eqpNo},#{eqpLongitude_inspect},#{eqpLatitude_inspect},sysdate,#{staffID_inspect},#{times})
+	</insert>
+
+	<select id="queryGlbm" parameterType="String" resultType="map">
+		select
+		distinct ton.id_number from tb_cablecheck_link_odso ton where
+		ton.OPT_CODE=#{glbm} and ton.id_number is not null
+	</select>
+
+	<select id="equCbAccount" parameterType="String" resultType="map">
+		select distinct tes.contract_persion_no from
+		tb_base_contract_equipment tes inner join tb_cablecheck_equipment tce
+		on tes.equipment_id=tce.equipment_id
+		and
+		tes.equipment_no=tce.equipment_code where tce.equipment_code=#{eqpNo}
+	</select>
+
+	<select id="PositionPersons" parameterType="String" resultType="String">
+		select distinct tg.staff_no from tb_base_staff_gwzs tg where
+		tg.grid_id=#{ddg}
+	</select>
+
+	<select id="queryDdj" parameterType="String" resultType="map">
+		select
+		distinct tb.grid_id from tb_cablecheck_equipment tb where
+		tb.equipment_code=#{eqpNo} and tb.grid_id is not null
+	</select>
+
+	<update id="updateResultTask" parameterType="map">
+		update
+		tb_cablecheck_task set Result_Status =#{Result_Status} ,
+							   result_error_reason=#{errorReason}
+		where task_id =#{task_id}
+	</update>
+	<!-- 获取批次Id的最大值 -->
+	<select id="getBatchId" resultType="int">
+		select nvl (max(BATCH_ID),0)
+		BATCH_ID from APP_CABLECHECK_ORDER_BATCH
+	</select>
+	<select id="getPortDetails" parameterType="java.util.List"
+		resultType="map">
+		select order_id,
+		order_no,
+		phy_port_id,
+		phy_eqp_id,
+		other_system_staff_id,
+		sggh,
+		REPLY_JOB_CSV,
+		REPLY_JOB_IOM,
+		MARK,
+		CREATE_TIME,
+		TEAM_ID
+		from (select tco.order_id,
+		tco.order_no,
+		tco.phy_port_id,
+		tco.phy_eqp_id,
+		tco.other_system_staff_id,
+		tco.SGGH,
+		ACOD.REPLY_JOB_NM REPLY_JOB_CSV,
+		AIOD.REPLY_JOB_NM REPLY_JOB_IOM,
+		TCO.MARK,
+		TCO.CREATE_TIME,
+		TM.TEAM_ID,
+		row_number() over(partition by TCO.phy_port_id order by tco.CREATE_TIME desc) rn
+		from tb_cablecheck_order tco
+		left join APP_IOM_OPT_DAILY AIOD ON AIOD.ORDER_ID = tco.order_id
+		left join APP_CSV_OPT_DAILY ACOD ON ACOD.WORK_ORDER_ID =
+		tco.order_id
+		LEFT join TB_BASE_STAFF_ZW_BANZU TM ON ACOD.REPLY_JOB_NM =
+		TM.TEAM_NAME
+		left join APP_IOM_OPT_DAILY AIOD ON AIOD.ORDER_ID = tco.order_id
+		left join APP_CSV_OPT_DAILY ACOD ON ACOD.WORK_ORDER_ID =
+		tco.order_id
+		LEFT join TB_BASE_STAFF_ZW_BANZU TM ON ACOD.REPLY_JOB_NM =
+		TM.TEAM_NAME
+		where tco.phy_port_id in
+		<foreach collection="list" item="portId" index="index" open="("
+			close=")" separator=",">
+			#{portId}
+		</foreach>
+		)
+		where rn = 1
+	</select>
+	<insert id="insertBatchData" parameterType="map">
+		insert into
+		APP_CABLECHECK_ORDER_BATCH values
+		(#{BATCHID},#{PHY_EQP_ID},#{PHY_EQP_ID_PORT},#{PHY_PORT_ID},#{ORDER_ID},#{MARK},#{REPLY_JOB_CSV},#{REPLY_JOB_IOM},#{CREATE_TIME},#{OTHER_SYSTEM_STAFF_ID},#{SGGH})
+	</insert>
+	<select id="getCSVGroup" parameterType="int" resultType="map">
+	  select
+		 A.other_system_staff_id
+		from APP_CABLECHECK_ORDER_BATCH A
+		where a.batch_id=#{batchId}
+		and A.MARK=1 and a.other_system_staff_id is not null
+		GROUP BY a.other_system_staff_id 
+	</select>
+	<select id="getIOMGroup" parameterType="int" resultType="map">
+		 select
+		 A.other_system_staff_id
+		from APP_CABLECHECK_ORDER_BATCH A
+		where a.batch_id=#{batchId}
+		and A.MARK=2 and a.other_system_staff_id is not null
+		GROUP BY a.other_system_staff_id 
+	</select>
+
+	<select id="getTeamReply" parameterType="String" resultType="String">
+		SELECT
+		TBS.STAFF_ID FROM TB_BASE_STAFF_ZW TBSZ
+		LEFT JOIN
+		TB_BASE_STAFF_ZW_BANZU TBSZB ON TBSZ.TEAM_ID=TBSZB.TEAM_ID
+		LEFT JOIN
+		TB_BASE_STAFF TBS ON TBS.ID_NUMBER=TBSZ.ID_NUMBER
+		WHERE
+		TBSZ.IS_LEADER='1' and TBSZ.Is_Auditor='1' AND
+		TBSZB.TEAM_NAME=#{csvTeam}
+	</select>
+	
+		<select id="getReplyId" parameterType="String" resultType="String">
+		SELECT distinct
+		TBS.STAFF_ID FROM TB_BASE_STAFF_ZW TBSZ
+		LEFT JOIN TB_BASE_STAFF_ZW_BANZU TBSZB ON TBSZ.TEAM_ID=TBSZB.TEAM_ID
+		LEFT JOIN TB_BASE_STAFF TBS ON TBS.ID_NUMBER=TBSZ.ID_NUMBER
+		WHERE TBSZ.ID=#{otherSysStaffId}
+	</select>
+	
+	<select id="getUserOreder" parameterType="String" resultType="map">
+		select * from tb_cablecheck_order co
+        where exists 
+        (select * from tb_cablecheck_taskdetail ct where ct.inspect_object_id = co.order_id 
+        and exists 
+        (select task_id from tb_cablecheck_task t  where ct.task_id = t.task_id and t.inspector = #{staffId}))
+	</select>
+	
+	<select id="doGetOreder" parameterType="map" resultType="map">
+		select * from tb_cablecheck_order co 
+		<if test="mark != null and mark != '' and mark == 1">  
+	   <![CDATA[
+		left join app_csv_opt_daily acod on co.order_id = acod.work_order_id
+		]]>
+		</if>
+		<if test="mark != null and mark != '' and mark == 2">  
+	   <![CDATA[
+		left join app_iom_opt_daily aiod on co.order_id = aiod.order_id
+		]]>
+		</if>
+		where co.order_id in 
+		<foreach collection="list" item="orderId" index="index" open="("
+			close=")" separator=",">
+			#{orderId}
+		</foreach>
+	</select>
+	
+	<select id="getOrderInfo" parameterType="map" resultType="map">
+		select  t.order_id,t.order_no,t.mark,t.order_team_id,t.id_number,t.staff_no,
+	           t.staff_name,t.person_team_id,t.team_name,to_char(t.staff_id)staff_id from (
+	        select tco.order_id,tco.order_no,tco.mark,tco.team_id order_team_id,zw.id_number,zw.staff_no,
+	           zw.staff_name,zw.team_id person_team_id,zw.team_name,f.staff_id ,
+	           tco.create_time,
+	           row_number() over(partition by TCO.phy_port_id order by tco.CREATE_TIME desc) rn
+	         from tb_cablecheck_order tco 
+	         inner join tb_base_staff_zw zw on zw.id=tco.other_system_staff_id
+	         left join tb_base_staff f on f.id_number=zw.id_number
+	         left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+	         where tco.phy_eqp_id=#{eqpId} and tco.phy_port_id=#{portId} and f.status=0 and f.isdeleted=0 and sr.role_id =287 )t
+	 	where t.rn=1
+	
+	<!--  select tco.order_id,tco.order_no,tco.mark,tco.team_id order_team_id,zw.id_number,zw.staff_no,
+	 		zw.staff_name,zw.team_id person_team_id,zw.team_name,f.staff_id 
+     from tb_cablecheck_order tco 
+     inner join tb_cablecheck_dtsj sj on sj.id=tco.btsj_id
+     inner join tb_base_staff_zw zw on zw.id=tco.other_system_staff_id
+     left join tb_base_staff f on f.id_number=zw.id_number
+     left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+     where  sj.bdsj &gt;=trunc(add_months(sysdate, -1), 'month') and sj.bdsj &lt;=trunc(sysdate, 'month')
+          and sj.sbid=#{eqpId} and sj.dzid=#{portId} and f.status=0 and f.isdeleted=0 and sr.role_id =287 and rownum=1 -->
+	   <!--  select tco.order_id,tco.order_no,tco.mark,tco.team_id order_team_id,zw.id_number,zw.staff_no,zw.staff_name,zw.team_id person_team_id,zw.team_name,f.staff_id from tb_cablecheck_order tco 
+			inner join tb_base_staff_zw zw on zw.id=tco.other_system_staff_id
+			left join tb_base_staff f on f.id_number=zw.id_number
+			left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+		where tco.phy_eqp_id=#{eqpId} and tco.phy_port_id=#{portId} and f.status=0 and f.isdeleted=0 and sr.role_id =287 and rownum=1 -->
+	</select>
+	
+	<select id="saveTrace" parameterType="map"  >
+		insert into tb_base_trace_record(
+				taskid,taskno,taskname,orderid,orderno,glbh,areaid, 
+				eqpid, eqpno, portid, portno, eqpid_new, eqpno_new, portid_new, 
+				portno_new, modify_time, modify_staff, modify_content, 
+				port_error, tasktype
+			)
+			values
+			(   #{task_id},#{TASK_NO},#{TASK_NAME},#{orderId},#{OrderNo},#{glbm},#{area_id},
+				#{eqpId},#{eqpNo},#{port_id},#{port_no},#{changedEqpId},#{changedEqpNo},#{changedPortId},
+				#{changedPortNo},sysdate,#{staffId},#{content,jdbcType=VARCHAR},#{descript,jdbcType=VARCHAR},#{task_type,jdbcType=VARCHAR}	
+			)
+	</select>
+	<select id="saveEqpTrace" parameterType="map"  >
+		insert into tb_base_trace_record(
+				taskid,taskno,taskname,areaid, 
+				eqpid, eqpno,modify_time, modify_staff,modify_content,tasktype
+			)
+			values
+			(   #{task_id},#{TASK_NO},#{TASK_NAME},#{area_id},
+				#{eqpId},#{eqpNo},sysdate,#{staffId},#{content,jdbcType=VARCHAR},#{task_type,jdbcType=VARCHAR}	
+			)
+	</select>
+
+	<insert id="insertEqpRecordZg" parameterType="map">
+		insert into
+		tb_cablecheck_record
+		(RECORD_ID,EQP_ID,EQP_NO,EQP_NAME,INFO,port_id,CREATE_TIME,CREATE_STAFF,port_no,
+		port_name,descript,record_type,area_id,son_area_id,isCheckOK,TASK_ID,DETAIL_ID,
+		ISH,eqpno_new,eqpid_new,portrightposition,portidrightposition,
+		changeportid,changeportno,changeeqpid,changeeqpno,port_info
+		)
+		values
+		(#{recordId},#{eqpId,jdbcType=VARCHAR},#{eqpNo,jdbcType=VARCHAR},#{eqpName,jdbcType=VARCHAR},
+		#{info,jdbcType=VARCHAR},#{port_id,jdbcType=VARCHAR},sysdate,#{staffId},#{port_no,jdbcType=VARCHAR},#{port_name,jdbcType=VARCHAR},
+		#{reason,jdbcType=VARCHAR},#{record_type,jdbcType=VARCHAR},#{area_id},#{son_area_id},#{isCheckOK,jdbcType=VARCHAR},
+		#{taskId,jdbcType=VARCHAR},#{detail_id,jdbcType=VARCHAR},#{isH,jdbcType=VARCHAR},
+		 #{rightEqpNo,jdbcType=VARCHAR},
+         #{rightEqpId,jdbcType=VARCHAR}, #{truePortNo,jdbcType=VARCHAR},#{truePortId,jdbcType=VARCHAR},#{changedPortId,jdbcType=VARCHAR},
+         #{changedPortNo,jdbcType=VARCHAR}, #{changedEqpId,jdbcType=VARCHAR}, #{changedEqpNo,jdbcType=VARCHAR}, #{reason2,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<insert id="saveTroubleTaskNew" parameterType="map">
+		insert into
+		tb_cablecheck_task(
+		TASK_ID,
+		TASK_NO,
+		TASK_NAME,
+		TASK_TYPE,
+		STATUS_ID,
+		INSPECTOR,
+		MAINTOR,
+		auditor,
+		CREATE_STAFF,
+		CREATE_TIME,
+		START_TIME,
+		LAST_UPDATE_TIME,
+		actual_complete_time,
+		paifa_time,
+		SON_AREA_ID,
+		AREA_ID,
+		ENABLE,
+		REMARK,
+		INFO,
+		NO_EQPNO_FLAG,
+		IS_NEED_ZG,
+		OLD_TASK_ID,
+		SBID,check_way)
+		values
+		(SQP_TB_CABLECHECK_TASK.nextVAL,
+		#{TASK_NO,jdbcType=VARCHAR},
+		#{TASK_NAME,jdbcType=VARCHAR},
+		#{TASK_TYPE,jdbcType=VARCHAR},
+		#{STATUS_ID,jdbcType=VARCHAR},
+		#{INSPECTOR,jdbcType=VARCHAR},
+		<choose>
+        <when test="MAINTOR !=null and MAINTOR != ''">
+           #{MAINTOR,jdbcType=VARCHAR},
+        </when>
+        <otherwise>
+           #{null,jdbcType=VARCHAR},
+        </otherwise>
+         </choose>
+         #{auditor,jdbcType=VARCHAR},
+		#{CREATE_STAFF,jdbcType=VARCHAR},
+		sysdate,
+		sysdate,
+		sysdate,
+		sysdate,
+		sysdate,
+		#{SON_AREA_ID,jdbcType=VARCHAR},
+		#{AREA_ID,jdbcType=VARCHAR},
+		#{ENABLE,jdbcType=VARCHAR},
+		#{REMARK,jdbcType=VARCHAR},
+		#{INFO,jdbcType=VARCHAR},
+		#{NO_EQPNO_FLAG,jdbcType=VARCHAR},
+		#{IS_NEED_ZG,jdbcType=VARCHAR},
+		#{OLD_TASK_ID,jdbcType=VARCHAR},
+		#{SBID,jdbcType=VARCHAR},#{checkWay,jdbcType=VARCHAR})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="TASK_ID">
+			SELECT SQP_TB_CABLECHECK_TASK.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	<select id="getAuditorByTaskId" parameterType="map" resultType="string" >
+		select nvl(ts.auditor,'') from tb_cablecheck_task ts where ts.task_id=#{task_id}
+	</select>
+	
+	<select id="getOrderOfBanZu" parameterType="string" resultType="map">
+		   select tco.order_id,tco.order_no, tco.mark,tco.team_id order_team_id,  zw.id_number,zw.staff_no,zw.staff_name,zw.team_id person_team_id,zw.team_name,to_char(f.staff_id)staff_id from tb_cablecheck_order tco 
+			inner join tb_base_staff_zw zw on zw.id=tco.other_system_staff_id
+			inner join tb_base_staff f on f.id_number=zw.id_number
+			left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+		  where tco.order_no=#{order_no} and f.status=0 and f.isdeleted=0 and sr.role_id =287 and rownum=1
+		<!-- select zw.id_number,zw.staff_no,zw.staff_name,zw.team_id,zw.team_name,f.staff_id from tb_cablecheck_order tco 
+			inner join tb_base_staff_zw zw on zw.id=tco.other_system_staff_id
+			inner join tb_base_staff f on f.id_number=zw.id_number
+			left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+		where tco.order_no=#{order_no} and f.status=0 and f.isdeleted=0 and sr.role_id =287 and rownum=1 -->
+	</select>
+	
+	<select id="getEqpType_Grid" parameterType="map" resultType="map">
+		  select tb.area_id, tb.res_type_id,tb.grid_id from tb_cablecheck_equipment tb
+		  where tb.parent_area_id=#{areaId} and tb.equipment_id= #{eqpId} and tb.equipment_code= #{eqpNo} and rownum=1
+	</select>
+	
+	<select id="queryDouDiGang" parameterType="String" resultType="map">
+		 	select distinct tg.staff_no from tb_base_staff_gwzs tg   
+		    where tg.grid_id=#{grid} 
+	</select>
+	
+	<select id="getEqpContractNo" parameterType="map" resultType="map">
+		 	 select tbce.contract_persion_no from tb_base_contract_equipment tbce 
+		 	 where tbce.area_id=#{areaId} and tbce.equipment_id=#{eqpId} and tbce.equipment_no=#{eqpNo} and rownum=1
+	</select>
+	
+	<insert id="insertEqpRecordNewYy" parameterType="map">
+		insert into
+		tb_cablecheck_record
+		(RECORD_ID,EQP_ID,EQP_NO,EQP_NAME,LONGITUDE,LATITUDE,
+		EQPADDRESS,REMARK,port_id,CREATE_TIME,CREATE_STAFF,
+		port_no,port_name,descript,record_type,area_id,son_area_id,
+		isCheckOK,TASK_ID,DETAIL_ID,ISH,action_type,
+		COMPANY,ORDER_ID,ORDER_NO,IS_FROM,eqpno_new,eqpid_new,portrightposition,portidrightposition,
+		changeportid,changeportno,changeeqpid,changeeqpno,check_way
+		)
+		values
+		(#{recordId},#{eqpId,jdbcType=VARCHAR},#{eqpNo,jdbcType=VARCHAR},#{eqpName,jdbcType=VARCHAR},#{longitude,jdbcType=VARCHAR},#{latitude,jdbcType=VARCHAR},
+		#{eqpAddress,jdbcType=VARCHAR},#{remarks,jdbcType=VARCHAR},#{port_id,jdbcType=VARCHAR},sysdate,#{staffId},
+		#{port_no,jdbcType=VARCHAR},#{port_name,jdbcType=VARCHAR},#{descript,jdbcType=VARCHAR},#{record_type,jdbcType=VARCHAR},
+		#{area_id},#{son_area_id},#{isCheckOK,jdbcType=VARCHAR},#{task_id,jdbcType=VARCHAR},#{detail_id,jdbcType=VARCHAR},
+		#{isH,jdbcType=VARCHAR},#{action_type,jdbcType=VARCHAR},#{type,jdbcType=VARCHAR},#{orderId,jdbcType=VARCHAR},#{orderNo,jdbcType=VARCHAR},
+		#{isFrom,jdbcType=VARCHAR},#{rightEqpNo,jdbcType=VARCHAR},#{rightEqpId,jdbcType=VARCHAR},#{truePortNo,jdbcType=VARCHAR},
+        #{truePortId,jdbcType=VARCHAR},#{changedPortId,jdbcType=VARCHAR},#{changedPortNo,jdbcType=VARCHAR},
+ 		#{changedEqpId,jdbcType=VARCHAR}, #{changedEqpNo,jdbcType=VARCHAR}, #{checkWay,jdbcType=VARCHAR}
+		)
+	</insert>
+	<update id="updateEqu_time_num" parameterType="map">
+		update tb_cablecheck_equipment set
+			CHECK_PORT_NUM= #{allcount},
+			RIGTH_PORT_NUM= #{truecount},
+	        check_complete_time= sysdate
+		where parent_area_id=#{areaId}
+			AND equipment_id =#{eqpId}
+			AND equipment_code = #{eqpNo}
+	</update>
+	<!-- 光网助手检查触发线路工单 -->
+	<insert id="insertLineWorkOrder" parameterType="map">
+		insert into tb_base_gwzs_lineworkorder(gwman, taskid, gwmanaccount, 
+			 eqpno, eqpname, checkportnum, gwcontent,checktime,adresscheckcnt,workhours ) 
+		values
+			 (#{gwMan},#{taskId},#{gwManAccount},#{equCode},#{equName},
+			 #{chekPortNum},#{gwContent},sysdate,#{adressCheckCnt},#{workhours})
+	</insert>
+	
+	<select id="queryProcessByOldTaskId" parameterType="string" resultType="map">
+		 select task_id,to_char(oper_time,'yyyy-mm-dd hh24:mi:ss')oper_time,to_char(oper_staff)oper_staff,status,remark,orderid,orderno,to_char(receiver)receiver,content from tb_cablecheck_process pro 
+		 where pro.task_id=#{taskId} and pro.status!=8
+	</select>
+	
+	<insert id="insertEqpRecordPartZg" parameterType="map">
+		insert into
+		tb_cablecheck_record
+		(RECORD_ID,EQP_ID,EQP_NO,EQP_NAME,INFO,port_id,CREATE_TIME,CREATE_STAFF,port_no,
+		port_name,descript,record_type,area_id,son_area_id,isCheckOK,TASK_ID,DETAIL_ID,
+		ISH,eqpno_new,eqpid_new,portrightposition,portidrightposition,
+		changeportid,changeportno,changeeqpid,changeeqpno,port_info
+		)
+		values
+		(#{recordId},#{eqpId,jdbcType=VARCHAR},#{eqpNo,jdbcType=VARCHAR},#{eqpName,jdbcType=VARCHAR},
+		#{forwarInfo,jdbcType=VARCHAR},#{port_id,jdbcType=VARCHAR},sysdate,#{staffId},#{port_no,jdbcType=VARCHAR},#{port_name,jdbcType=VARCHAR},
+		#{reason,jdbcType=VARCHAR},#{record_type,jdbcType=VARCHAR},#{area_id},#{son_area_id},#{isCheckOK,jdbcType=VARCHAR},
+		#{taskId,jdbcType=VARCHAR},#{detail_id,jdbcType=VARCHAR},#{isH,jdbcType=VARCHAR},
+		 #{rightEqpNo,jdbcType=VARCHAR},
+         #{rightEqpId,jdbcType=VARCHAR}, #{truePortNo,jdbcType=VARCHAR},#{truePortId,jdbcType=VARCHAR},#{changedPortId,jdbcType=VARCHAR},
+         #{changedPortNo,jdbcType=VARCHAR}, #{changedEqpId,jdbcType=VARCHAR}, #{changedEqpNo,jdbcType=VARCHAR}, #{reason2,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<select id="getOrderInfoNew" parameterType="map" resultType="map">
+		select  t.order_id,t.order_no,t.mark,t.order_team_id,to_char(t.archive_time,'yyyy-mm-dd hh24:mi:ss')archive_time,to_char(t.other_system_staff_id)other_system_staff_id from (
+          select tco.order_id,tco.order_no,tco.mark,tco.team_id order_team_id,tco.archive_time,tco.other_system_staff_id,
+             tco.create_time,
+             row_number() over(partition by TCO.phy_port_id order by tco.CREATE_TIME desc) rn
+           from tb_cablecheck_order tco 
+           where tco.phy_eqp_id=#{eqpId} and tco.phy_port_id=#{portId}  )t
+  	    where t.rn=1
+	</select>
+	
+	<select id="getOrderOfBanZuNew" parameterType="string" resultType="map">
+		 select tco.order_id,tco.order_no, tco.mark,tco.team_id order_team_id,to_char(tco.archive_time,'yyyy-mm-dd hh24:mi:ss')archive_time,to_char(tco.other_system_staff_id)other_system_staff_id  
+		    from tb_cablecheck_order tco 
+     	 where tco.order_no=#{order_no} and rownum=1
+	</select>
+	
+	<select id="getOrderActionType" parameterType="string" resultType="map">
+		 select t.action_type from (
+	           select aod.action_type from app_csv_opt_daily aod where aod.work_order_no=#{orderNo}
+	           union all
+	           select iod.action_type from app_iom_opt_daily iod where iod.order_no=#{orderNo}
+         ) t where rownum=1
+	</select>
+	
+	<select id="getStaffIdByOther" parameterType="string" resultType="map">
+		  select to_char(f.staff_id)staff_id from tb_base_staff f
+	      inner join tb_base_staff_zw zw on zw.id_number=f.id_number
+	      left join tb_base_staff_role sr on sr.staff_id=f.staff_id
+	      where f.status=0 and f.isdeleted=0 and sr.role_id =287 and zw.id=#{other_system_staff_id} and rownum=1
+	</select>
+	
+	<select id="getOuterEqpInfo" parameterType="map" resultType="map">
+		 select tb.equipment_id,tb.equipment_code,tb.equipment_name,tb.res_type_id,tb.address,tb.grid_id from tb_cablecheck_equipment tb where tb.equipment_id =
+(select tb.install_sbid from tb_cablecheck_equipment tb where tb.equipment_code=#{eqpNo} and tb.equipment_id=#{eqpId} and rownum=1) and rownum=1
+	</select>
+	
+	<select id="getIomStaffNo" parameterType="map" resultType="map">
+		select poi.staff_nbr from pub_staff_org_info poi 
+		where poi.staff_id=#{other_system_staff_id} and poi.job_id=#{order_team_id} and rownum=1
+	</select>
+	
+	<select id="getSonAreaAdmin" parameterType="string" resultType="map">
+		select to_char(ap.staff_id)staff_id,ap.son_area_id from tb_cablecheck_area_posts ap where ap.son_area_id=#{sonAreaId}
+	</select>
+	
+	<select id="getPhotoUrl" parameterType="string" resultType="string">
+	select to_char(wm_concat(p.photo_path))photo_path from tb_cablecheck_photo p where p.photo_id in (${_parameter})
+	</select>
+	
+</mapper>

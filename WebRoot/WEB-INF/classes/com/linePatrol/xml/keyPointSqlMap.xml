@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.KeyPointDao">
+
+	<select id="query" parameterType="map" resultType="map">
+		<![CDATA[
+select fiber_gradeone,gradeone,fiber_gradetwo,gradetwo,name,round((nvl(site_id_total,0)/((nvl(gradeone,0) + nvl(gradetwo,0))*7))*100,2)||'%' math from (
+select * from (
+select model.fiber_gradeone, model.gradeone ,model.fiber_gradetwo,model.gradetwo ,
+case
+  when model.area_id01 is null then model.area_id02 
+  else model.area_id01 
+end
+area_id,
+case
+  when model.nameone is null then model.nametwo 
+  else model.nameone 
+end
+name
+from (
+  select * from 
+  (
+    select count(mod01.site_id) gradeOne ,mod01.name nameOne,mod01.Fiber_Grade fiber_gradeone,mod01.area_id area_id01 from 
+      (select ats.site_id, name,atc.fiber_grade,ats.area_id
+             from axx_t_site ats inner join area a on ats.area_id=a.area_id
+                                 inner join axx_t_cable_area atca on a.area_id=atca.area_id
+                                 inner join axx_t_cable atc on atc.cable_id=atca.cable_id
+             where ats.site_type=1 and atc.fiber_grade='1'
+
+      )  mod01
+    group by mod01.name,mod01.Fiber_Grade,mod01.area_id
+  ) model1
+  FULL  JOIN
+  (
+    select count(mod02.site_id) gradeTwo ,mod02.name nameTwo,mod02.Fiber_Grade fiber_gradetwo ,mod02.area_id area_id02 from 
+      (select ats.site_id, name,atc.fiber_grade,ats.area_id
+           from axx_t_site ats inner join area a on ats.area_id=a.area_id
+                               inner join axx_t_cable_area atca on a.area_id=atca.area_id
+                               inner join axx_t_cable atc on atc.cable_id=atca.cable_id
+           where ats.site_type=1 and atc.fiber_grade='2'
+
+       )  mod02
+    group by mod02.name,mod02.Fiber_Grade,mod02.area_id
+    ) model2
+on model1.area_id01=model2.area_id02
+) model
+) test01
+full join 
+(
+      select count(site_id) site_id_total ,area_id
+      from axx_t_user_sign atus inner join axx_t_macth_site atms on atus.sign_id=atms.sign_id
+      where atms.SITE_TYPE=1 and (TRUNC(atus.sign_time,'DD') between TO_DATE (#{param_date}, 'YYYY/mm/dd') and (TO_DATE (#{param_date}, 'YYYY/mm/dd')+6))
+      group by atus.area_id
+)  test02
+on test01.area_id=test02.area_id
+) bb
+		]]>
+	</select>
+	
+</mapper>

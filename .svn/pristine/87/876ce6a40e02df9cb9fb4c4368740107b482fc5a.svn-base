@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.system.dao.MonitorDao">
+	<select id="getServerConfig" parameterType="String" resultType="map">
+		select host_name, user_name, password from tb_base_server_config where 1=1 
+		<if test="_parameter != null and _parameter != ''">  
+            <![CDATA[
+	    		and host_name=#{hostName}
+	    	]]>
+		</if>
+	</select>
+	<select id="getDBStatus" parameterType="map" resultType="map">
+		SELECT a.tablespace_name,
+		       a.bytes / (1024 * 1024) total,
+		       b.bytes / (1024 * 1024) used,
+		       c.bytes / (1024 * 1024) free,
+		       (b.bytes * 100) / a.bytes "%USED",
+		       (c.bytes * 100) / a.bytes "%FREE"
+		  FROM sys.sm$ts_avail a, sys.sm$ts_used b, sys.sm$ts_free c
+		 WHERE a.tablespace_name = b.tablespace_name
+		   AND a.tablespace_name = c.tablespace_name
+	</select>
+	
+	<update id="clearLogs" parameterType="map">
+		truncate table sys_log
+	</update>
+</mapper>

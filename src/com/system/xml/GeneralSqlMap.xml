@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.system.dao.GeneralDao">
+<sql id="dynamicWhere">
+		<if test="queryParams.versionNo != null and queryParams.versionNo != ''">  
+            <![CDATA[
+	    	AND tbsv.version_num like '%'||#{queryParams.versionNo}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.softwareId != null and queryParams.softwareId != ''">  
+            <![CDATA[
+	    	AND tbs.software_id = #{queryParams.softwareId} 
+	    	]]>
+		</if>
+</sql>
+
+	<select id="getAreaList" parameterType="map" resultType="map">
+		SELECT * FROM AREA A WHERE A.AREA_LEVEL = 3 ORDER BY A.AREA_ID
+	</select>
+	<select id="getSonAreaList" parameterType="String" resultType="map">
+		SELECT * FROM AREA A WHERE A.PARENT_AREA_ID = #{AREA_ID} ORDER BY A.AREA_ID
+	</select>
+	<select id="getGridList" parameterType="map" resultType="map">
+		select * from tb_cablecheck_grid g where g.area_id=#{areaId} and g.son_area_id=#{sonAreaId}
+	</select>
+	<select id="getSonAreaListByStaffId" parameterType="String" resultType="map">
+		SELECT A.*
+		  FROM AREA A, TB_BASE_STAFF F
+		 WHERE A.PARENT_AREA_ID = F.AREA_ID
+		   AND F.STAFF_ID = #{STAFF_ID}
+		 ORDER BY A.AREA_ID
+ 	</select>
+	<select id="getSoftwareList" parameterType="map" resultType="map">
+    SELECT * FROM TB_BASE_SOFT TBS
+	</select>
+	
+	<select id="getEqpNo" parameterType="String" resultType="String">
+select t.name from ressz.phy_equipment t where t.no='512CS.FUHUM/GJ003'
+	</select>
+	<select id="getSoftwarePageList" parameterType="util.page.Query" resultType="map">
+select tbsv.software_version_id,
+       tbsv.version_num,
+       tbsv.version_info,
+       tbsv.drivate_type,
+       tbs.software_id,
+       tbs.software_name,
+       tbs.package_name,
+       s.staff_name create_staff,
+       tbsv.file_path,
+       tbsv.file_name,
+       tbsv.if_force_update,
+       to_char(tbsv.create_date, 'yyyy-MM-dd') create_date,
+       tbsv.comments,
+       s1.staff_name modify_staff,
+       to_char(tbsv.modify_date) modify_date
+  from tb_base_soft_vers tbsv
+ inner join tb_base_soft tbs
+    on tbsv.software_id = tbs.software_id
+  left join tb_base_staff s
+    on tbsv.create_staff = s.staff_id
+  left join tb_base_staff s1
+    on tbsv.modify_staff = s1.staff_id
+ where tbsv.state = 1 
+ <include refid = "dynamicWhere" />
+ order by tbsv.software_id, tbsv.software_version_id desc
+	</select>
+	<!-- 查询公司信息 -->
+	<select id="getCompanyList" resultType="map" parameterType="map">
+	    select company_id,company_name from ins_company ic where type='0' 
+		<if test="areaId != null and areaId != ''">
+			and ic.area_id=#{areaId}
+		</if>
+	</select>
+	<select id="getSeq" parameterType="map" resultType="int">
+		select ${SEQ}.NEXTVAL from DUAL
+	</select>	
+	
+	<select id="getAreaById" parameterType="string" resultType="map">
+		select area_id, name from area where area_id = #{areaId}
+	</select>
+	
+	
+	<select id="getOwnCompany" parameterType="string" resultType="map">
+
+SELECT T.*  FROM  AXX_T_ORGANIZATION T WHERE T.AREA_ID=#{parameter} AND T.PARENT_ID!=-1
+	</select>
+	
+	<select id="getPhoto" parameterType="map" resultType="map">
+         SELECT *
+  FROM AXX_T_PHOTO T
+ WHERE T.PHOTO_TYPE =#{photo_type}
+   AND T.SITE_ID = #{site_id}
+	</select>
+	<select id="getPhotoByType" parameterType="map" resultType="map">
+         SELECT *
+  FROM AXX_T_PHOTO T
+ WHERE T.PHOTO_TYPE =#{photo_type}
+   AND T.SITE_ID = #{out_site_id}
+   AND T.STAFF_ID=#{staff_id}
+	</select>
+	<select id="getStaffByRole" parameterType="map" resultType="map">
+	    SELECT BS.*
+    FROM TB_BASE_STAFF BS, TB_BASE_ROLE BR, TB_BASE_STAFF_ROLE BSR
+   WHERE BS.STAFF_ID = BSR.STAFF_ID
+     AND BR.ROLE_ID = BSR.ROLE_ID
+     AND BR.ROLE_NO = #{role}
+     AND BS.AREA_ID = #{area_id}
+	   
+	</select>
+	<select id="getDeptListByStaff" parameterType="string" resultType="string">
+		SELECT D.DEPT_ID FROM TB_INS_STAFF_DEPT D WHERE D.STAFF_ID=#{staff_id}
+	</select>
+	
+	<select id="getDeptList" parameterType="string" resultType="map">
+		SELECT * FROM TB_INS_DEPT D 
+		WHERE D.AREA_ID=(SELECT S.AREA_ID FROM TB_BASE_STAFF S WHERE S.STAFF_ID=#{staff_id})
+	</select>
+	
+	<select id="getMainTainCompany" resultType="map">
+		select * from tb_base_maintain_company c order by c.company_id
+	</select>
+	
+	<select id="getBanzuByCompanyId" parameterType="String" resultType="map">
+		select zb.* from tb_base_company_banzu_relation br,tb_base_staff_zw_banzu zb  
+		where br.banzu_id = zb.team_id and br.company_id = #{companyId}
+	</select>
+	
+	<select id="getBanzuByAreaId" parameterType="String" resultType="map">
+		select distinct team_id,team_name from tb_base_staff_zw_banzu bz 
+		where bz.son_area_id = #{areaId} <!-- and bz.team_spec_id = 10 -->
+		and bz.is_look=0
+	</select>
+	
+</mapper>

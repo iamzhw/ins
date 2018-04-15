@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.CableTaskDao">
+
+	<sql id="dynamicWhere_task">
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND t.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.INSPECTOR != null and queryParams.INSPECTOR != ''">  
+            <![CDATA[
+	    	AND s.staff_id =#{queryParams.INSPECTOR}
+	    	
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_NO != null and queryParams.TASK_NO != ''">  
+            <![CDATA[
+	    	AND t.TASK_NO like '%'||#{queryParams.TASK_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.TASK_NAME != null and queryParams.TASK_NAME != ''">  
+            <![CDATA[
+	    	AND t.TASK_NAME like '%'||#{queryParams.TASK_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.START_TIME != null and queryParams.START_TIME != ''">  
+            <![CDATA[
+	    	AND t.START_TIME >= TO_DATE(#{queryParams.START_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="queryParams.COMPLETE_TIME != null and queryParams.COMPLETE_TIME != ''">  
+            <![CDATA[
+	    	AND t.COMPLETE_TIME <= TO_DATE(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd hh24:mi:ss')
+	    	]]>
+		</if>
+		<if test="queryParams.PLAN_TYPE != null and queryParams.PLAN_TYPE != ''">  
+            <![CDATA[
+	    	AND l.line_type = #{queryParams.PLAN_TYPE}
+	    	]]>
+		</if>
+	</sql>
+	
+	<select id="taskQuery" parameterType="util.page.Query" resultType="map">
+		SELECT TASK_ID, 
+		t.PLAN_ID, 
+		TASK_NO, 
+		TASK_NAME, 
+		STATUS_NAME, 
+		decode(l.line_type,0,'缆线任务',1,'区域任务',3,'点任务') line_type,
+		TO_CHAR(t.COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') AS COMPLETE_TIME, 
+		TO_CHAR(t.ACTUAL_COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') AS ACTUAL_COMPLETE_TIME,
+		TO_CHAR(t.CREATE_TIME,'yyyy-mm-dd hh24:mi:ss') AS CREATE_TIME, 
+		TO_CHAR(t.START_TIME,'yyyy-mm-dd hh24:mi:ss') AS START_TIME,
+		TBS.STAFF_NAME,
+		s.STAFF_NAME INSPECTOR ,
+		decode(app.id,null,'未推送',decode(app.ifsuccess,0,'推送成功','推送失败,原因:'||app.getmsg)) if_post
+		FROM TB_INS_TASK t, TB_INS_TASK_STAUS ts, TB_BASE_STAFF TBS, TB_INS_PLAN p, TB_BASE_STAFF s,
+		tb_ins_plan_detail pd,
+		tb_ins_line l,
+					<![CDATA[
+			(select substr(ap.postmsg,instr(ap.postmsg,'<taskId>')+8,instr(ap.postmsg,'</taskId>')-instr(ap.postmsg,'<taskId>')-8) postmsg,
+		        substr(getmsg,instr(getmsg,'<dealInfo>')+10,instr(getmsg,'</dealInfo>')-instr(getmsg,'<dealInfo>')-10) getmsg,ap.ifsuccess,ap.id
+from a_post ap) APP
+]]>
+		WHERE t.STATUS_ID = ts.STATUS_ID
+		AND t.PLAN_ID = p.PLAN_ID
+		and p.inspector_type=0
+		AND p.PLAN_KIND = 1
+		AND TBS.STAFF_ID(+)=T.CREATE_STAFF
+		AND s.STAFF_ID(+)=T.INSPECTOR
+		and p.PLAN_ID=pd.PLAN_ID
+		and l.line_id=pd.inspect_object_id
+		AND t.task_id=app.postmsg(+)
+		<include refid="dynamicWhere_task"/>
+		    union
+		    SELECT TASK_ID, 
+		    t.PLAN_ID, 
+		    TASK_NO, 
+		    TASK_NAME, 
+		    STATUS_NAME,
+		    decode(l.line_type,0,'缆线任务',1,'区域任务',3,'点任务') line_type,
+		    TO_CHAR(t.COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') AS COMPLETE_TIME, 
+		    TO_CHAR(t.ACTUAL_COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') AS ACTUAL_COMPLETE_TIME,
+		    TO_CHAR(t.CREATE_TIME,'yyyy-mm-dd hh24:mi:ss') AS CREATE_TIME, 
+		    TO_CHAR(t.START_TIME,'yyyy-mm-dd hh24:mi:ss') AS START_TIME,
+		    TBS.STAFF_NAME,
+		    df.dept_name INSPECTOR ,
+			decode(app.id,null,'未推送',decode(app.ifsuccess,0,'推送成功','推送失败,原因:'||app.getmsg)) if_post
+		    FROM TB_INS_TASK t, TB_INS_TASK_STAUS ts, TB_BASE_STAFF TBS, TB_INS_PLAN p, tb_ins_staff_dept s,tb_ins_dept df,
+		    tb_ins_plan_detail pd,
+			tb_ins_line l,
+			<![CDATA[
+			(select substr(ap.postmsg,instr(ap.postmsg,'<taskId>')+8,instr(ap.postmsg,'</taskId>')-instr(ap.postmsg,'<taskId>')-8) postmsg,
+		        substr(getmsg,instr(getmsg,'<dealInfo>')+10,instr(getmsg,'</dealInfo>')-instr(getmsg,'<dealInfo>')-10) getmsg,ap.ifsuccess,ap.id
+from a_post ap) APP
+]]>
+		    WHERE t.STATUS_ID = ts.STATUS_ID
+		    AND t.PLAN_ID = p.PLAN_ID
+		    and p.inspector_type=1
+		    AND p.PLAN_KIND = 1
+		    AND TBS.STAFF_ID=T.CREATE_STAFF(+)
+	        AND T.INSPECTOR=df.dept_id
+	        and df.dept_id=s.dept_id(+)
+	        and p.PLAN_ID=pd.PLAN_ID
+			and l.line_id=pd.inspect_object_id
+			AND t.task_id=app.postmsg(+)
+		    <include refid="dynamicWhere_task"/>
+		ORDER BY START_TIME DESC, CREATE_TIME DESC
+	</select>
+	
+	<delete id="deleteTask" parameterType="map" statementType="STATEMENT">
+		delete from TB_INS_TASK where TASK_ID in (${taskIds})
+	</delete>
+	
+	<delete id="deleteTaskDetail" parameterType="map" statementType="STATEMENT">
+		delete from TB_INS_TASK_DETAIL where TASK_ID in (${taskIds})
+	</delete>
+	<select id="getTaskInfo" parameterType="String" resultType="map">
+		SELECT *
+		FROM TB_INS_TASK T WHERE T.TASK_ID = #{TASK_ID}
+	</select>
+	
+</mapper>

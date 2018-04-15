@@ -1,0 +1,2902 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.CheckQualityReportDao">
+<sql id="dynamicWhere_QUERYWLJB">
+<if test="queryParams.WLJB_ID != null and queryParams.WLJB_ID != ''">  
+	            <![CDATA[
+		    	AND oed.net_layer_id IN (${queryParams.WLJB_ID})
+		    	]]>
+		  </if>
+	</sql>	
+	<sql id="dynamicWhere_DOWNWLJB">
+<if test="WLJB_ID != null and WLJB_ID != ''">  
+	            <![CDATA[
+		    	AND oed.net_layer_id IN (${WLJB_ID})
+		    	]]>
+		  </if>
+	</sql>	
+	
+<select id="query" parameterType="map" resultType="map">
+  select T5.*,a1.name cityname from (select T4.*,
+       decode(检查端子数, 0, 0, round((检查端子正确数 / 检查端子数), 4)*100) || '%' 端子检查准确率,
+       decode(changeEQPnum, 0, 0, round(((CHECKEQPnum+二次检查设备数+一键反馈检查设备数+不预告抽查设备数) / changeEQPnum), 4)*100) || '%' 设备检查完成率
+  from (select T3.areaid,
+               a.parent_area_id,
+               a.name,
+               T3.changeEQPnum, 
+               T3.eqpisHnum, 
+               T3.BILLEQPnum, 
+               T3.billeqpisHnum, 
+               T3.CHECKEQPnum,
+               (select count(1) from tb_cablecheck_dtsj dtsj 
+                left join odso_eqp_daily oed on oed.phy_eqp_id = dtsj.install_sbid
+					where to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+					and dtsj.areaid = t3.areaid
+						<include refid="dynamicWhere_QUERYWLJB" />
+					and dtsj.install_sbid is not null) 变动端子数,
+                   (select count(distinct(task.SBID))
+				  from tb_cablecheck_task task
+				  left join TB_CABLECHECK_TASKDETAIL tde
+				    on task.task_id = tde.task_id
+				  left join TB_CABLECHECK_RECORD r
+				    on tde.inspect_object_id = r.record_id
+				     left join odso_eqp_daily oed on oed.phy_eqp_id = task.SBID
+				 where task.task_type = 4   
+				   and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+				   and tde.inspect_object_type = 0
+				   and r.son_area_id = t3.areaid
+				   and tde.check_flag = 1
+				   and r.port_no is null
+				   	<include refid="dynamicWhere_QUERYWLJB" />
+				   ) 二次检查设备数,
+               (select count(distinct(task.SBID))
+                  from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                     and r.port_id is null
+                     	<include refid="dynamicWhere_QUERYWLJB" />
+                   and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1) 一键反馈检查设备数,
+               (select count(distinct(task.SBID))
+                   from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                     and r.port_id is null
+                     	<include refid="dynamicWhere_QUERYWLJB" />
+                    and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                    and task.task_type = 2
+                   ) 不预告抽查设备数,
+               (select count(r.port_id)
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task,  odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                   and task.task_type !=3
+                   and r.record_type != 2
+                   	<include refid="dynamicWhere_QUERYWLJB" />
+                   and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                    and dt.check_flag = 1) 检查端子数,
+               (select count(r.port_id)
+                 from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task,  odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                   and task.task_type !=3
+                   and r.record_type != 2
+                   	<include refid="dynamicWhere_QUERYWLJB" />
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok != 1
+                    and dt.check_flag = 1) 检查端子正确数,
+                   (select count(r.port_id)
+                 from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task,  odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                   and task.task_type !=3
+                   and r.record_type != 2
+                   	<include refid="dynamicWhere_QUERYWLJB" />
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')	
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok = 1
+                    and dt.check_flag = 1) 检查端子错误数
+        
+          from (select T2.areaid,
+                       T2.changeEQPnum,
+                       T2.BILLEQPnum,
+                       T2.eqpisH eqpisHnum,
+                       T2.billeqpisH billeqpisHnum,
+                       T2.CHECKEQPnum
+                  from (
+                        select distinct T.areaid,
+                                        count(distinct(T.install_sbid)) over(partition by T.areaid) changeEQPnum, 
+                                        count(distinct(TASK.SBID)) over(partition by T.areaid) BILLEQPnum, 
+                                        count(distinct( case when T.isH= 1 then T.install_sbid end)) over(partition by T.areaid) eqpisH,
+                                        count(distinct(case when TASK.STATUS_ID = 8 THEN TASK.SBID END)) over(partition by T.areaid) CHECKEQPnum, 
+                                        count(distinct( case when T.isH= 1 then TASK.SBID end))  over(partition by T.areaid) billeqpisH
+                          from (select a.parent_area_id,dtsj.areaid,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid,dtsj.areaid) T
+                          left join TB_CABLECHECK_TASK TASK
+                            ON TASK.SBID = T.install_sbid
+                           AND TASK.AREA_ID = T.parent_area_id
+                           AND TASK.TASK_TYPE = 0
+                          and task.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                           and trunc(task.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                             left join Tb_Cablecheck_Equipment e on e.equipment_id = t.install_sbid 
+                          
+                           where  e.equipment_id is not null
+                           and T.install_sbid is not null
+                          
+                  
+                  
+                  ) T2
+                 ) T3
+          join area a
+ 
+          on a.area_id = t3.areaid
+          
+         where    a.parent_area_id ! = 2
+         
+         <if test="queryParams.son_area != null and queryParams.son_area != ''">  
+	            <![CDATA[
+		    	AND a.area_id = #{queryParams.son_area}
+		    	]]>
+		  </if>
+         
+        <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and a.area_id  in (SELECT a.area_id FROM AREA A WHERE A.PARENT_AREA_ID = #{queryParams.AREA_ID} )  
+		    	]]>
+		  </if>
+         
+           ) T4)T5 LEFT JOIN AREA A1 ON A1.AREA_ID = T5.parent_area_id 
+</select>
+	
+<select id="selArea" resultType="map">
+		select area_id,name from area
+		where area_level=3
+</select>
+
+
+<select id="queryDown" parameterType="map" resultType="map">
+select T5.*,a1.name cityname from (select T4.*,
+       decode(检查端子数, 0, 0, round((检查端子正确数 / 检查端子数), 4)*100) || '%' 端子检查准确率,
+              decode(changeEQPnum, 0, 0, round(((CHECKEQPnum+二次检查设备数+一键反馈检查设备数+不预告抽查设备数) / changeEQPnum), 4)*100) || '%' 设备检查完成率
+       
+  from (select T3.areaid,
+               a.parent_area_id,
+               a.name,
+               T3.changeEQPnum, 
+               T3.eqpisHnum, 
+               T3.BILLEQPnum, 
+               T3.billeqpisHnum, 
+               T3.CHECKEQPnum,
+               (select count(dtsj.dzid) from tb_cablecheck_dtsj dtsj 
+                left join odso_eqp_daily oed on oed.phy_eqp_id = dtsj.install_sbid
+					where to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+					and dtsj.areaid = t3.areaid
+					<include refid="dynamicWhere_DOWNWLJB" />
+					and dtsj.install_sbid is not null) 变动端子数,
+          (select count(distinct(task.SBID))
+				  from tb_cablecheck_task task
+				  left join TB_CABLECHECK_TASKDETAIL tde
+				    on task.task_id = tde.task_id
+				  left join TB_CABLECHECK_RECORD r
+				    on tde.inspect_object_id = r.record_id
+				    
+				     left join odso_eqp_daily oed on oed.phy_eqp_id = task.SBID
+				 where task.task_type = 4   
+				   and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+				   and tde.inspect_object_type = 0
+				   and r.son_area_id = t3.areaid
+				   and tde.check_flag = 1
+				   and r.port_no is null
+				   <include refid="dynamicWhere_DOWNWLJB" />) 二次检查设备数,
+               (select count(distinct(task.SBID))
+                  from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                     and r.port_id is null
+                    and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   <include refid="dynamicWhere_DOWNWLJB" />) 一键反馈检查设备数,
+               (select count(distinct(task.SBID))
+                  from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                     and r.port_id is null
+                     and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                    and task.task_type = 2
+                    <include refid="dynamicWhere_DOWNWLJB" />
+                   ) 不预告抽查设备数,
+               (select count(r.port_id)
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task,  odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                   and task.task_type !=3
+                   and r.record_type != 2
+                 and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                    and dt.check_flag = 1
+                    <include refid="dynamicWhere_DOWNWLJB" />) 检查端子数,
+               (select count(r.port_id)
+                   from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task,  odso_eqp_daily oed
+                 where   oed.phy_eqp_id = task.SBID
+                 AND r.son_area_id = t3.areaid
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok != 1
+                    and dt.check_flag = 1
+                    <include refid="dynamicWhere_DOWNWLJB" />) 检查端子正确数,
+                   (select count(r.port_id)
+                 from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task,  odso_eqp_daily oed
+                 where r.son_area_id = t3.areaid
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')  
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok = 1
+                    and dt.check_flag = 1
+                    <include refid="dynamicWhere_DOWNWLJB" />) 检查端子错误数
+        
+          from (select T2.areaid,
+                       T2.changeEQPnum,
+                       T2.BILLEQPnum,
+                       T2.eqpisH eqpisHnum,
+                       T2.billeqpisH billeqpisHnum,
+                       T2.CHECKEQPnum
+                  from (
+                        select distinct T.areaid,
+                                        count(distinct(T.install_sbid)) over(partition by T.areaid) changeEQPnum, 
+                                        count(distinct(TASK.SBID)) over(partition by T.areaid) BILLEQPnum, 
+                                        count(distinct( case when T.isH= 1 then T.install_sbid end)) over(partition by T.areaid) eqpisH,
+                                         count(distinct(case when TASK.STATUS_ID = 8 THEN TASK.SBID END)) over(partition by T.areaid) CHECKEQPnum, 
+                                        count(distinct( case when T.isH= 1 then TASK.SBID end))  over(partition by T.areaid) billeqpisH
+                          from (select a.parent_area_id,dtsj.areaid,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        )dtsj  , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_DOWNWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid,dtsj.areaid) T
+                          left join TB_CABLECHECK_TASK TASK
+                            ON TASK.SBID = T.install_sbid
+                           AND TASK.AREA_ID = T.parent_area_id
+                           AND TASK.TASK_TYPE = 0
+                          and task.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                           and trunc(task.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                  
+                    left join Tb_Cablecheck_Equipment e on e.equipment_id = t.install_sbid 
+                           where  e.equipment_id is not null
+                           and T.install_sbid is not null
+                 
+                  
+                  ) T2
+                 ) T3
+          join area a
+ 
+          on a.area_id = t3.areaid
+          
+         where    a.parent_area_id ! = 2
+         
+         <if test="son_area != null and son_area != ''">  
+              <![CDATA[
+          AND a.area_id = #{son_area}
+          ]]>
+      </if>
+         
+        <if test="AREA_ID != null and AREA_ID != ''">  
+              <![CDATA[
+        and a.area_id  in (SELECT a.area_id FROM AREA A WHERE A.PARENT_AREA_ID = #{AREA_ID} )  
+          ]]>
+      </if>
+         
+           ) T4)T5 LEFT JOIN AREA A1 ON A1.AREA_ID = T5.parent_area_id 
+</select>
+
+
+
+
+
+	
+	<select id="queryChangeEqp" parameterType="map" resultType="map">
+       SELECT * FROM ( 
+                      select distinct T.areaid,T.install_sbid,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      )dtsj, odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 	<include refid="dynamicWhere_QUERYWLJB" />
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.install_sbid = tbe.equipment_id  WHERE M.areaid = #{queryParams.areaId} and M.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+                               <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>
+     </select>
+     
+     	<select id="queryPfEqp" parameterType="map" resultType="map">
+       SELECT * FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj
+                               where a.area_id = dtsj.areaid
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                            WHERE 1= 1 <include refid="dynamicWhere_QUERYWLJB" />
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{queryParams.areaId}	 and M.SBID IS NOT NULL
+                               <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>
+     </select>
+     
+     <select id="queryHEqp" parameterType="map" resultType="map">
+     select *  from (select a.parent_area_id,dtsj.areaid,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                       a.name
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        )dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 
+                                 AND OED.phy_eqp_id = dtsj.install_sbid 
+                                 	<include refid="dynamicWhere_QUERYWLJB" />  and dtsj.install_sbid is not null
+                                 group by a.parent_area_id, dtsj.install_sbid,dtsj.areaid,a.name) T left join TB_CABLECHECK_EQUIPMENT tbe on T.install_sbid = tbe.equipment_id  WHERE T.areaid = #{queryParams.areaId} AND T.isH = 1 and T.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+                                 
+     </select>
+     
+     <select id="queryPfHEqp" parameterType="map" resultType="map">
+        SELECT * FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name,
+                                  
+                                    case
+                                          when TASK.SBID is not null then
+                                           T.isH
+                                          else
+                                           0
+                                        end billeqpisH 
+                        from (
+                              select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                      case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                     a.name
+                                from area a,
+                                     (
+                                       select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj
+                               where a.area_id = dtsj.areaid
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                           left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                           WHERE 1=1 <include refid="dynamicWhere_QUERYWLJB" />
+                           
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{queryParams.areaId} and M.SBID IS NOT NULL and billeqpisH = 1
+                             </select> 
+                             
+    <select id="queryCheckEqp" parameterType="map" resultType="map">
+     SELECT * FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                            #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                          and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            and task.status_id = 8
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{queryParams.areaId} and M.SBID IS NOT NULL 
+          <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>
+    </select>                          
+                             
+     
+   
+      <select id="querySdEqp" parameterType="map" resultType="map">
+select *
+  from (select distinct(task.SBID),r.son_area_id,r.task_id
+		  from tb_cablecheck_task task
+		  left join TB_CABLECHECK_TASKDETAIL tde
+		    on task.task_id = tde.task_id
+		  left join TB_CABLECHECK_RECORD r
+		    on tde.inspect_object_id = r.record_id
+		    left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+		 where task.task_type = 4   
+		    and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+		   and tde.inspect_object_type = 0
+		   and r.son_area_id = #{queryParams.areaId}
+	   and tde.check_flag =1
+	   <include refid="dynamicWhere_QUERYWLJB" />
+   and r.port_no is null) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    ON M.SBID = tbe.equipment_id
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+     </select>
+     
+          <select id="queryYjEqp" parameterType="map" resultType="map">
+     
+            select * from (          
+ select distinct(task.SBID),r.son_area_id
+                  from tb_cablecheck_record r, tb_cablecheck_task task, area b
+                 where r.son_area_id = b.area_id
+                   and task.task_id = r.task_id
+                     and r.port_id is null
+                    and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   and b.area_id = #{queryParams.areaId}
+                   ) M left join TB_CABLECHECK_EQUIPMENT tbe
+                    ON M.SBID = tbe.equipment_id
+                    left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                  LEFT JOIN AREA A
+                    ON A.AREA_ID = M.son_area_id    
+                    where 1= 1 
+                      <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>    
+		  <include refid="dynamicWhere_QUERYWLJB" />  
+           </select>
+           
+   <select id="queryBkEqp" parameterType="map" resultType="map">
+           
+                select *
+                   from (select distinct (task.SBID),r.son_area_id
+                          from tb_cablecheck_record r,
+                               tb_cablecheck_task   task,
+                               area                 b
+                         where r.son_area_id = b.area_id
+                           and task.task_id = r.task_id
+                           and r.port_id is null
+                           and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                           and task.task_type = 2
+                           and b.area_id = #{queryParams.areaId}) M
+                          left join TB_CABLECHECK_EQUIPMENT tbe
+                            ON M.SBID = tbe.equipment_id
+                             left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                          LEFT JOIN AREA A
+                            ON A.AREA_ID = M.son_area_id
+                                                where 1= 1 
+                            
+  <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>
+		  <include refid="dynamicWhere_QUERYWLJB" />
+                           
+ </select>
+        
+<select id="queryCheckPort" parameterType="map" resultType="map">   
+select *
+  from (select r.port_id,
+               r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.son_area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+          from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.son_area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+           and dt.detail_id = r.detail_id
+            and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+           and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+           and dt.inspect_object_type = 1
+           and dt.check_flag= 1
+           and b.area_id = #{queryParams.areaId}
+           <include refid="dynamicWhere_QUERYWLJB" />) M
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+ 
+ <select id="queryCurrentPort" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.son_area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.son_area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                    and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and b.area_id = #{queryParams.areaId}
+                   and dt.check_flag= 1
+                   <include refid="dynamicWhere_QUERYWLJB" />
+                   and r.ischeckok != 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+  <select id="queryPromblePort" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.son_area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                 from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.son_area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and dt.check_flag= 1
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                   <include refid="dynamicWhere_QUERYWLJB" />
+                   and b.area_id = #{queryParams.areaId}
+                   and r.ischeckok = 1
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+ 
+ <select id="downChangeEqp" parameterType="map" resultType="map">
+       SELECT * FROM ( 
+                      select distinct T.areaid,T.install_sbid,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj, odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 
+                              
+                               <include refid="dynamicWhere_DOWNWLJB" />
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.install_sbid = tbe.equipment_id  WHERE M.areaid = #{areaId} and M.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+     </select>
+     
+     	<select id="downPfEqp" parameterType="map" resultType="map">
+       SELECT * FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj
+                               where a.area_id = dtsj.areaid
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                            WHERE 1= 1 <include refid="dynamicWhere_DOWNWLJB" />
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{areaId} and M.SBID IS NOT NULL
+     </select>
+     <select id="downHEqp" parameterType="map" resultType="map">
+       select *  from (select a.parent_area_id,dtsj.areaid,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                       a.name
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 
+                                 AND OED.phy_eqp_id = dtsj.install_sbid  
+                                 <include refid="dynamicWhere_DOWNWLJB" />  and dtsj.install_sbid is not null
+                                 group by a.parent_area_id, dtsj.install_sbid,dtsj.areaid,a.name) T left join TB_CABLECHECK_EQUIPMENT tbe on T.install_sbid = tbe.equipment_id  WHERE T.areaid = #{areaId} AND T.isH = 1 and T.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+     </select>
+     
+     <select id="downPfHEqp" parameterType="map" resultType="map">
+        SELECT * FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name,
+                                  
+                                    case
+                                          when TASK.SBID is not null then
+                                           T.isH
+                                          else
+                                           0
+                                        end billeqpisH 
+                        from (
+                              select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                      case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                     a.name
+                                from area a,
+                                     (
+                                       select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj
+                               where a.area_id = dtsj.areaid
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                           left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                           WHERE 1=1 <include refid="dynamicWhere_DOWNWLJB" />
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{areaId} and M.SBID IS NOT NULL and billeqpisH = 1
+     </select>
+     
+         <select id="downCheckEqp" parameterType="map" resultType="map">
+          SELECT * FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                            #{static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_DOWNWLJB" />
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                          and task.create_time &gt;=
+                             to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            and task.status_id = 8
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{areaId} and M.SBID IS NOT NULL
+         </select>
+     
+      <select id="downSdEqp" parameterType="map" resultType="map">
+select *
+  from (select distinct(task.SBID),r.son_area_id
+		  from tb_cablecheck_task task
+		  left join TB_CABLECHECK_TASKDETAIL tde
+		    on task.task_id = tde.task_id
+		  left join TB_CABLECHECK_RECORD r
+		    on tde.inspect_object_id = r.record_id
+		    left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+		 where task.task_type = 4   
+		   and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+		   and tde.inspect_object_type = 0
+		   and r.son_area_id = #{areaId}
+	   and tde.check_flag =1
+	  <include refid="dynamicWhere_DOWNWLJB" />
+   and r.port_no is null) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    ON M.SBID = tbe.equipment_id
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+     </select>
+     
+          <select id="downYjEqp" parameterType="map" resultType="map">
+     
+            select * from (          
+ select distinct(task.SBID),r.son_area_id
+                  from tb_cablecheck_record r, tb_cablecheck_task task, area b
+                 where r.son_area_id = b.area_id
+                   and task.task_id = r.task_id
+                     and r.port_id is null
+                   and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   and b.area_id = #{areaId}
+                   ) M left join TB_CABLECHECK_EQUIPMENT tbe
+                    ON M.SBID = tbe.equipment_id
+                      left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                  LEFT JOIN AREA A
+                    ON A.AREA_ID = M.son_area_id    
+                    WHERE 1=1 <include refid="dynamicWhere_DOWNWLJB" />     
+           </select>
+           
+   <select id="downBkEqp" parameterType="map" resultType="map">
+           
+                select *
+                   from (select distinct (task.SBID),r.son_area_id
+                          from tb_cablecheck_record r,
+                               tb_cablecheck_task   task,
+                               area                 b
+                         where r.son_area_id = b.area_id
+                           and task.task_id = r.task_id
+                           and r.port_id is null
+                            and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                           and task.task_type = 2
+                           and b.area_id = #{areaId}) M
+                          left join TB_CABLECHECK_EQUIPMENT tbe
+                            ON M.SBID = tbe.equipment_id
+                          LEFT JOIN AREA A
+                            ON A.AREA_ID = M.son_area_id
+                              left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                              WHERE 1=1 <include refid="dynamicWhere_DOWNWLJB" />
+
+                           
+ </select>
+        
+<select id="downCheckPort" parameterType="map" resultType="map">   
+select *
+  from (select r.port_id,
+               r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.son_area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+           from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.son_area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+           and dt.detail_id = r.detail_id
+           and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+           and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+           and dt.inspect_object_type = 1
+           and dt.check_flag= 1
+           and b.area_id = #{areaId}
+           <include refid="dynamicWhere_DOWNWLJB" />) M
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+ 
+ <select id="downCurrentPort" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.son_area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                   from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.son_area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and dt.check_flag= 1
+                   and b.area_id = #{areaId}
+                   and r.ischeckok != 1
+                   <include refid="dynamicWhere_DOWNWLJB" />)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+  <select id="downPromblePort" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.son_area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                   from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.son_area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                   and dt.check_flag= 1
+                   <include refid="dynamicWhere_DOWNWLJB" />
+                   and b.area_id = #{areaId}
+                   and r.ischeckok = 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+ 	<!-- 查询我的任务设备图片 -->
+	<resultMap id="myTaskEqpMap" type="Map" >
+        <result column="eqp_id" property="eqp_id"/>
+		<result column="eqp_no" property="eqp_no"/>
+		<result column="eqp_name" property="eqp_name"/>
+		<result column="eqpaddress" property="eqpaddress"/>
+		<result column="area_id" property="area_id"/>
+		<result column="son_area_id" property="son_area_id"/>
+		<result column="task_id" property="task_id"/>
+		<result column="record_type" property="record_type"/>
+		<result column="area_name" property="area_name"/>
+		<result column="son_area_name" property="son_area_name"/>
+		<!-- 查询图片  --> 
+        <collection property="photoList" column="task_id" select="getPhotoByEqpId"></collection>
+	</resultMap>
+<select id="getZqEqpInfo" parameterType="map" resultMap="myTaskEqpMap">   
+ select *
+                from TB_CABLECHECK_TASKDETAIL tde
+                left join TB_CABLECHECK_RECORD r
+                  on tde.inspect_object_id = r.record_id
+               where tde.task_id = (select task.old_task_id from tb_cablecheck_task task where task.task_id = #{TASK_ID} )
+                 and tde.inspect_object_type = 0
+                 and tde.check_flag = 1
+ 
+</select>        
+
+<select id="getZqSdEqpInfo" parameterType="map" resultMap="myTaskEqpMap">   
+ select *
+                from TB_CABLECHECK_TASKDETAIL tde
+                left join TB_CABLECHECK_RECORD r
+                  on tde.inspect_object_id = r.record_id
+               where tde.task_id = #{TASK_ID}
+                 and tde.inspect_object_type = 0
+                 and tde.check_flag = 1
+ 
+</select>     
+
+<resultMap type="Map" id="photoMap">
+       <result column="photo_path" property="photo_path"/>
+	   <result column="micro_photo_path" property="micro_photo_path"/>
+	   <result column="record_type" property="record_type"/>
+	</resultMap>
+	<!-- 根据设备id获取图片 -->
+	<select id="getPhotoByEqpId" parameterType="string" resultMap="photoMap"><!--
+		select distinct tp.photo_path, tp.micro_photo_path, tc.record_type
+				  from tb_cablecheck_photo tp
+				  left join tb_cablecheck_photo_rel tr
+				    on tp.photo_id = tr.photo_id
+				  left join tb_cablecheck_record tc
+				    on tc.task_id = tr.task_id
+				  left join tb_cablecheck_taskdetail tt
+				    on tt.task_id = tr.task_id
+				 where task_id = #{TASK_ID}
+				   and tt.inspect_object_type = 0
+				   and tc.task_id = tr.task_id
+				   and tr.detail_id = tt.detail_id
+				   and tp.photo_id = tr.photo_id
+	-->select p.photo_id, p.photo_path, p.micro_photo_path,r.record_type
+         from tb_cablecheck_record r ,
+              tb_cablecheck_photo_rel rel,
+              tb_cablecheck_photo  p
+        where r.record_id = rel.record_id 
+        and rel.photo_id = p.photo_id
+        and r.task_id = #{task_id}
+        and r.port_no is null
+	</select>
+    <resultMap id="myTaskPortMap" type="Map" >
+        <result column="ID" property="ID"/>
+		<result column="DZID" property="DZID"/>
+		<result column="DZBM" property="DZBM"/>
+		<result column="GLBH" property="GLBH"/>
+		<result column="GLMC" property="GLMC"/>
+		<result column="SBID" property="SBID"/>
+		<result column="SBBM" property="SBBM"/>
+		<result column="SBMC" property="SBMC"/>
+		<result column="ISH" property="ISH"/>
+		<result column="SGGH" property="SGGH"/>
+		<result column="TASK_ID" property="TASK_ID"/>
+		<!-- 查询图片  --> 
+        <collection property="portCheckedList" column="{TASK_ID=TASK_ID,PORT_ID=DZID}" select="getPortCheckedList"></collection>
+	</resultMap>
+	     <select id="getPortCheckedList" parameterType="map" resultType="map">
+		select *  from (select r.record_id,
+		       r.port_id,
+		       r.record_type,
+		       r.descript,
+		       (select bs.staff_name from TB_BASE_STAFF bs where bs.staff_id=r.create_staff) create_staff,
+		       r.create_time,
+		       decode(r.ischeckok, 0, '合格', '不合格') ischeckok,
+		       p.photo_path,
+		       p.micro_photo_path,
+		        rank()over(partition by r.port_id order by r.create_time desc) mm
+		  from TB_CABLECHECK_RECORD r left join TB_CABLECHECK_PHOTO_REL pr on r.record_id=pr.object_id
+		  left join tb_cablecheck_photo p on p.photo_id=pr.photo_id
+		 where r.port_id = #{PORT_ID}
+		   and r.task_id = #{TASK_ID}
+		   )  where  mm=1
+     </select>
+     
+      <select id="portChecked" parameterType="map" resultType="map">
+		select distinct create_staff,ischeckok,create_time,descript  from (select r.record_id,
+		       r.port_id,
+		       r.record_type,
+		       r.descript,
+		       (select bs.staff_name from TB_BASE_STAFF bs where bs.staff_id=r.create_staff) create_staff,
+		       r.create_time,
+		       decode(r.ischeckok, 0, '合格', '不合格') ischeckok,
+		       p.photo_path,
+		       p.micro_photo_path,
+		        rank()over(partition by r.port_id order by r.create_time desc) mm
+		  from TB_CABLECHECK_RECORD r left join TB_CABLECHECK_PHOTO_REL pr on r.record_id=pr.object_id
+		  left join tb_cablecheck_photo p on p.photo_id=pr.photo_id
+		 where r.port_id = #{PORT_ID}
+		   and r.task_id = #{TASK_ID}
+		   )  where  mm=1
+		        </select>
+     
+	<select id="getZqPortInfo" parameterType="map" resultMap="myTaskPortMap">
+	   select * from (
+		  SELECT TD.DZID,
+		         TD.DZBM,
+		         TD.GLBH,
+		         TD.GLMC,
+		         TD.SBID,
+		         TD.SBBM,
+		         TD.SBMC,
+		         t.task_id,
+		          case TD.H
+				when '0' then '否'
+				when '1' then '是'
+			end ISH,
+      td.SGGH
+		    FROM TB_CABLECHECK_DTSJ TD
+		    LEFT JOIN TB_CABLECHECK_TASKDETAIL T
+		      ON TD.ID = T.INSPECT_OBJECT_ID
+		   WHERE T.TASK_ID = (select task.old_task_id from tb_cablecheck_task task where task.task_id = #{TASK_ID} )
+		  union
+		  select to_char(r.port_id) port_id,
+		         r.port_no,
+		         td.glbm,
+		         td.glmc,
+		         to_char(r.eqp_id) eqp_id,
+		         r.eqp_no,
+		         r.eqp_name,
+		         td.task_id,
+		          case dt.H
+				when '0' then '否'
+				when '1' then '是'
+			end ISH,
+      dt.SGGH
+		    from TB_CABLECHECK_TASKDETAIL td
+		    left join TB_CABLECHECK_RECORD r
+		      on td.inspect_object_id = r.record_id
+		       left join TB_CABLECHECK_DTSJ dt
+          on dt.id = td.dtsj_id
+		   where td.task_id = (select task.old_task_id from tb_cablecheck_task task where task.task_id = #{TASK_ID} ) and r.port_id is not null and td.check_flag = 1 and r.port_id not in (
+		     select TD.DZID
+		       FROM TB_CABLECHECK_DTSJ TD
+		       LEFT JOIN TB_CABLECHECK_TASKDETAIL T
+		         ON TD.ID = T.INSPECT_OBJECT_ID
+		      WHERE T.TASK_ID = (select task.old_task_id from tb_cablecheck_task task where task.task_id = #{TASK_ID} )
+		   )
+		) mm
+		 order by to_number(regexp_substr(mm.DZBM, '[0-9]*[0-9]', 1)),
+		          to_number(regexp_substr(mm.DZBM, '[0-9]*[0-9]', 3))
+	</select>
+	
+	<select id="getZqSdPortInfo" parameterType="map" resultMap="myTaskPortMap">
+	   select * from (
+		  SELECT TD.DZID,
+		         TD.DZBM,
+		         TD.GLBH,
+		         TD.GLMC,
+		         TD.SBID,
+		         TD.SBBM,
+		         TD.SBMC,
+		         t.task_id,
+		          case TD.H
+				when '0' then '否'
+				when '1' then '是'
+			end ISH,
+      td.SGGH
+		    FROM TB_CABLECHECK_DTSJ TD
+		    LEFT JOIN TB_CABLECHECK_TASKDETAIL T
+		      ON TD.ID = T.INSPECT_OBJECT_ID
+		   WHERE T.TASK_ID = #{TASK_ID}
+		  union
+		  select r.port_id ,
+		         r.port_no,
+		         td.glbm,
+		         td.glmc,
+		         r.eqp_id,
+		         r.eqp_no,
+		         r.eqp_name,
+		         td.task_id,
+		          case dt.H
+				when '0' then '否'
+				when '1' then '是'
+			end ISH,
+      dt.SGGH
+		    from TB_CABLECHECK_TASKDETAIL td
+		    left join TB_CABLECHECK_RECORD r
+		      on td.inspect_object_id = r.record_id
+		       left join TB_CABLECHECK_DTSJ dt
+          on dt.id = td.dtsj_id
+		   where td.task_id = #{TASK_ID} and r.port_id is not null and td.check_flag = 1 and r.port_id not in (
+		     select TD.DZID
+		       FROM TB_CABLECHECK_DTSJ TD
+		       LEFT JOIN TB_CABLECHECK_TASKDETAIL T
+		         ON TD.ID = T.INSPECT_OBJECT_ID
+		      WHERE T.TASK_ID = #{TASK_ID}
+		   )
+		) mm
+		 order by to_number(regexp_substr(mm.DZBM, '[0-9]*[0-9]', 1)),
+		          to_number(regexp_substr(mm.DZBM, '[0-9]*[0-9]', 3))
+	</select>
+	
+	     <select id="queryProcess" parameterType="map" resultType="map">
+		select
+       		t.oper_time,
+       		ts.staff_name,
+       		t.remark
+		from tb_cablecheck_process t 
+		left join tb_base_staff ts on t.oper_staff=ts.staff_id
+		where t.task_id = #{TASK_ID} 
+		order by t.oper_time 
+	</select>
+	
+	
+	<select id="queryByCity" parameterType="map" resultType="map">
+	
+  select T4.*,
+       decode(检查端子数, 0, 0, round((检查端子正确数 / 检查端子数), 4)*100) || '%' 端子检查准确率,
+              decode(changeEQPnum, 0, 0, round(((CHECKEQPnum+二次检查设备数+一键反馈检查设备数+不预告抽查设备数) / changeEQPnum), 4)*100) || '%' 设备检查完成率
+       
+  from (select T3.parent_area_id,
+               a.name,
+               T3.changeEQPnum, 
+               T3.eqpisHnum, 
+               T3.BILLEQPnum, 
+               T3.billeqpisHnum, 
+               T3.CHECKEQPnum,
+               (select count(1)
+				  from tb_cablecheck_dtsj dtsj
+				  left join area a
+				    on a.area_id = dtsj.areaid
+left join odso_eqp_daily oed on oed.phy_eqp_id = dtsj.install_sbid
+				 where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+				 <include refid="dynamicWhere_QUERYWLJB" />
+				   and a.parent_area_id = t3.parent_area_id
+				   and dtsj.install_sbid is not null
+				) 变动端子数,
+                   (select count(distinct(task.SBID))
+				  from tb_cablecheck_task task
+				  left join TB_CABLECHECK_TASKDETAIL tde
+				    on task.task_id = tde.task_id
+				  left join TB_CABLECHECK_RECORD r
+				    on tde.inspect_object_id = r.record_id
+				     left join odso_eqp_daily oed on oed.phy_eqp_id = task.SBID
+				 where task.task_type = 4   
+				 <include refid="dynamicWhere_QUERYWLJB" />
+				   and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+				   and tde.inspect_object_type = 0
+				   and r.area_id = t3.parent_area_id
+				   and tde.check_flag = 1
+				   and r.port_no is null) 二次检查设备数,
+               (select count(distinct(task.SBID))
+                  from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.area_id = t3.parent_area_id
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                     and r.port_id is null
+                     <include refid="dynamicWhere_QUERYWLJB" />
+                    and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1) 一键反馈检查设备数,
+               (select count(distinct(task.SBID))
+                   from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.area_id = t3.parent_area_id
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                     and r.port_id is null
+                     <include refid="dynamicWhere_QUERYWLJB" />
+                   and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                    and task.task_type = 2
+                   ) 不预告抽查设备数,
+               (select count(r.port_id)
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task, odso_eqp_daily oed 
+                 where r.area_id = t3.parent_area_id
+                  AND oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                   <include refid="dynamicWhere_QUERYWLJB" />
+                 and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                    and dt.check_flag = 1) 检查端子数,
+               (select count(r.port_id)
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task, odso_eqp_daily oed 
+                 where r.area_id = t3.parent_area_id
+                  AND oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   <include refid="dynamicWhere_QUERYWLJB" />
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok != 1
+                    and dt.check_flag = 1) 检查端子正确数,
+                   (select count(r.port_id)
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task, odso_eqp_daily oed 
+                 where r.area_id = t3.parent_area_id
+                  AND oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   <include refid="dynamicWhere_QUERYWLJB" />
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')	
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok = 1
+                    and dt.check_flag = 1) 检查端子错误数
+        
+          from (select T2.parent_area_id,
+                       T2.changeEQPnum,
+                       T2.BILLEQPnum,
+                      T2.eqpisH eqpisHnum,
+                       T2.billeqpisH billeqpisHnum,
+                       T2.CHECKEQPnum
+                  from (select distinct T.parent_area_id,
+                                        count(distinct(T.install_sbid)) over(partition by T.parent_area_id) changeEQPnum, 
+                                        count(distinct(TASK.SBID)) over(partition by T.parent_area_id) BILLEQPnum, 
+                                        count(distinct( case when T.isH= 1 then T.install_sbid end)) over(partition by T.parent_area_id) eqpisH,
+                                        count(distinct(case when TASK.STATUS_ID = 8 THEN TASK.SBID END)) over(partition by T.parent_area_id) CHECKEQPnum,        
+                                         count(distinct( case when T.isH= 1 then TASK.SBID end))  over(partition by T.parent_area_id) billeqpisH
+                          from (select a.parent_area_id,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        )dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid) T
+                          left join TB_CABLECHECK_TASK TASK
+                            ON TASK.SBID = T.install_sbid
+                           AND TASK.AREA_ID = T.parent_area_id
+                           AND TASK.TASK_TYPE = 0
+                           and task.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                           and trunc(task.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                           left join tb_cablecheck_equipment e 
+                           on e.equipment_id = T.install_sbid
+                          
+                           where e.equipment_id is not null
+                          ) T2
+                 ) T3
+          join area a
+            on a.area_level = 3
+           and a.area_id = t3.parent_area_id
+           <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    	AND a.area_id = #{queryParams.AREA_ID}
+		    	]]>
+		  </if>
+		   
+           ) T4
+	</select>
+	
+	
+	<select id="queryDownByCity" parameterType="map" resultType="map">
+	  select T4.*,
+       decode(检查端子数, 0, 0, round((检查端子正确数 / 检查端子数), 4)*100) || '%' 端子检查准确率,
+                     decode(changeEQPnum, 0, 0, round(((CHECKEQPnum+二次检查设备数+一键反馈检查设备数+不预告抽查设备数) / changeEQPnum), 4)*100) || '%' 设备检查完成率
+       
+  from (select T3.parent_area_id,
+               a.name,
+               T3.changeEQPnum, 
+               T3.eqpisHnum, 
+               T3.BILLEQPnum, 
+               T3.billeqpisHnum, 
+               T3.CHECKEQPnum,
+              (select count(1)
+				  from tb_cablecheck_dtsj dtsj
+				  left join odso_eqp_daily oed on oed.phy_eqp_id = dtsj.install_sbid
+				  left join area a
+				    on a.area_id = dtsj.areaid
+				 where to_char(dtsj.bdsj, 'yyyy-mm') = #{static_month}
+				   and a.parent_area_id = t3.parent_area_id
+				   and dtsj.install_sbid is not null
+				   <include refid="dynamicWhere_DOWNWLJB" />
+				) 变动端子数,
+                   (select count(distinct(task.SBID))
+				  from tb_cablecheck_task task
+				  left join TB_CABLECHECK_TASKDETAIL tde
+				    on task.task_id = tde.task_id
+				  left join TB_CABLECHECK_RECORD r
+				    on tde.inspect_object_id = r.record_id
+				     left join odso_eqp_daily oed on oed.phy_eqp_id = task.SBID
+				 where task.task_type = 4   
+				   and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')       
+				   and tde.inspect_object_type = 0
+				   and r.area_id = t3.parent_area_id
+				   and tde.check_flag = 1
+				   and r.port_no is null
+				   <include refid="dynamicWhere_DOWNWLJB" />) 二次检查设备数,
+               (select count(distinct(task.SBID))
+                     from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.area_id = t3.parent_area_id
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                   
+                     and r.port_id is null
+                   and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   <include refid="dynamicWhere_DOWNWLJB" />) 一键反馈检查设备数,
+               (select count(distinct(task.SBID))
+                 from tb_cablecheck_record r, tb_cablecheck_task task , odso_eqp_daily oed
+                 where r.area_id = t3.parent_area_id
+                   and task.task_id = r.task_id
+                   AND oed.phy_eqp_id = task.SBID
+                     and r.port_id is null
+                     and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                    and task.task_type = 2
+                    <include refid="dynamicWhere_DOWNWLJB" />
+                   ) 不预告抽查设备数,
+               (select count(r.port_id)
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task, odso_eqp_daily oed 
+                 where r.area_id = t3.parent_area_id
+                  AND oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                    and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                 and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                    and dt.check_flag = 1
+                    <include refid="dynamicWhere_DOWNWLJB" />) 检查端子数,
+               (select count(r.port_id)
+                from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task, odso_eqp_daily oed 
+                 where r.area_id = t3.parent_area_id
+                  AND oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                    and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok != 1
+                    and dt.check_flag = 1
+                    <include refid="dynamicWhere_DOWNWLJB" />) 检查端子正确数,
+                   (select count(r.port_id)
+                 from tb_cablecheck_record r, tb_cablecheck_taskdetail dt,tb_cablecheck_task task, odso_eqp_daily oed 
+                 where r.area_id = t3.parent_area_id
+                  AND oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                    and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')	
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and r.ischeckok = 1
+                    and dt.check_flag = 1
+                    <include refid="dynamicWhere_DOWNWLJB" />) 检查端子错误数
+        
+          from (select T2.parent_area_id,
+                       T2.changeEQPnum,
+                       T2.BILLEQPnum,
+                      T2.eqpisH eqpisHnum,
+                       T2.billeqpisH billeqpisHnum,
+                       T2.CHECKEQPnum
+                  from (select distinct T.parent_area_id,
+                                        count(distinct(T.install_sbid)) over(partition by T.parent_area_id) changeEQPnum, 
+                                        count(distinct(TASK.SBID)) over(partition by T.parent_area_id) BILLEQPnum, 
+                                        count(distinct( case when T.isH= 1 then T.install_sbid end)) over(partition by T.parent_area_id) eqpisH,
+                                        count(distinct(case when TASK.STATUS_ID = 8 THEN TASK.SBID END)) over(partition by T.parent_area_id) CHECKEQPnum, 
+                                         count(distinct( case when T.isH= 1 then TASK.SBID end))  over(partition by T.parent_area_id) billeqpisH
+                          from (select a.parent_area_id,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_DOWNWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid) T
+                          left join TB_CABLECHECK_TASK TASK
+                            ON TASK.SBID = T.install_sbid
+                           AND TASK.AREA_ID = T.parent_area_id
+                           AND TASK.TASK_TYPE = 0
+                           and task.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                           and trunc(task.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                           left join tb_cablecheck_equipment e 
+                           on e.equipment_id = T.install_sbid
+                           
+                           where e.equipment_id is not null
+                           ) T2
+                 ) T3
+          join area a
+            on a.area_level = 3
+           and a.area_id = t3.parent_area_id
+           <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    	AND a.area_id = #{AREA_ID}
+		    	]]>
+		  </if>
+    
+		   
+           ) T4
+	</select>
+	
+<select id="queryChangeEqpByCity" parameterType="map" resultType="map">
+SELECT * FROM ( 
+                      select distinct T.parent_area_id,T.install_sbid,T.name
+                          from (select a.parent_area_id,
+                                       dtsj.install_sbid,
+                                      a.name
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid,a.name) T
+                          left join TB_CABLECHECK_TASK TASK
+                            ON TASK.SBID = T.install_sbid
+                           AND TASK.AREA_ID = T.parent_area_id
+                           AND TASK.TASK_TYPE = 0
+                           and task.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                           and trunc(task.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd'))M  left join TB_CABLECHECK_EQUIPMENT tbe on M.install_sbid = tbe.equipment_id  WHERE M.parent_area_id = #{queryParams.parent_area_id} and M.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+                             <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>
+</select>
+ <select id="downChangeEqpByCity" parameterType="map" resultType="map">
+ SELECT * FROM ( 
+                      select distinct T.parent_area_id,T.install_sbid,T.name
+                          from (select a.parent_area_id,
+                                       dtsj.install_sbid,
+                                      a.name
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_DOWNWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid,a.name) T
+                          left join TB_CABLECHECK_TASK TASK
+                            ON TASK.SBID = T.install_sbid
+                           AND TASK.AREA_ID = T.parent_area_id
+                           AND TASK.TASK_TYPE = 0
+                           and task.create_time &gt;= to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                           and trunc(task.create_time) &lt;= to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd'))M  left join TB_CABLECHECK_EQUIPMENT tbe on M.install_sbid = tbe.equipment_id  WHERE M.parent_area_id = #{parent_area_id} and M.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+</select>
+
+<select id="queryPfEqpByCity" parameterType="map" resultType="map">
+SELECT *
+  FROM (select distinct T.parent_area_id, T.TASK.SBID, T.name
+          from (select a.parent_area_id, dtsj.install_sbid, a.name
+                  from area a,
+                       (select dtsj.install_sbid,
+                               max(dtsj.h) h,
+                               dtsj.areaid,
+                               dtsj.dzid
+                          from tb_cablecheck_dtsj dtsj
+                         where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+                         group by dtsj.install_sbid, dtsj.areaid, dtsj.dzid
+                        
+                        ) dtsj
+                 where a.area_id = dtsj.areaid
+                 group by a.parent_area_id, dtsj.install_sbid, a.name) T
+          left join TB_CABLECHECK_TASK TASK
+            ON TASK.SBID = T.install_sbid
+           AND TASK.AREA_ID = T.parent_area_id
+           AND TASK.TASK_TYPE = 0
+            and task.create_time&gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time)&lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                             left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                             WHERE 1=1 <include refid="dynamicWhere_QUERYWLJB" />) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    on M.SBID = tbe.equipment_id
+    
+ WHERE M.parent_area_id = #{queryParams.parent_area_id}
+   and M.SBID IS NOT NULL
+     <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>
+</select>
+<select id="downPfEqpByCity" parameterType="map" resultType="map">
+SELECT *
+  FROM (select distinct T.parent_area_id, T.TASK.SBID, T.name
+          from (select a.parent_area_id, dtsj.install_sbid, a.name
+                  from area a,
+                       (select dtsj.install_sbid,
+                               max(dtsj.h) h,
+                               dtsj.areaid,
+                               dtsj.dzid
+                          from tb_cablecheck_dtsj dtsj
+                         where to_char(dtsj.bdsj, 'yyyy-mm') = #{static_month}
+                         group by dtsj.install_sbid, dtsj.areaid, dtsj.dzid
+                        
+                        ) dtsj
+                 where a.area_id = dtsj.areaid
+                 group by a.parent_area_id, dtsj.install_sbid, a.name) T
+          left join TB_CABLECHECK_TASK TASK
+            ON TASK.SBID = T.install_sbid
+           AND TASK.AREA_ID = T.parent_area_id
+           AND TASK.TASK_TYPE = 0
+            and task.create_time&gt;=
+                             to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time)&lt;=
+                             to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                             left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                             WHERE 1=1 <include refid="dynamicWhere_DOWNWLJB" />) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    on M.SBID = tbe.equipment_id
+ WHERE M.parent_area_id = #{parent_area_id}
+   and M.SBID IS NOT NULL
+</select>
+
+<select id="queryHEqpByCity" parameterType="map" resultType="map">
+select *  from (select a.parent_area_id,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                       a.name
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid  
+                                 <include refid="dynamicWhere_QUERYWLJB" />and dtsj.install_sbid is not null
+                                 group by a.parent_area_id, dtsj.install_sbid,a.name) T left join TB_CABLECHECK_EQUIPMENT tbe on T.install_sbid = tbe.equipment_id  WHERE T.parent_area_id = #{queryParams.parent_area_id} AND T.isH = 1 and T.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+                     
+</select>
+<select id="downHEqpByCity" parameterType="map" resultType="map">
+select *  from (select a.parent_area_id,
+                                       dtsj.install_sbid,
+                                       case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                       a.name
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        )dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid   and dtsj.install_sbid is not null
+                                 <include refid="dynamicWhere_DOWNWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid,a.name) T left join TB_CABLECHECK_EQUIPMENT tbe on T.install_sbid = tbe.equipment_id  WHERE T.parent_area_id = #{parent_area_id} AND T.isH = 1 and T.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+        
+</select>
+     <select id="queryPfHEqpByCity" parameterType="map" resultType="map">
+
+ SELECT * FROM ( 
+                      select distinct T.parent_area_id,TASK.SBID,T.name,
+                                  
+                                    case
+                                          when TASK.SBID is not null then
+                                           T.isH
+                                          else
+                                           0
+                                        end billeqpisH 
+                        from (
+                              select a.parent_area_id,
+                                     
+                                     dtsj.install_sbid,
+                                      case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                     a.name
+                                from area a,
+                                     (
+                                       select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj
+                               where a.area_id = dtsj.areaid
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                          left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID 
+                          WHERE 1= 1 <include refid="dynamicWhere_QUERYWLJB" />
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.parent_area_id = #{queryParams.parent_area_id} and M.SBID IS NOT NULL and billeqpisH = 1
+ </select>
+     <select id="downPfHEqpByCity" parameterType="map" resultType="map">
+     SELECT * FROM ( 
+                      select distinct T.parent_area_id,TASK.SBID,T.name,
+                                  
+                                    case
+                                          when TASK.SBID is not null then
+                                           T.isH
+                                          else
+                                           0
+                                        end billeqpisH 
+                        from (
+                              select a.parent_area_id,
+                                     
+                                     dtsj.install_sbid,
+                                      case
+                                         when count(0) = sum(dtsj.h) then
+                                          1
+                                         ELSE
+                                          0
+                                       end isH,
+                                     a.name
+                                from area a,
+                                     (
+                                       select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj
+                               where a.area_id = dtsj.areaid
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                           left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                           WHERE 1= 1 <include refid="dynamicWhere_DOWNWLJB" />
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.parent_area_id = #{parent_area_id} and M.SBID IS NOT NULL and billeqpisH = 1
+ </select>
+ 
+  <select id="queryCheckEqpByCity" parameterType="map" resultType="map">
+ SELECT *
+  FROM (select distinct T.parent_area_id, T.TASK.SBID, T.name
+          from (select a.parent_area_id, dtsj.install_sbid, a.name
+                  from area a,
+                       (select dtsj.install_sbid,
+                               max(dtsj.h) h,
+                               dtsj.areaid,
+                               dtsj.dzid
+                          from tb_cablecheck_dtsj dtsj
+                         where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+                         group by dtsj.install_sbid, dtsj.areaid, dtsj.dzid
+                        
+                        )dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                 group by a.parent_area_id, dtsj.install_sbid, a.name) T
+          left join TB_CABLECHECK_TASK TASK
+            ON TASK.SBID = T.install_sbid
+           AND TASK.AREA_ID = T.parent_area_id
+           AND TASK.TASK_TYPE = 0
+            and task.status_id = 8
+            and task.create_time&gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time)&lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    on M.SBID = tbe.equipment_id
+ WHERE M.parent_area_id = #{queryParams.parent_area_id}
+   and M.SBID IS NOT NULL
+   <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID} 
+		    	]]>
+		  </if>
+   
+   </select>
+   
+     <select id="downCheckEqpByCity" parameterType="map" resultType="map">
+ SELECT *
+  FROM (select distinct T.parent_area_id, T.TASK.SBID, T.name
+          from (select a.parent_area_id, dtsj.install_sbid, a.name
+                  from area a,
+                       (select dtsj.install_sbid,
+                               max(dtsj.h) h,
+                               dtsj.areaid,
+                               dtsj.dzid
+                          from tb_cablecheck_dtsj dtsj
+                         where to_char(dtsj.bdsj, 'yyyy-mm') = #{static_month}
+                         group by dtsj.install_sbid, dtsj.areaid, dtsj.dzid
+                        
+                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_DOWNWLJB" />
+                 group by a.parent_area_id, dtsj.install_sbid, a.name) T
+          left join TB_CABLECHECK_TASK TASK
+            ON TASK.SBID = T.install_sbid
+           AND TASK.AREA_ID = T.parent_area_id
+           AND TASK.TASK_TYPE = 0
+           and task.status_id = 8
+            and task.create_time&gt;=
+                             to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time)&lt;=
+                             to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    on M.SBID = tbe.equipment_id
+ WHERE M.parent_area_id = #{parent_area_id}
+   and M.SBID IS NOT NULL
+   </select>
+   
+    
+    <select id="querySdEqpByCity" parameterType="map" resultType="map">
+select *
+  from (select distinct(task.SBID),r.area_id,r.task_id
+		  from tb_cablecheck_task task
+		  left join TB_CABLECHECK_TASKDETAIL tde
+		    on task.task_id = tde.task_id
+		  left join TB_CABLECHECK_RECORD r
+		    on tde.inspect_object_id = r.record_id
+		    left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+		 where task.task_type = 4   
+		   and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')     
+		   and tde.inspect_object_type = 0
+		   and r.area_id = #{queryParams.parent_area_id}
+	   and tde.check_flag =1
+   and r.port_no is null
+   <include refid="dynamicWhere_QUERYWLJB" />) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    ON M.SBID = tbe.equipment_id
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+     </select>
+<select id="downSdEqpByCity" parameterType="map" resultType="map">
+     select *
+  from (select distinct(task.SBID),r.area_id,r.task_id
+		  from tb_cablecheck_task task
+		  left join TB_CABLECHECK_TASKDETAIL tde
+		    on task.task_id = tde.task_id
+		  left join TB_CABLECHECK_RECORD r
+		    on tde.inspect_object_id = r.record_id
+		    left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+		 where task.task_type = 4   
+		   and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.ACTUAL_COMPLETE_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')        
+		   and tde.inspect_object_type = 0
+		   and r.area_id = #{parent_area_id}
+	   and tde.check_flag =1
+   and r.port_no is null
+   <include refid="dynamicWhere_DOWNWLJB" />) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    ON M.SBID = tbe.equipment_id
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+     </select>
+     
+       <select id="queryYjEqpByCity" parameterType="map" resultType="map">
+     
+            select * from (          
+ select distinct(task.SBID),r.area_id
+                  from tb_cablecheck_record r, tb_cablecheck_task task, area b
+                 where r.area_id = b.area_id
+                   and task.task_id = r.task_id
+                     and r.port_id is null
+                 and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   and b.area_id = #{queryParams.parent_area_id}
+                   ) M left join TB_CABLECHECK_EQUIPMENT tbe
+                    ON M.SBID = tbe.equipment_id
+                  LEFT JOIN AREA A
+                    ON A.AREA_ID = M.area_id    
+                      left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                                        where 1= 1 
+                    <include refid="dynamicWhere_QUERYWLJB" />
+                      <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>     
+           </select>
+ <select id="downYjEqpByCity" parameterType="map" resultType="map">
+            select * from (          
+ select distinct(task.SBID),r.area_id
+                  from tb_cablecheck_record r, tb_cablecheck_task task, area b
+                 where r.area_id = b.area_id
+                   and task.task_id = r.task_id
+                     and r.port_id is null
+                   and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   and b.area_id = #{parent_area_id}
+                   ) M left join TB_CABLECHECK_EQUIPMENT tbe
+                    ON M.SBID = tbe.equipment_id
+                  LEFT JOIN AREA A
+                    ON A.AREA_ID = M.area_id        
+                      left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID 
+                      WHERE 1=1 <include refid="dynamicWhere_DOWNWLJB" />
+</select>
+
+ <select id="queryBkEqpByCity" parameterType="map" resultType="map">
+           
+                select *
+                   from (select distinct (task.SBID),r.area_id
+                          from tb_cablecheck_record r,
+                               tb_cablecheck_task   task,
+                               area                 b
+                         where r.area_id = b.area_id
+                           and task.task_id = r.task_id
+                           and r.port_id is null
+                           and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                           and task.task_type = 2
+                           and b.area_id = #{queryParams.parent_area_id}) M
+                          left join TB_CABLECHECK_EQUIPMENT tbe
+                            ON M.SBID = tbe.equipment_id
+                          LEFT JOIN AREA A
+                            ON A.AREA_ID = M.area_id
+                              left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                                                where 1= 1 
+                            <include refid="dynamicWhere_QUERYWLJB" />
+                    <if test="queryParams.RES_TYPE_ID != null and queryParams.RES_TYPE_ID != ''">  
+	            <![CDATA[
+		    and tbe.RES_TYPE_ID = #{queryParams.RES_TYPE_ID}  
+		    	]]>
+		  </if>         
+ </select>
+  <select id="downBkEqpByCity" parameterType="map" resultType="map">
+           
+                select *
+                   from (select distinct (task.SBID),r.area_id
+                          from tb_cablecheck_record r,
+                               tb_cablecheck_task   task,
+                               area                 b
+                         where r.area_id = b.area_id
+                           and task.task_id = r.task_id
+                           and r.port_id is null
+                           and task.START_TIME &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')    
+                           and task.task_type = 2
+                           and b.area_id = #{parent_area_id}) M
+                          left join TB_CABLECHECK_EQUIPMENT tbe
+                            ON M.SBID = tbe.equipment_id
+                          LEFT JOIN AREA A
+                            ON A.AREA_ID = M.area_id
+                              left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                              WHERE 1=1 <include refid="dynamicWhere_DOWNWLJB" />
+                           
+ </select>
+ 
+ 
+ <select id="queryCheckPortByCity" parameterType="map" resultType="map">   
+select *
+  from (select r.port_id,
+               r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+          from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+           and dt.detail_id = r.detail_id
+            and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+           and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+           and dt.inspect_object_type = 1
+           and dt.check_flag= 1
+           <include refid="dynamicWhere_QUERYWLJB" />
+           and b.area_id = #{queryParams.parent_area_id}) M
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+  <select id="downCheckPortByCity" parameterType="map" resultType="map">   
+select *
+  from (select r.port_id,
+               r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+          from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+           and dt.detail_id = r.detail_id
+           and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+           and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+           and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+           and dt.inspect_object_type = 1
+           and dt.check_flag= 1
+           <include refid="dynamicWhere_DOWNWLJB" />
+           and b.area_id = #{parent_area_id}) M
+  LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+  <select id="queryCurrentPortByCity" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                   <include refid="dynamicWhere_QUERYWLJB" />
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and b.area_id = #{queryParams.parent_area_id}
+                   and dt.check_flag= 1
+                   and r.ischeckok != 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+   <select id="downCurrentPortByCity" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                  from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and b.area_id = #{parent_area_id}
+                   and dt.check_flag= 1
+                   <include refid="dynamicWhere_DOWNWLJB" />
+                   and r.ischeckok != 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ <select id="queryPromblePortByCity" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                   from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and dt.check_flag= 1
+                   <include refid="dynamicWhere_QUERYWLJB" />
+                   and b.area_id = #{queryParams.parent_area_id}
+                   and r.ischeckok = 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+  <select id="downPromblePortByCity" parameterType="map" resultType="map">   
+select* from (
+select r.port_id, r.port_no,
+               r.eqp_name,
+               r.eqp_no,
+               r.task_id,
+               r.area_id,
+               r.create_staff,
+               TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time ,
+               r.descript,
+                dt.glbm,
+               dt.glmc,
+               case r.ischeckok
+                 when '1' then '不合格'
+                   else '合格'
+                     end ischeckok
+                   from tb_cablecheck_record r, tb_cablecheck_taskdetail dt, area b,tb_cablecheck_task task ,  odso_eqp_daily oed
+         where r.area_id = b.area_id
+           and oed.phy_eqp_id = task.SBID
+                   and dt.detail_id = r.detail_id
+                   and r.task_id=task.task_id
+                   and task.task_type !=3
+                   and r.record_type != 2
+                  and r.create_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                   and trunc(r.create_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                   and dt.inspect_object_type = 1
+                   and dt.check_flag= 1
+                   <include refid="dynamicWhere_DOWNWLJB" />
+                   and b.area_id = #{parent_area_id}
+                   and r.ischeckok = 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+ </select>
+ 
+  <select id="queryCheckEqpNum" parameterType="map" resultType="map">
+    
+ SELECT tbe.res_type_id,tbe.res_type,
+ count(1) num FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                           and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')      
+                            and task.status_id = 8
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{queryParams.areaId} and M.SBID IS NOT NULL  group by tbe.res_type_id,tbe.res_type
+    </select>      
+    
+      <select id="queryCheckEqpNumByCity" parameterType="map" resultType="map">
+      
+  select tbe.res_type_id,tbe.res_type,
+ count(1) num from (select distinct T.parent_area_id, T.TASK.SBID, T.name
+          from (select a.parent_area_id, dtsj.install_sbid, a.name
+                  from area a,
+                       (select dtsj.install_sbid,
+                               max(dtsj.h) h,
+                               dtsj.areaid,
+                               dtsj.dzid
+                          from tb_cablecheck_dtsj dtsj
+                         where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+                         group by dtsj.install_sbid, dtsj.areaid, dtsj.dzid
+                        
+                        )dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                 group by a.parent_area_id, dtsj.install_sbid, a.name) T
+          left join TB_CABLECHECK_TASK TASK
+            ON TASK.SBID = T.install_sbid
+           AND TASK.AREA_ID = T.parent_area_id
+           AND TASK.TASK_TYPE = 0
+           and task.status_id = 8
+            and task.create_time&gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time)&lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    on M.SBID = tbe.equipment_id
+ WHERE M.parent_area_id = #{queryParams.parent_area_id}
+   and M.SBID IS NOT NULL
+    
+    group by tbe.res_type_id,tbe.res_type
+      </select>
+ <select id="queryChangeEqpNum" parameterType="map" resultType="map">
+  select tbe.res_type_id,case when tbe.res_type is null then '其他设备' else tbe.res_type end res_type,
+ count(1) num FROM ( 
+                      select distinct T.areaid,T.install_sbid,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.install_sbid = tbe.equipment_id  WHERE M.areaid = #{queryParams.areaId} and M.install_sbid IS NOT NULL and tbe.equipment_id is not null
+                                 group by tbe.res_type_id,tbe.res_type order by tbe.res_type_id
+                             
+</select>
+ <select id="queryPfEqpNum" parameterType="map" resultType="map">
+  select tbe.res_type_id,tbe.res_type,
+ count(1) num FROM ( 
+                      select distinct T.areaid,TASK.SBID,T.name
+                                     
+                                     
+                        from (select a.parent_area_id,
+                                     dtsj.areaid,
+                                     dtsj.install_sbid,
+                                     a.name
+                                from area a,
+                                     (select dtsj.install_sbid,
+                                             max(dtsj.h) h,
+                                             dtsj.areaid,
+                                             dtsj.dzid
+                                        from tb_cablecheck_dtsj dtsj
+                                       where to_char(dtsj.bdsj, 'yyyy-mm') =
+                                             #{queryParams.static_month}
+                                       group by dtsj.install_sbid,
+                                                dtsj.areaid,
+                                                dtsj.dzid
+                                      
+                                      ) dtsj
+                               where a.area_id = dtsj.areaid
+                               group by a.parent_area_id,
+                                        dtsj.install_sbid,
+                                        dtsj.areaid,
+                                        a.name) T
+                        left join TB_CABLECHECK_TASK TASK
+                          ON TASK.SBID = T.install_sbid
+                         AND TASK.AREA_ID = T.parent_area_id
+                         AND TASK.TASK_TYPE = 0
+                         and task.create_time &gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time) &lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                            left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                            WHERE 1=1 
+                            <include refid="dynamicWhere_QUERYWLJB" />
+                             ) M  left join TB_CABLECHECK_EQUIPMENT tbe on M.SBID = tbe.equipment_id  WHERE M.areaid = #{queryParams.areaId} and M.SBID IS NOT NULL
+                             group by tbe.res_type_id,tbe.res_type
+</select>
+ <select id="queryYjEqpNum" parameterType="map" resultType="map">
+  select tbe.res_type_id,tbe.res_type,
+ count(1) num FROM (          
+ select distinct(task.SBID),r.son_area_id
+                  from tb_cablecheck_record r, tb_cablecheck_task task, area b
+                 where r.son_area_id = b.area_id
+                   and task.task_id = r.task_id
+                     and r.port_id is null
+                    and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   and b.area_id = #{queryParams.areaId}
+                   ) M left join TB_CABLECHECK_EQUIPMENT tbe
+                    ON M.SBID = tbe.equipment_id
+                      left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                  LEFT JOIN AREA A
+                    ON A.AREA_ID = M.son_area_id  
+                    WHERE 1=1 <include refid="dynamicWhere_QUERYWLJB" />
+                                                 group by tbe.res_type_id,tbe.res_type
+                            
+</select>
+ <select id="queryBkEqpNum" parameterType="map" resultType="map">
+    select tbe.res_type_id,tbe.res_type,
+ count(1) num FROM (select distinct (task.SBID),r.son_area_id
+                          from tb_cablecheck_record r,
+                               tb_cablecheck_task   task,
+                               area                 b
+                         where r.son_area_id = b.area_id
+                           and task.task_id = r.task_id
+                           and r.port_id is null
+                           and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                           and task.task_type = 2
+                           and b.area_id = #{queryParams.areaId}) M
+                          left join TB_CABLECHECK_EQUIPMENT tbe
+                            ON M.SBID = tbe.equipment_id
+                          LEFT JOIN AREA A
+                            ON A.AREA_ID = M.son_area_id
+                              left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                              WHERE 1=1 <include refid="dynamicWhere_QUERYWLJB" />
+                           group by tbe.res_type_id,tbe.res_type
+                            
+</select>
+ <select id="queryChangeNumEqpByCity" parameterType="map" resultType="map">
+ select tbe.res_type_id,case when tbe.res_type is null then '其他设备' else tbe.res_type end res_type,
+ count(1) num FROM ( 
+                      select distinct T.parent_area_id,T.install_sbid,T.name
+                          from (select a.parent_area_id,
+                                       dtsj.install_sbid,
+                                      a.name
+                                  from area a,
+                                       (select dtsj.install_sbid,
+                                               max(dtsj.h) h,
+                                               dtsj.areaid,
+                                               dtsj.dzid
+                                          from tb_cablecheck_dtsj dtsj
+                                         where 
+                                               to_char(dtsj.bdsj,'yyyy-mm') = #{queryParams.static_month}
+                                         group by dtsj.install_sbid,
+                                                  dtsj.areaid,
+                                                  dtsj.dzid
+                                        
+                                        ) dtsj , odso_eqp_daily oed
+                                 where a.area_id = dtsj.areaid
+                                 AND OED.phy_eqp_id = dtsj.install_sbid
+                                 <include refid="dynamicWhere_QUERYWLJB" />
+                                 group by a.parent_area_id, dtsj.install_sbid,a.name) T
+                          left join TB_CABLECHECK_TASK TASK
+                            ON TASK.SBID = T.install_sbid
+                           AND TASK.AREA_ID = T.parent_area_id
+                           AND TASK.TASK_TYPE = 0
+                           and task.create_time &gt;= to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                           and trunc(task.create_time) &lt;= to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd'))M  left join TB_CABLECHECK_EQUIPMENT tbe on M.install_sbid = tbe.equipment_id  WHERE M.parent_area_id = #{queryParams.parent_area_id} and M.install_sbid IS NOT NULL and tbe.equipment_id is not null 
+                            group by tbe.res_type_id,tbe.res_type order by tbe.res_type_id
+</select>
+ <select id="queryPfEqpNumByCity" parameterType="map" resultType="map">
+ select tbe.res_type_id,tbe.res_type,
+ count(1) num FROM (select distinct T.parent_area_id, T.TASK.SBID, T.name
+          from (select a.parent_area_id, dtsj.install_sbid, a.name
+                  from area a,
+                       (select dtsj.install_sbid,
+                               max(dtsj.h) h,
+                               dtsj.areaid,
+                               dtsj.dzid
+                          from tb_cablecheck_dtsj dtsj
+                         where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+                         group by dtsj.install_sbid, dtsj.areaid, dtsj.dzid
+                        
+                        ) dtsj
+                 where a.area_id = dtsj.areaid
+                 group by a.parent_area_id, dtsj.install_sbid, a.name) T
+          left join TB_CABLECHECK_TASK TASK
+            ON TASK.SBID = T.install_sbid
+           AND TASK.AREA_ID = T.parent_area_id
+           AND TASK.TASK_TYPE = 0
+            and task.create_time&gt;=
+                             to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+                         and trunc(task.create_time)&lt;=
+                             to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                              left join  odso_eqp_daily oed  on OED.phy_eqp_id = TASK.SBID
+                            WHERE 1=1 
+                            <include refid="dynamicWhere_QUERYWLJB" />) M
+  left join TB_CABLECHECK_EQUIPMENT tbe
+    on M.SBID = tbe.equipment_id
+    
+ WHERE M.parent_area_id = #{queryParams.parent_area_id}
+   and M.SBID IS NOT NULL
+                  group by tbe.res_type_id,tbe.res_type
+   
+</select>
+ <select id="queryBkEqpNumByCity" parameterType="map" resultType="map">
+   select tbe.res_type_id,tbe.res_type,
+ count(1) num from (select distinct (task.SBID),r.area_id
+                          from tb_cablecheck_record r,
+                               tb_cablecheck_task   task,
+                               area                 b
+                         where r.area_id = b.area_id
+                           and task.task_id = r.task_id
+                           and r.port_id is null
+                           and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                           and task.task_type = 2
+                           and b.area_id = #{queryParams.parent_area_id}) M
+                          left join TB_CABLECHECK_EQUIPMENT tbe
+                            ON M.SBID = tbe.equipment_id
+                          LEFT JOIN AREA A
+                            ON A.AREA_ID = M.area_id
+                              left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID
+                              WHERE 1=1 <include refid="dynamicWhere_QUERYWLJB" />
+                             group by tbe.res_type_id,tbe.res_type
+                            
+</select>
+ <select id="queryYjEqpNumByCity" parameterType="map" resultType="map">
+ select tbe.res_type_id,tbe.res_type,
+ count(1) num from  (          
+ select distinct(task.SBID),r.area_id
+                  from tb_cablecheck_record r, tb_cablecheck_task task, area b
+                 where r.area_id = b.area_id
+                   and task.task_id = r.task_id
+                     and r.port_id is null
+                 and task.START_TIME &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+				   and trunc(task.START_TIME) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')    
+                   and task.task_type = 1
+                   and b.area_id = #{queryParams.parent_area_id}
+                   ) M left join TB_CABLECHECK_EQUIPMENT tbe
+                    ON M.SBID = tbe.equipment_id
+                  LEFT JOIN AREA A
+                    ON A.AREA_ID = M.area_id   
+                      left join  odso_eqp_daily oed  on OED.phy_eqp_id = M.SBID  
+                      WHERE 1=1 <include refid="dynamicWhere_QUERYWLJB" />
+                    group by tbe.res_type_id,tbe.res_type    
+</select>
+
+<select id="queryDtsjPort" parameterType="map" resultType="map">   
+select dtsj.dzid,
+       dtsj.dzbm,
+       dtsj.sbid,
+       dtsj.sbbm,
+       dtsj.sbmc,
+        to_char(dtsj.bdsj, 'yyyy-MM-dd') bdsj,
+       dtsj.glbh,
+      
+      to_char(dtsj.gdjgsj, 'yyyy-MM-dd HH:mm:ss')gdjgsj,
+       dtsj.glmc,
+       dtsj.install_sbbm,
+       pt.name xz,
+       a.name town,
+       b.name city,
+       dtsj.pzgh,
+       dtsj.sggh,
+       dtsj.gqgh,
+       case dtsj.sblx when 2530 then '分光器'
+         when 414 then '综合配线箱'
+         when 704 then '光分纤箱'
+           when 703 then '光交接箱'
+             when 411 then 'ODF' end sblx
+  from tb_cablecheck_dtsj dtsj
+  left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON dtsj.XZ = PT.PSO_TYPE_ID
+    left join  odso_eqp_daily oed  on OED.phy_eqp_id = dtsj.install_sbid     
+  left join area a on a.area_id = dtsj.areaid 
+  left join area b on b.area_id = a.parent_area_id
+ where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+   and dtsj.areaid = #{queryParams.areaId}
+   and dtsj.install_sbid is not null
+   <include refid="dynamicWhere_QUERYWLJB" />
+</select>
+
+<select id="downDtsjPort" parameterType="map" resultType="map">   
+select dtsj.dzid,
+       dtsj.dzbm,
+       dtsj.sbid,
+       dtsj.sbbm,
+       dtsj.sbmc,
+       to_char(dtsj.bdsj, 'yyyy-MM-dd') bdsj,
+       dtsj.glbh,
+      
+      to_char(dtsj.gdjgsj, 'yyyy-MM-dd HH:mm:ss')gdjgsj,
+       
+       dtsj.glmc,
+       dtsj.install_sbbm,
+       pt.name xz,
+       a.name town,
+       b.name city,
+       dtsj.pzgh,
+       dtsj.sggh,
+       dtsj.gqgh,
+       case dtsj.sblx when 2530 then '分光器'
+         when 414 then '综合配线箱'
+         when 704 then '光分纤箱'
+           when 703 then '光交接箱'
+             when 411 then 'ODF' end sblx
+  from tb_cablecheck_dtsj dtsj
+  left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON dtsj.XZ = PT.PSO_TYPE_ID
+     left join  odso_eqp_daily oed  on OED.phy_eqp_id = dtsj.install_sbid          
+  left join area a on a.area_id = dtsj.areaid 
+  left join area b on b.area_id = a.parent_area_id
+ where to_char(dtsj.bdsj, 'yyyy-mm') = #{static_month}
+   and dtsj.areaid = #{areaId}
+   <include refid="dynamicWhere_DOWNWLJB" />
+   and dtsj.install_sbid is not null
+</select>
+
+
+
+
+<select id="queryDtsjPortByCity" parameterType="map" resultType="map">   
+select dtsj.dzid,
+       dtsj.dzbm,
+       dtsj.sbid,
+       dtsj.sbbm,
+       dtsj.sbmc,
+         to_char(dtsj.bdsj, 'yyyy-MM-dd') bdsj,
+       dtsj.glbh,
+      
+      to_char(dtsj.gdjgsj, 'yyyy-MM-dd HH:mm:ss')gdjgsj,
+       
+       dtsj.glmc,
+       dtsj.install_sbbm,
+       pt.name xz,
+       a.name town,
+       b.name city,
+       dtsj.pzgh,
+       dtsj.sggh,
+       dtsj.gqgh,
+       case dtsj.sblx when 2530 then '分光器'
+         when 414 then '综合配线箱'
+         when 704 then '光分纤箱'
+           when 703 then '光交接箱'
+             when 411 then 'ODF' end sblx
+  from tb_cablecheck_dtsj dtsj
+  left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON dtsj.XZ = PT.PSO_TYPE_ID
+      left join  odso_eqp_daily oed  on OED.phy_eqp_id = dtsj.install_sbid         
+  left join area a on a.area_id = dtsj.areaid 
+  left join area b on b.area_id = a.parent_area_id
+ where to_char(dtsj.bdsj, 'yyyy-mm') = #{queryParams.static_month}
+   and a.parent_area_id = #{queryParams.parent_area_id}
+   and dtsj.install_sbid is not null
+   <include refid="dynamicWhere_QUERYWLJB" />
+</select>   
+<select id="downDtsjPortByCity" parameterType="map" resultType="map">   
+select dtsj.dzid,
+       dtsj.dzbm,
+       dtsj.sbid,
+       dtsj.sbbm,
+       dtsj.sbmc,
+        to_char(dtsj.bdsj, 'yyyy-MM-dd') bdsj,
+       dtsj.glbh,
+      
+      to_char(dtsj.gdjgsj, 'yyyy-MM-dd HH:mm:ss')gdjgsj,
+       
+       dtsj.glmc,
+       dtsj.install_sbbm,
+       pt.name xz,
+       a.name town,
+       b.name city,
+       dtsj.pzgh,
+       dtsj.sggh,
+       dtsj.gqgh,
+       case dtsj.sblx when 2530 then '分光器'
+         when 414 then '综合配线箱'
+         when 704 then '光分纤箱'
+           when 703 then '光交接箱'
+             when 411 then 'ODF' end sblx
+  from tb_cablecheck_dtsj dtsj
+  left join OSSPAD.TB_CABLECHECK_SRV_PSO_TYPE PT
+          ON dtsj.XZ = PT.PSO_TYPE_ID
+    left join  odso_eqp_daily oed  on OED.phy_eqp_id = dtsj.install_sbid           
+  left join area a on a.area_id = dtsj.areaid 
+  left join area b on b.area_id = a.parent_area_id
+ where to_char(dtsj.bdsj, 'yyyy-mm') = #{static_month}
+   and a.parent_area_id = #{parent_area_id}
+   and dtsj.install_sbid is not null
+   <include refid="dynamicWhere_DOWNWLJB" />
+</select>
+</mapper>

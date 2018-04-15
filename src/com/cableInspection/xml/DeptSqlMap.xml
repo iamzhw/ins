@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.DeptDao">
+<sql id="dynamicWhere">
+		<if
+			test="queryParams.DEPT_NAME != null and queryParams.DEPT_NAME != ''">  
+            <![CDATA[
+	    	AND  instr (tbc.DEPT_NAME,#{queryParams.DEPT_NAME})>0
+	    	]]>
+		</if>
+		<if
+			test="queryParams.DEPT_NO != null and queryParams.DEPT_NO != ''">  
+            <![CDATA[
+            AND  instr (tbc.DEPT_NO,#{queryParams.DEPT_NO})>0
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND tbc.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tbc.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</sql>
+
+
+
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		SELECT tbc.dept_id,
+         tbc.dept_no,
+   	 	tbc.dept_name,
+		a.name area_name,
+		b.name
+		son_area_name,
+		tbs.staff_name,
+		(select count(0) from tb_ins_staff_dept sd where sd.dept_id=tbc.dept_id) PEOPLENUM,
+		to_char(tbc.create_date,'yyyy-MM-dd hh24:mi:ss') as
+		create_time
+		FROM tb_ins_DEPT tbc,
+		tb_base_staff tbs, AREA A, AREA B
+		WHERE tbc.AREA_ID = A.AREA_ID
+		AND tbc.SON_AREA_ID = B.AREA_ID
+		and
+		tbc.create_staff = tbs.staff_id
+		<include refid="dynamicWhere" />
+		ORDER BY tbc.AREA_ID, tbc.SON_AREA_ID
+	</select>
+
+	<select id="getDeptInfo" parameterType="int" resultType="map">
+		SELECT *
+		FROM tb_ins_DEPT tbc
+		WHERE tbc.DEPT_id=#{id}
+		
+	</select>
+
+	<select id="getSonAreaListByClassId" parameterType="int"
+		resultType="map">
+		SELECT A.*
+		FROM AREA A, TB_BASE_DEPT F
+		WHERE A.PARENT_AREA_ID = F.AREA_ID
+		AND F.DEPT_ID = #{deptId}
+		ORDER BY A.AREA_ID
+ 	</select>
+	<insert id="insert" parameterType="map">
+		INSERT INTO TB_INS_DEPT
+		(DEPT_ID,
+		DEPT_NO,
+		DEPT_NAME,
+		AREA_ID,
+		SON_AREA_ID,
+		CREATE_STAFF,
+		CREATE_DATE)
+		VALUES
+		(SEQ_TB_INS_DEPT.Nextval,#{DEPT_NO},#{DEPT_NAME},#{AREA_ID},#{SON_AREA_ID},#{CREATE_STAFF},
+		SYSDATE)
+	</insert>
+
+
+	<update id="update" parameterType="map">
+		UPDATE TB_INS_DEPT F
+		SET
+		F.DEPT_NO = #{DEPT_NO},
+		F.DEPT_NAME = #{DEPT_NAME},
+		F.SON_AREA_ID= #{SON_AREA_ID},
+		F.MODIFY_STAFF = #{MODIFY_STAFF},
+		F.MODIFY_DATE =SYSDATE
+		WHERE F.DEPT_ID = #{DEPT_ID}
+	</update>
+
+	<delete id="delete" parameterType="int">
+		DELETE tb_ins_DEPT WHERE
+		DEPT_id=#{id}
+	</delete>
+	<select id="getStaffs" parameterType="util.page.Query"
+		resultType="map">
+		select * from (
+		SELECT s.STAFF_ID, s.STAFF_NO, s.STAFF_NAME ,
+		(select to_char(wm_concat(distinct(d.dept_name))) from tb_ins_staff_dept sd,tb_ins_dept d 
+		where sd.staff_id = s.staff_id
+			and d.dept_id = sd.dept_id) dept_name,
+		(select count(0) from tb_ins_staff_dept sd
+		where sd.staff_id = s.staff_id
+			<if test="queryParams.DEPT_ID != null and queryParams.DEPT_ID != ''">  
+	            <![CDATA[
+		    		AND sd.dept_id=#{queryParams.DEPT_ID}
+		    	]]>
+			</if>
+			) type
+		FROM TB_BASE_STAFF s, TB_BASE_ROLE r, TB_BASE_STAFF_ROLE sr 
+		WHERE s.ISDELETED = 0 
+			and s.STATUS = 0 
+			and s.STAFF_ID = sr.STAFF_ID
+			and r.ROLE_ID = sr.ROLE_ID
+			and r.ROLE_NO = 'LXXJ_INSPECTOR'
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+		) t order by t.type desc,t.dept_name desc
+		</select>
+	<delete id="deleteStaffByDeptId" parameterType="int">
+		DELETE tb_ins_staff_dept WHERE
+		DEPT_id=#{id}
+	</delete>
+	<insert id="insertStaffByDeptId" parameterType="map">
+		INSERT INTO tb_ins_staff_dept
+		(
+		ID,
+		STAFF_ID,
+		DEPT_ID,
+		MODIFY_STAFF,
+		MODIFY_TIME)
+		VALUES
+		(SEQ_TB_ins_staff_dept.Nextval,#{STAFF_ID},#{DEPT_ID},#{CREATE_STAFF},SYSDATE)
+	</insert>
+	
+	<select id="checkDeptExist" parameterType="string" resultType="int">
+		SELECT COUNT(1) FROM TB_INS_DEPT D WHERE D.DEPT_NO =#{DEPT_NO}
+	</select>
+	
+	<select id="getAreaIdByName" parameterType="string" resultType="string">
+		SELECT AREA_ID FROM AREA WHERE NAME =#{NAME}
+	</select>
+	
+	<select id="getMinAreaIdByParentName" parameterType="string" resultType="string">
+		SELECT MAX(AREA_ID) FROM AREA 
+		WHERE PARENT_AREA_ID = #{PAREMT_AREA_ID}
+	</select>
+	
+	<select id="getDeptSelection" parameterType="map" resultType="map">
+		SELECT D.DEPT_NAME DEPT_ID,D.DEPT_NAME FROM TB_INS_DEPT D WHERE D.AREA_ID=#{area_id}
+		<if test="dept_name != null and dept_name != ''">
+    	AND D.DEPT_NAME LIKE '%${dept_name}%'
+    	</if>
+	</select>
+	
+	<select id="getDeptSelectionForCable" parameterType="map" resultType="map">
+		SELECT D.DEPT_NO,D.DEPT_NAME FROM TB_INS_DEPT D WHERE D.AREA_ID=#{area_id}
+		order by d.son_area_id
+	</select>
+		<select id="getDeptByAreaId" parameterType="map" resultType="map">
+		SELECT D.DEPT_ID, d.DEPT_NO,D.DEPT_NAME FROM TB_INS_DEPT D WHERE D.AREA_ID=#{area_id}
+		<if test="dept_name != null and dept_name != ''">
+    	AND D.DEPT_NAME LIKE '%${dept_name}%'
+    	</if>
+	</select>
+</mapper>

@@ -1,0 +1,4059 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cableCheck.dao.SpecialCheckReportDao">
+<sql id="dynamicWhere_QUERYWLJB">
+<if test="queryParams.WLJB_ID != null and queryParams.WLJB_ID != ''">  
+	            <![CDATA[
+		    	AND oed.net_layer_id IN (${queryParams.WLJB_ID})
+		    	]]>
+		  </if>
+	</sql>	
+	<sql id="dynamicWhere_DOWNWLJB">
+<if test="WLJB_ID != null and WLJB_ID != ''">  
+	            <![CDATA[
+		    	AND oed.net_layer_id IN (${WLJB_ID})
+		    	]]>
+		  </if>
+	</sql>	
+<select id="query" parameterType="map" resultType="map">
+  select nvl(m.zy_check, 0) 资源整治单已检查,
+        nvl(m.zy_wrong, 0) 资源整治单发现问题,
+        nvl(p.zy_all, 0) 资源整改单总量,
+        nvl(m.check_port_zy, 0) check_port_zy,
+        nvl(m.wrong_port_zy, 0) wrong_port_zy,
+        NVL(decode(check_port_zy,
+                   0,
+                   0,
+                   round(((check_port_zy - wrong_port_zy) / check_port_zy),
+                         4) * 100),
+            0) || '%' RATE_zy,
+        nvl(m.ftth_check, 0) FTTH拆机已检查,
+        nvl(m.ftth_wrong, 0) FTTH拆机发现问题,
+        nvl(m.check_port_ftth, 0) check_port_ftth,
+        nvl(m.wrong_port_ftth, 0) wrong_port_ftth,
+        NVL(decode(check_port_ftth,
+                   0,
+                   0,
+                   round(((check_port_ftth - wrong_port_ftth) /
+                         check_port_ftth),
+                         4) * 100),
+            0) || '%' RATE_ftth,
+        nvl(m.iom_check, 0) IOM拆机已检查,
+        nvl(m.iom_wrong, 0) IOM拆机发现问题,
+
+        nvl(m.check_port_iom, 0) check_port_iom,
+        nvl(m.wrong_port_iom, 0) wrong_port_iom,
+        NVL(decode(check_port_iom,
+                   0,
+                   0,
+                   round(((check_port_iom - wrong_port_iom) / check_port_iom),
+                         4) * 100),
+            0) || '%' RATE_iom,
+        nvl(m.check_port, 0) check_port,
+        nvl(m.right_port, 0) right_port,
+        nvl(m.check_port, 0) - nvl(m.right_port, 0) wrong_port,
+        NVL(decode(check_port,
+                   0,
+                   0,
+                   round((right_port / check_port), 4) * 100),
+            0) || '%' RATE,
+        nvl(n.kx_check, 0) 客响订单已检查,
+        nvl(n.kx_wrong, 0) 客响订单发现问题,
+        nvl(n.tag0, 0) 客响订单问题1,
+        nvl(n.tag1, 0) 客响订单问题2,
+        nvl(n.tag2, 0) 客响订单问题3,
+        nvl(n.tag3, 0) 客响订单问题4,
+        nvl(n.tag4, 0) 客响订单问题5,
+        nvl(n.tag5, 0) 客响订单问题6,
+        nvl(n.tag6, 0) 客响订单问题7,
+       
+        
+       a.name town,
+       aa.name city,
+       a.area_id areaid,
+       aa.area_id parent_area_id
+   from area a
+   left join (select count(distinct(case
+                                      when task.task_type = 6 then
+                                       task.task_id
+                                    end)) zy_check,
+                     count(distinct(case
+                                      when task.task_type = 6 and task.is_need_zg = 1 then
+                                       task.task_id
+                                    end)) zy_wrong,
+                     
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_zy,
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_zy,
+                     
+                     count(distinct(case
+                                      when task.task_type = 7 then
+                                       task.SBID
+                                    end)) ftth_check,
+                     count(distinct(case
+                                      when task.task_type = 7 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) ftth_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_ftth,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_ftth,
+                     
+                     count(distinct(case
+                                      when task.task_type = 8 then
+                                       task.SBID
+                                    end)) iom_check,
+                     count(distinct(case
+                                      when task.task_type = 8 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) iom_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_iom,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_iom,
+                     
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port,
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 and r.ischeckok = 0 then
+                              r.record_id
+                           end) right_port,
+                     
+                     task.son_area_id
+                from tb_cablecheck_task task
+                left join tb_cablecheck_record r
+                  on r.task_id = task.task_id
+               where task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                 and trunc(task.start_time) &lt;=
+                      to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                 and r.port_id is not null
+               group by task.son_area_id) m
+     on a.area_id = m.son_area_id
+ 
+   left join (select count(distinct(kxtask.task_id)) kx_check,
+                     count(distinct(case
+                                      when kxr.tag = 0 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag0,
+                     count(distinct(case
+                                      when kxr.tag = 1 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag1,
+                     count(distinct(case
+                                      when kxr.tag = 2 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag2,
+                     count(distinct(case
+                                      when kxr.tag = 3 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag3,
+                     count(distinct(case
+                                      when kxr.tag = 4 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag4,
+                     count(distinct(case
+                                      when kxr.tag = 5 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag5,
+                     count(distinct(case
+                                      when kxr.tag = 6 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag6,
+                     count(distinct(case
+                                      when kxtask.allcheck = 1 then
+                                       kxtask.task_id
+                                    end)) kx_wrong,
+                     kxtask.son_area_id
+                from TB_CABLECHECK_KXTASK kxtask
+                left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+               where kxtask.CREATE_TIME &gt;=
+                     to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                 and trunc(kxtask.CREATE_TIME) &lt;=
+                      to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+              
+               group by kxtask.son_area_id) n
+     on a.area_id = n.son_area_id
+
+ 
+   left join (select count(1) zy_all, task.son_area_id
+                from tb_cablecheck_task task
+               where task.task_type in (1, 2, 3)
+                 and task.status_id in (7, 8)
+                 and task.is_need_zg = 1
+                 and trunc(task.modify_time) &lt;=
+                      to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+               group by task.son_area_id) p
+     on p.son_area_id = a.area_id
+  left join area aa
+    on aa.area_id = a.parent_area_id
+ where a.area_level = 4
+
+  <if test="queryParams.son_area != null and queryParams.son_area != ''">  
+	            <![CDATA[
+		    	AND a.area_id = #{queryParams.son_area}
+		    	]]>
+		  </if>
+         
+        <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and aa.area_id  = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>
+ 
+</select>
+	<select id="queryDown" parameterType="map" resultType="map">
+  select nvl(m.zy_check, 0) 资源整治单已检查,
+        nvl(m.zy_wrong, 0) 资源整治单发现问题,
+        nvl(p.zy_all, 0) 资源整改单总量,
+        nvl(m.check_port_zy, 0) check_port_zy,
+        nvl(m.wrong_port_zy, 0) wrong_port_zy,
+        NVL(decode(check_port_zy,
+                   0,
+                   0,
+                   round(((check_port_zy - wrong_port_zy) / check_port_zy),
+                         4) * 100),
+            0) || '%' RATE_zy,
+        nvl(m.ftth_check, 0) FTTH拆机已检查,
+        nvl(m.ftth_wrong, 0) FTTH拆机发现问题,
+        nvl(m.check_port_ftth, 0) check_port_ftth,
+        nvl(m.wrong_port_ftth, 0) wrong_port_ftth,
+        NVL(decode(check_port_ftth,
+                   0,
+                   0,
+                   round(((check_port_ftth - wrong_port_ftth) /
+                         check_port_ftth),
+                         4) * 100),
+            0) || '%' RATE_ftth,
+        nvl(m.iom_check, 0) IOM拆机已检查,
+        nvl(m.iom_wrong, 0) IOM拆机发现问题,
+
+        nvl(m.check_port_iom, 0) check_port_iom,
+        nvl(m.wrong_port_iom, 0) wrong_port_iom,
+        NVL(decode(check_port_iom,
+                   0,
+                   0,
+                   round(((check_port_iom - wrong_port_iom) / check_port_iom),
+                         4) * 100),
+            0) || '%' RATE_iom,
+        nvl(m.check_port, 0) check_port,
+        nvl(m.right_port, 0) right_port,
+        nvl(m.check_port, 0) - nvl(m.right_port, 0) wrong_port,
+        NVL(decode(check_port,
+                   0,
+                   0,
+                   round((right_port / check_port), 4) * 100),
+            0) || '%' RATE,
+        nvl(n.kx_check, 0) 客响订单已检查,
+        nvl(n.kx_wrong, 0) 客响订单发现问题,
+        nvl(n.tag0, 0) 客响订单问题1,
+        nvl(n.tag1, 0) 客响订单问题2,
+        nvl(n.tag2, 0) 客响订单问题3,
+        nvl(n.tag3, 0) 客响订单问题4,
+        nvl(n.tag4, 0) 客响订单问题5,
+        nvl(n.tag5, 0) 客响订单问题6,
+        nvl(n.tag6, 0) 客响订单问题7,
+       
+        
+       a.name town,
+       aa.name city,
+       a.area_id areaid,
+       aa.area_id parent_area_id
+   from area a
+   left join (select count(distinct(case
+                                      when task.task_type = 6 then
+                                       task.task_id
+                                    end)) zy_check,
+                     count(distinct(case
+                                      when task.task_type = 6 and task.is_need_zg = 1 then
+                                       task.task_id
+                                    end)) zy_wrong,
+                     
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_zy,
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_zy,
+                     
+                     count(distinct(case
+                                      when task.task_type = 7 then
+                                       task.SBID
+                                    end)) ftth_check,
+                     count(distinct(case
+                                      when task.task_type = 7 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) ftth_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_ftth,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_ftth,
+                     
+                     count(distinct(case
+                                      when task.task_type = 8 then
+                                       task.SBID
+                                    end)) iom_check,
+                     count(distinct(case
+                                      when task.task_type = 8 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) iom_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_iom,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_iom,
+                     
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port,
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 and r.ischeckok = 0 then
+                              r.record_id
+                           end) right_port,
+                     
+                     task.son_area_id
+                from tb_cablecheck_task task
+                left join tb_cablecheck_record r
+                  on r.task_id = task.task_id
+               where task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                 and trunc(task.start_time) &lt;=
+                      to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                 and r.port_id is not null
+               group by task.son_area_id) m
+     on a.area_id = m.son_area_id
+ 
+   left join (select count(distinct(kxtask.task_id)) kx_check,
+                     count(distinct(case
+                                      when kxr.tag = 0 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag0,
+                     count(distinct(case
+                                      when kxr.tag = 1 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag1,
+                     count(distinct(case
+                                      when kxr.tag = 2 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag2,
+                     count(distinct(case
+                                      when kxr.tag = 3 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag3,
+                     count(distinct(case
+                                      when kxr.tag = 4 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag4,
+                     count(distinct(case
+                                      when kxr.tag = 5 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag5,
+                     count(distinct(case
+                                      when kxr.tag = 6 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag6,
+                     count(distinct(case
+                                      when kxtask.allcheck = 1 then
+                                       kxtask.task_id
+                                    end)) kx_wrong,
+                     kxtask.son_area_id
+                from TB_CABLECHECK_KXTASK kxtask
+                left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+               where kxtask.CREATE_TIME &gt;=
+                     to_date(#{START_TIME}, 'yyyy-mm-dd')
+                 and trunc(kxtask.CREATE_TIME) &lt;=
+                      to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+              
+               group by kxtask.son_area_id) n
+     on a.area_id = n.son_area_id
+
+ 
+   left join (select count(1) zy_all, task.son_area_id
+                from tb_cablecheck_task task
+               where task.task_type in (1, 2, 3)
+                 and task.status_id in (7, 8)
+                 and task.is_need_zg = 1
+                 and trunc(task.modify_time) &lt;=
+                      to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+               group by task.son_area_id) p
+     on p.son_area_id = a.area_id
+  left join area aa
+    on aa.area_id = a.parent_area_id
+ where a.area_level = 4
+
+  <if test="son_area != null and son_area != ''">  
+	            <![CDATA[
+		    	AND a.area_id = #{son_area}
+		    	]]>
+		  </if>
+         
+        <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and aa.area_id  = #{AREA_ID} 
+		    	]]>
+		  </if>
+ 
+	
+	
+	</select>
+
+<select id="queryByCity" parameterType="map" resultType="map">
+  select nvl(m.zy_check, 0) 资源整治单已检查,
+        nvl(m.zy_wrong, 0) 资源整治单发现问题,
+        nvl(p.zy_all, 0) 资源整改单总量,
+        nvl(m.check_port_zy, 0) check_port_zy,
+        nvl(m.wrong_port_zy, 0) wrong_port_zy,
+        NVL(decode(check_port_zy,
+                   0,
+                   0,
+                   round(((check_port_zy - wrong_port_zy) / check_port_zy),
+                         4) * 100),
+            0) || '%' RATE_zy,
+        nvl(m.ftth_check, 0) FTTH拆机已检查,
+        nvl(m.ftth_wrong, 0) FTTH拆机发现问题,
+        nvl(m.check_port_ftth, 0) check_port_ftth,
+        nvl(m.wrong_port_ftth, 0) wrong_port_ftth,
+        NVL(decode(check_port_ftth,
+                   0,
+                   0,
+                   round(((check_port_ftth - wrong_port_ftth) /
+                         check_port_ftth),
+                         4) * 100),
+            0) || '%' RATE_ftth,
+        nvl(m.iom_check, 0) IOM拆机已检查,
+        nvl(m.iom_wrong, 0) IOM拆机发现问题,
+        nvl(x.iom_all, 0) IOM拆机总量,
+        nvl(m.check_port_iom, 0) check_port_iom,
+        nvl(m.wrong_port_iom, 0) wrong_port_iom,
+        NVL(decode(check_port_iom,
+                   0,
+                   0,
+                   round(((check_port_iom - wrong_port_iom) / check_port_iom),
+                         4) * 100),
+            0) || '%' RATE_iom,
+        nvl(m.check_port, 0) check_port,
+        nvl(m.right_port, 0) right_port,
+        nvl(m.check_port, 0) - nvl(m.right_port, 0) wrong_port,
+        NVL(decode(check_port,
+                   0,
+                   0,
+                   round((right_port / check_port), 4) * 100),
+            0) || '%' RATE,
+        nvl(n.kx_check, 0) 客响订单已检查,
+        nvl(n.kx_wrong, 0) 客响订单发现问题,
+        nvl(n.tag0, 0) 客响订单问题1,
+        nvl(n.tag1, 0) 客响订单问题2,
+        nvl(n.tag2, 0) 客响订单问题3,
+        nvl(n.tag3, 0) 客响订单问题4,
+        nvl(n.tag4, 0) 客响订单问题5,
+        nvl(n.tag5, 0) 客响订单问题6,
+        nvl(n.tag6, 0) 客响订单问题7,
+        nvl(y.kx_all, 0) 客响订单总量,
+        
+        a.name    city,
+        a.area_id PARENT_AREA_ID
+   from area a
+   left join (select count(distinct(case
+                                      when task.task_type = 6 then
+                                       task.task_id
+                                    end)) zy_check,
+                     count(distinct(case
+                                      when task.task_type = 6 and task.is_need_zg = 1 then
+                                       task.task_id
+                                    end)) zy_wrong,
+                     
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_zy,
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_zy,
+                     
+                     count(distinct(case
+                                      when task.task_type = 7 then
+                                       task.SBID
+                                    end)) ftth_check,
+                     count(distinct(case
+                                      when task.task_type = 7 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) ftth_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_ftth,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_ftth,
+                     
+                     count(distinct(case
+                                      when task.task_type = 8 then
+                                       task.SBID
+                                    end)) iom_check,
+                     count(distinct(case
+                                      when task.task_type = 8 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) iom_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_iom,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_iom,
+                     
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port,
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 and r.ischeckok = 0 then
+                              r.record_id
+                           end) right_port,
+                     
+                     task.area_id
+                from tb_cablecheck_task task
+                left join tb_cablecheck_record r
+                  on r.task_id = task.task_id
+               where task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                 and trunc(task.start_time) &lt;=
+                      to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+                 and r.port_id is not null
+               group by task.area_id) m
+     on a.area_id = m.area_id
+ 
+   left join (select count(distinct(kxtask.task_id)) kx_check,
+                     count(distinct(case
+                                      when kxr.tag = 0 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag0,
+                     count(distinct(case
+                                      when kxr.tag = 1 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag1,
+                     count(distinct(case
+                                      when kxr.tag = 2 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag2,
+                     count(distinct(case
+                                      when kxr.tag = 3 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag3,
+                     count(distinct(case
+                                      when kxr.tag = 4 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag4,
+                     count(distinct(case
+                                      when kxr.tag = 5 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag5,
+                     count(distinct(case
+                                      when kxr.tag = 6 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag6,
+                     count(distinct(case
+                                      when kxtask.allcheck = 1 then
+                                       kxtask.task_id
+                                    end)) kx_wrong,
+                     kxtask.area_id
+                from TB_CABLECHECK_KXTASK kxtask
+                left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+               where kxtask.CREATE_TIME &gt;=
+                     to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+                 and trunc(kxtask.CREATE_TIME) &lt;=
+                      to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+              
+               group by kxtask.area_id) n
+     on a.area_id = n.area_id
+ 
+   left join ( select count(1) kx_all, no.fgs_id local_area_id
+   from tb_cablecheck_nores no
+  where no.accept_date &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(no.accept_date) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd') group by no.fgs_id) y
+     on a.area_id = y.local_area_id
+ 
+   left join (select count(1) zy_all, task.area_id
+                from tb_cablecheck_task task
+               where task.task_type in (1, 2, 3)
+                 and task.status_id in (7, 8)
+                 and task.is_need_zg = 1
+                 and trunc(task.modify_time) &lt;=
+                      to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+               group by task.area_id) p
+     on p.area_id = a.area_id
+ 
+   left join (select count(1) iom_all, gxl.fgs_id
+                from tb_cablecheck_ossgxl gxl
+               where (gxl.action_type_name = '拆' or
+                     (gxl.action_type_name = '移' and
+                     gxl.add_opt_code != gxl.del_opt_code) and
+                     trunc(gxl.finish_date) &lt;=
+                     to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd') and
+                     gxl.finish_date &gt;=
+                     to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd'))
+               group by gxl.fgs_id) x
+     on x.fgs_id = a.area_id
+  where a.area_level = 3
+
+         
+        <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+	            <![CDATA[
+		    and a.area_id  = #{queryParams.AREA_ID} 
+		    	]]>
+		  </if>
+	
+</select>
+<select id="queryDownByCity" parameterType="map" resultType="map">
+select nvl(m.zy_check, 0) 资源整治单已检查,
+        nvl(m.zy_wrong, 0) 资源整治单发现问题,
+        nvl(p.zy_all, 0) 资源整改单总量,
+        nvl(m.check_port_zy, 0) check_port_zy,
+        nvl(m.wrong_port_zy, 0) wrong_port_zy,
+        NVL(decode(check_port_zy,
+                   0,
+                   0,
+                   round(((check_port_zy - wrong_port_zy) / check_port_zy),
+                         4) * 100),
+            0) || '%' RATE_zy,
+        nvl(m.ftth_check, 0) FTTH拆机已检查,
+        nvl(m.ftth_wrong, 0) FTTH拆机发现问题,
+        nvl(m.check_port_ftth, 0) check_port_ftth,
+        nvl(m.wrong_port_ftth, 0) wrong_port_ftth,
+        NVL(decode(check_port_ftth,
+                   0,
+                   0,
+                   round(((check_port_ftth - wrong_port_ftth) /
+                         check_port_ftth),
+                         4) * 100),
+            0) || '%' RATE_ftth,
+        nvl(m.iom_check, 0) IOM拆机已检查,
+        nvl(m.iom_wrong, 0) IOM拆机发现问题,
+        nvl(x.iom_all, 0) IOM拆机总量,
+        nvl(m.check_port_iom, 0) check_port_iom,
+        nvl(m.wrong_port_iom, 0) wrong_port_iom,
+        NVL(decode(check_port_iom,
+                   0,
+                   0,
+                   round(((check_port_iom - wrong_port_iom) / check_port_iom),
+                         4) * 100),
+            0) || '%' RATE_iom,
+        nvl(m.check_port, 0) check_port,
+        nvl(m.right_port, 0) right_port,
+        nvl(m.check_port, 0) - nvl(m.right_port, 0) wrong_port,
+        NVL(decode(check_port,
+                   0,
+                   0,
+                   round((right_port / check_port), 4) * 100),
+            0) || '%' RATE,
+        nvl(n.kx_check, 0) 客响订单已检查,
+        nvl(n.kx_wrong, 0) 客响订单发现问题,
+        nvl(n.tag0, 0) 客响订单问题1,
+        nvl(n.tag1, 0) 客响订单问题2,
+        nvl(n.tag2, 0) 客响订单问题3,
+        nvl(n.tag3, 0) 客响订单问题4,
+        nvl(n.tag4, 0) 客响订单问题5,
+        nvl(n.tag5, 0) 客响订单问题6,
+        nvl(n.tag6, 0) 客响订单问题7,
+        nvl(y.kx_all, 0) 客响订单总量,
+        
+        a.name    city,
+        a.area_id PARENT_AREA_ID
+   from area a
+   left join (select count(distinct(case
+                                      when task.task_type = 6 then
+                                       task.task_id
+                                    end)) zy_check,
+                     count(distinct(case
+                                      when task.task_type = 6 and task.is_need_zg = 1 then
+                                       task.task_id
+                                    end)) zy_wrong,
+                     
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_zy,
+                     count(case
+                             when r.port_id is not null and task.task_type = 6 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_zy,
+                     
+                     count(distinct(case
+                                      when task.task_type = 7 then
+                                       task.SBID
+                                    end)) ftth_check,
+                     count(distinct(case
+                                      when task.task_type = 7 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) ftth_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_ftth,
+                     count(case
+                             when r.port_id is not null and task.task_type = 7 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_ftth,
+                     
+                     count(distinct(case
+                                      when task.task_type = 8 then
+                                       task.SBID
+                                    end)) iom_check,
+                     count(distinct(case
+                                      when task.task_type = 8 and task.is_need_zg = 1 then
+                                       task.SBID
+                                    end)) iom_wrong,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port_iom,
+                     count(case
+                             when r.port_id is not null and task.task_type = 8 and
+                                  r.record_type != 2 and r.ischeckok = 1 then
+                              r.record_id
+                           end) wrong_port_iom,
+                     
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 then
+                              r.record_id
+                           end) check_port,
+                     count(case
+                             when r.port_id is not null and
+                                  task.task_type in (6, 7, 8) and
+                                  r.record_type != 2 and r.ischeckok = 0 then
+                              r.record_id
+                           end) right_port,
+                     
+                     task.area_id
+                from tb_cablecheck_task task
+                left join tb_cablecheck_record r
+                  on r.task_id = task.task_id
+               where task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+                 and trunc(task.start_time) &lt;=
+                      to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+                 and r.port_id is not null
+               group by task.area_id) m
+     on a.area_id = m.area_id
+ 
+   left join (select count(distinct(kxtask.task_id)) kx_check,
+                     count(distinct(case
+                                      when kxr.tag = 0 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag0,
+                     count(distinct(case
+                                      when kxr.tag = 1 and kxr.isok1 = 1 then
+                                       kxr.task_id
+                                    end)) tag1,
+                     count(distinct(case
+                                      when kxr.tag = 2 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag2,
+                     count(distinct(case
+                                      when kxr.tag = 3 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag3,
+                     count(distinct(case
+                                      when kxr.tag = 4 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag4,
+                     count(distinct(case
+                                      when kxr.tag = 5 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag5,
+                     count(distinct(case
+                                      when kxr.tag = 6 and
+                                           (kxr.isok1 = 1 or
+                                           (kxr.isok1 = 0 and kxr.isok2 = 1)) then
+                                       kxr.task_id
+                                    end)) tag6,
+                     count(distinct(case
+                                      when kxtask.allcheck = 1 then
+                                       kxtask.task_id
+                                    end)) kx_wrong,
+                     kxtask.area_id
+                from TB_CABLECHECK_KXTASK kxtask
+                left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+               where kxtask.CREATE_TIME &gt;=
+                     to_date(#{START_TIME}, 'yyyy-mm-dd')
+                 and trunc(kxtask.CREATE_TIME) &lt;=
+                      to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+              
+               group by kxtask.area_id) n
+     on a.area_id = n.area_id
+ 
+   left join (  select count(1) kx_all, no.fgs_id local_area_id
+   from tb_cablecheck_nores no
+  where no.accept_date &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(no.accept_date) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd') group by no.fgs_id) y
+     on a.area_id = y.local_area_id
+ 
+   left join (select count(1) zy_all, task.area_id
+                from tb_cablecheck_task task
+               where task.task_type in (1, 2, 3)
+                 and task.status_id in (7, 8)
+                 and task.is_need_zg = 1
+                 and trunc(task.modify_time) &lt;=
+                      to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+               group by task.area_id) p
+     on p.area_id = a.area_id
+ 
+   left join (select count(1) iom_all, gxl.fgs_id
+                from tb_cablecheck_ossgxl gxl
+               where (gxl.action_type_name = '拆' or
+                     (gxl.action_type_name = '移' and
+                     gxl.add_opt_code != gxl.del_opt_code) and
+                     trunc(gxl.finish_date) &lt;=
+                     to_date(#{PSTART_TIME}, 'yyyy-mm-dd') and
+                     gxl.finish_date &gt;=
+                     to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd'))
+               group by gxl.fgs_id) x
+     on x.fgs_id = a.area_id
+  where a.area_level = 3
+
+        <if test="AREA_ID != null and AREA_ID != ''">  
+	            <![CDATA[
+		    and a.area_id  = #{AREA_ID} 
+		    	]]>
+		  </if>
+	
+</select>
+
+<select id="queryZY" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 6
+    AND TASK.SON_AREA_ID =#{queryParams.areaId}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+
+<select id="queryFTTH" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 7
+    AND TASK.SON_AREA_ID =#{queryParams.areaId}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="queryIOM" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 8
+    AND TASK.SON_AREA_ID =#{queryParams.areaId}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="queryKX" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{queryParams.areaId}
+</select>
+
+
+
+<select id="queryZYByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name,
+        aa.name city
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+     left join area aa
+     on aa.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 6
+    AND TASK.AREA_ID =#{queryParams.parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+
+<select id="queryFTTHByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name,
+        aa.name city
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+     left join area aa
+     on aa.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 7
+    AND TASK.area_id =#{queryParams.parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="queryIOMByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name,
+        aa.name city
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+     left join area aa
+     on aa.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 8
+    AND TASK.area_id =#{queryParams.parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="queryKXByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name,
+       aa.name city
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+    left join area aa
+     on aa.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.area_id = #{queryParams.parent_area_id}
+</select>	
+
+<select id="downZY" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 6
+    AND TASK.SON_AREA_ID =#{areaId}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+
+<select id="downFTTH" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 7
+    AND TASK.SON_AREA_ID =#{areaId}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="downIOM" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 8
+    AND TASK.SON_AREA_ID =#{areaId}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="downKX" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+</select>
+
+
+
+<select id="downZYByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name,
+        aa.name city
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+     left join area aa
+     on aa.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 6
+    AND TASK.AREA_ID =#{parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+
+<select id="downFTTHByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name,
+        aa.name city
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+     left join area aa
+     on aa.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 7
+    AND TASK.area_id =#{parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="downIOMByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name,
+        aa.name city
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+     left join area aa
+     on aa.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 8
+    AND TASK.area_id =#{parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+<select id="downKXByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       ss.staff_name,
+       kxtask.task_id,
+       aa.name city
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+    left join area aa
+     on aa.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.area_id = #{parent_area_id}
+</select>	
+
+
+ <select id="queryCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+    
+  <select id="queryPromblePort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   and r.ischeckok = 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+      <select id="queryRightPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   and r.ischeckok != 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+    <select id="queryCheckPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+    
+      <select id="queryPromblePortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id}
+                   and r.ischeckok = 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+    
+     <select id="queryRightPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id}
+                   and r.ischeckok != 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+    
+ <select id="downCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+    
+  <select id="downPromblePort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   and r.ischeckok = 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+      <select id="downRightPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   and r.ischeckok != 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+    <select id="downCheckPortByCity" parameterType="map" resultType="map">    
+ select* from (
+ select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id}
+                  )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+    
+      <select id="downPromblePortByCity" parameterType="map" resultType="map">    
+ select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id}
+                   and r.ischeckok = 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+    
+     <select id="downRightPortByCity" parameterType="map" resultType="map">    
+ select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type in (6, 7, 8)
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id}
+                   and r.ischeckok != 1)M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select> 
+    
+    <select id="queryZYW" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 6
+  AND TASK.IS_NEED_ZG = 1
+    AND TASK.SON_AREA_ID =#{queryParams.areaId}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+ <select id="queryZYALL" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.modify_time, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.maintor
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE task.task_type in (1, 2, 3)
+  AND TASK.IS_NEED_ZG = 1
+  and task.status_id in (7, 8)
+    AND TASK.SON_AREA_ID =#{queryParams.areaId}
+    and trunc(task.modify_time) &lt;=
+                      to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+</select>	   
+   <select id="queryFTTHW" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 7
+  AND TASK.IS_NEED_ZG = 1
+    AND TASK.SON_AREA_ID =#{queryParams.areaId}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+   <select id="queryIOMW" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 8
+  AND TASK.IS_NEED_ZG = 1
+    AND TASK.SON_AREA_ID =#{queryParams.areaId}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+    
+    <select id="queryKXW" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and  kxtask.allcheck=1
+</select> 
+
+<select id="queryKXW1" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 0 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="queryKXW2" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 1 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="queryKXW3" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW4" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW5" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 4 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW6" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 5 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW7" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 6 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+    
+    
+ 
+   <select id="queryZYWByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 6
+  AND TASK.IS_NEED_ZG = 1
+    AND task.area_id =#{queryParams.parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+ <select id="queryZYALLByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.modify_time, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.maintor
+   left join area a
+     on a.area_id = task.area_id
+  WHERE task.task_type in (1, 2, 3)
+  AND TASK.IS_NEED_ZG = 1
+  and task.status_id in (7, 8)
+    AND task.area_id =#{queryParams.parent_area_id}
+    and trunc(task.modify_time) &lt;=
+                      to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+</select>	   
+   <select id="queryFTTHWByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 7
+  AND TASK.IS_NEED_ZG = 1
+    AND task.area_id =#{queryParams.parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+   <select id="queryIOMWByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 8
+  AND TASK.IS_NEED_ZG = 1
+    AND task.area_id =#{queryParams.parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+
+
+
+
+    
+    <select id="queryKXWByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.area_id = #{queryParams.parent_area_id}
+ and  kxtask.allcheck=1
+</select> 
+
+<select id="queryKXW1ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{queryParams.parent_area_id}
+ and kxr.tag = 0 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="queryKXW2ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{queryParams.parent_area_id}
+ and kxr.tag = 1 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="queryKXW3ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{queryParams.parent_area_id}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW4ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{queryParams.parent_area_id}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW5ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{queryParams.parent_area_id}
+ and kxr.tag = 4 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW6ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{queryParams.parent_area_id}
+ and kxr.tag = 5 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="queryKXW7ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{queryParams.parent_area_id}
+ and kxr.tag = 6 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+ <select id="queryIOMALLByCity" parameterType="map" resultType="map">
+
+ 
+ select GXL.FGS_ID,
+       GXL.FGS_NAME,
+       GXL.AREA_NAME,
+       GXL.ORDER_CODE,
+       GXL.ORDER_TITLE,
+       GXL.ORDER_TYPE,
+       GXL.SERVICE_NAME,
+       TO_CHAR(GXL.FINISH_DATE, 'yyyy-mm-dd hh24:mi:ss') finish_date,
+       GXL.DEL_OPT_CODE,
+       GXL.ACTION_TYPE_NAME,
+       GXL.POST_NAME,
+       GXL.PARTY_NAME from   tb_cablecheck_ossgxl gxl where gxl.fgs_id = #{queryParams.parent_area_id}
+     and   (gxl.action_type_name = '拆' or   (gxl.action_type_name = '移'and gxl.add_opt_code!=gxl.del_opt_code))
+    and   trunc(gxl.finish_date) &lt;=
+                     to_date(#{queryParams.PCOMPLETE_TIME}, 'yyyy-mm-dd') and 
+                     gxl.finish_date &gt;=
+                     to_date(#{queryParams.PSTART_TIME}, 'yyyy-mm-dd')
+</select>	
+
+<select id="queryKXALLByCity" parameterType="map" resultType="map">
+select fgs_name, 
+fgs_id, 
+area_name, 
+id, 
+order_code, 
+order_type, 
+accept_date, 
+finish_date, 
+PSO_ID,
+complete_date, 
+opt_code, 
+xuqiu
+
+ from tb_cablecheck_nores no
+ where  fgs_id = #{queryParams.parent_area_id}
+and  no.accept_date &gt;
+ = to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd') and trunc(no.accept_date) &lt;
+ = to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+
+
+
+
+
+
+
+
+
+
+
+   
+    <select id="downZYW" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 6
+  AND TASK.IS_NEED_ZG = 1
+    AND TASK.SON_AREA_ID =#{areaId}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+ <select id="downZYALL" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.modify_time, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.maintor
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE task.task_type in (1, 2, 3)
+  AND TASK.IS_NEED_ZG = 1
+  and task.status_id in (7, 8)
+    AND TASK.SON_AREA_ID =#{areaId}
+    and trunc(task.modify_time) &lt;=
+                      to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+</select>	   
+   <select id="downFTTHW" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 7
+  AND TASK.IS_NEED_ZG = 1
+    AND TASK.SON_AREA_ID =#{areaId}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+   <select id="downIOMW" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.son_area_id
+  WHERE TASK.TASK_TYPE = 8
+  AND TASK.IS_NEED_ZG = 1
+    AND TASK.SON_AREA_ID =#{areaId}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+    
+    <select id="downKXW" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and  kxtask.allcheck=1
+</select> 
+
+<select id="downKXW1" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 0 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="downKXW2" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 1 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="downKXW3" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW4" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW5" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 4 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW6" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 5 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW7" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.son_area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.SON_AREA_ID = #{areaId}
+ and kxr.tag = 6 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+    
+    
+ 
+   <select id="downZYWByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 6
+  AND TASK.IS_NEED_ZG = 1
+    AND task.area_id =#{parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+ <select id="downZYALLByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.modify_time, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.maintor
+   left join area a
+     on a.area_id = task.area_id
+  WHERE task.task_type in (1, 2, 3)
+  AND TASK.IS_NEED_ZG = 1
+  and task.status_id in (7, 8)
+    AND task.area_id =#{parent_area_id}
+    and trunc(task.modify_time) &lt;=
+                      to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd')
+                 and task.modify_time &gt;=
+                     to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+</select>	   
+   <select id="downFTTHWByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 7
+  AND TASK.IS_NEED_ZG = 1
+    AND task.area_id =#{parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+   <select id="downIOMWByCity" parameterType="map" resultType="map">
+ select TASK.TASK_NAME,
+        TO_CHAR(TASK.START_TIME, 'yyyy-MM-dd HH24:mi:ss') start_time,
+        task.task_no,
+        case STATUS_ID
+          when 4 then
+           '问题上报,待派单'
+          when 5 then
+           '退单,待派单'
+          when 6 then
+           '待回单'
+          when 7 then
+           '已整改回单,待审核'
+          when 8 then
+           '已归档'
+        end STATUS_ID,
+        ss.staff_name,
+        a.name
+   from TB_CABLECHECK_TASK TASK
+   left join tb_base_staff ss
+     on ss.staff_id = task.inspector
+   left join area a
+     on a.area_id = task.area_id
+  WHERE TASK.TASK_TYPE = 8
+  AND TASK.IS_NEED_ZG = 1
+    AND task.area_id =#{parent_area_id}
+    AND task.start_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(task.start_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	 
+
+
+
+
+    
+    <select id="downKXWByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxTASK.area_id = #{parent_area_id}
+ and  kxtask.allcheck=1
+</select> 
+
+<select id="downKXW1ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{parent_area_id}
+ and kxr.tag = 0 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="downKXW2ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{parent_area_id}
+ and kxr.tag = 1 and
+     kxr.isok1 = 1 
+   
+</select>
+<select id="downKXW3ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{parent_area_id}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW4ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{parent_area_id}
+ and kxr.tag = 3 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW5ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{parent_area_id}
+ and kxr.tag = 4 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW6ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{parent_area_id}
+ and kxr.tag = 5 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+<select id="downKXW7ByCity" parameterType="map" resultType="map">
+
+
+select kxtask.iom_order_id,
+       kxtask.order_code,
+       to_char(kxtask.create_time, 'yyyy-MM-dd HH24:mi:ss') create_time,
+       a.name,
+       kxtask.task_id,
+       ss.staff_name
+  from TB_CABLECHECK_KXTASK kxtask
+   left join TB_CABLECHECK_KXTASK_record kxr
+                  on kxtask.task_id = kxr.task_id
+  left join tb_base_staff ss
+    on ss.staff_id = kxtask.inspector
+  left join area a
+    on a.area_id = kxtask.area_id
+where  kxtask.create_time &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(kxtask.create_time) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+ and kxtask.area_id = #{parent_area_id}
+ and kxr.tag = 6 and
+     (kxr.isok1 = 1 or
+    (kxr.isok1 = 0 and kxr.isok2 = 1))
+</select>
+ <select id="downIOMALLByCity" parameterType="map" resultType="map">
+
+ 
+ select GXL.FGS_ID,
+       GXL.FGS_NAME,
+       GXL.AREA_NAME,
+       GXL.ORDER_CODE,
+       GXL.ORDER_TITLE,
+       GXL.ORDER_TYPE,
+       GXL.SERVICE_NAME,
+       TO_CHAR(GXL.FINISH_DATE, 'yyyy-mm-dd hh24:mi:ss') finish_date,
+       GXL.DEL_OPT_CODE,
+       GXL.ACTION_TYPE_NAME,
+       GXL.POST_NAME,
+       GXL.PARTY_NAME from   tb_cablecheck_ossgxl gxl where gxl.fgs_id = #{parent_area_id}
+     and   (gxl.action_type_name = '拆' or   (gxl.action_type_name = '移'and gxl.add_opt_code!=gxl.del_opt_code))
+    and   trunc(gxl.finish_date) &lt;=
+                     to_date(#{PCOMPLETE_TIME}, 'yyyy-mm-dd') and 
+                     gxl.finish_date &gt;=
+                     to_date(#{PSTART_TIME}, 'yyyy-mm-dd')
+</select>	
+
+<select id="downKXALLByCity" parameterType="map" resultType="map">
+select fgs_name, 
+fgs_id, 
+area_name, 
+id, 
+order_code, 
+order_type, 
+accept_date, 
+finish_date, 
+PSO_ID,
+complete_date, 
+opt_code, 
+xuqiu
+
+ from tb_cablecheck_nores no
+ where  fgs_id = #{parent_area_id}
+and  no.accept_date &gt;
+ = to_date(#{START_TIME}, 'yyyy-mm-dd') and trunc(no.accept_date) &lt;
+ = to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+</select>	
+
+    
+ <select id="queryZyCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =6
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+    
+ <select id="queryZyWrongPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =6
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+   
+   <select id="queryFTTHCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =7
+   and r.record_type != 2
+
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+    
+     
+       <select id="queryFTTHWrongPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =7
+   and r.record_type != 2
+and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+      
+         <select id="queryIOMCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =8
+   and r.record_type != 2
+
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+      
+       <select id="queryIOMWrongPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =8
+   and r.record_type != 2
+and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{queryParams.areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+    
+     <select id="queryZyPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 6
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+       <select id="queryZyWrongPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 6
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+         <select id="queryFTTHPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 7
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>          
+  <select id="queryFTTHWrongPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 7
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>        
+   
+       <select id="queryIOMPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 8
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>      
+    <select id="queryIOMWrongPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 8
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{queryParams.START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{queryParams.COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{queryParams.parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
+ <select id="downZyCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =6
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	
+    
+ <select id="downZyWrongPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =6
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+   
+   <select id="downFTTHCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =7
+   and r.record_type != 2
+
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+    
+     
+       <select id="downFTTHWrongPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =7
+   and r.record_type != 2
+and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+      
+         <select id="downIOMCheckPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =8
+   and r.record_type != 2
+
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+      
+       <select id="downIOMWrongPort" parameterType="map" resultType="map">   
+  select* from (
+select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.son_area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type =8
+   and r.record_type != 2
+and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.son_area_id = #{areaId}
+                   )M LEFT JOIN AREA A
+    ON A.AREA_ID = M.son_area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff
+    </select>	   
+    
+     <select id="downZyPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 6
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+       <select id="downZyWrongPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 6
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>
+         <select id="downFTTHPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 7
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>          
+  <select id="downFTTHWrongPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 7
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>        
+   
+       <select id="downIOMPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 8
+   and r.record_type != 2
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>      
+    <select id="downIOMWrongPortByCity" parameterType="map" resultType="map">    
+ select* from (
+  select r.port_id,
+       r.port_no,
+       r.eqp_name,
+       r.eqp_no,
+       r.task_id,
+       r.area_id,
+       r.create_staff,
+       TO_CHAR(r.create_time, 'yyyy-MM-dd HH24:mi:ss') check_time,
+       r.descript,
+       case r.ischeckok
+         when '1' then
+          '不合格'
+         else
+          '合格'
+       end ischeckok,
+       dt.glbm,
+                                           dt.glmc
+  from tb_cablecheck_task task
+  left join tb_cablecheck_record r
+  left join tb_cablecheck_taskdetail dt on dt.detail_id = r.detail_id
+    on task.task_id = r.task_id
+ where task.task_type = 8
+   and r.record_type != 2
+   and r.ischeckok = 1
+   and task.start_time &gt;= to_date(#{START_TIME}, 'yyyy-mm-dd')
+   and trunc(task.start_time) &lt;= to_date(#{COMPLETE_TIME}, 'yyyy-mm-dd')
+   and r.port_id is not null 
+   and dt.check_flag = 1
+   and r.area_id = #{parent_area_id})M LEFT JOIN AREA A
+    ON A.AREA_ID = M.area_id
+    left join tb_cablecheck_task ta on ta.task_id = M.task_id
+    left join tb_base_staff tbs on tbs.staff_id = M.create_staff   
+    </select>   
+    
+    
+    
+         
+   
+    
+</mapper>

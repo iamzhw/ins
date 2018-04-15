@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/task
+                        http://www.springframework.org/schema/task/spring-task.xsd">
+
+	<!-- 消息监听读取 -->
+	<bean id="staffMsgListener" class="com.activemq.common.StaffMsgListener"></bean>
+
+	<!-- 配置监听消息的线程池 -->
+	<task:executor id="staffTaskExecutor" rejection-policy="CALLER_RUNS" pool-size="10-20" keep-alive="300" queue-capacity="0" />
+
+	<bean id="staffMessageConverter" class="org.springframework.jms.support.converter.SimpleMessageConverter"/>
+
+	<!-- 消息监听容器（Queue），配置连接工厂，监听的队列是queue，监听器是上面定义的监听器 -->
+	<bean id="staffJmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+		<property name="connectionFactory" ref="activeMQConnectionFactory" />
+		<property name="destinationName" value="ZHXJ_QUEUE" />
+		<!-- property name="destination" ref="defaultQueue" / -->
+		<property name="messageListener" ref="staffMsgListener" />
+		<!-- 启用activemq本地事务管理，默认false -->
+		<property name="sessionTransacted" value="false" />
+		<!-- 设置消息监听线程数量，格式为"concurrentConsumers-maxConcurrentConsumers" -->
+		<property name="concurrency" value="6-6" />
+		<!-- 当需要新的消费者，并且监听线程数量没有达到最大时，每次新加入的监听线程数量，默认为1 -->
+		<property name="idleConsumerLimit" value="2" />
+		<!-- 最大空闲任务数量，但会保证最小线程数量，默认为1 -->
+		<property name="idleTaskExecutionLimit" value="1" />
+		<!-- 监听异常恢复间隔，默认5000ms，默认恢复策略为FixedBackOff -->
+		<property name="recoveryInterval" value="5000" />
+		<!-- receive消息等待最长时间，默认1000ms -->
+		<property name="receiveTimeout" value="2000" />
+		<!-- 采用线程池执行监听任务 -->
+		<property name="taskExecutor" ref="staffTaskExecutor" />
+		<!-- 每个监听线程任务最大执行消息数，"-1"表示不限制 -->
+		<property name="maxMessagesPerTask" value="100" />
+		<!-- 消息选择器，可以根据消息中的信息进行筛选，如mesg.setIntProperty("aaaa", 12); -->
+		<!-- property name="messageSelector" value="aaaa=12" / -->
+	</bean>
+
+</beans>

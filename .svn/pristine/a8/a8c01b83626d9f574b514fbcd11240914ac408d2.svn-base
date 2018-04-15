@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linePatrol.dao.GaotieAutoTrackDao">
+	
+	<select id="getTheTrack" resultType="map" parameterType="map">
+	SELECT TO_CHAR(T.TRACK_TIME, 'YYYY-MM-DD HH24:MI:SS') TRACK_TIME,
+	       LONGITUDE,
+	       LATITUDE,
+	       TRACK_TYPE,
+	       SPEED,
+	       IS_GPS,
+	       TRACK_ID
+	  FROM AXX_GT_PATROL_TRACK T
+	 WHERE 1 = 1
+ 	<if test=" start_time  != null and start_time  != '' and end_time!=null and end_time!=''"> 
+	    <![CDATA[ 
+	       and TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND #{end_time}
+	     ]]>
+   </if>
+	<if test=" start_time  != null and start_time  != '' and (end_time==null or end_time=='')"> 
+	 	<![CDATA[ 
+	        and    TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND '23:59'
+		 ]]>
+	</if>
+	<if test=" (start_time  == null or start_time  == '') and end_time!=null and end_time!=''"> 
+	 	<![CDATA[ 
+	       and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN '00:00' AND #{end_time}
+	 	]]>
+	</if>
+	   AND T.GPS_FLAG = 0
+	   AND TRUNC(T.TRACK_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+	   AND T.CREATED_BY = #{inspact_id} 
+	ORDER BY TRACK_TIME
+	</select>
+	
+	<select id="getPhotoList" resultType="map" parameterType="string">
+	SELECT * FROM axx_t_photo p WHERE p.SITE_ID = #{track_id} and p.photo_type = '16' ORDER BY p.upload_time DESC 
+	</select>
+	
+   <select id="selTrackForDG" parameterType="map" resultType="map">
+	select T.TRACK_ID,to_char(T.TRACK_TIME,'yyyy-mm-dd hh24:mi:ss') TRACK_TIME,T.TRACK_TYPE,T.LONGITUDE,T.LATITUDE from AXX_GT_PATROL_TRACK T
+	 where TRUNC(T.TRACK_TIME) = TO_DATE(#{inspact_date}, 'YYYY-MM-DD')
+	 AND T.CREATED_BY = #{inspact_id}
+	 AND T.GPS_FLAG = 0
+	 <if test=" start_time  != null and start_time  != '' and end_time !=null and end_time !=''"> 
+ 		<![CDATA[ 
+          and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND #{end_time}
+ 		]]>
+	</if>
+	<if test=" start_time  != null and start_time  != '' and (end_time == null or end_time == '')"> 
+ 		<![CDATA[ 
+         and    TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN #{start_time} AND '23:59'
+ 		]]>
+	</if>
+	<if test=" (start_time  == null or start_time  == '') and end_time != null and end_time != ''"> 
+ 		<![CDATA[ 
+         and     TO_CHAR(T.TRACK_TIME, 'HH24:MI') BETWEEN '00:00' AND #{end_time}
+ 		]]>
+	</if>
+	ORDER BY TRACK_TIME
+  </select>
+	
+	
+</mapper>

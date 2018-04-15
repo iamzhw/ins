@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.system.dao.GridDao">
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select gd.grid_id,gd.grid_name,
+		gd.grid_no,
+		(select to_char(wm_concat(distinct(tbs.staff_name)))
+		from tb_base_staff tbs ,tb_base_gird_staff sg
+		where tbs.staff_id=sg.staff_id and sg.grid_id=gd.grid_id) sh_name
+		from tb_cablecheck_grid gd where 1=1
+		<if test="queryParams.GRID_NAME != null and queryParams.GRID_NAME != ''">  
+		   <![CDATA[
+			AND gd.grid_name != #{queryParams.GRID_NAME}
+			]]>
+		</if>
+		<if test="queryParams.GRID_NO != null and queryParams.GRID_NO != ''">  
+		   <![CDATA[
+			AND gd.grid_no != #{queryParams.GRID_NO}
+			]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+		   <![CDATA[
+			AND gd.area_id=#{queryParams.AREA_ID}
+			]]>
+		</if>
+		<if
+			test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+		   <![CDATA[
+			and gd.son_area_id=#{queryParams.SON_AREA_ID}
+			]]>
+		</if>
+	</select>
+
+	<select id="queryAduits" parameterType="util.page.Query" resultType="map">
+		select bs.staff_id,bs.staff_no,bs.staff_name from tb_cablecheck_grid gr
+		left join tb_base_staff bs on gr.area_id=bs.area_id and
+		gr.son_area_id=bs.son_area_id
+		left join tb_base_staff_role tbsr on tbsr.staff_id=bs.staff_id
+		where gr.grid_id=#{queryParams.GRID_ID} and tbsr.role_id=406
+
+	</select>
+	
+	<delete id="delAudits" parameterType="String">
+	delete from tb_base_gird_staff gs where gs.grid_id=#{queryParams.grid_id}
+	</delete>
+	<insert id="saveAduits" parameterType="map">
+	insert into  tb_base_gird_staff(GRID_ID,staff_id) values(#{GRID_ID},#{STAFF_ID})
+	</insert>
+	
+	<select id="getAduits" parameterType="String" resultType="String" >
+	  select t.staff_id from  tb_base_gird_staff t where t.grid_id=#{grid_id}
+	</select>
+</mapper>

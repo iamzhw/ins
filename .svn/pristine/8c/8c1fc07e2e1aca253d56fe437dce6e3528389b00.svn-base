@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.axx.dao.LineSiteInterfaceDao">
+  <select id="getTaskSitesByUser" parameterType="map" resultType="map">
+	select distinct t.* from (select tt.TASK_ID,ts.SITE_ID,ts.SITE_NAME,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS,nvl(ts.SITE_MATCH,300) SITE_MATCH from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+    where tt.INSPECT_ID=#{USER_ID} AND tt.status=0 AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+    AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual)
+ 	UNION ALL
+	select tt.TASK_ID,tto.out_site_id SITE_ID,mos.site_name,3 SITE_TYPE, mos.x LONGITUDE,mos.y LATITUDE,mos.con_address ADDRESS,nvl(mos.SITE_MATCH ,300) SITE_MATCH
+	from AXX_T_TASK_OUTSITE tto inner join axx_main_out_site mos on tto.out_site_id=mos.out_site_id
+	inner join  AXX_T_TASK tt on tto.TASK_ID=tt.TASK_ID 
+	 where tt.INSPECT_ID=#{USER_ID} AND tt.status=0 AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual))t
+  </select>
+  
+  <select id="getUnfinishSitesByUser" parameterType="map" resultType="map">
+    select tt.TASK_ID,ts.SITE_ID,nvl(ts.SITE_NAME,' ') site_name,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS, '1' is_arrive from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+  	where tt.INSPECT_ID=#{USER_ID}
+  	AND ts.site_type=2
+  	AND tt.status=0
+  	AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual)
+ 	AND not exists(select tms.SITE_ID from AXX_T_MACTH_SITE tms where tms.TASK_ID=tt.TASK_ID and tms.site_id=ts.site_id)
+ 	UNION ALL 
+ 	select tt.TASK_ID,ts.SITE_ID,nvl(ts.SITE_NAME,' ') site_name,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS, '0' is_arrive from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+  	where tt.INSPECT_ID=#{USER_ID} 
+  	AND ts.site_type=2  
+  	AND tt.status=0
+  	AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual)
+ 	AND  exists(select tms.SITE_ID from AXX_T_MACTH_SITE tms where tms.TASK_ID=tt.TASK_ID and tms.site_id=ts.site_id)
+ 	UNION ALL
+ 	select tt.TASK_ID,ts.SITE_ID,nvl(ts.SITE_NAME,' ') site_name,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS, '1' is_arrive from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+  	where tt.INSPECT_ID=#{USER_ID}
+  	AND ts.site_type=1
+  	AND tt.status=0
+  	AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual)
+ 	AND not exists(select tms.SITE_ID from AXX_T_MACTH_SITE tms 
+	inner join AXX_T_USER_SIGN tus on tms.SIGN_ID=tus.SIGN_ID where tms.TASK_ID=tt.TASK_ID and tms.site_id=ts.site_id)
+ 	UNION ALL 
+ 	select tt.TASK_ID,ts.SITE_ID,nvl(ts.SITE_NAME,' ') site_name,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS, '0' is_arrive from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+  	where tt.INSPECT_ID=#{USER_ID}
+  	AND ts.site_type=1
+  	AND tt.status=0
+  	AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual)
+ 	AND  exists(select tms.SITE_ID from AXX_T_MACTH_SITE tms 
+	inner join AXX_T_USER_SIGN tus on tms.SIGN_ID=tus.SIGN_ID where tms.TASK_ID=tt.TASK_ID and tms.site_id=ts.site_id)
+  </select>
+  
+   <select id="getUnfinishSignSitesByUser" parameterType="map" resultType="map">
+  	select distinct ts.SITE_ID,ts.SITE_NAME,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS,nvl(ts.SITE_MATCH,300) SITE_MATCH,tt.task_id from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+  	where ts.SITE_TYPE=1 AND tt.INSPECT_ID=#{USER_ID}  AND tt.STATUS = 0 AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual)
+  </select>
+  
+   <select id="getTaskSitesByUserAndSite" parameterType="map" resultType="map">
+  	select tt.TASK_ID,ts.SITE_ID,ts.SITE_NAME,ts.SITE_TYPE, ts.LONGITUDE,ts.LATITUDE,ts.ADDRESS,ts.SITE_MATCH from AXX_T_SITE ts 
+    inner join AXX_T_LINE_SITE tls on ts.SITE_ID=tls.SITE_ID
+    inner join AXX_T_TASK_LINE ttl on tls.LINE_ID=ttl.LINE_ID
+    inner join AXX_T_TASK tt on ttl.TASK_ID=tt.TASK_ID
+  	where tt.INSPECT_ID=#{USER_ID}  AND tt.START_DATE &lt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND tt.END_DATE &gt;= (SELECT TRUNC(SYSDATE) FROM dual)
+	AND ts.SITE_ID=#{SITE_ID}
+  </select>
+  
+  <select id="getTrackId" resultType="int">
+  	select SEQ_AUTO_USER_TRACK_ID.Nextval from dual
+  </select>
+  
+    <select id="getRegisterId" resultType="int">
+  	select SEQ_T_USER_SIGN_ID.Nextval from dual
+  </select>
+  
+    <select id="getSiteMatchId" resultType="int">
+  	select SEQ_T_MACTH_SITE_ID.Nextval from dual
+  </select>
+  <!-- 保存轨迹前先获取用户的最大轨迹 -->
+  <select id="getMaxTrackId" parameterType="map" resultType="int">
+  	select nvl(max(aut.TRACK_ID),0) track_id from axx_auto_user_track aut 
+   where aut.GPS_FLAG=0 and aut.USER_ID=#{USER_ID}
+  </select>
+  
+   <select id="getMaxTrackByUser" parameterType="map" resultType="map">
+   select aut.track_id,to_char(aut.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,aut.track_type,aut.longitude,aut.latitude,
+    aut.user_id,aut.gps_flag,aut.speed,aut.area_id,aut.user_id,aut.is_gps,aut.gps_switch 
+   	from axx_auto_user_track aut where user_id=#{USER_ID} and aut.track_time=(select max(track_time) from axx_auto_user_track 
+   	where trunc(track_time) = trunc(sysdate) and user_id=#{USER_ID} 
+   	and track_time &lt;to_date(#{FIRST_TIME},'yyyy-mm-dd hh24:mi:ss')) order by aut.track_id desc
+  </select>
+  <select id="getMaxHasFlagTrackByUser" parameterType="map" resultType="map">
+   select aut.track_id,to_char(aut.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,aut.track_type,aut.longitude,aut.latitude,
+    aut.user_id,aut.gps_flag,aut.speed,aut.area_id,aut.user_id,aut.is_gps,aut.gps_switch 
+   	from axx_auto_user_track aut where user_id=#{USER_ID} and aut.track_time=(select max(track_time) from axx_auto_user_track 
+   	where trunc(track_time) = trunc(sysdate) and gps_switch=1 and gps_flag=0 
+   	and track_time &lt;to_date(#{FIRST_TIME},'yyyy-mm-dd hh24:mi:ss') and user_id=#{USER_ID}) order by aut.track_id desc
+  </select>
+  
+  
+   <select id="getMaxMatchSite" parameterType="map" resultType="map">
+   select tms.MATCH_ID,tms.SITE_ID,tms.CON_LABEL from AXX_T_MACTH_SITE tms 
+   where tms.site_id=#{SITE_ID} and  tms.site_type=#{SITE_TYPE} and tms.task_id=#{TASK_ID} and tms.track_id=#{TRACK_ID}
+  </select>
+  
+   <select id="getInvalidTime" parameterType="map" resultType="map">
+	select tit.user_id,tit.line_date,to_char(tit.start_time, 'yyyy-mm-dd hh24:mi:ss') START_TIME,to_char(tit.end_time, 'yyyy-mm-dd hh24:mi:ss') END_TIME,tit.invalid_type from axx_t_invalid_time tit
+	where tit.user_id=#{USER_ID} and trunc(tit.line_date)=trunc(TO_DATE(#{QUERY_DATE}, 'yyyy-mm-dd'))
+  </select>
+  
+  <insert id="saveAutoTrack" parameterType="map">
+  	insert into AXX_AUTO_USER_TRACK(TRACK_ID,TRACK_TIME,USER_ID,LONGITUDE,LATITUDE,SPEED,UPLOAD_TIME,AREA_ID,TRACK_TYPE,GPS_FLAG,IS_GPS,GPS_SWITCH)
+  	values(#{TRACK_ID},TO_DATE(#{TRACK_TIME},'yyyy-MM-dd hh24:mi:ss'),#{USER_ID},#{LONGITUDE},#{LATITUDE},#{SPEED},TO_DATE(#{UPLOAD_TIME},'yyyy-MM-dd hh24:mi:ss'),#{AREA_ID},#{TRACK_TYPE},#{GPS_FLAG},#{IS_GPS,jdbcType=NUMERIC},#{GPS_SWITCH,jdbcType=NUMERIC})
+  </insert>
+  
+  <insert id="saveMatchSite" parameterType="map">
+  	insert into AXX_T_MACTH_SITE(MATCH_ID,SIGN_ID,TRACK_ID,MATCH_TIME,SITE_TYPE,SITE_ID,SITE_NAME,SITE_DISTANCE,TASK_ID,REMARK,CON_LABEL)
+  	values(#{MATCH_ID},#{SIGN_ID,jdbcType=NUMERIC},#{TRACK_ID,jdbcType=NUMERIC},TO_DATE(#{MATCH_TIME},'yyyy-MM-dd hh24:mi:ss'),#{SITE_TYPE},
+  	#{SITE_ID},#{SITE_NAME},#{SITE_DISTANCE},#{TASK_ID},#{REMARK,jdbcType=VARCHAR},#{CON_LABEL,jdbcType=NUMERIC})
+  </insert>
+  
+   <insert id="saveRegisterSite" parameterType="map">
+  	insert into AXX_T_USER_SIGN(SIGN_ID,SIGN_TIME,USER_ID,AREA_ID,LONGITUDE,LATITUDE)
+  	values(#{SIGN_ID},TO_DATE(#{SIGN_TIME},'yyyy-MM-dd hh24:mi:ss'),#{USER_ID},#{AREA_ID},#{LONGITUDE},#{LATITUDE})
+  </insert>
+  
+    <select id="getCalTrackList" parameterType="map" resultType="map">
+  	select aut.track_id,to_char(aut.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,aut.track_type,aut.longitude,aut.latitude,
+    	aut.user_id,aut.gps_flag,aut.speed,aut.area_id,aut.user_id,aut.is_gps,aut.gps_switch
+     from AXX_AUTO_USER_TRACK aut where aut.user_id=#{USER_ID} 
+     and trunc(track_time) = to_date(#{QUERY_DATE},'yyyy-mm-dd')
+     and aut.track_time between to_date(#{START_TIME},'yyyy-mm-dd hh24:mi:ss')
+     and to_date(#{END_TIME},'yyyy-mm-dd hh24:mi:ss') order by aut.TRACK_TIME
+  </select>
+  
+  <select id="getTrackList" parameterType="map" resultType="map">
+  	select aut.track_id,to_char(aut.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,aut.track_type,aut.longitude,aut.latitude,
+    	aut.user_id,aut.gps_flag,aut.speed,aut.area_id,aut.user_id,aut.is_gps,aut.gps_switch
+     from AXX_AUTO_USER_TRACK aut where aut.user_id=#{USER_ID} and trunc(aut.track_time) = trunc(sysdate) order by aut.TRACK_TIME DESC
+  </select>
+  <select id="getUserTrackTime" parameterType="map" resultType="int">
+  	select count(1) from AXX_AUTO_USER_TRACK aut where aut.user_id=#{USER_ID} and aut.track_time=to_date(#{TRACK_TIME},'yyyy-mm-dd hh24:mi:ss')
+  </select>
+  <insert id="saveMatchQuartzInfo" parameterType="map">
+  	insert into AXX_T_MATCH_QUARTZ(USER_ID,START_TIME,END_TIME,MAX_TRACK_ID,EXECUTE_DATE,STATUS,AREA_ID)
+  	values(#{USER_ID},to_date(#{START_TIME},'yyyy-mm-dd hh24:mi:ss'),to_date(#{END_TIME},'yyyy-mm-dd hh24:mi:ss'),#{MAX_TRACK_ID},trunc(SYSDATE),0,#{AREA_ID})
+  </insert>
+  <delete id="deleteMatchQuartzInfo" parameterType="map">
+  	delete from AXX_T_MATCH_QUARTZ where USER_ID=#{USER_ID} and START_TIME=to_date(#{START_TIME},'yyyy-mm-dd hh24:mi:ss') and END_TIME=to_date(#{END_TIME},'yyyy-mm-dd hh24:mi:ss')
+  </delete>
+  <select id="queryMatchQuartzInfos" parameterType="map" resultType="map">
+	select distinct USER_ID,to_char(START_TIME,'yyyy-mm-dd hh24:mi:ss') START_TIME,to_char(END_TIME,'yyyy-mm-dd hh24:mi:ss') END_TIME,
+			MAX_TRACK_ID,to_char(EXECUTE_DATE,'yyyy-mm-dd') QUERY_DATE from AXX_T_MATCH_QUARTZ 
+	where AREA_ID in (${AREA_ID}) order by START_TIME
+  </select>
+  <update id="updateMatchQuartzInfo" parameterType="map">
+  	update AXX_T_MATCH_QUARTZ set STATUS=1 where USER_ID=#{USER_ID} and START_TIME=to_date(#{START_TIME},'yyyy-mm-dd hh24:mi:ss') and END_TIME=to_date(#{END_TIME},'yyyy-mm-dd hh24:mi:ss')
+  </update>
+  <select id="queryKeysiteByUser" parameterType="map" resultType="map">
+  	select tms.match_id,tms.track_id,tms.sign_id,tms.site_id from axx_t_macth_site tms where tms.sign_id is not null and tms.task_id=#{TASK_ID} and tms.site_id=#{SITE_ID}
+  </select>
+   <select id="queryMatchSiteByTrack" parameterType="map" resultType="map">
+  	select tms.match_id,tms.track_id,tms.site_id,tms.task_id,tms.CON_LABEL from axx_t_macth_site tms where tms.track_id=#{TRACK_ID} and tms.site_id=#{SITE_ID}
+  </select>
+  
+   <select id="getMaxGtTrackByUser" parameterType="map" resultType="map">
+      select t.track_id,
+       t.longitude,
+       t.latitude,
+       to_char(t.track_time, 'yyyy-mm-dd hh24:mi:ss') track_time,
+       t.created_by user_id,
+       t.gps_switch,
+       t.is_gps,
+       t.track_type,
+       t.speed,
+	   t.gps_flag
+	  from axx_gt_patrol_track t
+	 where t.created_by = #{USER_ID}
+	   and t.track_time =
+	       (select max(track_time)
+	          from axx_gt_patrol_track
+	         where trunc(track_time) = trunc(sysdate)
+	           and created_by = #{USER_ID} 
+	           and track_time &lt;to_date(#{FIRST_TIME}, 'yyyy-mm-dd hh24:mi:ss'))
+	 order by t.track_id desc
+  </select>
+  
+  <select id="getUserGtTrackTime" parameterType="map" resultType="int">
+  	select count(1) from axx_gt_patrol_track t where t.created_by=#{USER_ID} and t.track_time=to_date(#{TRACK_TIME},'yyyy-mm-dd hh24:mi:ss')
+  </select>
+  
+  <select id="getGtTrackId" resultType="int">
+  	select seq_gt_patrol_track.Nextval from dual
+  </select>
+  
+  <insert id="saveAutoGtTrack" parameterType="map">
+	insert into axx_gt_patrol_track
+	  (track_id,
+	   longitude,
+	   latitude,
+	   track_time,
+	   created_by,
+	   gps_switch,
+	   is_gps,
+	   upload_time,
+	   track_type,
+	   speed,
+	   gps_flag)
+	values
+	  (#{TRACK_ID},
+	   #{LONGITUDE},
+	   #{LATITUDE},
+	   TO_DATE(#{TRACK_TIME}, 'yyyy-MM-dd hh24:mi:ss'),
+	   #{USER_ID},
+	   #{GPS_SWITCH,jdbcType=NUMERIC},
+	   #{IS_GPS,jdbcType=NUMERIC},
+	   TO_DATE(#{UPLOAD_TIME}, 'yyyy-MM-dd hh24:mi:ss'),
+	   #{TRACK_TYPE},
+	   #{SPEED},
+	   #{GPS_FLAG}
+	   )     
+  </insert>
+  
+  <insert id="saveUserUploadTime" parameterType="map">
+		insert into ins_user_uploadtime(
+			user_id, 
+			upload_time,
+			type
+		)
+		values(
+			#{user_id}, 
+			sysdate,
+			#{type}
+		)
+  </insert>
+  
+  <select id="selectUserUploadTime" resultType="map" parameterType="map">
+  		select a.user_id,a.upload_time,a.type from INS_USER_UPLOADTIME a
+		where a.upload_time &gt; to_date(#{time},'yyyy-MM-dd hh24:mi:ss') 
+		and a.user_id = #{user_id}
+		and a.type = #{type}
+  </select>
+</mapper>

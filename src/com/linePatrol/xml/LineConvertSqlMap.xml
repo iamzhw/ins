@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+
+<mapper namespace="com.linePatrol.dao.LineConvertDao">
+  <select id="getConvertSites" parameterType="map" resultType="map">
+   select ts.site_id,ts.longitude,ts.latitude from axx_t_site ts where ts.area_id=#{AREA_ID} and ts.convert_status=0 order by ts.SITE_ID
+  </select>
+  <update id="updateSites" parameterType="map" >
+  	update axx_t_site set longitude=trunc(#{LONGITUDE},6),latitude=trunc(#{LATITUDE},6),convert_status=1 where site_id=#{SITE_ID}
+  </update>
+  <insert id="saveInvalidSites" parameterType="map">
+  	insert into temp_invalid_site(SITE_ID,AREA_ID) values(#{SITE_IDS},#{AREA_ID})
+  </insert>
+  <select id="getTempSites" resultType="map">
+  	select site_id,site_code,x longitude,y latitude from TEMP_TO_AXX_T_SITE where site_id=0
+  </select>
+  <update id="updateTempSite" parameterType="map">
+  	update TEMP_TO_AXX_T_SITE ts set 
+	<if test=" LONGITUDE != null and LONGITUDE  != ''"> 
+		<![CDATA[ ts.X=#{LONGITUDE},]]>
+	</if>
+	<if test=" LATITUDE != null and LATITUDE  != ''"> 
+		<![CDATA[ ts.Y=#{LATITUDE},]]>
+	</if>
+	ts.site_id=#{SITE_ID}
+  	where ts.site_code=#{SITE_CODE}
+  </update>
+</mapper>

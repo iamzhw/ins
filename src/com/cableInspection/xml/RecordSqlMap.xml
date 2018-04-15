@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableInspection.dao.RecordDao">
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.start_time != null and queryParams.start_time!= ''">  
+            <![CDATA[
+             and to_date(tir.create_time) >=TO_DATE(#{queryParams.start_time}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.end_time != null and queryParams.end_time != ''">  
+            <![CDATA[
+	    	 and to_date(tir.create_time) <=TO_DATE(#{queryParams.end_time}, 'yyyy-mm-dd')
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND tit.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</sql>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		SELECT tir.record_id,
+		a.name area_name,
+		b.name son_area_name,
+		tit.task_name,
+		tip.plan_name,
+		tbs.staff_name,
+		nvl(count(tipr.photo_id),0) as sumphoto,
+		to_char(tir.create_time,'yyyy-mm-dd hh24:mi:ss') as create_time,
+		tir.descrp,
+		tir.cable_level,
+		tir.iskeep,
+		tir.equip_code,
+		tiet.equipment_type_name
+		FROM tb_ins_record tir,tb_ins_task tit,tb_ins_plan tip,tb_base_staff
+		tbs,area a,area b,tb_ins_photo_rel tipr,tb_ins_equipment_type tiet
+		where tir.record_type = 3
+		and tit.task_id(+)=tir.task_id
+		and tip.plan_id(+)=tir.point_id
+		and tbs.staff_id(+)=tir.inspector
+		and a.area_id(+)=tir.area_id
+		and b.area_id(+)=tir.son_area_id
+		and tipr.record_id(+)=tir.record_id
+		and tiet.equipment_type_id(+)=tir.equip_type
+		<include refid="dynamicWhere" />
+		group by tir.record_id,
+		a.name,
+		b.name,
+		tit.task_name,
+		tip.plan_name,
+		tbs.staff_name,tir.create_time,
+		tir.descrp,
+		tir.cable_level,
+		tir.iskeep,
+		tir.equip_code,
+		tiet.equipment_type_name
+	</select>
+
+<select id="queryPhoto" parameterType="map" resultType="map">
+SELECT tip.photo_path
+  FROM tb_ins_photo tip, tb_ins_photo_rel tipr
+ where tip.photo_id = tipr.photo_id
+   and tipr.record_id = #{record_id}
+</select>
+
+<select id="getAreaList" resultType="map">
+		select area_id,name from area where parent_area_id=2
+</select>
+<select id="getSonAreaListByAreaId" resultType="map">
+		select area_id,name from area where parent_area_id= #{AREA_ID}
+</select>
+
+  <select id="getListByPage" parameterType="util.page.Query" resultType="map">
+		 select area_name,area_id,
+			sum(decode(record_day,'1',record_count,'')) as record_1,
+			sum(decode(record_day,'2',record_count,'')) as record_2,
+			sum(decode(record_day,'3',record_count,'')) as record_3,
+			sum(decode(record_day,'4',record_count,'')) as record_4,
+			sum(decode(record_day,'5',record_count,'')) as record_5,
+			
+			sum(decode(record_day,'6',record_count,'')) as record_6,
+			sum(decode(record_day,'7',record_count,'')) as record_7,
+			sum(decode(record_day,'8',record_count,'')) as record_8,
+			sum(decode(record_day,'9',record_count,'')) as record_9,
+			sum(decode(record_day,'10',record_count,'')) as record_10,
+			
+			sum(decode(record_day,'11',record_count,'')) as record_11,
+			sum(decode(record_day,'12',record_count,'')) as record_12,
+			sum(decode(record_day,'13',record_count,'')) as record_13,
+			sum(decode(record_day,'14',record_count,'')) as record_14,
+			sum(decode(record_day,'15',record_count,'')) as record_15,
+			
+			sum(decode(record_day,'16',record_count,'')) as record_16,
+			sum(decode(record_day,'17',record_count,'')) as record_17,
+			sum(decode(record_day,'18',record_count,'')) as record_18,
+			sum(decode(record_day,'19',record_count,'')) as record_19,
+			sum(decode(record_day,'20',record_count,'')) as record_20,
+			
+			sum(decode(record_day,'21',record_count,'')) as record_21,
+			sum(decode(record_day,'22',record_count,'')) as record_22,
+			sum(decode(record_day,'23',record_count,'')) as record_23,
+			sum(decode(record_day,'24',record_count,'')) as record_24,
+			sum(decode(record_day,'25',record_count,'')) as record_25,
+			
+			sum(decode(record_day,'26',record_count,'')) as record_26,
+			sum(decode(record_day,'27',record_count,'')) as record_27,
+			sum(decode(record_day,'28',record_count,'')) as record_28,
+			sum(decode(record_day,'29',record_count,'')) as record_29,
+			sum(decode(record_day,'30',record_count,'')) as record_30,
+			
+			sum(decode(record_day,'31',record_count,'')) as record_31
+			
+			from (
+			     select area_name,area_id, insRecord.record_day, count(record_id) record_count
+			                from (select distinct record.record_id,
+			                                      area.name area_name,
+			                                      area.area_id,
+			                                      to_number(to_char(record.create_time, 'yyyy')) as record_year,
+			                                      to_number(to_char(record.create_time, 'mm')) as record_month,
+			                                      to_number(to_char(record.create_time, 'dd')) as record_day
+			                        from tb_ins_record record, tb_ins_point point, area
+			                       where record.point_id = point.point_id
+			                          and to_number(to_char(record.create_time, 'yyyy')) = #{queryParams.RECORD_YEAR}
+			                         <if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+							            <![CDATA[
+							            and point.area_id = #{queryParams.AREA_ID}
+			                            and area.area_id = point.son_area_id
+								    	 ]]>
+									 </if> 
+									 <if test="queryParams.AREA_ID == null or queryParams.AREA_ID == ''">  
+							            <![CDATA[
+							             and area.area_id = point.area_id
+								    	 ]]>
+									 </if> 
+			                         order by area.area_id,record_month,record_day
+			                         ) insRecord
+			               where 1=1--insRecord.record_year = to_number(to_char(sysdate, 'yyyy'))
+			                 
+			                 <if test="queryParams.RECORD_MONTH != null and queryParams.RECORD_MONTH != ''">  
+							            <![CDATA[
+							            	and insRecord.record_month =#{queryParams.RECORD_MONTH}
+								    	 ]]>
+						     </if> 
+			               group by insRecord.record_day, area_name,area_id
+			               order by insRecord.area_name, record_day
+			) group by area_name,area_id
+	</select>
+
+	<select id="queryRecordStaff" parameterType="util.page.Query" resultType="map">
+		   select task.task_name,tbInsRecord.area_name,staff_area.name as staff_area_name,tbInsRecord.area_id,to_char(record.create_time,'yyyy-MM-dd hh24:mi:ss') as record_time,record.descrp,staff.staff_name,staff.staff_no,point.point_name,point.point_no 
+				    from tb_ins_record record,tb_ins_point point ,tb_base_staff staff,tb_cablecheck_task task,area staff_area,(
+				           select distinct insRecord.record_id,area_name,area_id, insRecord.record_day
+				              from (select distinct record.record_id,
+				                                    area.name area_name,
+				                                    area.area_id,
+				                                    to_number(to_char(record.create_time, 'yyyy')) as record_year,
+				                                    to_number(to_char(record.create_time, 'mm')) as record_month,
+				                                    to_number(to_char(record.create_time, 'dd')) as record_day
+				                      from tb_ins_record record, tb_ins_point point, area
+				                     where record.point_id = point.point_id
+				                       and to_number(to_char(record.create_time, 'yyyy')) =  #{queryParams.RECORD_YEAR}
+		                   <if test="queryParams.SEARCH_AREA_ID == null or queryParams.SEARCH_AREA_ID == ''">  
+							            <![CDATA[
+							              and point.area_id = #{queryParams.AREA_ID}
+							              and area.area_id = point.area_id
+								    	 ]]>
+							</if>
+							
+							<if test="queryParams.SEARCH_AREA_ID != null and queryParams.SEARCH_AREA_ID != ''">  
+							            <![CDATA[
+							              and point.son_area_id = #{queryParams.AREA_ID}
+							              and area.area_id = point.son_area_id
+								    	 ]]>
+							</if>
+		                   
+		                     order by area.area_id,record_month,record_day
+					                       ) insRecord
+					             where 1=1
+					               and insRecord.record_month = #{queryParams.RECORD_MONTH}
+					               and insRecord.record_day = #{queryParams.RECORD_DAY}
+					       ) tbInsRecord
+					    where tbInsRecord.record_id = record.record_id and record.point_id = point.point_id 
+					    and record.inspector = staff.staff_id(+) and record.task_id = task.task_id(+) 
+					    and staff_area.area_id = staff.son_area_id
+	</select>
+	
+	<select id="getRecordForExport" parameterType="map" resultType="map">
+		 select area_name,area_id,
+			sum(decode(record_day,'1',record_count,'')) as record_1,
+			sum(decode(record_day,'2',record_count,'')) as record_2,
+			sum(decode(record_day,'3',record_count,'')) as record_3,
+			sum(decode(record_day,'4',record_count,'')) as record_4,
+			sum(decode(record_day,'5',record_count,'')) as record_5,
+			
+			sum(decode(record_day,'6',record_count,'')) as record_6,
+			sum(decode(record_day,'7',record_count,'')) as record_7,
+			sum(decode(record_day,'8',record_count,'')) as record_8,
+			sum(decode(record_day,'9',record_count,'')) as record_9,
+			sum(decode(record_day,'10',record_count,'')) as record_10,
+			
+			sum(decode(record_day,'11',record_count,'')) as record_11,
+			sum(decode(record_day,'12',record_count,'')) as record_12,
+			sum(decode(record_day,'13',record_count,'')) as record_13,
+			sum(decode(record_day,'14',record_count,'')) as record_14,
+			sum(decode(record_day,'15',record_count,'')) as record_15,
+			
+			sum(decode(record_day,'16',record_count,'')) as record_16,
+			sum(decode(record_day,'17',record_count,'')) as record_17,
+			sum(decode(record_day,'18',record_count,'')) as record_18,
+			sum(decode(record_day,'19',record_count,'')) as record_19,
+			sum(decode(record_day,'20',record_count,'')) as record_20,
+			
+			sum(decode(record_day,'21',record_count,'')) as record_21,
+			sum(decode(record_day,'22',record_count,'')) as record_22,
+			sum(decode(record_day,'23',record_count,'')) as record_23,
+			sum(decode(record_day,'24',record_count,'')) as record_24,
+			sum(decode(record_day,'25',record_count,'')) as record_25,
+			
+			sum(decode(record_day,'26',record_count,'')) as record_26,
+			sum(decode(record_day,'27',record_count,'')) as record_27,
+			sum(decode(record_day,'28',record_count,'')) as record_28,
+			sum(decode(record_day,'29',record_count,'')) as record_29,
+			sum(decode(record_day,'30',record_count,'')) as record_30,
+			
+			sum(decode(record_day,'31',record_count,'')) as record_31
+			
+			from (
+			     select area_name,area_id, insRecord.record_day, count(record_id) record_count
+			                from (select distinct record.record_id,
+			                                      area.name area_name,
+			                                      area.area_id,
+			                                      to_number(to_char(record.create_time, 'yyyy')) as record_year,
+			                                      to_number(to_char(record.create_time, 'mm')) as record_month,
+			                                      to_number(to_char(record.create_time, 'dd')) as record_day
+			                        from tb_ins_record record, tb_ins_point point, area
+			                       where record.point_id = point.point_id
+			                          and to_number(to_char(record.create_time, 'yyyy')) =  #{RECORD_YEAR}
+			                         <if test="AREA_ID != null and AREA_ID != ''">  
+							            <![CDATA[
+							            and point.area_id = #{AREA_ID}
+			                            and area.area_id = point.son_area_id
+								    	 ]]>
+									 </if> 
+									 <if test="AREA_ID == null or AREA_ID == ''">  
+							            <![CDATA[
+							             and area.area_id = point.area_id
+								    	 ]]>
+									 </if> 
+			                         order by area.area_id,record_month,record_day
+			                         ) insRecord
+			               where 1=1
+			                 
+			                 <if test="RECORD_MONTH != null and RECORD_MONTH != ''">  
+							            <![CDATA[
+							            	and insRecord.record_month =#{RECORD_MONTH}
+								    	 ]]>
+						     </if> 
+			               group by insRecord.record_day, area_name,area_id
+			               order by insRecord.area_name, record_day
+			) group by area_name,area_id
+	</select>
+	
+	<select id="getRecordStaffForExport" parameterType="map" resultType="map">
+					select task.task_name,tbInsRecord.area_name,staff_area.name as staff_area_name,tbInsRecord.area_id,to_char(record.create_time,'yyyy-MM-dd hh24:mi:ss') as record_time,record.descrp,staff.staff_name,staff.staff_no,point.point_name,point.point_no 
+				    from tb_ins_record record,tb_ins_point point ,tb_base_staff staff,tb_cablecheck_task task,area staff_area,(
+				           select distinct insRecord.record_id,area_name,area_id, insRecord.record_day
+				              from (select distinct record.record_id,
+				                                    area.name area_name,
+				                                    area.area_id,
+				                                    to_number(to_char(record.create_time, 'yyyy')) as record_year,
+				                                    to_number(to_char(record.create_time, 'mm')) as record_month,
+				                                    to_number(to_char(record.create_time, 'dd')) as record_day
+				                      from tb_ins_record record, tb_ins_point point, area
+				                     where record.point_id = point.point_id
+				                       and to_number(to_char(record.create_time, 'yyyy')) =  #{RECORD_YEAR}
+				                       
+		                   <if test="SEARCH_AREA_ID == null or SEARCH_AREA_ID == ''">  
+							            <![CDATA[
+							              and point.area_id = #{AREA_ID}
+							              and area.area_id = point.area_id
+								    	 ]]>
+							</if>
+							
+							<if test="SEARCH_AREA_ID != null and SEARCH_AREA_ID != ''">  
+							            <![CDATA[
+							              and point.son_area_id = #{AREA_ID}
+							              and area.area_id = point.son_area_id
+								    	 ]]>
+							</if>
+						                   order by area.area_id,record_month,record_day
+					                       ) insRecord
+					             where 1=1
+					               and insRecord.record_month = #{RECORD_MONTH}
+					               and insRecord.record_day = #{RECORD_DAY}
+					       ) tbInsRecord
+					    where tbInsRecord.record_id = record.record_id and record.point_id = point.point_id 
+					    and record.inspector = staff.staff_id and record.task_id = task.task_id 
+					    and staff_area.area_id = staff.son_area_id
+	</select>
+	
+</mapper>

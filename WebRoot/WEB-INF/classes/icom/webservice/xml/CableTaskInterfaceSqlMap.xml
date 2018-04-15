@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="icom.webservice.dao.CableTaskInterfaceDao">
+
+	<!-- 对接智能网管,获取缆线任务列表 -->
+	<select id="getAllTaskByStaffNo" parameterType="String" resultType="icom.webservice.model.TaskModel">
+		SELECT t.TASK_ID as taskId,
+	    t.TASK_NAME as taskName, 
+	    t.PLAN_ID as planId,
+	    decode(p.PLAN_CIRCLE,1,'日',2,'周',3,'月',4,'年') AS planCircle,
+	    to_char(t.START_TIME,'yyyy-mm-dd hh24:mi:ss') AS startTime,
+	    to_char(t.COMPLETE_TIME,'yyyy-mm-dd hh24:mi:ss') AS completeTime
+	    FROM TB_INS_TASK t, TB_INS_TASK_STAUS ts, TB_BASE_STAFF TBS, TB_INS_PLAN p, TB_BASE_STAFF s 
+	    WHERE t.STATUS_ID = ts.STATUS_ID
+	    AND t.PLAN_ID = p.PLAN_ID
+	    AND TBS.STAFF_ID(+)=T.CREATE_STAFF
+	    AND s.STAFF_ID(+)=T.INSPECTOR
+	    AND p.PLAN_KIND = 1
+	    AND (ts.STATUS_VALUE='1' or ts.STATUS_VALUE='2')
+	    and  t.START_TIME &lt;=sysdate
+      	and t.COMPLETE_TIME &gt;=sysdate
+	    AND s.STAFF_NO = #{staffNo}
+	    ORDER BY t.START_TIME DESC
+	</select>
+	<!-- 对接智能网管,获取班组下缆线任务列表 -->
+	<select id="getAllTaskByDeptNo" parameterType="String" resultType="icom.webservice.model.TaskModel">
+		<![CDATA[
+		SELECT
+			T.TASK_ID as taskId,
+			T.TASK_NAME as taskName,
+			T.STATUS_ID ,
+			A.NAME,
+			T.PLAN_ID as planId,
+			T.START_TIME AS startTime,
+			T.COMPLETE_TIME as completeTime,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE > -1) MAINCOUNT,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE < 0) NORMALCOUNT,
+      		(SELECT COUNT(1) FROM
+			TB_INS_RECORD TIR 
+			 JOIN TB_INS_TASK_DETAIL TD ON TD.TASK_DETAIL_ID = TIR.TASK_DETAIL_ID
+			 JOIN TB_INS_POINT TIP ON TIP.POINT_ID = TIR.POINT_ID
+			WHERE TIR.RECORD_TYPE=0 AND TIR.TASK_ID= T.TASK_ID) AS SIGNINCOUNT
+      		,P.CREATE_TIME AS MODIFYTIME,
+      		 decode(P.PLAN_CIRCLE,1,'日',2,'周',3,'月',4,'年') AS planCircle
+      		,(SELECT MAX(LINE_TYPE) FROM TB_INS_LINE LINE,TB_INS_TASK_DETAIL TD WHERE LINE.LINE_ID=TD.INSPECT_OBJECT_ID AND T.TASK_ID=TD.TASK_ID ) AS LINETYPE
+		FROM TB_INS_TASK T, AREA A, TB_INS_PLAN P,TB_BASE_STAFF S
+		WHERE A.AREA_ID = T.SON_AREA_ID
+			]]>
+			AND P.PLAN_ID = T.PLAN_ID
+			AND P.PLAN_KIND = 1
+			AND P.ISDELETED = 0
+			and  T.START_TIME &lt;=sysdate
+      	and T.COMPLETE_TIME &gt;=sysdate
+			AND T.INSPECTOR = s.staff_id
+   			AND S.STAFF_NO=#{staffNo}
+   			AND S.STATUS=0 
+   			AND S.ISDELETED=0
+		UNION ALL
+		<![CDATA[
+		SELECT
+			T.TASK_ID as taskId,
+			T.TASK_NAME as taskName,
+			T.STATUS_ID,
+			A.NAME,
+			T.PLAN_ID as planId,
+			T.START_TIME AS startTime,
+			T.COMPLETE_TIME as completeTime,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE > -1) MAINCOUNT,
+			(SELECT COUNT(1)
+			FROM TB_INS_PLAN_DETAIL TIPD, TB_INS_LINE_POINT TILP, TB_INS_POINT TIP
+			WHERE TIPD.PLAN_ID = P.PLAN_ID
+			AND TIPD.INSPECT_OBJECT_ID = TILP.LINE_ID
+			AND TIP.POINT_ID = TILP.POINT_ID
+			AND TIP.POINT_TYPE < 0) NORMALCOUNT,
+      		(SELECT COUNT(1) FROM
+			TB_INS_RECORD TIR 
+			 JOIN TB_INS_TASK_DETAIL TD ON TD.TASK_DETAIL_ID = TIR.TASK_DETAIL_ID
+			 JOIN TB_INS_POINT TIP ON TIP.POINT_ID = TIR.POINT_ID
+			WHERE TIR.RECORD_TYPE=0 AND TIR.TASK_ID= T.TASK_ID) AS SIGNINCOUNT
+      		,P.CREATE_TIME AS MODIFYTIME,
+      		 decode(P.PLAN_CIRCLE,1,'日',2,'周',3,'月',4,'年') AS planCircle
+      		,(SELECT MAX(LINE_TYPE) FROM TB_INS_LINE LINE,TB_INS_TASK_DETAIL TD WHERE LINE.LINE_ID=TD.INSPECT_OBJECT_ID AND T.TASK_ID=TD.TASK_ID ) AS LINETYPE
+		FROM TB_INS_TASK T, AREA A, TB_INS_PLAN P
+		WHERE A.AREA_ID = T.SON_AREA_ID
+			]]>
+			AND P.PLAN_ID = T.PLAN_ID
+			AND P.PLAN_KIND = 1
+			AND P.ISDELETED = 0
+			AND T.START_TIME &lt;=sysdate
+      	    AND T.COMPLETE_TIME &gt;=sysdate
+			AND T.INSPECTOR in
+			(SELECT DEPT_ID FROM TB_INS_STAFF_DEPT WHERE STAFF_ID in
+			(select staff_id from tb_base_staff where staff_no=#{staffNo} and status=0 and isdeleted=0))
+	</select>
+	
+	<!-- 对接智能网管,获取缆线计划下所有缆线点信息(包括关键点和非关键点) -->
+	<select id="getAllPointsByPlanId" parameterType="String" resultType="com.cableInspection.model.PointModel" >
+		SELECT til.LINE_ID as line,
+	    tip.LONGITUDE as longitude,
+	    tip.LATITUDE as latitude
+	  	FROM TB_INS_LINE   til,
+	    TB_INS_PLAN_DETAIL tipd,
+	    TB_INS_LINE_POINT  tilp,
+	    TB_INS_POINT       tip
+	 	WHERE til.LINE_ID = tipd.INSPECT_OBJECT_ID
+	    AND tilp.POINT_ID = tip.POINT_ID
+	    AND tilp.LINE_ID(+) = tipd.INSPECT_OBJECT_ID
+	    AND tipd.PLAN_ID = #{planId}
+	</select>
+	
+</mapper>

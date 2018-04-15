@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.MainTainCompanyDao">
+	<select id="listCompany" resultType="map">
+		<!-- select (select a.name from area a where a.area_id = bz.area_id) area_name,
+		(select a.name from area a where a.area_id = bz.son_area_id) son_area_name,
+		c.company_id,c.company_name,bz.team_name banzu_name from tb_base_maintain_company c
+		left join tb_base_company_banzu_relation cbr on c.company_id = cbr.company_id
+		left join tb_base_staff_zw_banzu bz on cbr.banzu_id = bz.team_id 
+		where 1=1 and bz.team_name is not null
+		<if test="queryParams.company_name != null and queryParams.company_name != ''">  
+            <![CDATA[
+    			AND c.company_name like '%'||#{queryParams.company_name}||'%'
+    		]]>
+  		</if>
+  		<if test="queryParams.area != null and queryParams.area != ''">  
+            <![CDATA[
+    			AND c.area_id = #{queryParams.area}
+    		]]>
+  		</if>
+		order by c.company_id -->
+		
+		select c.area_name,c.company_id,c.company_name
+		<!-- ,to_char(wm_concat(bz.team_name))banzu_name --> 
+		from tb_base_maintain_company c
+     	<!-- left join tb_base_company_banzu_relation cbr on c.company_id = cbr.company_id
+     	left join tb_base_staff_zw_banzu bz on cbr.banzu_id = bz.team_id  -->
+     	where 1=1
+     	
+   		<if test="queryParams.company_name != null and queryParams.company_name != ''">  
+            <![CDATA[
+    			AND c.company_name like '%'||#{queryParams.company_name}||'%'
+    		]]>
+  		</if>
+  		<if test="queryParams.areaId != null and queryParams.areaId != ''">  
+            <![CDATA[
+    			AND c.area_id = #{queryParams.areaId}
+    		]]>
+  		</if>
+     	group by c.company_id,c.company_name,c.area_name
+	</select>
+	
+	<select id="selectCompany" resultType="map" parameterType="map">
+		select c.company_id,c.company_name from tb_base_maintain_company c 
+		where c.company_id = #{id}
+	</select>
+	
+	
+	<insert id="addCompany"  parameterType="map">
+		insert into tb_base_maintain_company
+	  	(company_id, company_name, create_time, update_time, create_staff_id, update_staff_id,area_id,area_name)
+		values
+	  	(Seq_Maintain_Company_Id.Nextval, #{comName}, sysdate, sysdate,#{staff},#{staff},#{areaId},#{areaName})
+	</insert>
+	
+	
+	<update id="updateCompany" parameterType="map">
+		update tb_base_maintain_company
+	   	set company_name = #{comName},
+	    update_time = sysdate,
+	    update_staff_id = #{staff},
+	    area_id = #{areaID},
+	    area_name = #{areaName}
+	 	where company_id = #{comId}
+	</update>
+	
+	
+	<delete id="deleteCompany" parameterType="map">
+		delete from tb_base_maintain_company where company_id = #{comId}
+	</delete>
+	
+	<insert id="saveRelation" parameterType="map">
+		insert into tb_base_company_banzu_relation
+		(id, company_id, banzu_id)
+		values
+		(seq_company_banzu_id.nextval, #{companyId}, #{teamId})		
+	</insert>
+	
+	
+	<delete id="deleteRelation" parameterType="map">
+		delete from tb_base_company_banzu_relation where company_id = #{companyId}
+	</delete>
+	
+	
+	<select id="listGridOrder" resultType="map">
+		select o.*,j.* from tb_cablecheck_order o 
+		left join tb_cablecheck_equipment e on o.phy_eqp_id=e.install_sbid
+		left join tb_cablecheck_dtsj j on j.id = o.btsj_id 
+		where 1=1
+		<if test="queryParams.gridId != null and queryParams.gridId != ''">  
+            <![CDATA[
+    			AND e.grid_id = #{queryParams.gridId}
+    		]]>
+  		</if>
+		<if test="queryParams.startDate != null and queryParams.startDate != '' and queryParams.endDate != null and queryParams.endDate != '' ">  
+            <![CDATA[
+    			AND j.bdsj between to_date(#{queryParams.startDate},'yyyy-mm-dd') 
+    			and  to_date(#{queryParams.startDate},'yyyy-mm-dd')
+    		]]>
+  		</if>
+  		<if test="queryParams.teamId != null and queryParams.teamId != ''">  
+            <![CDATA[
+    			and o.team_id= #{queryParams.teamId}
+    		]]>
+  		</if>
+	</select>
+	
+	
+	<select id="isExistDept" parameterType="map" resultType="int">
+		select count(*) from tb_base_staff_zw_banzu where parent_org_id = #{id}
+	</select>
+	
+	<select id="lookStatus" parameterType="map" resultType="int">
+		select count(*) from tb_base_staff_zw_banzu where  is_look = #{is_look} 
+		<if test="id == null or id == ''">  
+            <![CDATA[
+    			and team_id = #{treeId}
+    		]]>
+  		 </if>
+		 <if test="id != null and id != ''">  
+            <![CDATA[
+    			and  parent_org_id = #{id} 
+    		]]>
+  		 </if>
+	</select>
+	
+	<select id="getDeptTree" parameterType="map" resultType="map">
+		 select team_id id,team_name name,
+     	 nvl(parent_org_id,'0') parentid,'1' isparent, 
+     	 (select count(*) from tb_base_staff_zw_banzu n 
+     	 where n.parent_org_id = b.team_id and n.is_look=0) actionname
+     	 <!-- from tb_base_staff_zw_banzu b where 1=1 -->
+     	 
+     	 from tb_base_staff_zw_banzu b where 1=1
+     	 
+     	 <if test="id == null or id == ''">  
+            <![CDATA[
+    			and b.team_id = #{treeId}
+    		]]>
+  		 </if>
+		 <if test="id != null and id != ''">  
+            <![CDATA[
+    			and b.parent_org_id = #{id} 
+    		]]>
+  		 </if>
+  		 <if test="is_look != null and is_look != ''">  
+            <![CDATA[
+    			and b.is_look = #{is_look}
+    		]]>
+  		 </if>
+  		 order by team_id desc
+	</select>
+	
+	<select id="getUserTree" parameterType="map" resultType="map">
+		select id id,staff_name||'('||'工号：'||staff_no||','||'tel:'||z.moblephone||')' name,
+     	team_id parentid,'0' isparent,0 actionname
+     	<!-- from tb_base_staff_zw z -->
+     	from tb_base_staff_zw z  
+     	where z.team_id = #{id} and z.status = 0 order by id desc
+	</select>
+	
+	<update id="updateTreeStatus" parameterType="map">
+		update tb_base_staff_zw_banzu  set is_look=1 where team_id = #{teamId}
+	</update>
+	
+	
+	<update id="updateTreeStaffStatus" parameterType="map">
+		update tb_base_staff_zw  set status=1 where team_id = #{teamId} and id=#{zw_id}
+	</update>
+	
+	<select id="selectTeamName" parameterType="map" resultType="string">
+		select nvl(to_char(wm_concat(distinct team_name)),'-1') team_name from (
+		select a.team_id,a.team_name,
+		(select count(*) from tb_base_staff_zw z where z.team_id = a.team_id) num
+		from 
+		(select * from tb_base_staff_zw_banzu start with team_id = #{teamId} 
+		connect by prior team_id = parent_org_id)  a ) b 
+		where b.num > 0 
+	</select>
+	
+	<select id="selectArea" parameterType="map" resultType="map">
+		select * from area a where a.area_id = #{id}
+	</select>
+	
+</mapper> 

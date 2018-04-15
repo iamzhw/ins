@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webservice.intelligenceNetworkM.dao.IntelligenceNetworkMDao">
+	
+	<insert id="saveRemoteCheck" parameterType="map" >
+	 insert into tb_cablecheck_remote_check
+	 	(id,
+	 	eqp_no,
+	 	area_name,
+	 	son_area_name,
+	 	check_num,
+	 	error_num,
+	 	check_person,
+	 	check_time,
+	 	port_id,
+	 	port_no,
+	 	errorDetail,
+	 	is_check_ok
+	 	)
+	 	VALUES
+	 	(sequence_remote_check_id.nextval,
+	 	#{eqpNo},
+	 	#{aeraName},
+	 	#{sonAreaName},
+	 	#{checkNum},
+	 	#{errorNum},
+	 	#{checkPersion},
+	 	to_date(#{checkTime},'yyyy-mm-dd hh24:mi:ss'),
+	 	#{portId},
+	 	#{portNo},
+	 	#{errorDetail},
+	 	#{is_check_ok}
+	 	)
+	</insert>
+
+	<select id="getAgencyTaskListCount" parameterType="map" resultType="map">
+	select count(0) checkTaskNum
+    from 
+      TB_CABLECHECK_TASK T,AREA A, AREA B, TB_BASE_STAFF S1,TB_BASE_STAFF S2, TB_BASE_STAFF S3,
+     
+      TB_CABLECHECK_EQUIPMENT TBC,
+      TB_CABLECHECK_GRID             G
+    where T.ENABLE = 0
+      and t.status_id not in (0,8)
+      and ((t.inspector= #{staff_id} or t.maintor=#{staff_id} or t.auditor=#{staff_id}) or t.auditor is null)
+      and S1.STAFF_ID (+)= T.INSPECTOR
+      and S2.STAFF_ID (+)= T.MAINTOR
+      and S3.STAFF_ID(+)= T.AUDITOR
+      and A.AREA_ID(+) = T.AREA_ID
+      and B.AREA_ID(+) = T.SON_AREA_ID
+     
+      and T.SBID = TBC.EQUIPMENT_ID(+)
+      and TBC.GRID_ID = G.GRID_ID(+)
+    
+      ORDER BY LAST_UPDATE_TIME DESC
+	</select>
+	
+	<select id="getstaff_id" parameterType="map" resultType="map">
+	select * from tb_base_staff tbs where  1=1
+		<if
+			test="idCard != null and idCard != ''">  
+            <![CDATA[
+	    	AND tbs.id_number=#{idCard}
+	    	]]>
+		</if>
+		<if
+			test="staff_No != null and staff_No != ''">  
+            <![CDATA[
+	    	AND tbs.staff_No=#{staff_No}
+	    	]]>
+		</if>
+	</select>
+	
+	<select id="getLightPathPerson" parameterType="map" resultType="map">
+		select IOM_WORK_ORDER_ID,REPLY_PTY_NBR,REPLY_PTY_NM,REPLY_ACCT_NO from tb_cablecheck_link_odso ad where ad.OPT_CODE=#{lightNo} group by REPLY_PTY_NBR,REPLY_PTY_NM,REPLY_ACCT_NO,IOM_WORK_ORDER_ID
+	</select>
+	
+	<select id="selectWorkOrderList" parameterType="map" resultType="map"><!--
+	select tcw.workOrder_no,tcw.workOrder_type,tcw.sn,tcw.glbh,tcw.configurer,tcw.revisionNum,tcw.constructionHill,tcw.modifyFiberSponsor,
+	tcw.revisionAction,tcw.glOperator,tcw.operateType,tcw.userName,tcw.installedAddress,tcw.glly,tcw.glmc,tcw.completedTime,tcw.modifyTime  
+	from tb_cablecheck_workOrderDetail tcw where tcw.task_no=#{task_no}
+	--></select>
+	<!-- 集约化工单退单 -->
+	<update id="chargeback" parameterType="string">
+		update tb_cablecheck_task ts set ts.status_id=5 ,
+										  ts.maintor='',
+										  ts.auditor=''
+		where ts.task_id=#{taskId}
+	</update>
+</mapper>

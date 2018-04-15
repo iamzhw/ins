@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.outsite.dao.OsMaintainSchemeDao">
+	<sql id="dynamicWhere">
+
+		<if test="queryParams.p_status  != null and queryParams.p_status  != ''"> 
+			<![CDATA[  and  T.status  =#{queryParams.p_status }   ]]>
+		</if>
+		<if test="queryParams.p_scheme_name  != null and queryParams.p_scheme_name  != ''"> 
+			<![CDATA[ and  T.scheme_name  like '%'||#{queryParams.p_scheme_name }||'%'    ]]>
+		</if>
+		<if test="queryParams.p_out_site_name  != null and queryParams.p_out_site_name  != ''"> 
+			<![CDATA[ and  mos.site_name  like '%'||#{queryParams.p_out_site_name }||'%'    ]]>
+		</if>
+		<if test="queryParams.area_id  != null and queryParams.area_id  != ''"> 
+			<![CDATA[ and  mos.area_id =#{queryParams.area_id }]]>
+		</if>
+	</sql>
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		
+SELECT T.SCHEME_ID,
+       T.SCHEME_NAME,
+       T.OUT_SITE_ID,
+       T.OUT_SITE_TYPE,
+       T.MS_CONTENT,
+       T.USER_ID,
+       T.TS_RES,
+       T.COMMIT_UID, 
+       BS1.STAFF_NAME COMMIT_NAME,
+       T.COMMIT_X,
+       T.COMMIT_Y,
+       T.STATUS,
+       TO_CHAR(T.COMMIT_DATE, 'YYYY-MM-DD HH24:MI:SS') COMMIT_DATE,
+       IS_TIMEOUT,
+       T.AREA_ID,
+       TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD') CREATION_TIME,
+       T.CREATED_BY, 
+       BS2.STAFF_NAME CREATED_PERSON,
+       TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD') UPDATE_TIME,
+       T.UPDATED_BY,
+       MOS.SITE_NAME,
+       MOS.CON_STATUS
+
+  FROM AXX_OUT_SITE_MAINTAIN_SCHEME T,
+       AXX_MAIN_OUT_SITE            MOS,
+       TB_BASE_STAFF                BS1,
+       TB_BASE_STAFF                BS2
+ WHERE T.OUT_SITE_ID = MOS.OUT_SITE_ID
+   AND T.COMMIT_UID = BS1.STAFF_ID(+)
+   AND T.CREATED_BY = BS2.STAFF_ID(+)
+   AND T.DELETE_FLAG = 1
+		<include refid="dynamicWhere" />
+	</select>
+
+	<insert id="osMaintainSchemeSave" parameterType="map">
+		INSERT INTO AXX_OUT_SITE_MAINTAIN_SCHEME(
+		<if test=" scheme_name  != null and scheme_name  != ''"> 
+ <![CDATA[ 
+SCHEME_NAME,
+ ]]>
+		</if>
+		<if test=" out_site_id  != null and out_site_id  != ''"> 
+ <![CDATA[ 
+OUT_SITE_ID,
+ ]]>
+		</if>
+		<if test=" out_site_type  != null and out_site_type  != ''"> 
+ <![CDATA[ 
+OUT_SITE_TYPE,
+ ]]>
+		</if>
+		<if test=" ms_content  != null and ms_content  != ''"> 
+ <![CDATA[ 
+MS_CONTENT,
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+USER_ID,
+ ]]>
+		</if>
+		<if test=" commit_uid  != null and commit_uid  != ''"> 
+ <![CDATA[ 
+COMMIT_UID,
+ ]]>
+		</if>
+		<if test=" commit_x  != null and commit_x  != ''"> 
+ <![CDATA[ 
+COMMIT_X,
+ ]]>
+		</if>
+		<if test=" commit_y  != null and commit_y  != ''"> 
+ <![CDATA[ 
+COMMIT_Y,
+ ]]>
+		</if>
+		<if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+STATUS,
+ ]]>
+		</if>
+		<if test=" commit_date  != null and commit_date  != ''"> 
+ <![CDATA[ 
+COMMIT_DATE,
+ ]]>
+		</if>
+		<if test=" is_timeout  != null and is_timeout  != ''"> 
+ <![CDATA[ 
+IS_TIMEOUT,
+ ]]>
+		</if>
+		<if test=" area_id  != null and area_id  != ''"> 
+ <![CDATA[ 
+AREA_ID,
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+CREATION_TIME,
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+CREATED_BY,
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME,
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+UPDATED_BY,
+ ]]>
+		</if>
+		<if test=" delete_flag  != null and delete_flag  != ''"> 
+ <![CDATA[ 
+DELETE_FLAG,
+ ]]>
+		</if>
+		SCHEME_ID) values(
+		<if test=" scheme_name  != null and scheme_name  != ''"> 
+ <![CDATA[ 
+#{scheme_name},
+ ]]>
+		</if>
+		<if test=" out_site_id  != null and out_site_id  != ''"> 
+ <![CDATA[ 
+#{out_site_id},
+ ]]>
+		</if>
+		<if test=" out_site_type  != null and out_site_type  != ''"> 
+ <![CDATA[ 
+#{out_site_type},
+ ]]>
+		</if>
+		<if test=" ms_content  != null and ms_content  != ''"> 
+ <![CDATA[ 
+#{ms_content},
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+#{user_id},
+ ]]>
+		</if>
+		<if test=" commit_uid  != null and commit_uid  != ''"> 
+ <![CDATA[ 
+#{commit_uid},
+ ]]>
+		</if>
+		<if test=" commit_x  != null and commit_x  != ''"> 
+ <![CDATA[ 
+#{commit_x},
+ ]]>
+		</if>
+		<if test=" commit_y  != null and commit_y  != ''"> 
+ <![CDATA[ 
+#{commit_y},
+ ]]>
+		</if>
+		<if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+#{status},
+ ]]>
+		</if>
+		<if test=" commit_date  != null and commit_date  != ''"> 
+ <![CDATA[ 
+to_date(#{commit_date},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" is_timeout  != null and is_timeout  != ''"> 
+ <![CDATA[ 
+#{is_timeout},
+ ]]>
+		</if>
+		<if test=" area_id  != null and area_id  != ''"> 
+ <![CDATA[ 
+#{area_id},
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+to_date(#{creation_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+#{created_by},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+#{updated_by},
+ ]]>
+		</if>
+		<if test=" delete_flag  != null and delete_flag  != ''"> 
+ <![CDATA[ 
+#{delete_flag},
+ ]]>
+		</if>
+		#{scheme_id})
+	</insert>
+
+
+	
+	
+	<update id="osMaintainSchemeDelete" parameterType="String">
+	    update AXX_OUT_SITE_MAINTAIN_SCHEME t set t.delete_flag=0 where t.scheme_id=#{scheme_id}
+	</update>
+
+	<select id="findById" parameterType="int" resultType="map">
+	
+SELECT T.SCHEME_ID,
+       T.SCHEME_NAME,
+       T.OUT_SITE_ID,
+       T.OUT_SITE_TYPE,
+       T.MS_CONTENT,
+       T.USER_ID,
+       T.COMMIT_UID, 
+       BS1.STAFF_NAME COMMIT_NAME,
+       T.COMMIT_X,
+       T.COMMIT_Y,
+       T.STATUS,
+       TO_CHAR(T.COMMIT_DATE, 'YYYY-MM-DD HH24:MI:SS') COMMIT_DATE,
+       IS_TIMEOUT,
+       T.AREA_ID,
+       TO_CHAR(T.CREATION_TIME, 'YYYY-MM-DD HH24:MI:SS') CREATION_TIME,
+       T.CREATED_BY, 
+       BS2.STAFF_NAME CREATED_PERSON,
+       TO_CHAR(T.UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS') UPDATE_TIME,
+       T.UPDATED_BY,
+       MOS.SITE_NAME,
+       MOS.CON_STATUS
+
+  FROM AXX_OUT_SITE_MAINTAIN_SCHEME T,
+       AXX_MAIN_OUT_SITE            MOS,
+       TB_BASE_STAFF                BS1,
+       TB_BASE_STAFF                BS2
+ WHERE T.OUT_SITE_ID = MOS.OUT_SITE_ID
+   AND T.COMMIT_UID = BS1.STAFF_ID(+)
+   AND T.CREATED_BY = BS2.STAFF_ID(+)
+   AND T.SCHEME_ID=#{scheme_id}
+
+  </select>
+
+	<update id="osMaintainSchemeUpdate" parameterType="map">
+		UPDATE AXX_OUT_SITE_MAINTAIN_SCHEME set
+		<if test=" scheme_name  != null and scheme_name  != ''"> 
+ <![CDATA[ 
+SCHEME_NAME=#{scheme_name},
+ ]]>
+		</if>
+		<if test=" out_site_id  != null and out_site_id  != ''"> 
+ <![CDATA[ 
+OUT_SITE_ID=#{out_site_id},
+ ]]>
+		</if>
+		<if test=" out_site_type  != null and out_site_type  != ''"> 
+ <![CDATA[ 
+OUT_SITE_TYPE=#{out_site_type},
+ ]]>
+		</if>
+		<if test=" ms_content  != null and ms_content  != ''"> 
+ <![CDATA[ 
+MS_CONTENT=#{ms_content},
+ ]]>
+		</if>
+		<if test=" user_id  != null and user_id  != ''"> 
+ <![CDATA[ 
+USER_ID=#{user_id},
+ ]]>
+		</if>
+		<if test=" commit_uid  != null and commit_uid  != ''"> 
+ <![CDATA[ 
+COMMIT_UID=#{commit_uid},
+ ]]>
+		</if>
+		<if test=" commit_x  != null and commit_x  != ''"> 
+ <![CDATA[ 
+COMMIT_X=#{commit_x},
+ ]]>
+		</if>
+		<if test=" commit_y  != null and commit_y  != ''"> 
+ <![CDATA[ 
+COMMIT_Y=#{commit_y},
+ ]]>
+		</if>
+		<if test=" status  != null and status  != ''"> 
+ <![CDATA[ 
+STATUS=#{status},
+ ]]>
+		</if>
+		<if test=" commit_date  != null and commit_date  != ''"> 
+ <![CDATA[ 
+COMMIT_DATE=to_date(#{commit_date},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" is_timeout  != null and is_timeout  != ''"> 
+ <![CDATA[ 
+IS_TIMEOUT=#{is_timeout},
+ ]]>
+		</if>
+		<if test=" area_id  != null and area_id  != ''"> 
+ <![CDATA[ 
+AREA_ID=#{area_id},
+ ]]>
+		</if>
+		<if test=" creation_time  != null and creation_time  != ''"> 
+ <![CDATA[ 
+CREATION_TIME=to_date(#{creation_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" created_by  != null and created_by  != ''"> 
+ <![CDATA[ 
+CREATED_BY=#{created_by},
+ ]]>
+		</if>
+		<if test=" update_time  != null and update_time  != ''"> 
+ <![CDATA[ 
+UPDATE_TIME=to_date(#{update_time},'yyyy-mm-dd hh24:mi:ss'),
+ ]]>
+		</if>
+		<if test=" updated_by  != null and updated_by  != ''"> 
+ <![CDATA[ 
+UPDATED_BY=#{updated_by},
+ ]]>
+		</if>
+		<if test=" ts_res != null and ts_res  != ''"> 
+ <![CDATA[ 
+TS_RES=#{ts_res},
+ ]]>
+		</if>
+		
+		SCHEME_ID=#{scheme_id}
+		where SCHEME_ID=#{scheme_id}
+	</update>
+	
+	
+	<select id="findAll" resultType="map">
+		
+select t.SCHEME_ID,
+       t.SCHEME_NAME,
+       t.OUT_SITE_ID,
+       t.OUT_SITE_TYPE,
+       t.MS_CONTENT,
+       t.USER_ID,
+       t.COMMIT_UID,
+       t.COMMIT_X,
+       t.COMMIT_Y,
+       t.STATUS,
+       to_char(t.COMMIT_DATE, 'yyyy-mm-dd hh24:mi:ss') COMMIT_DATE,
+       IS_TIMEOUT,
+       t.AREA_ID,
+       to_char(t.CREATION_TIME, 'yyyy-mm-dd hh24:mi:ss') CREATION_TIME,
+       t.CREATED_BY,
+       to_char(t.UPDATE_TIME, 'yyyy-mm-dd hh24:mi:ss') UPDATE_TIME,
+       UPDATED_BY
+  from AXX_OUT_SITE_MAINTAIN_SCHEME t where t.delete_flag=1
+		
+	</select>
+	
+	<select id="getNextId" resultType="string">
+	     SELECT  SEQ_AXX_OS_MAINTAIN_SCHEME.NEXTVAL FROM DUAL
+	</select>
+	
+</mapper>

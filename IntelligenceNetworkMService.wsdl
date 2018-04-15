@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="intelligenceNetworkMService" targetNamespace="http://service.intelligenceNetworkM.webservice.com/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://service.intelligenceNetworkM.webservice.com/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://service.intelligenceNetworkM.webservice.com/" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://service.intelligenceNetworkM.webservice.com/">
+  <xsd:element name="saveRemoteCheck" type="tns:saveRemoteCheck"/>
+  <xsd:complexType name="saveRemoteCheck">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="arg0" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="saveRemoteCheckResponse" type="tns:saveRemoteCheckResponse"/>
+  <xsd:complexType name="saveRemoteCheckResponse">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="return" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="selectWorkOrderList" type="tns:selectWorkOrderList"/>
+  <xsd:complexType name="selectWorkOrderList">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="arg0" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="selectWorkOrderListResponse" type="tns:selectWorkOrderListResponse"/>
+  <xsd:complexType name="selectWorkOrderListResponse">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="return" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="selectAgencyTask" type="tns:selectAgencyTask"/>
+  <xsd:complexType name="selectAgencyTask">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="appFlowCountRequest" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="selectAgencyTaskResponse" type="tns:selectAgencyTaskResponse"/>
+  <xsd:complexType name="selectAgencyTaskResponse">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="return" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="getEquWorkOrder" type="tns:getEquWorkOrder"/>
+  <xsd:complexType name="getEquWorkOrder">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="arg0" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="getEquWorkOrderResponse" type="tns:getEquWorkOrderResponse"/>
+  <xsd:complexType name="getEquWorkOrderResponse">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="return" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="getLightPathPerson" type="tns:getLightPathPerson"/>
+  <xsd:complexType name="getLightPathPerson">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="arg0" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="getLightPathPersonResponse" type="tns:getLightPathPersonResponse"/>
+  <xsd:complexType name="getLightPathPersonResponse">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="return" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="getEquWorkOrder">
+    <wsdl:part name="parameters" element="tns:getEquWorkOrder">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="saveRemoteCheckResponse">
+    <wsdl:part name="parameters" element="tns:saveRemoteCheckResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="saveRemoteCheck">
+    <wsdl:part name="parameters" element="tns:saveRemoteCheck">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getLightPathPersonResponse">
+    <wsdl:part name="parameters" element="tns:getLightPathPersonResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getLightPathPerson">
+    <wsdl:part name="parameters" element="tns:getLightPathPerson">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="selectAgencyTask">
+    <wsdl:part name="parameters" element="tns:selectAgencyTask">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="selectWorkOrderListResponse">
+    <wsdl:part name="parameters" element="tns:selectWorkOrderListResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="selectWorkOrderList">
+    <wsdl:part name="parameters" element="tns:selectWorkOrderList">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="selectAgencyTaskResponse">
+    <wsdl:part name="parameters" element="tns:selectAgencyTaskResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getEquWorkOrderResponse">
+    <wsdl:part name="parameters" element="tns:getEquWorkOrderResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="IntelligenceNetworkMService">
+    <wsdl:operation name="saveRemoteCheck">
+      <wsdl:input name="saveRemoteCheck" message="tns:saveRemoteCheck">
+    </wsdl:input>
+      <wsdl:output name="saveRemoteCheckResponse" message="tns:saveRemoteCheckResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="selectWorkOrderList">
+      <wsdl:input name="selectWorkOrderList" message="tns:selectWorkOrderList">
+    </wsdl:input>
+      <wsdl:output name="selectWorkOrderListResponse" message="tns:selectWorkOrderListResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="selectAgencyTask">
+      <wsdl:input name="selectAgencyTask" message="tns:selectAgencyTask">
+    </wsdl:input>
+      <wsdl:output name="selectAgencyTaskResponse" message="tns:selectAgencyTaskResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getEquWorkOrder">
+      <wsdl:input name="getEquWorkOrder" message="tns:getEquWorkOrder">
+    </wsdl:input>
+      <wsdl:output name="getEquWorkOrderResponse" message="tns:getEquWorkOrderResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getLightPathPerson">
+      <wsdl:input name="getLightPathPerson" message="tns:getLightPathPerson">
+    </wsdl:input>
+      <wsdl:output name="getLightPathPersonResponse" message="tns:getLightPathPersonResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="intelligenceNetworkMServiceSoapBinding" type="tns:IntelligenceNetworkMService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="saveRemoteCheck">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="saveRemoteCheck">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="saveRemoteCheckResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="selectWorkOrderList">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="selectWorkOrderList">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="selectWorkOrderListResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="selectAgencyTask">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="selectAgencyTask">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="selectAgencyTaskResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getEquWorkOrder">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="getEquWorkOrder">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getEquWorkOrderResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="getLightPathPerson">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="getLightPathPerson">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getLightPathPersonResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="intelligenceNetworkMService">
+    <wsdl:port name="IntelligenceNetworkMServicePort" binding="tns:intelligenceNetworkMServiceSoapBinding">
+      <soap:address location="http://localhost:9090/IntelligenceNetworkMServicePort"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

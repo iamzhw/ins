@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linePatrol.dao.LineTaskDao">
+
+
+	<sql id="dynamicWhere">
+		<if test="queryParams.TASK_NAME != null and queryParams.TASK_NAME != ''">  
+            <![CDATA[
+	    	AND tt.TASK_NAME like '%'||#{queryParams.TASK_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND tbs.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.START_DATE != null and queryParams.START_DATE != ''">  
+     	 AND tt.START_DATE &gt;=TO_DATE(#{queryParams.START_DATE}, 'yyyy-mm-dd')
+		</if>
+		<if test="queryParams.END_DATE != null and queryParams.END_DATE != ''">  
+          AND tt.END_DATE &lt;=TO_DATE(#{queryParams.END_DATE}, 'yyyy-mm-dd')
+		</if>
+		<if test="queryParams.TASK_TYPE != null and queryParams.TASK_TYPE != ''">  
+            <![CDATA[
+	    	AND tt.TASK_TYPE = #{queryParams.TASK_TYPE}
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+			<![CDATA[
+	    	AND tt.AREA_ID=#{queryParams.AREA_ID}
+	    	]]>
+		</if>
+
+	</sql>
+
+	<select id="query" parameterType="util.page.Query" resultType="map">
+		select tt.TASK_ID,tt.TASK_ID TASK_DETAIL_ID,tt.TASK_NAME,to_char(tt.START_DATE,'yyyy-mm-dd') START_DATE,
+		to_char(tt.END_DATE,'yyyy-mm-dd') END_DATE,tbs.STAFF_NAME,tt.TASK_ID DETAIL_ID,
+		case when tt.TASK_TYPE = '1'  then '计划任务' when tt.TASK_TYPE = '2' then '临时任务' end as TASK_TYPE,
+		case when tt.STATUS = '0'  then '正常' when tt.STATUS = '1' then '休息' end as STATUS
+		from AXX_T_TASK tt 
+		inner join TB_BASE_STAFF tbs on tt.INSPECT_ID=tbs.STAFF_ID
+		<include refid="dynamicWhere" />
+		order by tt.CREATE_DATE desc
+	</select>
+	
+	<select id="getTaskId" resultType="int">
+		select SEQ_LINE_TASK_ID.NEXTVAL from dual
+	</select>
+	
+	<select id="getTask" parameterType="map" resultType="map">
+		select tt.TASK_ID,tt.TASK_NAME,to_char(tt.START_DATE,'yyyy-mm-dd') START_DATE,
+		to_char(tt.END_DATE,'yyyy-mm-dd') END_DATE,tt.INSPECT_ID,tbs.STAFF_NAME,tt.TASK_TYPE
+		from AXX_T_TASK tt 
+		inner join TB_BASE_STAFF tbs on tt.INSPECT_ID=tbs.STAFF_ID
+		where tt.TASK_ID=#{TASK_ID}
+	</select>
+	
+	<select id="getTaskItems" parameterType="map" resultType="map">
+		select ttl.TASK_ID, ttl.LINE_ID,tli.LINE_NAME from AXX_T_TASK_LINE ttl
+		inner join AXX_T_LINE_INFO tli on ttl.LINE_ID=tli.LINE_ID
+		where ttl.TASK_ID=#{TASK_ID}
+	</select>
+	
+		<!-- 本地的巡线员 -->
+	<select id="getInpectStaff" parameterType="map" resultType="map">
+	  SELECT BS.STAFF_ID,BS.STAFF_NAME FROM TB_BASE_STAFF BS
+		inner join TB_BASE_STAFF_ROLE BSR on BS.STAFF_ID = BSR.STAFF_ID
+		inner join TB_BASE_ROLE BR on BR.ROLE_ID = BSR.ROLE_ID
+		 WHERE  BR.ROLE_NO = 'AXX_XXY' AND BS.AREA_ID = #{AREA_ID}
+	</select>
+	
+	<select id="getCableList" parameterType="map" resultType="map">
+	select tc.CABLE_ID,tc.CABLE_NAME from AXX_T_CABLE tc 
+     inner join AXX_T_CABLE_AREA tca on tc.CABLE_ID=tca.CABLE_ID
+     where tca.AREA_ID=#{AREA_ID}
+	</select>
+	
+	<select id="getRelayList" parameterType="map" resultType="map">
+		select tr.RELAY_ID,tr.RELAY_NAME from AXX_T_RELAY tr where tr.CABLE_ID=#{CABLE_ID}
+	</select>
+	
+	<select id="getLineList" parameterType="map" resultType="map">
+      select tli.LINE_ID,tli.LINE_NAME from AXX_T_LINE_INFO tli 
+		inner join AXX_T_RELAY tr on tli.RELAY_ID=tr.RELAY_ID
+        inner join AXX_T_RELAY_AREA tra on tra.RELAY_ID=tr.RELAY_ID and tra.AREA_ID=#{AREA_ID}
+		inner join AXX_T_CABLE tc on tr.CABLE_ID=tc.CABLE_ID
+        inner join AXX_T_CABLE_AREA tca on tc.CABLE_ID=tca.CABLE_ID and tca.AREA_ID=#{AREA_ID}
+	</select>
+	
+	<select id="getTaskDetail" parameterType="map" resultType="map">
+ 		select tt.task_id,tli.line_id,tli.line_name from axx_t_line_info tli 
+ 		inner join axx_t_task_line ttl on tli.line_id=ttl.line_id
+		inner join axx_t_task tt on ttl.task_id=tt.task_id where tt.task_id=#{TASK_ID}
+	</select>
+	
+	<select id="getTaskOutSiteDetail" parameterType="map" resultType="map">
+		select tto.task_id,tto.out_site_id,mos.site_name from AXX_T_TASK_OUTSITE tto 
+		inner join axx_main_out_site mos on  tto.out_site_id=mos.out_site_id
+		where tto.task_id=#{TASK_ID} 
+	</select>
+	
+	<insert id="insert" parameterType="map">
+	INSERT INTO AXX_T_TASK(TASK_ID,JOB_ID,TASK_NAME,START_DATE,END_DATE,INSPECT_ID,STATUS,TASK_TYPE,CREATE_DATE,AREA_ID)
+	VALUES (#{TASK_ID},'',#{TASK_NAME},TO_DATE(#{START_DATE},'yyyy-mm-dd'),TO_DATE(#{END_DATE},'yyyy-mm-dd'),
+	#{INSPECT_ID},0,2,(select TRUNC(SYSDATE) FROM dual),#{AREA_ID})
+	</insert>
+	<insert id="insertTaskItem" parameterType="map">
+	INSERT INTO AXX_T_TASK_LINE(TASK_ID,LINE_ID) values(#{TASK_ID},#{LINE_ID})
+	</insert>
+	
+	<update id="update" parameterType="map">
+	update AXX_T_TASK tt set tt.START_DATE=TO_DATE(#{START_DATE},'yyyy-mm-dd'),tt.END_DATE=TO_DATE(#{END_DATE},'yyyy-mm-dd'),
+	INSPECT_ID=#{INSPECT_ID} where tt.TASK_ID=#{TASK_ID}
+	</update>
+	<update id="stop">
+	update AXX_T_TASK tt set tt.STATUS=1 where tt.TASK_ID in (${TASK_ID})
+	</update>
+	
+</mapper>

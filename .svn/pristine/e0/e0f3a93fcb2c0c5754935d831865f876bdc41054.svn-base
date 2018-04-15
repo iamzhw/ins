@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cableCheck.dao.TeamManagerDao">
+	
+	<select id="exportTeam" resultType="map" parameterType="map">
+		select (select name from area a where a.area_id = b.area_id) area_name,
+		(select name from area a where a.area_id = b.son_area_id) son_area_name,m.company_name,b.team_id,b.team_name,
+		(select to_char(wm_concat(nvl(f.staff_name,z.staff_name)||'('||nvl(f.staff_no,z.staff_no)||')')) from  tb_base_staff_zw z left join tb_base_staff f on f.staff_id = z.shenhe_staff_id 
+		where z.team_id = b.team_id and z.is_leader = 1 and z.is_auditor = 1  and z.status in (0,2)) shenhe_name,
+		(select to_char(wm_concat(nvl(f.staff_name,z.staff_name)||'('||nvl(f.staff_no,z.staff_no)||')')) from  tb_base_staff_zw z left join tb_base_staff f on f.staff_id = z.doudi_staff_id  
+		where z.team_id = b.team_id and z.is_doudi= 1  and z.status in (0,2)) doudi_name ,
+		(select count(*) from  tb_base_staff_zw z where z.team_id = b.team_id and z.status=0) STAFF_NUM
+		from (select * from (
+		select * from (select * from tb_base_staff_zw_banzu where is_look = 0) n start with team_id in (${queryParams.teamIds}) 
+		connect by prior n.team_id = n.parent_org_id ) where is_look = 0)  b 
+		left join tb_base_company_banzu_relation r on r.banzu_id = b.team_id
+		left join tb_base_maintain_company m on m.company_id = r.company_id
+		where b.is_look = 0 and b.team_id not in (0000017)
+	</select>
+
+	<select id="exportTeamUser" resultType="map" parameterType="map">
+		select z.id staff_id,z.staff_no,z.staff_name,z.team_id,z.team_name,z.moblephone,
+		(select a.name from area a where a.area_id = n.area_id) area_name,
+		(select a.name from area a where a.area_id = n.son_area_id) son_area_name,m.company_name
+		,(CASE WHEN z.is_leader = '1' THEN '审核员/接单人,维护员' ELSE '维护员' END ) role_name
+		from tb_base_staff_zw z 
+		left join tb_base_staff_zw_banzu n on n.team_id = z.team_id
+		left join tb_base_company_banzu_relation r on r.banzu_id = n.team_id
+		left join tb_base_maintain_company m on m.company_id = r.company_id
+		where z.status = 0 and z.team_id in 
+		(select distinct team_id from (
+		select * from (select * from tb_base_staff_zw_banzu where is_look = 0) n start with team_id in (${queryParams.teamIds}) 
+		connect by prior n.team_id = n.parent_org_id ) where is_look = 0)
+	</select>
+
+
+	<select id="listTeam" resultType="map">
+		
+		select * from 
+		(
+		select (select name from area a where a.area_id = b.area_id) area_name,
+		(select name from area a where a.area_id = b.son_area_id) son_area_name,
+		<!-- m.company_name, -->
+		(select to_char(wm_concat(m.company_name)) from  tb_base_company_banzu_relation r,tb_base_maintain_company m 
+		where r.banzu_id =  b.team_id and m.company_id=r.company_id) company_name,
+		b.team_id,b.team_name,
+		(select to_char(wm_concat(nvl(f.staff_name,z.staff_name)||'('||nvl(f.staff_no,z.staff_no)||')'))   
+		from  tb_base_staff_zw z left join tb_base_staff f on f.staff_id = z.shenhe_staff_id where z.team_id = b.team_id 
+		and z.is_leader = 1 and z.is_auditor = 1  and z.status in (0,2)) shenhe_name,
+		(select to_char(wm_concat(nvl(f.staff_name,z.staff_name)||'('||nvl(f.staff_no,z.staff_no)||')'))  
+		from  tb_base_staff_zw z left join tb_base_staff f on f.staff_id = z.doudi_staff_id where z.team_id = b.team_id 
+    	and z.is_doudi= 1  and z.status in (0,2)) doudi_name,
+		(select count(*) from  tb_base_staff_zw z where z.team_id = b.team_id and z.status=0) STAFF_NUM
+		from tb_base_staff_zw_banzu b 
+<!-- 		left join tb_base_company_banzu_relation r on r.banzu_id = b.team_id
+		left join tb_base_maintain_company m on m.company_id = r.company_id -->
+		where b.is_look = 0 and b.team_id not in (0000017)
+		<if test="queryParams.clickNode != null and queryParams.clickNode != '' and queryParams.clickNode != 0 ">  
+            <![CDATA[
+    			and b.parent_org_id = #{queryParams.clickNode}
+    		]]>
+  		</if>
+		
+		
+		<if test="queryParams.company_name != null and queryParams.company_name != ''">  
+            <![CDATA[
+    			AND m.company_name like '%'||#{queryParams.company_name}||'%'
+    		]]>
+  		</if>
+  		<if test="queryParams.team_name != null and queryParams.team_name != ''">  
+            <![CDATA[
+    			AND b.team_name like '%'||#{queryParams.team_name}||'%'
+    		]]>
+  		</if>
+  		
+  		<choose>  
+  			<when test="queryParams.option == 0 and queryParams.area != null and queryParams.area != '' and queryParams.area != 0"> 
+                and ( b.area_id is null or  b.area_id  = #{queryParams.area})
+            </when>
+           	<when test="queryParams.area == '-1'">  
+                AND b.area_id is null
+            </when>
+	    	<when test="queryParams.area != null and queryParams.area != '' and queryParams.area != 0"> 
+                AND b.area_id = #{queryParams.area}
+            </when>
+       	</choose>
+       	
+       	<choose>  
+       		<!-- <when test="queryParams.option_son ==0">  
+                and ( b.son_area_id is null or  b.son_area_id  = #{queryParams.son_area})
+            </when> -->
+       		<when test="queryParams.son_area == '-1'">  
+                AND b.son_area_id is null
+            </when>
+	    	<when test="queryParams.son_area != null and queryParams.son_area != ''">  
+                AND b.son_area_id = #{queryParams.son_area}
+            </when> 
+       	</choose> 
+  		
+  		<!-- <if test="queryParams.area != null and queryParams.area != ''">  
+            <![CDATA[
+    			AND b.area_id = #{queryParams.area}
+    		]]>
+  		</if>
+  		<if test="queryParams.son_area != null and queryParams.son_area != ''">  
+            <![CDATA[
+    			AND b.son_area_id = #{queryParams.son_area}
+    		]]>
+  		</if> -->
+  		
+		order by b.tree_team_code asc
+		) where 1=1
+		<if test="queryParams.staff_name != null and queryParams.staff_name != ''">  
+            <![CDATA[
+    			AND (shenhe_name like '%'||#{queryParams.staff_name}||'%' or doudi_name like '%'||#{queryParams.staff_name}||'%') 
+    		]]>
+  		</if> 
+	</select>
+	
+	<select id="listUserRole" parameterType="map" resultType="map"> 
+		<!-- select staff_no||'@@'||'is_leader' uniqueId ,team_id,team_name,staff_name,staff_no,'审核员/接单人' role_name 
+		from tb_base_staff_zw z where z.team_id = #{queryParams.teamId} 
+		and z.is_leader=1 and z.is_auditor = 1
+		union all
+		select staff_no||'@@'||'is_doudi' uniqueId ,team_id,team_name,staff_name,staff_no,'兜底岗' role_name from tb_base_staff_zw z where z.team_id = #{queryParams.teamId}  
+		and z.is_doudi=1 -->
+		
+		select z.staff_no||'@@'||'is_leader' uniqueId ,team_id,team_name,nvl(f.staff_name,z.staff_name) staff_name,
+		nvl(f.staff_no,z.staff_no) staff_no,'审核员/接单人' role_name 
+		from tb_base_staff_zw z 
+		left join tb_base_staff f on f.staff_id = z.shenhe_staff_id
+		where z.team_id = #{queryParams.teamId}
+		and z.is_leader=1 and z.is_auditor = 1
+		union all
+		select z.staff_no||'@@'||'is_doudi' uniqueId ,team_id,team_name,nvl(f.staff_name,z.staff_name)staff_name,
+		nvl(f.staff_no,z.staff_no)staff_no,'兜底岗' role_name 
+		from tb_base_staff_zw z 
+		left join tb_base_staff f on f.staff_id = z.doudi_staff_id
+		where z.team_id = #{queryParams.teamId}
+		and z.is_doudi=1
+	</select>
+	
+	<update id="updateTeam" parameterType="map">
+		update tb_base_staff_zw_banzu b set b.area_id=#{area},b.son_area_id=#{son_area}
+		 where b.team_id in (${select_teamId})
+	</update>
+	
+	
+	<select id="selectRelationCount" parameterType="map" resultType="int">
+		select count(*) from tb_base_company_banzu_relation where banzu_id = #{teamId}
+	</select>
+	
+	<select id="updateCompany" parameterType="map">
+		update tb_base_company_banzu_relation set company_id=#{companyId}  where banzu_id = #{teamId}
+	</select>
+	
+	
+	<select id="selectStaffCount" parameterType="map" resultType="int">
+		select count(*) from tb_base_staff_zw zw 
+		left join tb_base_staff f on f.id_number = zw.id_number
+		where team_id = #{teamId} and f.staff_id=#{staffId}
+	</select>
+	
+	<update id="updateShenhe" parameterType="map">
+		update tb_base_staff_zw set is_leader=1,is_auditor=1,shenhe_staff_id=#{staffId}
+		where team_id=#{teamId} and id_number in
+   		(select distinct f.id_number from tb_base_staff f where f.staff_id = #{staffId})
+	</update>
+	
+	<insert id="addShenhe" parameterType="map">
+		insert into tb_base_staff_zw 
+		(id,staff_no,staff_name,team_id,team_name,is_leader,is_auditor,id_number,moblephone,is_from,STATUS,shenhe_staff_id)
+		(select staff_id,staff_no,staff_name,#{teamId},
+		(select team_name from tb_base_staff_zw_banzu b where b.team_id = #{teamId}) team_name,1,1,
+		id_number,tel,2,2,#{staffId} from tb_base_staff f where f.staff_id = #{staffId})
+	</insert>
+	
+	
+	<update id="updateDoudi" parameterType="map">
+		update tb_base_staff_zw set is_doudi=1,doudi_staff_id=#{staffId}
+		where team_id=#{teamId} and id_number in
+   		(select distinct f.id_number from tb_base_staff f where f.staff_id = #{staffId})
+	</update>
+	
+	<insert id="addDoudi" parameterType="map">
+		insert into tb_base_staff_zw 
+		(id,staff_no,staff_name,team_id,team_name,is_doudi,id_number,moblephone,is_from,status,doudi_staff_id)
+		(select staff_id,staff_no,staff_name,#{teamId},
+		(select team_name from tb_base_staff_zw_banzu b where b.team_id = #{teamId}) team_name,1,
+		id_number,tel,2,2,#{staffId} from tb_base_staff f where f.staff_id = #{staffId})
+	</insert>
+	
+	<select id="queryImportLog" parameterType="util.page.Query" resultType="map">
+		select l.*,to_char(l.create_date,'yyyy-MM-dd hh24:mi:ss') CREATE_TIME 
+		from tb_cablecheck_banzu_import_log l where l.create_staff = #{queryParams.staff_id} 
+		order by l.import_id asc
+	</select>
+	
+	<select id="queryStaff" parameterType="util.page.Query" resultType="map">
+		SELECT distinct s.STAFF_ID, s.STAFF_NO, s.STAFF_NAME ,0 as STAFF_type,'个人' as STAFF_TYPE_NAME,s.tel
+		FROM TB_BASE_STAFF s<!-- , TB_BASE_ROLE r -->, TB_BASE_STAFF_ROLE sr 
+		WHERE s.ISDELETED = 0 
+			and s.STATUS = 0 
+			and s.STAFF_ID = sr.STAFF_ID
+			<!-- and r.ROLE_ID = sr.ROLE_ID
+			and r.ROLE_NO = 'CABLE_XJY' -->
+		<if test="queryParams.STAFF_NO != null and queryParams.STAFF_NO != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NO like '%'||#{queryParams.STAFF_NO}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.STAFF_NAME != null and queryParams.STAFF_NAME != ''">  
+            <![CDATA[
+	    	AND s.STAFF_NAME like '%'||#{queryParams.STAFF_NAME}||'%' 
+	    	]]>
+		</if>
+		<if test="queryParams.AREA_ID != null and queryParams.AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.AREA_ID = #{queryParams.AREA_ID}
+	    	]]>
+		</if>
+		<if test="queryParams.SON_AREA_ID != null and queryParams.SON_AREA_ID != ''">  
+            <![CDATA[
+	    	AND s.SON_AREA_ID = #{queryParams.SON_AREA_ID}
+	    	]]>
+		</if>
+	</select>
+	
+	
+	
+	<insert id="insertCableRole" parameterType="map">
+		insert into tb_base_staff_role(staff_id,role_id) 
+		values (#{staffId},466)
+	</insert>
+	
+	<select id="isExistCableRole" parameterType="map" resultType="java.lang.Integer">
+		select count(*) from  tb_base_staff_role r where r.staff_id = #{staffId} and r.role_id = 466
+	</select>
+	
+	<select id="queryRolePermission" parameterType="map" resultType="map">
+		select T.ROLE_ID, T.ROLE_NAME, T.ROLE_NO from TB_BASE_ROLE_ZW T
+	</select>
+	
+	<update id="resetTeamStaff" parameterType="map">
+		update tb_base_staff_zw b set 
+		<if test="shy != null and shy != ''">  
+            <![CDATA[
+	    		b.is_leader = 0, b.is_auditor = 0 
+	    	]]>
+		</if>
+		<if test="ddg != null and ddg != ''">  
+            <![CDATA[
+	    		, b.is_doudi = 0 
+	    	]]>
+		</if>
+		where b.team_id in (${team_ids})
+	</update>
+	
+	<update id="updateTeamStaff" parameterType="map">
+		update tb_base_staff_zw b set 
+		<choose>
+           	<when test="role_type != null and role_type != '' and role_type == 'is_leader'">  
+                b.is_leader = 0, b.is_auditor = 0,b.shenhe_staff_id=''
+            </when>
+	    	<when test="role_type != null and role_type != '' and role_type == 'is_doudi'"> 
+                b.is_doudi = 0 ,b.doudi_staff_id=''
+            </when>
+       	</choose>
+		where b.team_id = #{team_ids} and b.staff_no = #{staff_no}
+	</update>
+	
+	<select id="calBatchUpdateBanzu" parameterType="java.util.Map">
+		<![CDATA[ 
+			call batch_update_banzu(#{team_id_in,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	
+	<select id="calBatchUpdateZwAreaId" parameterType="java.util.Map">
+		<![CDATA[ 
+			call batch_update_zw_areaid(#{team_id_in,mode=IN,jdbcType=VARCHAR}) 
+		]]>
+	</select>
+	
+	
+</mapper> 
